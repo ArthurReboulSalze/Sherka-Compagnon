@@ -2,7 +2,7 @@ import { test, expect, chromium, type Browser, type Page } from '@playwright/tes
 import { spawn, execFileSync, type ChildProcess } from 'node:child_process';
 import { mkdirSync, existsSync, writeFileSync, readFileSync, copyFileSync, readdirSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { resolve } from 'node:path';
+import { basename, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 let executable = resolve(process.env.SHERKA_TEST_EXECUTABLE ?? 'target/debug/sherka-compagnon.exe');
@@ -13,6 +13,27 @@ let widget: Page;
 let dataDirectory: string;
 let consoleErrors: string[];
 let debugPort: number;
+let ciWebViewPolicy = false;
+
+function configureCiWebView(argumentsValue: string, userDataFolder: string): void {
+  if (process.env.GITHUB_ACTIONS !== 'true') return;
+  // Hosted Windows runners are elevated. Since WebView2 150, environment
+  // overrides are ignored there; use an EXE-scoped HKLM policy on this VM.
+  const name = basename(executable);
+  if (name !== 'sherka-compagnon.exe') throw new Error('Unexpected CI test executable');
+  ciWebViewPolicy = true;
+  for (const [setting, value] of [['AdditionalBrowserArguments', argumentsValue], ['UserDataFolder', userDataFolder]]) {
+    execFileSync('reg.exe', ['add', `HKLM\\Software\\Policies\\Microsoft\\Edge\\WebView2\\${setting}`, '/v', name, '/t', 'REG_SZ', '/d', value, '/f'], {windowsHide: true, stdio: 'pipe'});
+  }
+}
+
+function clearCiWebView(): void {
+  if (!ciWebViewPolicy) return;
+  for (const setting of ['AdditionalBrowserArguments', 'UserDataFolder']) {
+    try { execFileSync('reg.exe', ['delete', `HKLM\\Software\\Policies\\Microsoft\\Edge\\WebView2\\${setting}`, '/v', 'sherka-compagnon.exe', '/f'], {windowsHide: true, stdio: 'pipe'}); } catch {}
+  }
+  ciWebViewPolicy = false;
+}
 
 function modelRoutes(ids: string[], context = 8192, thoughts: Record<string, string[]> = {}) {
   const loaded = new Set(ids);
@@ -55,6 +76,9 @@ async function startApplication(hidden = true, autostartVoice = false): Promise<
     });
   });
   debugPort = port;
+  const browserArguments = `--remote-debugging-port=${port} --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows`;
+  const webViewData = resolve(dataDirectory, 'webview');
+  configureCiWebView(browserArguments, webViewData);
   child = spawn(executable, [], {
     windowsHide: true,
     stdio: 'pipe',
@@ -63,8 +87,8 @@ async function startApplication(hidden = true, autostartVoice = false): Promise<
       SHERKA_DATA_DIR: dataDirectory,
       SHERKA_AUTOSTART_VOICE: autostartVoice ? '1' : '0',
       SHERKA_TEST_HIDDEN: hidden ? '1' : '0',
-      WEBVIEW2_USER_DATA_FOLDER: resolve(dataDirectory, 'webview'),
-      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port} --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows`,
+      WEBVIEW2_USER_DATA_FOLDER: webViewData,
+      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: browserArguments,
     },
   });
   child.stderr?.on('data', (data) => process.stderr.write(data));
@@ -102,6 +126,7 @@ async function stopApplication(): Promise<void> {
     await new Promise<void>((done) => { if (child.exitCode !== null) done(); else child.once('exit', () => done()); });
   }
   await browser?.close().catch(() => {});
+  clearCiWebView();
 }
 
 test.beforeEach(async () => {
