@@ -51,4 +51,4 @@ References: [VoiceStudio](https://github.com/debpalash/VoiceStudio), [speech pla
 
 ## Limitations
 
-LM Studio is the only complete conversation adapter. Token-protected services remain unsupported. External software and models are neither embedded nor redistributed.
+Remote conversation providers use separate OpenAI Chat Completions and Anthropic Messages adapters with protected API keys. See [providers](PROVIDERS.md). External software and models are neither embedded nor redistributed. VoiceStudio token authentication is not implemented.

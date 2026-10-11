@@ -42,6 +42,8 @@ test('feedback translates authored templates without changing names or memories'
     'VoiceStudio unreachable (HTTP 503). Check its address and access in Settings.');
   assert.equal(api.feedback('Réglages — model identifier'),'Réglages — model identifier');
   assert.equal(api.feedback('Souvenir #42 corrigé : Réglages'),'Memory #42 corrected: Réglages');
+  assert.equal(api.feedback('Z.ai a refusé la demande (HTTP 429). Le fournisseur est temporairement indisponible. Réessaie plus tard.'),
+    'Z.ai refused the request (HTTP 429). The provider is temporarily unavailable. Try again later.');
   assert.equal(api.t(['Voix enregistrée · ',''],'Réglages'),'Saved voice · Réglages');
 });
 test('unsupported interface locale falls back to French',()=>{

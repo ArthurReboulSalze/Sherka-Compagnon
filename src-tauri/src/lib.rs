@@ -443,12 +443,47 @@ async fn export_memories(
 }
 
 #[tauri::command]
-async fn discover_language_models(base_url: String) -> Result<LanguageCatalog, String> {
+async fn discover_language_models(
+    base_url: Option<String>,
+    connections: Option<Connections>,
+) -> Result<LanguageCatalog, String> {
+    if let Some(config) = connections {
+        return sherka_core::providers::Providers::new(config)
+            .map_err(|e| e.to_string())?
+            .catalog()
+            .await
+            .map_err(|e| e.to_string());
+    }
+    let base_url =
+        base_url.ok_or_else(|| "Indique l’adresse de base de l’API du fournisseur.".to_owned())?;
     CatalogClient::new(&base_url)
         .map_err(|e| e.to_string())?
         .language_models()
         .await
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn get_provider_key_status(connections: Connections) -> Result<bool, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        sherka_core::credentials::load(&connections)
+            .map(|key| key.is_some())
+            .map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|_| {
+        "Le coffre de clés API n’est pas accessible. Vérifie ta session Windows.".to_owned()
+    })?
+}
+#[tauri::command]
+async fn set_provider_key(connections: Connections, key: Option<String>) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        sherka_core::credentials::set(&connections, key.as_deref()).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|_| {
+        "Le coffre de clés API n’est pas accessible. Vérifie ta session Windows.".to_owned()
+    })?
 }
 
 #[tauri::command]
@@ -586,6 +621,8 @@ pub fn run() {
             export_memories,
             export_profile,
             discover_language_models,
+            get_provider_key_status,
+            set_provider_key,
             discover_voices,
             widget_action,
             get_audio_devices,

@@ -571,6 +571,87 @@ test('imports validés, texte non exécutable et permissions distinctes des fen�
 });
 
 
+test('providers: API controls, protected keys, Anthropic streaming, cancellation and restart', async () => {
+  const fixture = JSON.parse(readFileSync(resolve('tests/fixtures/services.json'), 'utf8'));
+  const requests: {path:string; body:any; auth:string|undefined}[] = [];
+  let interrupted: (() => void) | undefined;
+  let number = 0;
+  const server = createServer((request,response) => {
+    if (request.url!.startsWith('/remote/v1/models')) { response.writeHead(200,{'Content-Type':'application/json'}); response.end(JSON.stringify({data:[{id:'cloud-test',display_name:'Cloud fixture',max_input_tokens:32768,max_tokens:4096,capabilities:{thinking:{supported:true,types:{adaptive:{supported:true},disabled:{supported:true}}},effort:{low:{supported:true}}}}],has_more:false})); return; }
+    const catalog = fixture[request.url!]; if (catalog) { response.writeHead(200,{'Content-Type':'application/json'});response.end(JSON.stringify(catalog));return; }
+    if (request.method==='GET') { response.writeHead(404);response.end('{}');return; }
+    let raw='';request.on('data',bytes=>raw+=bytes);request.on('end',()=>{
+      const body=JSON.parse(raw);requests.push({path:request.url!,body,auth:request.headers['x-api-key'] as string|undefined});
+      if (request.url==='/v1/audio/speech') { expect(request.headers.authorization).toBeUndefined();expect(request.headers['x-api-key']).toBeUndefined();response.writeHead(200,{'Content-Type':'audio/pcm'});response.end(Buffer.alloc(24000));return; }
+      expect(request.url).toBe('/remote/v1/messages');expect(request.headers['anthropic-version']).toBe('2023-06-01');
+      response.writeHead(200,{'Content-Type':'text/event-stream'});
+      const event=(value:any)=>response.write('data: '+JSON.stringify(value)+'\n\n');
+      event({type:'message_start',message:{usage:{input_tokens:120,output_tokens:1}}});event({type:'content_block_delta',delta:{type:'thinking_delta',thinking:'REFLEXION SECRETE'}});
+      event({type:'content_block_delta',delta:{type:'text_delta',text:'Bonjour depuis le cloud. '}});
+      const finish=()=>{event({type:'message_delta',delta:{stop_reason:'end_turn'},usage:{output_tokens:20}});response.end('data: {"type":"message_stop"}\n\n');};
+      if (++number===2) interrupted=()=>{event({type:'content_block_delta',delta:{type:'text_delta',text:'FIN ANCIENNE'}});finish();}; else finish();
+    });
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));const address=server.address() as {port:number}; const url='http://127.0.0.1:'+address.port;
+  let configured:any;
+  try {
+    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.locator('[name="llm_provider"]').selectOption('zai');await expect(panel.getByLabel('Adresse de base de l’API',{exact:true})).toHaveValue('https://api.z.ai/api/paas/v4');
+    await panel.locator('[name="llm_provider"]').selectOption('zai_coding');await expect(panel.getByLabel('Adresse de base de l’API',{exact:true})).toHaveValue('https://api.z.ai/api/coding/paas/v4');
+    await panel.locator('[name="llm_provider"]').selectOption('custom_anthropic');
+    await panel.getByLabel('Adresse de base de l’API',{exact:true}).fill(url+'/remote/v1');await panel.locator('[name="llm_model"]').fill('cloud-test');
+    configured={...(await native<any>('get_snapshot')).profiles[0].connections,llm_provider:'custom_anthropic',llm_api_url:url+'/remote/v1'}; await panel.locator('#provider-api-key').fill('fixture-token');
+    await panel.locator('[data-refresh="lm"]').click();await expect(panel.locator('#provider-models option')).toHaveCount(1);await expect(panel.locator('#provider-api-key')).toHaveValue('fixture-token');
+    await panel.getByRole('button',{name:'Enregistrer la clé',exact:true}).click();
+    await expect(panel.locator('#provider-key-status')).toHaveText('Clé protégée enregistrée pour cette adresse');await expect(panel.locator('#provider-api-key')).toHaveValue('');
+    await panel.locator('[data-refresh="lm"]').click();await expect(panel.locator('#provider-models option')).toHaveCount(1);
+    await panel.locator('[name="reasoning"]').selectOption('low');
+    await panel.getByRole('button',{name:'Enregistrer ces choix',exact:true}).click();
+    let state=await native<any>('get_snapshot');let p=state.profiles[0];configured=p.connections;
+    expect(p.connections.llm_provider).toBe('custom_anthropic');expect(JSON.stringify(state)).not.toContain('fixture-token');
+    expect(await widget.evaluate(async config=>{try {await (window as any).__TAURI_INTERNALS__.invoke('get_provider_key_status',{connections:config});return true;} catch {return false;}},configured)).toBe(false);
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...configured,voice_studio_url:url,tts_engine:'omni',tts_voice:'voice-test',volume:0}}});
+    await panel.getByRole('button',{name:'Conversation',exact:true}).click();
+    await panel.getByLabel('Ou écris-lui ici').fill('Bonjour');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();
+    await expect(panel.locator('#conversation-history')).toContainText('Bonjour depuis le cloud.');
+    expect(requests.find(r=>r.path.endsWith('/messages'))!.body.system).toContain('Sherka');expect(requests.find(r=>r.path.endsWith('/messages'))!.body.thinking.type).toBe('adaptive');
+    expect(requests.find(r=>r.path.endsWith('/messages'))!.auth).toBe('fixture-token');expect(requests.filter(r=>r.path.endsWith('/speech')).every(r=>!r.body.input.includes('REFLEXION SECRETE'))).toBe(true);
+    await expect.poll(()=>requests.filter(r=>r.path.endsWith('/speech')).length).toBeGreaterThan(0);
+    await panel.getByLabel('Ou écris-lui ici').fill('Suite');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();await expect.poll(()=>number).toBe(2);await expect(panel.locator('#live-reply')).toContainText('Bonjour depuis le cloud.');
+    await panel.getByRole('button',{name:'Arrêter la réponse',exact:true}).click();interrupted?.();
+    await expect.poll(async()=> (await native<any[]>('get_history',{profileId:p.id})).at(-1)?.delivery).toBe('interrupted');
+    expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('FIN ANCIENNE');
+    await panel.getByRole('button',{name:'Réglages',exact:true}).click();await panel.screenshot({path:'artifacts/providers-options.png',fullPage:true});
+    await stopApplication();await startApplication();
+    state=await native<any>('get_snapshot');p=state.profiles[0];expect(p.connections.llm_provider).toBe('custom_anthropic');expect(await native('get_provider_key_status',{connections:p.connections})).toBe(true);
+    const db=readFileSync(resolve(dataDirectory,'profiles',p.id,'profile.sqlite3'));expect(db.includes(Buffer.from('fixture-token'))).toBe(false);
+    await panel.getByRole('button',{name:'Réglages',exact:true}).click();await panel.getByRole('button',{name:'Retirer la clé',exact:true}).click();await expect(panel.locator('#provider-key-status')).toHaveText('Aucune clé enregistrée pour cette adresse');
+    expect(consoleErrors).toEqual([]);
+  } finally {
+    if (configured && child.exitCode===null) await native('set_provider_key',{connections:configured,key:null}).catch(()=>{});
+    server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));
+  }
+});
+
+test('providers live: tiny GLM 5.3 Flash checks on OpenRouter and Z.ai', async () => {
+  test.skip(process.env.SHERKA_CLOUD_CHECK!=='1','Opt-in billable checks only');
+  test.setTimeout(180_000);
+  const selected=process.env.SHERKA_CLOUD_PROVIDERS?.split(',');
+  for (const [kind,variable,model] of [['open_router','OPENROUTER_API_KEY','z-ai/glm-5.3-flash'],['zai','ZAI_API_KEY','glm-5.3-flash'],['zai_coding','ZAI_CODING_API_KEY','glm-5.3-flash']]) {
+    if (selected && !selected.includes(kind)) continue;
+    const key=process.env[variable];if (!key) throw new Error('Missing '+variable);
+    const state=await native<any>('get_snapshot');const p=state.profiles[0];
+    const connections={...p.connections,llm_provider:kind,llm_api_url:null,llm_model:model,llm_model_key:null,context_limit:8192,response_tokens:512,reasoning:'low'};
+    if (!await native('get_provider_key_status',{connections})) await native('set_provider_key',{connections,key});
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections}});
+    await native('send_message',{profileId:p.id,text:'Reply with only OK.',speak:false});
+    await expect.poll(async()=>{ const s=await native<any>('get_conversation');if(s.live.error)throw new Error(s.live.error);return s.session.response; },{timeout:75_000}).toBe('idle');
+    const history=await native<any[]>('get_history',{profileId:p.id});expect(history.at(-1).role).toBe('assistant');expect(history.at(-1).content).toContain('OK');
+    const live=await native<any>('get_conversation');expect(live.live.usage.length_limited).toBe(false);
+    console.log(`${kind}: ${model}, input=${live.live.usage.prompt_tokens}, output=${live.live.usage.completion_tokens}, reasoning=${live.live.usage.reasoning_tokens}`);
+  }
+});
+
 test('conversation SSE réelle : texte progressif, arrêt, erreurs, profils et brouillon préservés', async () => {
   const models = modelRoutes(['chat-test']);
   const requests: { model: string; messages: { role: string; content: string }[] }[] = [];

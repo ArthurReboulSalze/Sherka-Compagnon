@@ -4902,5 +4902,525 @@
     "Installierte und installationsfreie Versionen verwenden dieselben Daten.",
     "安装版与免安装版共享这些数据。",
     "インストール版とポータブル版はこのデータを共有します。"
+  ],
+  "· {0} chargé(s)": [
+    "· {0} loaded",
+    "· {0} cargado(s)",
+    "· {0} caricato/i",
+    "· {0} geladen",
+    "· 已加载 {0} 个",
+    "· {0} 個読み込み済み"
+  ],
+  "{0} Le budget utilise une estimation prudente et une marge de sécurité ; les anciens échanges sont écartés si nécessaire, sans couper ton nouveau message.": [
+    "{0} The budget uses a conservative estimate and a safety margin; older exchanges are omitted when needed without cutting your new message.",
+    "{0} El presupuesto usa una estimación prudente y un margen de seguridad; se omiten intercambios antiguos si hace falta, sin cortar tu nuevo mensaje.",
+    "{0} Il budget usa una stima prudente e un margine di sicurezza; gli scambi più vecchi vengono esclusi se necessario, senza tagliare il nuovo messaggio.",
+    "{0} Das Budget verwendet eine vorsichtige Schätzung und einen Sicherheitspuffer; ältere Beiträge werden bei Bedarf ausgelassen, ohne deine neue Nachricht zu kürzen.",
+    "{0} 预算采用保守估算并留出安全余量；必要时会省略较早的对话，不会截断你的新消息。",
+    "{0} 予算は慎重な推定と安全余裕を使います。必要に応じて古い会話を省き、新しいメッセージは切り詰めません。"
+  ],
+  "{0} modèle(s) de conversation détecté(s)": [
+    "{0} conversation model(s) found",
+    "{0} modelo(s) de conversación encontrado(s)",
+    "{0} modello/i di conversazione trovato/i",
+    "{0} Gesprächsmodell(e) gefunden",
+    "发现 {0} 个对话模型",
+    "{0} 個の会話モデルを検出"
+  ],
+  "{0} sélectionné chez {1}.": [
+    "{0} selected on {1}.",
+    "{0} seleccionado en {1}.",
+    "{0} selezionato su {1}.",
+    "{0} bei {1} ausgewählt.",
+    "已在 {1} 选择 {0}。",
+    "{1} で {0} を選択しました。"
+  ],
+  "Adresse de base de l’API": [
+    "API base URL",
+    "URL base de la API",
+    "URL di base dell’API",
+    "API-Basis-URL",
+    "API 基础地址",
+    "API ベース URL"
+  ],
+  "Aucune clé enregistrée pour cette adresse": [
+    "No key saved for this address",
+    "No hay clave guardada para esta dirección",
+    "Nessuna chiave salvata per questo indirizzo",
+    "Kein Schlüssel für diese Adresse gespeichert",
+    "此地址尚未保存密钥",
+    "このアドレスのキーは未保存です"
+  ],
+  "Ce fournisseur ne charge pas de modèle local.": [
+    "This provider does not load local models.",
+    "Este proveedor no carga modelos locales.",
+    "Questo fornitore non carica modelli locali.",
+    "Dieser Anbieter lädt keine lokalen Modelle.",
+    "此提供商不加载本地模型。",
+    "このプロバイダーはローカルモデルを読み込みません。"
+  ],
+  "Ce fournisseur ne fournit pas la limite de contexte. Indique le plafond du modèle dans Réglages avant de converser.": [
+    "This provider does not report the context limit. Set the model’s context ceiling in Settings before chatting.",
+    "Este proveedor no indica el límite de contexto. Configura el límite del modelo en Ajustes antes de conversar.",
+    "Questo fornitore non indica il limite di contesto. Imposta il limite del modello nelle impostazioni prima di conversare.",
+    "Dieser Anbieter meldet keine Kontextgrenze. Trage vor dem Gespräch die Grenze des Modells in den Einstellungen ein.",
+    "此提供商未报告上下文限制。请先在设置中填写模型的上下文上限，再开始对话。",
+    "このプロバイダーはコンテキスト上限を提供していません。会話の前に設定でモデルの上限を指定してください。"
+  ],
+  "Choisis un fournisseur API pour enregistrer une clé.": [
+    "Choose an API provider to save a key.",
+    "Elige un proveedor de API para guardar una clave.",
+    "Scegli un fornitore API per salvare una chiave.",
+    "Wähle einen API-Anbieter, um einen Schlüssel zu speichern.",
+    "请选择 API 提供商以保存密钥。",
+    "キーを保存する API プロバイダーを選択してください。"
+  ],
+  "Choisis un modèle de conversation dans Réglages.": [
+    "Choose a conversation model in Settings.",
+    "Elige un modelo de conversación en Ajustes.",
+    "Scegli un modello di conversazione nelle impostazioni.",
+    "Wähle ein Gesprächsmodell in den Einstellungen.",
+    "请在设置中选择对话模型。",
+    "設定で会話モデルを選択してください。"
+  ],
+  "Choisis un modèle du catalogue ou saisis son identifiant. Si la limite de contexte est inconnue, renseigne le plafond dans le budget de conversation.": [
+    "Choose a catalog model or enter its ID. If its context limit is unknown, set the ceiling in the conversation budget.",
+    "Elige un modelo del catálogo o introduce su identificador. Si se desconoce el contexto, indica el límite en el presupuesto de conversación.",
+    "Scegli un modello dal catalogo o inserisci il suo identificativo. Se il limite di contesto è sconosciuto, impostalo nel budget di conversazione.",
+    "Wähle ein Modell aus dem Katalog oder gib seine ID ein. Ist die Kontextgrenze unbekannt, trage sie im Gesprächsbudget ein.",
+    "从目录选择模型或输入模型 ID。若上下文限制未知，请在对话预算中填写上限。",
+    "カタログからモデルを選ぶか ID を入力してください。コンテキスト上限が不明な場合は、会話予算に上限を指定してください。"
+  ],
+  "Clé API": [
+    "API key",
+    "Clave API",
+    "Chiave API",
+    "API-Schlüssel",
+    "API 密钥",
+    "API キー"
+  ],
+  "Clé protégée enregistrée pour cette adresse": [
+    "Protected key saved for this address",
+    "Clave protegida guardada para esta dirección",
+    "Chiave protetta salvata per questo indirizzo",
+    "Geschützter Schlüssel für diese Adresse gespeichert",
+    "此地址的受保护密钥已保存",
+    "このアドレスの保護されたキーを保存済みです"
+  ],
+  "Coller une nouvelle clé": [
+    "Paste a new key",
+    "Pega una nueva clave",
+    "Incolla una nuova chiave",
+    "Neuen Schlüssel einfügen",
+    "粘贴新密钥",
+    "新しいキーを貼り付け"
+  ],
+  "Enregistre la clé API de ce fournisseur dans Réglages.": [
+    "Save this provider’s API key in Settings.",
+    "Guarda la clave API de este proveedor en Ajustes.",
+    "Salva la chiave API di questo fornitore nelle impostazioni.",
+    "Speichere den API-Schlüssel dieses Anbieters in den Einstellungen.",
+    "请在设置中保存此提供商的 API 密钥。",
+    "設定でこのプロバイダーの API キーを保存してください。"
+  ],
+  "Enregistrer la clé": [
+    "Save key",
+    "Guardar clave",
+    "Salva chiave",
+    "Schlüssel speichern",
+    "保存密钥",
+    "キーを保存"
+  ],
+  "Fournisseur": [
+    "Provider",
+    "Proveedor",
+    "Fornitore",
+    "Anbieter",
+    "提供商",
+    "プロバイダー"
+  ],
+  "FOURNISSEURS": [
+    "PROVIDERS",
+    "PROVEEDORES",
+    "FORNITORI",
+    "ANBIETER",
+    "提供商",
+    "プロバイダー"
+  ],
+  "https://example.com/v1": [
+    "https://example.com/v1",
+    "https://example.com/v1",
+    "https://example.com/v1",
+    "https://example.com/v1",
+    "https://example.com/v1",
+    "https://example.com/v1"
+  ],
+  "Identifiant du modèle": [
+    "Model ID",
+    "Identificador del modelo",
+    "Identificativo del modello",
+    "Modell-ID",
+    "模型 ID",
+    "モデル ID"
+  ],
+  "L’adresse de l’API doit utiliser HTTPS, sans clé ni paramètres ; HTTP est réservé au serveur local.": [
+    "The API address must use HTTPS without keys or parameters; HTTP is only allowed for a local server.",
+    "La dirección API debe usar HTTPS, sin claves ni parámetros; HTTP solo se permite para un servidor local.",
+    "L’indirizzo API deve usare HTTPS, senza chiavi o parametri; HTTP è consentito solo per un server locale.",
+    "Die API-Adresse muss HTTPS ohne Schlüssel oder Parameter verwenden; HTTP ist nur für einen lokalen Server erlaubt.",
+    "API 地址必须使用 HTTPS，且不包含密钥或参数；仅本地服务器可使用 HTTP。",
+    "API アドレスはキーやパラメーターを含まない HTTPS にしてください。HTTP はローカルサーバーのみ使用できます。"
+  ],
+  "La clé API est vide ou invalide.": [
+    "The API key is empty or invalid.",
+    "La clave API está vacía o no es válida.",
+    "La chiave API è vuota o non valida.",
+    "Der API-Schlüssel ist leer oder ungültig.",
+    "API 密钥为空或无效。",
+    "API キーが空または無効です。"
+  ],
+  "La clé est protégée par Windows, partagée pour cette adresse et exclue des profils exportés.": [
+    "Windows protects the key. It is shared for this address and excluded from exported profiles.",
+    "Windows protege la clave. Se comparte para esta dirección y se excluye de los perfiles exportados.",
+    "Windows protegge la chiave. È condivisa per questo indirizzo ed esclusa dai profili esportati.",
+    "Windows schützt den Schlüssel. Er gilt für diese Adresse und wird nicht mit Profilen exportiert.",
+    "密钥由 Windows 保护，同一地址共用，且不包含在导出的角色档案中。",
+    "キーは Windows が保護します。同じアドレスで共有され、プロフィールのエクスポートには含まれません。"
+  ],
+  "La demande structurée dépasse le budget du modèle ; aucune mémoire n’a été modifiée.": [
+    "The structured request exceeds the model’s budget; no memory was changed.",
+    "La solicitud estructurada supera el presupuesto del modelo; no se modificó ningún recuerdo.",
+    "La richiesta strutturata supera il budget del modello; nessun ricordo è stato modificato.",
+    "Die strukturierte Anfrage überschreitet das Modellbudget; keine Erinnerung wurde geändert.",
+    "结构化请求超出模型预算；未修改任何记忆。",
+    "構造化リクエストがモデルの予算を超えています。記憶は変更されていません。"
+  ],
+  "La pensée Anthropic nécessite plus de 1 024 tokens de réponse. Augmente la réserve dans Réglages.": [
+    "Anthropic thinking needs more than 1,024 response tokens. Increase the reserve in Settings.",
+    "El razonamiento de Anthropic necesita más de 1.024 tokens de respuesta. Aumenta la reserva en Ajustes.",
+    "Il ragionamento Anthropic richiede più di 1.024 token di risposta. Aumenta la riserva nelle impostazioni.",
+    "Anthropic-Denken benötigt mehr als 1.024 Antworttokens. Erhöhe die Reserve in den Einstellungen.",
+    "Anthropic 思考需要超过 1,024 个回复 token。请在设置中增加预留额度。",
+    "Anthropic の思考には 1,024 を超える応答トークンが必要です。設定で予約数を増やしてください。"
+  ],
+  "La proposition du fournisseur est incomplète ; aucune mémoire n’a été modifiée.": [
+    "The provider’s proposal is incomplete; no memory was changed.",
+    "La propuesta del proveedor está incompleta; no se modificó ningún recuerdo.",
+    "La proposta del fornitore è incompleta; nessun ricordo è stato modificato.",
+    "Der Vorschlag des Anbieters ist unvollständig; keine Erinnerung wurde geändert.",
+    "提供商的提议不完整；未修改任何记忆。",
+    "プロバイダーの提案が未完了です。記憶は変更されていません。"
+  ],
+  "La proposition du fournisseur est invalide ; aucune mémoire n’a été modifiée.": [
+    "The provider’s proposal is invalid; no memory was changed.",
+    "La propuesta del proveedor no es válida; no se modificó ningún recuerdo.",
+    "La proposta del fornitore non è valida; nessun ricordo è stato modificato.",
+    "Der Vorschlag des Anbieters ist ungültig; keine Erinnerung wurde geändert.",
+    "提供商的提议无效；未修改任何记忆。",
+    "プロバイダーの提案が無効です。記憶は変更されていません。"
+  ],
+  "La proposition du fournisseur est invalide.": [
+    "The provider’s proposal is invalid.",
+    "La propuesta del proveedor no es válida.",
+    "La proposta del fornitore non è valida.",
+    "Der Vorschlag des Anbieters ist ungültig.",
+    "提供商的提议无效。",
+    "プロバイダーの提案が無効です。"
+  ],
+  "La réponse du fournisseur dépasse la limite de sécurité.": [
+    "The provider’s response exceeds the safety limit.",
+    "La respuesta del proveedor supera el límite de seguridad.",
+    "La risposta del fornitore supera il limite di sicurezza.",
+    "Die Antwort des Anbieters überschreitet die Sicherheitsgrenze.",
+    "提供商的回复超出安全限制。",
+    "プロバイダーの応答が安全上限を超えています。"
+  ],
+  "Le catalogue du fournisseur est incompatible.": [
+    "The provider’s catalog is incompatible.",
+    "El catálogo del proveedor es incompatible.",
+    "Il catalogo del fornitore è incompatibile.",
+    "Der Katalog des Anbieters ist inkompatibel.",
+    "提供商目录格式不兼容。",
+    "プロバイダーのカタログに互換性がありません。"
+  ],
+  "Le catalogue du fournisseur est trop volumineux.": [
+    "The provider’s catalog is too large.",
+    "El catálogo del proveedor es demasiado grande.",
+    "Il catalogo del fornitore è troppo grande.",
+    "Der Katalog des Anbieters ist zu groß.",
+    "提供商目录过大。",
+    "プロバイダーのカタログが大きすぎます。"
+  ],
+  "Le coffre de clés API n’est pas accessible. Vérifie ta session Windows.": [
+    "The API key vault is unavailable. Check your Windows session.",
+    "El almacén de claves API no está disponible. Comprueba tu sesión de Windows.",
+    "L’archivio delle chiavi API non è accessibile. Controlla la sessione Windows.",
+    "Der API-Schlüsselspeicher ist nicht erreichbar. Prüfe deine Windows-Sitzung.",
+    "无法访问 API 密钥库。请检查你的 Windows 会话。",
+    "API キー保管庫にアクセスできません。Windows セッションを確認してください。"
+  ],
+  "Le flux du fournisseur contient un événement invalide.": [
+    "The provider’s stream contains an invalid event.",
+    "El flujo del proveedor contiene un evento no válido.",
+    "Il flusso del fornitore contiene un evento non valido.",
+    "Der Datenstrom des Anbieters enthält ein ungültiges Ereignis.",
+    "提供商数据流包含无效事件。",
+    "プロバイダーのストリームに無効なイベントがあります。"
+  ],
+  "Le fournisseur a arrêté la réponse sans texte exploitable.": [
+    "The provider stopped the response without usable text.",
+    "El proveedor detuvo la respuesta sin texto utilizable.",
+    "Il fornitore ha interrotto la risposta senza testo utilizzabile.",
+    "Der Anbieter hat die Antwort ohne verwendbaren Text beendet.",
+    "提供商停止了回复，未返回可用文本。",
+    "プロバイダーが利用可能なテキストを返さず応答を終了しました。"
+  ],
+  "Le fournisseur a fermé la connexion avant la fin de sa réponse.": [
+    "The provider closed the connection before finishing its response.",
+    "El proveedor cerró la conexión antes de completar su respuesta.",
+    "Il fornitore ha chiuso la connessione prima di completare la risposta.",
+    "Der Anbieter hat die Verbindung vor dem Ende seiner Antwort geschlossen.",
+    "提供商在回复完成前关闭了连接。",
+    "プロバイダーが応答の完了前に接続を閉じました。"
+  ],
+  "Le fournisseur a renvoyé un document JSON invalide.": [
+    "The provider returned an invalid JSON document.",
+    "El proveedor devolvió un documento JSON no válido.",
+    "Il fornitore ha restituito un documento JSON non valido.",
+    "Der Anbieter hat ein ungültiges JSON-Dokument zurückgegeben.",
+    "提供商返回了无效的 JSON 文档。",
+    "プロバイダーが無効な JSON を返しました。"
+  ],
+  "Le fournisseur a renvoyé une réponse vide.": [
+    "The provider returned an empty response.",
+    "El proveedor devolvió una respuesta vacía.",
+    "Il fornitore ha restituito una risposta vuota.",
+    "Der Anbieter hat eine leere Antwort zurückgegeben.",
+    "提供商返回了空回复。",
+    "プロバイダーが空の応答を返しました。"
+  ],
+  "Le fournisseur a signalé une erreur pendant la réponse.": [
+    "The provider reported an error during the response.",
+    "El proveedor indicó un error durante la respuesta.",
+    "Il fornitore ha segnalato un errore durante la risposta.",
+    "Der Anbieter hat während der Antwort einen Fehler gemeldet.",
+    "提供商在回复过程中报告了错误。",
+    "プロバイダーが応答中にエラーを報告しました。"
+  ],
+  "Le fournisseur n’a pas renvoyé un flux de conversation SSE.": [
+    "The provider did not return an SSE conversation stream.",
+    "El proveedor no devolvió un flujo de conversación SSE.",
+    "Il fornitore non ha restituito un flusso di conversazione SSE.",
+    "Der Anbieter hat keinen SSE-Gesprächsdatenstrom zurückgegeben.",
+    "提供商未返回 SSE 对话数据流。",
+    "プロバイダーが SSE 会話ストリームを返しませんでした。"
+  ],
+  "Le fournisseur ne signale aucun réglage de pensée pour ce modèle.": [
+    "The provider reports no thinking controls for this model.",
+    "El proveedor no indica controles de razonamiento para este modelo.",
+    "Il fornitore non indica controlli di ragionamento per questo modello.",
+    "Der Anbieter meldet keine Denkeinstellungen für dieses Modell.",
+    "提供商未报告此模型的思考设置。",
+    "プロバイダーはこのモデルの思考設定を提供していません。"
+  ],
+  "Le fournisseur reçoit le prompt du compagnon, les échanges retenus et les souvenirs utilisés. La voix et les fichiers restent sur ton PC. Des frais d’API peuvent s’appliquer.": [
+    "The provider receives the companion’s prompt, retained exchanges and recalled memories. Voice and files stay on your PC. API charges may apply.",
+    "El proveedor recibe el prompt del compañero, los intercambios retenidos y los recuerdos usados. La voz y los archivos permanecen en tu PC. Puede haber cargos de API.",
+    "Il fornitore riceve il prompt del compagno, gli scambi mantenuti e i ricordi usati. Voce e file restano sul PC. Possono applicarsi costi API.",
+    "Der Anbieter erhält den Prompt des Begleiters, berücksichtigte Beiträge und verwendete Erinnerungen. Stimme und Dateien bleiben auf deinem PC. API-Kosten können anfallen.",
+    "提供商会收到伙伴提示词、保留的对话和使用的记忆。语音和文件留在你的电脑上，API 使用可能产生费用。",
+    "プロバイダーに送られるのはキャラクターのプロンプト、保持された会話、使用する記憶です。音声とファイルは PC に残ります。API 料金が発生する場合があります。"
+  ],
+  "Le modèle choisi n’est plus disponible chez ce fournisseur.": [
+    "The selected model is no longer available from this provider.",
+    "El modelo elegido ya no está disponible en este proveedor.",
+    "Il modello scelto non è più disponibile presso questo fornitore.",
+    "Das ausgewählte Modell ist bei diesem Anbieter nicht mehr verfügbar.",
+    "此提供商已不再提供所选模型。",
+    "選択したモデルはこのプロバイダーで利用できなくなりました。"
+  ],
+  "Le plafond Sherka ne modifie pas le chargement dans LM Studio.": [
+    "Sherka’s ceiling does not change model loading in LM Studio.",
+    "El límite de Sherka no cambia la carga del modelo en LM Studio.",
+    "Il limite di Sherka non modifica il caricamento in LM Studio.",
+    "Sherkas Grenze verändert das Laden in LM Studio nicht.",
+    "Sherka 的上限不会改变 LM Studio 的加载设置。",
+    "Sherka の上限は LM Studio のモデル読み込み設定を変更しません。"
+  ],
+  "Le plafond Sherka ne peut pas augmenter le contexte annoncé par le fournisseur.": [
+    "Sherka’s ceiling cannot increase the context reported by the provider.",
+    "El límite de Sherka no puede aumentar el contexto indicado por el proveedor.",
+    "Il limite di Sherka non può aumentare il contesto indicato dal fornitore.",
+    "Sherkas Grenze kann den vom Anbieter gemeldeten Kontext nicht erhöhen.",
+    "Sherka 的上限不能扩大提供商报告的上下文容量。",
+    "Sherka の上限でプロバイダーが示すコンテキストを増やすことはできません。"
+  ],
+  "Limite documentée du modèle": [
+    "Documented model limit",
+    "Límite documentado del modelo",
+    "Limite documentato del modello",
+    "Dokumentierte Modellgrenze",
+    "模型文档中的限制",
+    "モデルの文書化された上限"
+  ],
+  "Maximale": [
+    "Maximum",
+    "Máxima",
+    "Massima",
+    "Maximal",
+    "最高",
+    "最大"
+  ],
+  "Maximum du modèle : {0} tokens.": [
+    "Model maximum: {0} tokens.",
+    "Máximo del modelo: {0} tokens.",
+    "Massimo del modello: {0} token.",
+    "Modellmaximum: {0} Tokens.",
+    "模型最大容量：{0} token。",
+    "モデルの最大値：{0} トークン。"
+  ],
+  "Minimale": [
+    "Minimal",
+    "Mínima",
+    "Minima",
+    "Minimal",
+    "最低",
+    "最小"
+  ],
+  "Réglage de LM Studio": [
+    "LM Studio default",
+    "Configuración de LM Studio",
+    "Impostazione di LM Studio",
+    "LM-Studio-Einstellung",
+    "LM Studio 默认设置",
+    "LM Studio の既定値"
+  ],
+  "Réglage du fournisseur": [
+    "Provider default",
+    "Configuración del proveedor",
+    "Impostazione del fornitore",
+    "Anbieterstandard",
+    "提供商默认设置",
+    "プロバイダーの既定値"
+  ],
+  "Retirer la clé": [
+    "Remove key",
+    "Eliminar clave",
+    "Rimuovi chiave",
+    "Schlüssel entfernen",
+    "删除密钥",
+    "キーを削除"
+  ],
+  "Vérification du coffre…": [
+    "Checking key vault…",
+    "Comprobando almacén…",
+    "Verifica dell’archivio…",
+    "Schlüsselspeicher wird geprüft…",
+    "正在检查密钥库…",
+    "キー保管庫を確認中…"
+  ],
+  "Vérifie la clé API et les droits d’accès du fournisseur.": [
+    "Check the API key and provider access permissions.",
+    "Comprueba la clave API y los permisos de acceso del proveedor.",
+    "Controlla la chiave API e i permessi di accesso del fornitore.",
+    "Prüfe den API-Schlüssel und die Zugriffsrechte beim Anbieter.",
+    "请检查 API 密钥和提供商访问权限。",
+    "API キーとプロバイダーのアクセス権を確認してください。"
+  ],
+  "API compatible OpenAI": [
+    "OpenAI-compatible API",
+    "API compatible con OpenAI",
+    "API compatibile con OpenAI",
+    "OpenAI-kompatible API",
+    "兼容 OpenAI 的 API",
+    "OpenAI 互換 API"
+  ],
+  "API compatible Anthropic": [
+    "Anthropic-compatible API",
+    "API compatible con Anthropic",
+    "API compatibile con Anthropic",
+    "Anthropic-kompatible API",
+    "兼容 Anthropic 的 API",
+    "Anthropic 互換 API"
+  ],
+  "{0} met trop de temps à répondre. Réessaie plus tard ou réduis la réflexion du modèle.": [
+    "{0} is taking too long to respond. Try later or reduce the model’s thinking.",
+    "{0} tarda demasiado en responder. Inténtalo más tarde o reduce la reflexión del modelo.",
+    "{0} impiega troppo tempo a rispondere. Riprova più tardi o riduci il ragionamento del modello.",
+    "{0} braucht zu lange für die Antwort. Versuche es später oder reduziere das Nachdenken des Modells.",
+    "{0} 响应超时。请稍后重试或降低模型的思考强度。",
+    "{0} の応答に時間がかかりすぎています。後で試すか、モデルの思考を減らしてください。"
+  ],
+  "Connexion à {0} interrompue. Vérifie ta connexion Internet et l’adresse de l’API.": [
+    "Connection to {0} interrupted. Check your Internet connection and API address.",
+    "Se interrumpió la conexión con {0}. Comprueba tu conexión a Internet y la dirección de la API.",
+    "Connessione a {0} interrotta. Controlla la connessione Internet e l’indirizzo dell’API.",
+    "Verbindung zu {0} unterbrochen. Prüfe deine Internetverbindung und die API-Adresse.",
+    "与 {0} 的连接已中断。请检查网络连接和 API 地址。",
+    "{0} への接続が切れました。インターネット接続と API アドレスを確認してください。"
+  ],
+  "Le crédit API ou le forfait de ce fournisseur est indisponible. Vérifie la facturation et l’adresse de l’API ; un abonnement de chat ou de code peut être distinct.": [
+    "API credit or a plan is unavailable for this provider. Check billing and the API address; a chat or coding subscription may be separate.",
+    "El crédito API o el plan de este proveedor no está disponible. Comprueba la facturación y la dirección de la API; la suscripción de chat o código puede ser independiente.",
+    "Il credito API o il piano di questo fornitore non è disponibile. Controlla la fatturazione e l’indirizzo dell’API; un abbonamento di chat o codice può essere separato.",
+    "API-Guthaben oder Tarif dieses Anbieters ist nicht verfügbar. Prüfe Abrechnung und API-Adresse; ein Chat- oder Coding-Abo kann separat sein.",
+    "此提供商的 API 额度或套餐不可用。请检查账单和 API 地址；聊天或编程订阅可能单独计费。",
+    "このプロバイダーの API 残高またはプランを利用できません。請求情報と API アドレスを確認してください。チャットやコーディングの契約は別の場合があります。"
+  ],
+  "Le fournisseur est temporairement indisponible. Réessaie plus tard.": [
+    "The provider is temporarily unavailable. Try again later.",
+    "El proveedor no está disponible temporalmente. Inténtalo más tarde.",
+    "Il fornitore è temporaneamente indisponibile. Riprova più tardi.",
+    "Der Anbieter ist vorübergehend nicht verfügbar. Versuche es später erneut.",
+    "提供商暂时不可用。请稍后重试。",
+    "プロバイダーを一時的に利用できません。後でもう一度試してください。"
+  ],
+  "Vérifie l’adresse de l’API, le modèle et ses options dans Réglages.": [
+    "Check the API address, model and its options in Settings.",
+    "Comprueba la dirección de la API, el modelo y sus opciones en Ajustes.",
+    "Controlla l’indirizzo dell’API, il modello e le sue opzioni nelle impostazioni.",
+    "Prüfe API-Adresse, Modell und dessen Optionen in den Einstellungen.",
+    "请在设置中检查 API 地址、模型及其选项。",
+    "設定で API アドレス、モデルとそのオプションを確認してください。"
+  ],
+  "Sherka d’origine suit la langue de l’interface ; les compagnons personnalisés gardent leur langue. Choisis toi-même des modèles et des voix compatibles chez ton fournisseur et dans VoiceStudio.": [
+    "The original Sherka follows the interface language; custom companions keep their language. Choose compatible models with your provider and voices in VoiceStudio.",
+    "Sherka original sigue el idioma de la interfaz; los compañeros personalizados conservan su idioma. Elige modelos compatibles en tu proveedor y voces en VoiceStudio.",
+    "Sherka originale segue la lingua dell’interfaccia; i compagni personalizzati mantengono la propria lingua. Scegli modelli compatibili dal tuo fornitore e voci in VoiceStudio.",
+    "Die ursprüngliche Sherka folgt der Oberflächensprache; eigene Begleiter behalten ihre Sprache. Wähle passende Modelle bei deinem Anbieter und Stimmen in VoiceStudio.",
+    "默认 Sherka 跟随界面语言，自定义伙伴保留自己的语言。请在提供商处选择兼容模型，并在 VoiceStudio 中选择兼容声音。",
+    "標準の Sherka は画面の言語に従い、独自のコンパニオンは設定した言語を保ちます。プロバイダーで対応するモデルを、VoiceStudio で対応する声を選んでください。"
+  ],
+  "Vérifie que le modèle de conversation, la reconnaissance vocale et la voix choisis prennent en charge la langue du compagnon. Leurs réglages se font chez le fournisseur et dans VoiceStudio.": [
+    "Check that the conversation model, speech recognition and voice support the companion’s language. Configure them with your provider and in VoiceStudio.",
+    "Comprueba que el modelo de conversación, el reconocimiento de voz y la voz admiten el idioma del compañero. Se configuran en el proveedor y en VoiceStudio.",
+    "Verifica che il modello di conversazione, il riconoscimento vocale e la voce supportino la lingua del compagno. Configurali dal fornitore e in VoiceStudio.",
+    "Prüfe, ob Gesprächsmodell, Spracherkennung und Stimme die Sprache des Begleiters unterstützen. Richte sie beim Anbieter und in VoiceStudio ein.",
+    "请确认对话模型、语音识别和声音支持伙伴的语言。请在提供商和 VoiceStudio 中配置它们。",
+    "会話モデル、音声認識、声がコンパニオンの言語に対応しているか確認してください。プロバイダーと VoiceStudio で設定します。"
+  ],
+  "Choisis le modèle de conversation, le moteur de transcription et la voix dans les réglages avant d'activer le micro.": [
+    "Choose the conversation model, transcription engine and voice in Settings before enabling the microphone.",
+    "Elige el modelo de conversación, el motor de transcripción y la voz en Ajustes antes de activar el micrófono.",
+    "Scegli il modello di conversazione, il motore di trascrizione e la voce nelle impostazioni prima di attivare il microfono.",
+    "Wähle Gesprächsmodell, Transkriptionsengine und Stimme in den Einstellungen, bevor du das Mikrofon aktivierst.",
+    "启用麦克风前，请在设置中选择对话模型、转录引擎和声音。",
+    "マイクを有効にする前に、設定で会話モデル、文字起こしエンジン、声を選んでください。"
+  ],
+  "Budget : {0} tokens (contexte disponible : {1}). Entrée : estimation prudente {2} ; réponse réservée : {3} ; marge : {4}. {5} souvenir(s), {6} échange(s) transmis, {7} écarté(s){8}.{9}": [
+    "Budget: {0} tokens (available context: {1}). Input: conservative estimate {2}; reserved reply: {3}; safety margin: {4}. {5} memory item(s), {6} exchange(s) sent, {7} omitted{8}.{9}",
+    "Presupuesto: {0} tokens (contexto disponible: {1}). Entrada: estimación prudente {2}; respuesta reservada: {3}; margen: {4}. {5} recuerdo(s), {6} intercambio(s) enviados, {7} omitidos{8}.{9}",
+    "Budget: {0} token (contesto disponibile: {1}). Input: stima prudente {2}; risposta riservata: {3}; margine: {4}. {5} ricordo/i, {6} scambio/i inviati, {7} esclusi{8}.{9}",
+    "Budget: {0} Tokens (verfügbarer Kontext: {1}). Eingabe: vorsichtige Schätzung {2}; Antwortreserve: {3}; Puffer: {4}. {5} Erinnerungen, {6} Beiträge gesendet, {7} ausgelassen{8}.{9}",
+    "预算：{0} tokens（可用上下文：{1}）。输入保守估算：{2}；回答预留：{3}；安全余量：{4}。使用 {5} 条记忆，发送 {6} 段对话，省略 {7} 段{8}。{9}",
+    "予算：{0} トークン（利用可能なコンテキスト：{1}）。入力の慎重な推定：{2}、回答の予約：{3}、余裕：{4}。記憶 {5} 件、送信した会話 {6} 件、省いた会話 {7} 件{8}。{9}"
+  ],
+  "Usage renvoyé par le fournisseur : {0} en entrée, {1} en sortie{2}.": [
+    "Usage reported by the provider: {0} input, {1} output{2}.",
+    "Uso indicado por el proveedor: {0} de entrada, {1} de salida{2}.",
+    "Utilizzo riportato dal fornitore: {0} in input, {1} in output{2}.",
+    "Vom Anbieter gemeldeter Verbrauch: {0} Eingabe, {1} Ausgabe{2}.",
+    "提供商报告的用量：输入 {0}，输出 {1}{2}。",
+    "プロバイダーからの使用量：入力 {0}、出力 {1}{2}。"
   ]
 }

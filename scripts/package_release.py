@@ -23,11 +23,13 @@ subprocess.run(["node", "node_modules/@tauri-apps/cli/tauri.js", "signer", "sign
 readme = """Sherka Companion — Windows x64, no installation
 
 Extract the entire ZIP into a writable folder and run sherka-compagnon.exe.
-WebView2, the Visual C++ x64 runtime, VoiceStudio and LM Studio are required.
-Start the LM Studio server; Sherka starts installed VoiceStudio when needed.
+WebView2, the Visual C++ x64 runtime and VoiceStudio are required for voice.
+Use LM Studio locally, or connect your own remote API provider in Settings.
+Start your local model server; Sherka starts installed VoiceStudio when needed.
 Choose one of seven interface languages in Settings. The original Sherka's
 personality and instructions follow that language automatically.
-Configure your own compatible models and voice in LM Studio and VoiceStudio.
+Configure compatible models with your provider and voices in VoiceStudio.
+Remote providers receive conversation context and may charge API fees.
 
 Data stays in %LOCALAPPDATA%\\fr.sherka.compagnon, not beside this executable.
 Check updates manually from Settings. No private data is included here.

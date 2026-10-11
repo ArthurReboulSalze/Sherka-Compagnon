@@ -101,6 +101,7 @@ impl CatalogClient {
                 for model in response.models.into_iter().filter(|m| m.kind == "llm") {
                     if model.loaded_instances.is_empty() {
                         models.push(LanguageModel {
+                            api: None,
                             key: model.key.clone(),
                             id: model.key,
                             label: model.display_name,
@@ -113,6 +114,7 @@ impl CatalogClient {
                     } else {
                         for instance in model.loaded_instances {
                             models.push(LanguageModel {
+                                api: None,
                                 key: model.key.clone(),
                                 id: instance.id,
                                 label: model.display_name.clone(),
@@ -150,6 +152,7 @@ impl CatalogClient {
                             .into_iter()
                             .filter(|m| ["llm", "vlm"].contains(&m.kind.as_str()))
                             .map(|m| LanguageModel {
+                                api: None,
                                 key: m.id.clone(),
                                 label: m.id.clone(),
                                 id: m.id,
@@ -276,6 +279,7 @@ pub struct LanguageCatalog {
 }
 #[derive(Debug, Clone, Serialize)]
 pub struct LanguageModel {
+    pub api: Option<ApiModelCapabilities>,
     pub key: String,
     pub id: String,
     pub label: String,
@@ -284,6 +288,13 @@ pub struct LanguageModel {
     pub max_context_length: Option<u64>,
     pub loaded_context_length: Option<u64>,
     pub reasoning: Option<ReasoningCapabilities>,
+}
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct ApiModelCapabilities {
+    pub max_output_tokens: Option<u32>,
+    pub structured_output: bool,
+    pub adaptive_thinking: bool,
+    pub parameters: Vec<String>,
 }
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ReasoningCapabilities {

@@ -17,6 +17,8 @@ fn main() {
             "export_profile",
             "widget_action",
             "discover_language_models",
+            "get_provider_key_status",
+            "set_provider_key",
             "discover_voices",
             "get_audio_devices",
             "get_conversation",

@@ -57,8 +57,13 @@ pub fn budget(
     profile: &ProfileDraft,
     model: &crate::catalogs::LanguageModel,
 ) -> Result<ContextBudget> {
-    let loaded = model.loaded_context_length.filter(|n| *n >= 1024 && *n <= 2_000_000)
-        .ok_or_else(|| Error::Validation("LM Studio ne fournit pas le contexte réellement chargé. Actualise LM Studio et recharge ce modèle.".into()))?;
+    let loaded = if profile.connections.llm_provider.is_local() {
+        model.loaded_context_length.filter(|n| *n >= 1024 && *n <= 2_000_000)
+            .ok_or_else(|| Error::Validation("LM Studio ne fournit pas le contexte réellement chargé. Actualise LM Studio et recharge ce modèle.".into()))?
+    } else {
+        model.max_context_length.or(profile.connections.context_limit.map(u64::from)).filter(|n| *n >= 1024)
+            .ok_or_else(|| Error::Validation("Ce fournisseur ne fournit pas la limite de contexte. Indique le plafond du modèle dans Réglages avant de converser.".into()))?.min(2_000_000)
+    };
     let limit = loaded.min(model.max_context_length.unwrap_or(loaded)).min(
         profile
             .connections
@@ -72,7 +77,17 @@ pub fn budget(
         loaded_context: loaded,
         limit,
         input_estimate: 0,
-        response_tokens: profile.connections.response_tokens.min((limit / 4) as u32),
+        response_tokens: profile
+            .connections
+            .response_tokens
+            .min((limit / 4) as u32)
+            .min(
+                model
+                    .api
+                    .as_ref()
+                    .and_then(|m| m.max_output_tokens)
+                    .unwrap_or(u32::MAX),
+            ),
         safety_tokens: (limit as usize / 20).clamp(256, 2048),
         history_kept: 0,
         history_omitted: 0,
@@ -87,6 +102,7 @@ pub fn context(
     user: &str,
 ) -> Result<Vec<ChatMessage>> {
     let model = crate::catalogs::LanguageModel {
+        api: None,
         id: "fixture".into(),
         key: "fixture".into(),
         label: String::new(),

@@ -64,7 +64,7 @@ impl ModelManager {
             return Err(Error::StaleOperation);
         }
         let provider = Providers::new(next.clone())?;
-        let catalog = if next.llm_model.is_some() {
+        let catalog = if next.llm_provider.is_local() && next.llm_model.is_some() {
             Some(provider.catalog().await?)
         } else {
             None
@@ -78,6 +78,9 @@ impl ModelManager {
                     })?
                     .clone(),
             ),
+            _ if !next.llm_provider.is_local() && next.llm_model.is_some() => {
+                Some(provider.remote_model().await?)
+            }
             _ => None,
         };
         // On app restart the selected old profile is our only provenance.
@@ -87,7 +90,7 @@ impl ModelManager {
         if let Some(c) = owned.as_ref() {
             old.push(c.clone());
         }
-        if let Some(c) = previous
+        if let Some(c) = previous.filter(|c| c.llm_provider.is_local())
             && !old.iter().any(|x| {
                 x.lm_studio_url == c.lm_studio_url
                     && (x.llm_model == c.llm_model
@@ -103,7 +106,8 @@ impl ModelManager {
             let Some(ref id) = c.llm_model else {
                 continue;
             };
-            if c.lm_studio_url == next.lm_studio_url
+            if next.llm_provider.is_local()
+                && c.lm_studio_url == next.lm_studio_url
                 && target.as_ref().is_some_and(|m| &m.id == id || &m.key == id)
             {
                 continue;
@@ -134,7 +138,8 @@ impl ModelManager {
                 return Err(Error::Validation("Impossible d'identifier l'ancienne instance à décharger ; choisis son identifiant précis dans LM Studio.".into()));
             }
             for m in candidates {
-                if c.lm_studio_url == next.lm_studio_url
+                if next.llm_provider.is_local()
+                    && c.lm_studio_url == next.lm_studio_url
                     && target.as_ref().is_some_and(|target| target.id == m.id)
                 {
                     continue;
@@ -167,6 +172,10 @@ impl ModelManager {
             *owned = None;
             return Ok(None);
         };
+        if !next.llm_provider.is_local() {
+            *owned = None;
+            return Ok(Some(model));
+        }
         let mut tracking = next.clone();
         tracking.llm_model = Some(model.key.clone());
         tracking.llm_model_key = Some(model.key.clone());

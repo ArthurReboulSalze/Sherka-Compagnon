@@ -3,7 +3,7 @@
 ## Prepare voice and intelligence
 
 1. Install [VoiceStudio for Windows](https://github.com/debpalash/VoiceStudio/releases). Download a ready TTS engine and speech recognition model, then create or select a voice. OmniVoice and Parakeet TDT v3 were used during development.
-2. Install [LM Studio](https://lmstudio.ai/), download a conversation model suitable for your PC and start its [local server](https://lmstudio.ai/docs/developer/core/server). Start with at least 8,192 context tokens for a model such as Dolphin 8B. Larger contexts require more memory.
+2. For offline intelligence, install [LM Studio](https://lmstudio.ai/), download a conversation model suitable for your PC and start its [local server](https://lmstudio.ai/docs/developer/core/server). Start with at least 8,192 context tokens for a model such as Dolphin 8B. Alternatively, use your own OpenRouter, Z.ai, OpenAI, Anthropic or compatible API key; see [provider setup](PROVIDERS.md).
 
 These applications, voices and models are separate downloads with their own licenses and hardware requirements. Response speed depends on your hardware and choices.
 
@@ -24,7 +24,7 @@ The companion appears alone, with its microphone off. Hover over it, open the co
 
 The original Sherka comes with a personality and instructions in all seven languages and follows your interface choice automatically. You do not need to rewrite her character. Custom companions keep their own language.
 
-Sherka starts installed VoiceStudio when its local service is stopped. Typical addresses are `http://127.0.0.1:1234` for LM Studio and `http://127.0.0.1:3900` for VoiceStudio. Refresh the catalogs, choose the conversation model, TTS engine, voice and transcription model, then save. Choose items from your own installation.
+Sherka starts installed VoiceStudio when its local service is stopped. Typical addresses are `http://127.0.0.1:1234` for LM Studio and `http://127.0.0.1:3900` for VoiceStudio. Choose the conversation provider for this companion, refresh its catalog, choose a model, then choose the VoiceStudio TTS engine, voice and transcription model. Save the choices. For a remote provider, save a protected API key and enter a context ceiling if the catalog has no limit. Provider charges and privacy policies apply.
 
 Under **Microphone & listening**, select input and output. Start with headphones, enable the microphone and speak normally. Confirmed speech can interrupt the current response. You can also type, with or without spoken replies.
 

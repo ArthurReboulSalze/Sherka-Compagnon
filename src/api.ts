@@ -1,6 +1,6 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import type { Message, Mutation, Snapshot, WidgetAction, LanguageCatalog, VoiceCatalog, AudioDevices, LiveState } from './types';
+import type { Message, Mutation, Snapshot, WidgetAction, LanguageCatalog, VoiceCatalog, AudioDevices, LiveState, Connections } from './types';
 import type { MemoryState, MemoryEdit, MemorySource } from './types';
 
 export const desktopAvailable = () => isTauri();
@@ -21,7 +21,9 @@ export const onWidgetVisibility = (callback: (visible: boolean) => void) => list
 export const switchCompanion = (id: string) => invoke<Snapshot>('switch_companion', { id });
 export const onQuit = (callback: (value: { stage: 'unloading' | 'failed'; error?: string }) => void) => listen<{ stage: 'unloading' | 'failed'; error?: string }>('sherka:quit', e => callback(e.payload));
 export const onChanged = (callback: () => void) => listen('sherka:changed', callback);
-export const discoverLanguageModels = (baseUrl: string) => invoke<LanguageCatalog>('discover_language_models', { baseUrl });
+export const discoverLanguageModels = (config: string | Connections) => invoke<LanguageCatalog>('discover_language_models', typeof config === 'string' ? { baseUrl: config } : { connections: config });
+export const providerKeyStatus = (connections: Connections) => invoke<boolean>('get_provider_key_status', { connections });
+export const setProviderKey = (connections: Connections, key: string | null) => invoke<void>('set_provider_key', { connections, key });
 export const discoverVoices = (baseUrl: string) => invoke<VoiceCatalog>('discover_voices', { baseUrl });
 export const audioDevices = () => invoke<AudioDevices>('get_audio_devices');
 export const conversation = () => invoke<LiveState>('get_conversation');

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — 2026-10-11
+
+- Per-companion OpenRouter, Z.ai API and Coding Plan, OpenAI, Anthropic and compatible API providers alongside LM Studio.
+- OpenAI Chat Completions and Anthropic Messages adapters for streaming, usage and structured memory operations.
+- Windows Credential Manager keys scoped to provider and endpoint, separate from profiles and exports.
+- Remote context/output budgets, mandatory thinking controls and local model cleanup on cloud handover.
+- Provider settings and feedback in all seven interface languages, with privacy and setup documentation.
+
 ## 0.5.1 — 2026-10-11
 
 - Startup recovery screen replaces silent exits when settings or profile databases cannot be opened, including data last used by a newer executable.

@@ -10,7 +10,9 @@ use tokio_tungstenite::tungstenite::{Message as WsMessage, protocol::WebSocketCo
 
 #[derive(Clone)]
 pub struct Providers {
-    http: Client,
+    pub(crate) http: Client,
+    pub(crate) api_key: Option<String>,
+    pub(crate) api_model: Option<crate::catalogs::LanguageModel>,
     pub connections: Connections,
 }
 
@@ -22,11 +24,20 @@ pub struct ChatOutcome {
     pub reasoning_tokens: Option<u64>,
 }
 
-fn failure(text: impl Into<String>) -> Error {
+pub(crate) fn failure(text: impl Into<String>) -> Error {
     Error::Validation(text.into())
 }
-fn network(service: &str, error: &reqwest::Error) -> Error {
-    failure(if error.is_timeout() {
+pub(crate) fn network(service: &str, error: &reqwest::Error) -> Error {
+    let local = service.starts_with("LM Studio") || service.starts_with("VoiceStudio");
+    failure(if !local && error.is_timeout() {
+        format!(
+            "{service} met trop de temps à répondre. Réessaie plus tard ou réduis la réflexion du modèle."
+        )
+    } else if !local {
+        format!(
+            "Connexion à {service} interrompue. Vérifie ta connexion Internet et l’adresse de l’API."
+        )
+    } else if error.is_timeout() {
         format!(
             "{service} met trop de temps à répondre. Vérifie le chargement du modèle et la mémoire GPU."
         )
@@ -37,7 +48,15 @@ fn network(service: &str, error: &reqwest::Error) -> Error {
 
 impl Providers {
     pub fn new(connections: Connections) -> Result<Self> {
+        let api_key = crate::credentials::load(&connections)?;
+        Self::with_api_key(connections, api_key)
+    }
+    /// Explicit credentials for isolated contract tests and backend use only.
+    pub fn with_api_key(connections: Connections, api_key: Option<String>) -> Result<Self> {
         let connections = connections.validated()?;
+        if let Some(key) = &api_key {
+            crate::credentials::validate_key(key)?;
+        }
         let http = Client::builder()
             .no_proxy()
             .redirect(reqwest::redirect::Policy::none())
@@ -45,25 +64,67 @@ impl Providers {
             .timeout(Duration::from_secs(180))
             .build()
             .map_err(|_| failure("Impossible d'initialiser les connexions."))?;
-        Ok(Self { http, connections })
+        Ok(Self {
+            http,
+            connections,
+            api_key,
+            api_model: None,
+        })
     }
 
-    async fn checked(response: Response, service: &str) -> Result<Response> {
+    pub(crate) async fn checked(mut response: Response, service: &str) -> Result<Response> {
         let status = response.status();
         if status.is_success() {
             return Ok(response);
         }
-        let advice = match status.as_u16() {
-            401 | 403 => {
-                "L'authentification du serveur est activée ; les clés protégées ne sont pas encore prises en charge."
+        let local = service.starts_with("LM Studio") || service.starts_with("VoiceStudio");
+        // Inspect only bounded, documented error codes. Never display arbitrary
+        // provider messages, even when they echo prompts or credentials.
+        let credit_exhausted = if !local && status.as_u16() == 429 {
+            tokio::time::timeout(Duration::from_secs(2), async {
+                let mut bytes = Vec::new();
+                while let Ok(Some(chunk)) = response.chunk().await {
+                    if bytes.len() + chunk.len() > 16_384 {
+                        return false;
+                    }
+                    bytes.extend_from_slice(&chunk);
+                }
+                let Ok(value) = serde_json::from_slice::<Value>(&bytes) else {
+                    return false;
+                };
+                let error = &value["error"];
+                (service.starts_with("Z.ai") && (error["code"] == "1113" || error["code"] == 1113))
+                    || ["code", "type"].iter().any(|field| {
+                        matches!(
+                            error[*field].as_str(),
+                            Some("insufficient_quota" | "credit_balance_exhausted")
+                        )
+                    })
+            })
+            .await
+            .unwrap_or(false)
+        } else {
+            false
+        };
+        let advice = if credit_exhausted || !local && status.as_u16() == 402 {
+            "Le crédit API ou le forfait de ce fournisseur est indisponible. Vérifie la facturation et l’adresse de l’API ; un abonnement de chat ou de code peut être distinct."
+        } else {
+            match status.as_u16() {
+                401 | 403 => "Vérifie la clé API et les droits d’accès du fournisseur.",
+                404 => "Vérifie l'adresse et le modèle choisi dans les réglages.",
+                409 => "Vérifie que le modèle choisi est installé et actif dans ce logiciel.",
+                429 => "Le serveur est occupé. Attends la fin de son calcul avant de réessayer.",
+                500..=599 if !local => {
+                    "Le fournisseur est temporairement indisponible. Réessaie plus tard."
+                }
+                500..=599 => {
+                    "Vérifie le modèle, les journaux du logiciel et la mémoire GPU disponible."
+                }
+                _ if !local => {
+                    "Vérifie l’adresse de l’API, le modèle et ses options dans Réglages."
+                }
+                _ => "Vérifie les réglages du modèle et de la voix dans ce logiciel.",
             }
-            404 => "Vérifie l'adresse et le modèle choisi dans les réglages.",
-            409 => "Vérifie que le modèle choisi est installé et actif dans ce logiciel.",
-            429 => "Le serveur est occupé. Attends la fin de son calcul avant de réessayer.",
-            500..=599 => {
-                "Vérifie le modèle, les journaux du logiciel et la mémoire GPU disponible."
-            }
-            _ => "Vérifie les réglages du modèle et de la voix dans ce logiciel.",
         };
         // Never expose arbitrary response bodies (which may echo prompts/keys).
         Err(failure(format!(
@@ -86,6 +147,9 @@ impl Providers {
         tokens: mpsc::Sender<String>,
         max_tokens: u32,
     ) -> Result<ChatOutcome> {
+        if !self.connections.llm_provider.is_local() {
+            return self.api_chat(messages, tokens, max_tokens).await;
+        }
         let model = self
             .connections
             .llm_model
@@ -179,6 +243,9 @@ impl Providers {
     }
 
     pub async fn catalog(&self) -> Result<crate::catalogs::LanguageCatalog> {
+        if !self.connections.llm_provider.is_local() {
+            return self.api_catalog().await;
+        }
         crate::catalogs::CatalogClient::new(&self.connections.lm_studio_url)
             .map_err(|e| failure(e.to_string()))?
             .language_models()
@@ -187,6 +254,9 @@ impl Providers {
     }
 
     pub async fn load_model(&self, key: &str) -> Result<()> {
+        if !self.connections.llm_provider.is_local() {
+            return Err(failure("Ce fournisseur ne charge pas de modèle local."));
+        }
         // Preserve the user's LM Studio loading preset, notably large Gemma
         // context/KV settings. Never allocate the theoretical maximum blindly.
         let response = self
@@ -203,6 +273,9 @@ impl Providers {
         Ok(())
     }
     pub async fn unload_model(&self, instance: &str) -> Result<()> {
+        if !self.connections.llm_provider.is_local() {
+            return Err(failure("Ce fournisseur ne charge pas de modèle local."));
+        }
         let response = self
             .http
             .post(format!(
@@ -230,6 +303,11 @@ impl Providers {
             return Err(failure(
                 "La demande de mémoire dépasse le budget du modèle. Utilise une demande plus courte ou le panneau Mémoire.",
             ));
+        }
+        if !self.connections.llm_provider.is_local() {
+            return self
+                .api_structured(messages, schema, OUTPUT, Duration::from_secs(60), limit)
+                .await;
         }
         let mut body = json!({"model":self.connections.llm_model,"messages":messages,"stream":false,"temperature":0,"max_tokens":OUTPUT,"response_format":{"type":"json_schema","json_schema":{"name":"sherka_memory","strict":true,"schema":schema}}});
         if let Some(effort) = self.connections.reasoning_effort() {
@@ -278,6 +356,17 @@ impl Providers {
             return Err(failure(
                 "Le contexte disponible est trop petit pour décider de la recherche Internet.",
             ));
+        }
+        if !self.connections.llm_provider.is_local() {
+            let plan: crate::web::Plan = self
+                .api_structured(messages, schema, 256, Duration::from_secs(20), limit)
+                .await?;
+            if plan.search {
+                crate::web::query(&plan.query)?;
+            } else if !plan.query.is_empty() {
+                return Err(failure("La décision de recherche Internet est invalide."));
+            }
+            return Ok(plan);
         }
         let mut body = json!({"model":self.connections.llm_model,"messages":messages,"stream":false,"temperature":0,"max_tokens":256,
             "response_format":{"type":"json_schema","json_schema":{"name":"sherka_web_search","strict":true,"schema":schema}}});
@@ -649,12 +738,12 @@ pub fn wav(pcm: &[i16]) -> Vec<u8> {
 }
 
 #[derive(Default)]
-struct Sse {
+pub(crate) struct Sse {
     pending: Vec<u8>,
     data: String,
 }
 impl Sse {
-    fn feed(&mut self, bytes: &[u8]) -> Result<Vec<String>> {
+    pub(crate) fn feed(&mut self, bytes: &[u8]) -> Result<Vec<String>> {
         self.pending.extend_from_slice(bytes);
         if self.pending.len() > 256_000 {
             return Err(failure("Événement SSE trop volumineux."));

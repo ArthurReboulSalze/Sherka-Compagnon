@@ -16,7 +16,9 @@ The original Sherka's UUID is registered in settings. Her built-in personality a
 
 Capture and response belong to a profile and generation. Switching, interruption and pause cancel obsolete work; late events cannot reactivate it. Voice commands release their gate while awaiting VoiceStudio, keeping settings and exit responsive. A separate pending token handles pre-session waits.
 
-CPAL capture/output feeds Silero speech confirmation, VoiceStudio transcription, LM Studio SSE and VoiceStudio TTS. Sonora provides echo processing in speaker mode. Text and speech buffers are independent. TTS prepares upcoming passages during playback; short verses are grouped. Bounded PCM queues can transition in one output callback. Heard receipts follow completed playback. Cancellation clears queued work.
+CPAL capture/output feeds Silero speech confirmation, VoiceStudio transcription, the selected provider's SSE stream and VoiceStudio TTS. LM Studio, OpenAI Chat Completions and Anthropic Messages normalize final text and usage into the same pipeline; reasoning events are excluded. Sonora provides echo processing in speaker mode. Text and speech buffers are independent. TTS prepares upcoming passages during playback; short verses are grouped. Bounded PCM queues can transition in one output callback. Heard receipts follow completed playback. Cancellation clears queued work.
+
+Companions serialize provider, full API base, model and budget preferences without keys. Windows Credential Manager owns provider/base-scoped credentials; only the panel can query key presence, replace a key or remove it. Remote requests use HTTPS except loopback, do not follow redirects and never forward provider credentials to VoiceStudio. Context discovery precedes local model retirement, and remote adapters never call local model load/unload endpoints.
 
 VoiceStudio synthesizes a passage before returning audio, so synthesis can exceed the available buffer. No token-level speech generation or zero-latency guarantee is claimed.
 

@@ -75,6 +75,7 @@ export function feedback(source: string | null | undefined): string {
       const values: string[] = [];
       positions.forEach((position, index) => { values[position] = match[index + 1]!; });
       if (key === 'Souvenir #{0} {1} : {2}') values[1] = t(values[1]!);
+      if (key === '{0} a refusé la demande (HTTP {1}). {2}') values[2] = t(values[2]!);
       return t(key).replace(/\{(\d+)\}/g, (original, position: string) => values[Number(position)] ?? original);
     }
   }

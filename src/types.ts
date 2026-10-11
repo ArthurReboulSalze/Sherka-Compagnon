@@ -76,6 +76,8 @@ export interface LiveState { session: Snapshot['session']; live: LiveConversatio
 export interface AudioDevices { inputs: { id: string; name: string; is_default: boolean }[]; outputs: { id: string; name: string; is_default: boolean }[] }
 
 export interface Connections {
+  llm_provider?: LlmProvider;
+  llm_api_url?: string | null;
   lm_studio_url: string;
   voice_studio_url: string;
   llm_model: string | null;
@@ -90,6 +92,7 @@ export interface Connections {
   response_tokens: number;
   reasoning: string | null;
 }
+export type LlmProvider = 'lm_studio' | 'open_router' | 'zai' | 'zai_coding' | 'open_ai' | 'anthropic' | 'custom_open_ai' | 'custom_anthropic';
 export interface LanguageCatalog {
   source: string;
   models: { id: string; key: string; label: string; loaded: boolean | null; quantization: string | null; max_context_length: number | null; loaded_context_length: number | null; reasoning: {allowed_options: string[];default: string | null} | null }[];

@@ -105,7 +105,7 @@ export function paintLive(value: LiveState): void {
     context.hidden = !b;
     if (b) {
       const n = (v: number) => v.toLocaleString(formatLocale());
-      context.querySelector('p')!.textContent = t`Budget : ${n(b.limit)} tokens (${n(b.loaded_context)} chargés). Entrée : estimation prudente ${n(b.input_estimate)} ; réponse réservée : ${n(b.response_tokens)} ; marge : ${n(b.safety_tokens)}. ${b.memories_used.length} souvenir(s), ${b.history_kept} échange(s) transmis, ${b.history_omitted} écarté(s)${b.memories_omitted ? t` ; ${b.memories_omitted} souvenir(s) hors budget` : ''}.${value.live.usage?.prompt_tokens != null ? t` Usage renvoyé par LM Studio : ${n(value.live.usage.prompt_tokens)} en entrée, ${n(value.live.usage.completion_tokens ?? 0)} en sortie${value.live.usage.reasoning_tokens != null ? t`, dont ${n(value.live.usage.reasoning_tokens)} de réflexion` : ''}.` : ''}`;
+      context.querySelector('p')!.textContent = t`Budget : ${n(b.limit)} tokens (contexte disponible : ${n(b.loaded_context)}). Entrée : estimation prudente ${n(b.input_estimate)} ; réponse réservée : ${n(b.response_tokens)} ; marge : ${n(b.safety_tokens)}. ${b.memories_used.length} souvenir(s), ${b.history_kept} échange(s) transmis, ${b.history_omitted} écarté(s)${b.memories_omitted ? t` ; ${b.memories_omitted} souvenir(s) hors budget` : ''}.${value.live.usage?.prompt_tokens != null ? t` Usage renvoyé par le fournisseur : ${n(value.live.usage.prompt_tokens)} en entrée, ${n(value.live.usage.completion_tokens ?? 0)} en sortie${value.live.usage.reasoning_tokens != null ? t`, dont ${n(value.live.usage.reasoning_tokens)} de réflexion` : ''}.` : ''}`;
     }
   }
   for (const [selector, text, visible] of [

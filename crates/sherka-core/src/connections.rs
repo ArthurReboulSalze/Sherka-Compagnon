@@ -1,11 +1,63 @@
 use crate::{Error, Result};
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum LlmProvider {
+    #[default]
+    LmStudio,
+    OpenRouter,
+    Zai,
+    ZaiCoding,
+    OpenAi,
+    Anthropic,
+    CustomOpenAi,
+    CustomAnthropic,
+}
+impl LlmProvider {
+    pub fn is_local(&self) -> bool {
+        *self == Self::LmStudio
+    }
+    pub fn is_anthropic(self) -> bool {
+        matches!(self, Self::Anthropic | Self::CustomAnthropic)
+    }
+    pub fn is_zai(self) -> bool {
+        matches!(self, Self::Zai | Self::ZaiCoding)
+    }
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::LmStudio => "LM Studio",
+            Self::OpenRouter => "OpenRouter",
+            Self::Zai => "Z.ai",
+            Self::ZaiCoding => "Z.ai Coding Plan",
+            Self::OpenAi => "OpenAI",
+            Self::Anthropic => "Anthropic",
+            Self::CustomOpenAi => "API OpenAI",
+            Self::CustomAnthropic => "API Anthropic",
+        }
+    }
+    pub fn default_url(self) -> Option<&'static str> {
+        match self {
+            Self::LmStudio => None,
+            Self::OpenRouter => Some("https://openrouter.ai/api/v1"),
+            Self::Zai => Some("https://api.z.ai/api/paas/v4"),
+            Self::ZaiCoding => Some("https://api.z.ai/api/coding/paas/v4"),
+            Self::OpenAi => Some("https://api.openai.com/v1"),
+            Self::Anthropic => Some("https://api.anthropic.com/v1"),
+            _ => None,
+        }
+    }
+}
+
 /// Model/voice references belong to the companion. No credentials are stored
 /// here or included in profile exports.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Connections {
+    #[serde(skip_serializing_if = "LlmProvider::is_local")]
+    pub llm_provider: LlmProvider,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub llm_api_url: Option<String>,
     pub lm_studio_url: String,
     pub voice_studio_url: String,
     pub llm_model: Option<String>,
@@ -24,6 +76,8 @@ pub struct Connections {
 impl Default for Connections {
     fn default() -> Self {
         Self {
+            llm_provider: LlmProvider::LmStudio,
+            llm_api_url: None,
             lm_studio_url: "http://127.0.0.1:1234".into(),
             voice_studio_url: "http://127.0.0.1:3900".into(),
             llm_model: None,
@@ -43,11 +97,12 @@ impl Default for Connections {
 
 impl Connections {
     pub fn validated(mut self) -> Result<Self> {
-        if self
-            .reasoning
-            .as_deref()
-            .is_some_and(|s| !["off", "on", "low", "medium", "high", "xhigh"].contains(&s))
-        {
+        if self.reasoning.as_deref().is_some_and(|s| {
+            ![
+                "off", "on", "minimal", "low", "medium", "high", "xhigh", "max",
+            ]
+            .contains(&s)
+        }) {
             return Err(Error::Validation(
                 "Le réglage de pensée est invalide.".into(),
             ));
@@ -77,6 +132,12 @@ impl Connections {
         }
         self.lm_studio_url = base_url(&self.lm_studio_url)?;
         self.voice_studio_url = base_url(&self.voice_studio_url)?;
+        if let Some(value) = self.llm_api_url.take().filter(|s| !s.trim().is_empty()) {
+            self.llm_api_url = Some(api_base_url(&value)?);
+        }
+        if !self.llm_provider.is_local() {
+            self.api_base()?;
+        }
         for reference in [
             &mut self.llm_model,
             &mut self.llm_model_key,
@@ -121,6 +182,50 @@ impl Connections {
             other => other,
         })
     }
+
+    pub fn api_base(&self) -> Result<String> {
+        if self.llm_provider.is_local() {
+            return Ok(format!("{}/v1", self.lm_studio_url));
+        }
+        api_base_url(
+            self.llm_api_url
+                .as_deref()
+                .or(self.llm_provider.default_url())
+                .ok_or_else(|| {
+                    Error::Validation("Indique l’adresse de base de l’API du fournisseur.".into())
+                })?,
+        )
+    }
+}
+
+/// Unlike LM Studio's host normalization, preserve /api/v1 and /api/paas/v4.
+/// Credentials must never travel over unencrypted public HTTP or URL userinfo.
+pub fn api_base_url(value: &str) -> Result<String> {
+    let invalid = || {
+        Error::Validation("L’adresse de l’API doit utiliser HTTPS, sans clé ni paramètres ; HTTP est réservé au serveur local.".into())
+    };
+    if value.len() > 2048 {
+        return Err(invalid());
+    }
+    let mut url = url::Url::parse(value.trim()).map_err(|_| invalid())?;
+    let local = match url.host() {
+        Some(url::Host::Domain("localhost")) => true,
+        Some(url::Host::Ipv4(ip)) => ip.is_loopback(),
+        Some(url::Host::Ipv6(ip)) => ip.is_loopback(),
+        _ => false,
+    };
+    if !(url.scheme() == "https" || url.scheme() == "http" && local)
+        || url.host_str().is_none()
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+    {
+        return Err(invalid());
+    }
+    let path = url.path().trim_end_matches('/').to_owned();
+    url.set_path(&path);
+    Ok(url.to_string().trim_end_matches('/').to_owned())
 }
 
 pub fn base_url(value: &str) -> Result<String> {

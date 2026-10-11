@@ -22,6 +22,8 @@ npx.cmd playwright test
 
 Native tests use isolated databases under `artifacts/native`, without normal user data or real microphone capture. Real-service suites are opt-in: `SHERKA_LIVE_SERVICES`, `SHERKA_LIVE_CONVERSATION`, `SHERKA_LIVE_MEMORY`, `SHERKA_LIVE_SHUTDOWN`, `SHERKA_LIVE_VOICE_STARTUP`. Read each before enabling. Supply your own `SHERKA_TEST_VOICE_ID` for TTS tests.
 
+Remote contract tests use loopback servers and temporary Windows vault entries. `SHERKA_CLOUD_CHECK=1` explicitly enables the native **providers live:** test with `OPENROUTER_API_KEY`, `ZAI_API_KEY` and `ZAI_CODING_API_KEY`. Set `SHERKA_CLOUD_PROVIDERS` to a comma-separated selection (`open_router,zai,zai_coding`) to test only available accounts. It sends a synthetic short prompt to GLM 5.3 Flash on each selected provider, with a 512-token output cap and low thinking, and can incur a small charge. It populates an empty provider key entry without replacing an existing one. Never enable Playwright tracing or log key values during real-service tests. No personal profiles are used.
+
 `SHERKA_DATA_DIR` isolates diagnostics. `SHERKA_AUTOSTART_VOICE=0` disables VoiceStudio launch and readiness waiting. Update overrides are debug-only, loopback-only and require isolated data. `SHERKA_TEST_ALLOW_CURRENT_UPDATE=1` allows a same-version signed debug replacement for tests; release builds ignore it.
 
 Windows CI checks Rust, TypeScript and native flows without external services or real audio hardware. A network simulation does not validate acoustic interruption: distinguish automated, real-service and headphone/speaker tests.

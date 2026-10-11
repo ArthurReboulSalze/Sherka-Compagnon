@@ -21,6 +21,8 @@
     "allow-export-profile",
     "allow-widget-action",
     "allow-discover-language-models",
+    "allow-get-provider-key-status",
+    "allow-set-provider-key",
     "allow-discover-voices",
     "allow-get-audio-devices",
     "allow-get-conversation",

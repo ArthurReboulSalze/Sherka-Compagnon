@@ -166,7 +166,7 @@ pub async fn toggle(
     let connections=with_core(shared.clone(),|c| {
         let p=c.store.profile(c.session.snapshot().profile_id)?;
         if p.details.connections.llm_model.is_none() || p.details.connections.stt_model.is_none() || p.details.connections.tts_engine.is_none() || p.details.connections.tts_voice.is_none() {
-            return Err(Error::Validation("Choisis le modèle LM Studio, le moteur de transcription et la voix dans les réglages avant d'activer le micro.".into()));
+            return Err(Error::Validation("Choisis le modèle de conversation, le moteur de transcription et la voix dans les réglages avant d'activer le micro.".into()));
         }
         Ok(p.details.connections)
     }).await?;
@@ -242,7 +242,7 @@ pub async fn send(
         let profile = core.store.profile(profile_id)?;
         if profile.details.connections.llm_model.is_none() {
             return Err(Error::Validation(
-                "Choisis un modèle LM Studio dans les réglages.".into(),
+                "Choisis un modèle de conversation dans Réglages.".into(),
             ));
         }
         if speak
@@ -502,8 +502,9 @@ async fn prepare_turn(
     .await
     .map_err(|_| "Le chargement du modèle a échoué.".to_owned())?
     .map_err(|e| e.to_string())?
-    .ok_or("Choisis un modèle LM Studio.")?;
+    .ok_or("Choisis un modèle de conversation dans Réglages.")?;
     provider.connections.llm_model = Some(model.id.clone());
+    provider.use_api_model(&model);
     provider
         .connections
         .validate_reasoning(&model)
@@ -698,10 +699,16 @@ fn schedule_memory(app: AppHandle, shared: Shared, profile: Uuid, provider: Prov
                 provider.connections.llm_model.as_deref()?,
             )
             .ok()?;
-            if model.loaded != Some(true) {
+            if provider.connections.llm_provider.is_local() && model.loaded != Some(true) {
                 return None;
             }
-            let limit = model.loaded_context_length?;
+            let limit = if provider.connections.llm_provider.is_local() {
+                model.loaded_context_length?
+            } else {
+                model
+                    .max_context_length
+                    .or(provider.connections.context_limit.map(u64::from))?
+            };
             let (messages, schema) = sherka_core::memory::consolidation_request(&batch);
             let value = provider
                 .structured::<sherka_core::memory::Consolidation>(
@@ -768,11 +775,19 @@ pub fn switch_model(
         {
             match result {
                 Ok(Some(model)) => {
-                    c.live.notice = Some(format!(
-                        "{} chargé · contexte : {} tokens.",
-                        model.label,
-                        model.loaded_context_length.unwrap_or(0)
-                    ))
+                    c.live.notice = Some(if next.llm_provider.is_local() {
+                        format!(
+                            "{} chargé · contexte : {} tokens.",
+                            model.label,
+                            model.loaded_context_length.unwrap_or(0)
+                        )
+                    } else {
+                        format!(
+                            "{} sélectionné chez {}.",
+                            model.label,
+                            next.llm_provider.label()
+                        )
+                    })
                 }
                 Ok(None) => {
                     c.live.notice =
