@@ -1,0 +1,42 @@
+[
+  {
+    "name": "alloc-stdlib",
+    "version": "0.3.0",
+    "source": "https://raw.githubusercontent.com/dropbox/rust-alloc-no-stdlib/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/LICENSE"
+  },
+  {
+    "name": "dasp_sample",
+    "version": "0.11.0",
+    "source": "https://raw.githubusercontent.com/rustaudio/sample/97c3bb9b2363c0b46ac1633858bf1054fd02a980/LICENSE-MIT"
+  },
+  {
+    "name": "defmt-parser",
+    "version": "1.0.0",
+    "source": "https://raw.githubusercontent.com/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT"
+  },
+  {
+    "name": "selectors",
+    "version": "0.38.0",
+    "source": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/MPL-2.0.txt"
+  },
+  {
+    "name": "sonora-aec3",
+    "version": "0.2.0",
+    "source": "https://raw.githubusercontent.com/dignifiedquire/sonora/a024d6ef8351add55be5e8b1d6cc35f555787660/LICENSE"
+  },
+  {
+    "name": "webview2-com",
+    "version": "0.39.1",
+    "source": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+  },
+  {
+    "name": "webview2-com-macros",
+    "version": "0.8.1",
+    "source": "https://raw.githubusercontent.com/wravery/webview2-rs/dffa41a8a46d3f5565eefbff2de57d38d399f158/LICENSE"
+  },
+  {
+    "name": "webview2-com-sys",
+    "version": "0.39.1",
+    "source": "https://raw.githubusercontent.com/wravery/webview2-rs/edc2caf886175ccaebe86078c9cfe1ae2a187328/LICENSE"
+  }
+]

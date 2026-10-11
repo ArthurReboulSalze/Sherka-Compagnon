@@ -1,0 +1,30 @@
+[package]
+name = "sherka-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+rusqlite = { version = "0.40.2", default-features = false, features = ["bundled"] }
+image = { version = "0.25.10", default-features = false, features = ["png", "webp"] }
+base64 = "0.22"
+tokio-util = { version = "0.7", features = ["rt"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "multipart", "stream"] }
+url = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "sync", "net"] }
+tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
+futures-util = { version = "0.3", features = ["sink"] }
+cpal = "0.18.2"
+sonora = "0.2.0"
+webrtc-vad = "0.4.0"
+ort = { version = "=2.0.0-rc.10", default-features = false, features = ["std", "download-binaries"] }
+
+[dev-dependencies]
+tempfile = "3"
+

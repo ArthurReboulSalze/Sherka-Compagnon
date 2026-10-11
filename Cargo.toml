@@ -1,0 +1,23 @@
+[workspace]
+members = ["crates/sherka-core", "src-tauri"]
+default-members = ["crates/sherka-core"]
+resolver = "2"
+
+[workspace.package]
+version = "0.3.3"
+license = "GPL-3.0-only"
+repository = "https://github.com/ArthurReboulSalze/Sherka-Compagnon"
+edition = "2024"
+rust-version = "1.91"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "2"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = true
+

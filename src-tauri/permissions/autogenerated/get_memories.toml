@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-memories"
+description = "Enables the get_memories command without any pre-configured scope."
+commands.allow = ["get_memories"]
+
+[[permission]]
+identifier = "deny-get-memories"
+description = "Denies the get_memories command without any pre-configured scope."
+commands.deny = ["get_memories"]

@@ -1,0 +1,29 @@
+{
+  "/api/v1/models": {"models": [
+    {"type":"llm","key":"small-chat","display_name":"Small Chat","loaded_instances":[{"id":"my-loaded-chat","config":{"context_length":4096}}],"quantization":{"name":"Q4_K_M"},"max_context_length":8192},
+    {"type":"llm","key":"large-chat","display_name":"Large Chat","loaded_instances":[],"quantization":{"name":null},"max_context_length":32768,"capabilities":{"reasoning":{"allowed_options":["off","low","medium","high"],"default":"medium"}}},
+    {"type":"embedding","key":"vectors","display_name":"Vectors","loaded_instances":[],"quantization":null,"max_context_length":2048}
+  ]},
+  "/.well-known/voicestudio-speech": {"protocol":"voicestudio.speech.v1","service_version":"0.5.6","features":{"streaming_transcription":true,"batch_transcription":true}},
+  "/engines/tts": {"active":"omni","backends":[
+    {"id":"omni","display_name":"Omni Test","available":true,"supports_cloning":true},
+    {"id":"kitten","display_name":"Kitten Test","available":true,"supports_cloning":false},
+    {"id":"cosy","display_name":"Cosy Test","available":false,"supports_cloning":true}
+  ]},
+  "/models": {"models":[
+    {"repo_id":"example/omni","label":"Omni weights","role":"TTS","engines":["omni"],"installed":true,"incomplete":false,"supported":true},
+    {"repo_id":"example/kitten","label":"Kitten weights","role":"TTS","engines":["kitten"],"installed":false,"incomplete":false,"supported":true},
+    {"repo_id":"example/cosy","label":"Cosy weights","role":"TTS","engines":["cosy"],"installed":true,"incomplete":false,"supported":true}
+  ]},
+  "/v1/audio/voices": {"voices":[
+    {"voice_id":"alloy","name":"Alloy","type":"openai_alias"},
+    {"voice_id":"voice-a","name":"Sherka","type":"profile","language":"French"},
+    {"voice_id":"voice-b","name":"Sherka","type":"profile","language":"French"}
+  ]},
+  "/v1/models": {"data":[
+    {"id":"tts-1","voicestudio":{"kind":"tts","alias_for_active_engine":true}},
+    {"id":"omni","voicestudio":{"kind":"tts","alias_for_active_engine":false}},
+    {"id":"kitten","voicestudio":{"kind":"tts","alias_for_active_engine":false}},
+    {"id":"faster-whisper","voicestudio":{"kind":"stt","alias_for_active_engine":false}}
+  ]}
+}

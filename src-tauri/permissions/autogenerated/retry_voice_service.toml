@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-retry-voice-service"
+description = "Enables the retry_voice_service command without any pre-configured scope."
+commands.allow = ["retry_voice_service"]
+
+[[permission]]
+identifier = "deny-retry-voice-service"
+description = "Denies the retry_voice_service command without any pre-configured scope."
+commands.deny = ["retry_voice_service"]

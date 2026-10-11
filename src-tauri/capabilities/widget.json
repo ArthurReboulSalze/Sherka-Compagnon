@@ -1,0 +1,19 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "widget",
+  "description": "Le widget peut lire son état, être déplacé et ouvrir le panneau. Aucun accès fichier ou réseau.",
+  "windows": [
+    "widget"
+  ],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "core:window:allow-start-dragging",
+    "core:window:allow-start-resize-dragging",
+    "allow-get-snapshot",
+    "allow-switch-companion",
+    "allow-widget-action",
+    "allow-get-conversation",
+    "allow-get-voice-service"
+  ]
+}

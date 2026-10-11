@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-voice-service"
+description = "Enables the get_voice_service command without any pre-configured scope."
+commands.allow = ["get_voice_service"]
+
+[[permission]]
+identifier = "deny-get-voice-service"
+description = "Denies the get_voice_service command without any pre-configured scope."
+commands.deny = ["get_voice_service"]

@@ -1,0 +1,313 @@
+//! VoiceStudio is the required speech service. Conversation providers do not
+//! participate in this lifecycle, and no microphone is opened here.
+use reqwest::Client;
+use serde::Serialize;
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+use tauri::{Emitter, Manager};
+use tokio::sync::watch;
+use tokio_util::sync::CancellationToken;
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Status {
+    pub attempt: u64,
+    pub url: String,
+    pub phase: &'static str,
+    pub message: String,
+}
+
+type Launcher = Arc<dyn Fn(u16, CancellationToken) -> Result<(), String> + Send + Sync>;
+type Reporter = Arc<dyn Fn(Status) + Send + Sync>;
+struct Attempt {
+    id: u64,
+    cancel: CancellationToken,
+}
+struct Inner {
+    client: Client,
+    attempt: Mutex<Attempt>,
+    state: watch::Sender<Status>,
+    cancel: CancellationToken,
+    launch: Launcher,
+    report: Reporter,
+    enabled: bool,
+    budget: Duration,
+    interval: Duration,
+}
+
+#[derive(Clone)]
+pub struct VoiceStartup(Arc<Inner>);
+
+impl VoiceStartup {
+    pub fn new(app: tauri::AppHandle) -> Result<Self, String> {
+        Self::build(
+            Arc::new(crate::service_process::launch),
+            Arc::new(move |status| {
+                let _ = app.emit("sherka:voice-service", status);
+            }),
+            std::env::var("SHERKA_AUTOSTART_VOICE").as_deref() != Ok("0"),
+            Duration::from_secs(300),
+            Duration::from_millis(700),
+        )
+    }
+
+    fn build(
+        launch: Launcher,
+        report: Reporter,
+        enabled: bool,
+        budget: Duration,
+        interval: Duration,
+    ) -> Result<Self, String> {
+        let client = Client::builder()
+            .no_proxy()
+            .redirect(reqwest::redirect::Policy::none())
+            .connect_timeout(Duration::from_secs(4))
+            .timeout(Duration::from_secs(5))
+            .build()
+            .map_err(|e| e.to_string())?;
+        let (state, _) = watch::channel(Status {
+            attempt: 0,
+            url: String::new(),
+            phase: "disabled",
+            message: String::new(),
+        });
+        Ok(Self(Arc::new(Inner {
+            client,
+            attempt: Mutex::new(Attempt {
+                id: 0,
+                cancel: CancellationToken::new(),
+            }),
+            state,
+            cancel: CancellationToken::new(),
+            launch,
+            report,
+            enabled,
+            budget,
+            interval,
+        })))
+    }
+
+    pub fn status(&self) -> Status {
+        self.0.state.borrow().clone()
+    }
+    pub fn cancel(&self) {
+        self.0.cancel.cancel();
+    }
+
+    // One shared attempt per endpoint: startup, retry and speech requests join
+    // the same worker. Changing the endpoint cancels the previous wait.
+    pub fn start(&self, url: &str, recheck: bool) -> Result<u64, String> {
+        if self.0.cancel.is_cancelled() {
+            return Err("Démarrage de VoiceStudio annulé.".into());
+        }
+        if !self.0.enabled {
+            return Ok(0);
+        }
+        let url = sherka_core::connections::base_url(url).map_err(|e| e.to_string())?;
+        let mut attempt = self
+            .0
+            .attempt
+            .lock()
+            .map_err(|_| "Démarrage indisponible.")?;
+        let status = self.status();
+        if status.url == url
+            && (matches!(status.phase, "checking" | "starting")
+                || (!recheck && status.phase == "ready"))
+        {
+            return Ok(attempt.id);
+        }
+        attempt.cancel.cancel();
+        attempt.id += 1;
+        attempt.cancel = self.0.cancel.child_token();
+        let id = attempt.id;
+        let cancel = attempt.cancel.clone();
+        self.publish(Status {
+            attempt: id,
+            url: url.clone(),
+            phase: "checking",
+            message: "Connexion à VoiceStudio…".into(),
+        });
+        let service = self.clone();
+        tauri::async_runtime::spawn(async move {
+            let result = tokio::select! {
+                biased;
+                _ = cancel.cancelled() => return,
+                result = tokio::time::timeout(service.0.budget, service.prepare(id, &url, cancel.clone())) =>
+                    result.unwrap_or_else(|_| Err("VoiceStudio n’est pas prêt après 5 minutes. Vérifie sa fenêtre, puis réessaie.".into())),
+            };
+            match result {
+                Ok(()) => service.update(id, "ready", "VoiceStudio est prêt.".into()),
+                Err(error) => service.update(id, "error", error),
+            }
+        });
+        Ok(id)
+    }
+
+    pub async fn ensure(&self, url: &str) -> Result<(), String> {
+        let mut changes = self.0.state.subscribe();
+        let id = self.start(url, true)?;
+        if !self.0.enabled {
+            return Ok(());
+        }
+        loop {
+            let status = changes.borrow_and_update().clone();
+            if status.attempt != id {
+                return Err(
+                    "La connexion vocale a changé. Réessaie avec le compagnon actif.".into(),
+                );
+            }
+            match status.phase {
+                "ready" => return Ok(()),
+                "error" => return Err(status.message),
+                _ => {}
+            }
+            tokio::select! {
+                biased;
+                _ = self.0.cancel.cancelled() => return Err("Démarrage de VoiceStudio annulé.".into()),
+                result = changes.changed() => { result.map_err(|_| "Démarrage indisponible.")?; }
+            }
+        }
+    }
+
+    fn publish(&self, status: Status) {
+        self.0.state.send_replace(status.clone());
+        (self.0.report)(status);
+    }
+    fn update(&self, id: u64, phase: &'static str, message: String) {
+        let Ok(attempt) = self.0.attempt.lock() else {
+            return;
+        };
+        if attempt.id != id || attempt.cancel.is_cancelled() {
+            return;
+        }
+        let mut status = self.status();
+        status.phase = phase;
+        status.message = message;
+        self.publish(status);
+    }
+
+    async fn prepare(&self, id: u64, url: &str, cancel: CancellationToken) -> Result<(), String> {
+        let mut launched = false;
+        loop {
+            match probe(&self.0.client, url).await? {
+                Probe::Ready => return Ok(()),
+                Probe::Stopped if !launched => {
+                    let port = local_port(url).ok_or("VoiceStudio est inaccessible à cette adresse. Le lancement automatique nécessite une adresse HTTP locale, sans chemin intermédiaire.")?;
+                    self.update(id, "starting", "Démarrage de VoiceStudio…".into());
+                    let launch = self.0.launch.clone();
+                    let cancel = cancel.clone();
+                    tauri::async_runtime::spawn_blocking(move || launch(port, cancel))
+                        .await
+                        .map_err(|_| "Impossible de démarrer VoiceStudio.")??;
+                    launched = true;
+                }
+                _ => self.update(id, "starting", "VoiceStudio se prépare…".into()),
+            }
+            tokio::time::sleep(self.0.interval).await;
+        }
+    }
+}
+
+// Do not launch a local program for a remote server, HTTPS proxy, or API path.
+fn local_port(base: &str) -> Option<u16> {
+    let url = url::Url::parse(base).ok()?;
+    let local = match url.host()? {
+        url::Host::Domain(name) => name.eq_ignore_ascii_case("localhost"),
+        url::Host::Ipv4(ip) => ip == std::net::Ipv4Addr::LOCALHOST,
+        url::Host::Ipv6(ip) => ip == std::net::Ipv6Addr::LOCALHOST,
+    };
+    (local
+        && url.scheme() == "http"
+        && url.path() == "/"
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.query().is_none()
+        && url.fragment().is_none())
+    .then(|| url.port_or_known_default())
+    .flatten()
+}
+
+enum Probe {
+    Ready,
+    Stopped,
+    Pending,
+}
+async fn json(mut response: reqwest::Response) -> Result<serde_json::Value, String> {
+    let mut bytes = Vec::new();
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|_| "Réponse VoiceStudio interrompue.")?
+    {
+        if bytes.len() + chunk.len() > 65_536 {
+            return Err("Réponse VoiceStudio trop volumineuse.".into());
+        }
+        bytes.extend_from_slice(&chunk);
+    }
+    serde_json::from_slice(&bytes)
+        .map_err(|_| "Cette adresse ne renvoie pas une réponse VoiceStudio valide.".into())
+}
+fn checked(response: &reqwest::Response) -> Result<(), String> {
+    if response.status().is_success() {
+        Ok(())
+    } else {
+        Err(format!(
+            "VoiceStudio est inaccessible (HTTP {}). Vérifie son adresse et son accès dans les réglages.",
+            response.status().as_u16()
+        ))
+    }
+}
+async fn probe(client: &Client, base: &str) -> Result<Probe, String> {
+    let health = match client.get(format!("{base}/health")).send().await {
+        Ok(response) => response,
+        Err(error) if error.is_timeout() => return Ok(Probe::Pending),
+        Err(error) if error.is_connect() => return Ok(Probe::Stopped),
+        Err(_) => return Err("Impossible de joindre VoiceStudio. Vérifie son adresse.".into()),
+    };
+    if health.status() == reqwest::StatusCode::SERVICE_UNAVAILABLE {
+        return Ok(Probe::Pending);
+    }
+    checked(&health)?;
+    let health = json(health).await?;
+    if health["status"] != "ok" || !health["version"].is_string() || !health["device"].is_string() {
+        return Err("Un autre service répond à cette adresse, ou VoiceStudio n’est pas compatible. Vérifie l’adresse dans les réglages.".into());
+    }
+    let response = match client
+        .get(format!("{base}/.well-known/voicestudio-speech"))
+        .send()
+        .await
+    {
+        Ok(response) => response,
+        Err(error) if error.is_timeout() || error.is_connect() => return Ok(Probe::Pending),
+        Err(_) => return Err("Impossible de vérifier les capacités de VoiceStudio.".into()),
+    };
+    if response.status() == reqwest::StatusCode::SERVICE_UNAVAILABLE {
+        return Ok(Probe::Pending);
+    }
+    checked(&response)?;
+    if json(response).await?["protocol"] != "voicestudio.speech.v1" {
+        return Err(
+            "VoiceStudio ne fournit pas le protocole vocal attendu. Vérifie sa version.".into(),
+        );
+    }
+    Ok(Probe::Ready)
+}
+
+pub async fn start_active(app: &tauri::AppHandle, recheck: bool) -> Result<(), String> {
+    crate::windows::ensure_running()?;
+    let url = crate::with_core(app.state::<crate::Shared>().inner().clone(), |c| {
+        Ok(c.store
+            .profile(c.session.snapshot().profile_id)?
+            .details
+            .connections
+            .voice_studio_url)
+    })
+    .await?;
+    app.state::<VoiceStartup>().start(&url, recheck)?;
+    Ok(())
+}
+
+#[cfg(test)]
+#[path = "voice_startup_tests.rs"]
+mod tests;

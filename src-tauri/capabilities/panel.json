@@ -1,0 +1,32 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "panel",
+  "description": "Le panneau gère les profils et les préférences via les commandes Rust validées.",
+  "windows": [
+    "panel"
+  ],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "allow-get-snapshot",
+    "allow-get-widget-visibility",
+    "allow-apply-mutation",
+    "allow-get-history",
+    "allow-get-memories",
+    "allow-edit-memory",
+    "allow-search-archive",
+    "allow-export-memories",
+    "allow-export-profile",
+    "allow-widget-action",
+    "allow-discover-language-models",
+    "allow-discover-voices",
+    "allow-get-audio-devices",
+    "allow-get-conversation",
+    "allow-send-message",
+    "allow-get-voice-service",
+    "allow-retry-voice-service",
+    "allow-get-update-status",
+    "allow-check-update",
+    "allow-install-update"
+  ]
+}

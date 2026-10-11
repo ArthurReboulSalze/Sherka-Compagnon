@@ -1,0 +1,49 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version already committed in package.json
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
+      - name: Validate release input
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          if ($version -ne $env:RELEASE_VERSION -or $version -notmatch '^\d+\.\d+\.\d+$') { throw 'Commit the requested version before releasing.' }
+          if (!$env:TAURI_SIGNING_PRIVATE_KEY) { throw 'Signing secret is required.' }
+      - run: npm ci
+      - run: python scripts/audit_publication.py
+      - run: npm run check
+      - run: cargo test --workspace --locked
+      - run: npm run build:windows
+      - run: python scripts/package_release.py
+      - name: Create draft release
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem -LiteralPath "releases/$env:RELEASE_VERSION" -File | Select-Object -ExpandProperty FullName)
+          gh release create "v$env:RELEASE_VERSION" @files --target $env:GITHUB_SHA --draft --title "Sherka $env:RELEASE_VERSION" --notes-file "docs/releases/$env:RELEASE_VERSION.md"

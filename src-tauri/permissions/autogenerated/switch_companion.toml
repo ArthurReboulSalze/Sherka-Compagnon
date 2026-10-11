@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-switch-companion"
+description = "Enables the switch_companion command without any pre-configured scope."
+commands.allow = ["switch_companion"]
+
+[[permission]]
+identifier = "deny-switch-companion"
+description = "Denies the switch_companion command without any pre-configured scope."
+commands.deny = ["switch_companion"]

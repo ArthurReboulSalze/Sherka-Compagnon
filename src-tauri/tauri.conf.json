@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Sherka Compagnon",
+  "version": "0.3.3",
+  "identifier": "fr.sherka.compagnon",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "panel",
+        "create": false,
+        "title": "Sherka — Poste de bord",
+        "url": "index.html",
+        "width": 1120,
+        "height": 800,
+        "minWidth": 760,
+        "minHeight": 580,
+        "center": true,
+        "visible": false,
+        "backgroundColor": "#10151d",
+        "theme": "Dark"
+      },
+      {
+        "label": "widget",
+        "create": false,
+        "title": "Sherka — Compagnon",
+        "url": "index.html?view=widget",
+        "width": 290,
+        "height": 350,
+        "minWidth": 188,
+        "minHeight": 228,
+        "maxWidth": 600,
+        "maxHeight": 720,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "resizable": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "backgroundColor": "#00000000"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'none'",
+      "devCsp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost ws://127.0.0.1:1420; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'none'",
+      "capabilities": [
+        "panel",
+        "widget"
+      ]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "resources": {
+      "../crates/sherka-core/models/LICENSE.silero": "licenses/Silero.txt",
+      "../crates/sherka-core/models/LICENSE.onnxruntime": "licenses/ONNXRuntime.txt",
+      "../crates/sherka-core/models/ONNXRUNTIME-ThirdPartyNotices.txt": "licenses/ONNXRuntime-ThirdPartyNotices.txt",
+      "../LICENSE": "licenses/GPL-3.0.txt",
+      "../THIRD_PARTY_NOTICES.md": "licenses/THIRD_PARTY_NOTICES.md"
+    },
+    "shortDescription": "Ton compagnon de bureau, sa propre histoire.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "displayLanguageSelector": false,
+        "languages": [
+          "French"
+        ],
+        "installMode": "currentUser"
+      }
+    },
+    "createUpdaterArtifacts": true,
+    "license": "GPL-3.0-only"
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENGNjU4NUE4RTkwMDQxMDIKUldRQ1FRRHBxSVZseis0OTBISmFYOFRDKzFqRDBDK0JUVXlXTWhtVUwxYmJpV3JBRHNZeWhIMWMK",
+      "endpoints": [
+        "https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      },
+      "requireSignedVersion": true
+    }
+  }
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-apply-mutation"
+description = "Enables the apply_mutation command without any pre-configured scope."
+commands.allow = ["apply_mutation"]
+
+[[permission]]
+identifier = "deny-apply-mutation"
+description = "Denies the apply_mutation command without any pre-configured scope."
+commands.deny = ["apply_mutation"]
