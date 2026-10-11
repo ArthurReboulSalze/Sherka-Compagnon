@@ -8,10 +8,7 @@
 <p align="center"><em>Give your AI a voice and a place on your desktop.</em></p>
 
 <p align="center">
-  <a href="https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest"><img src="https://img.shields.io/github/v/release/ArthurReboulSalze/Sherka-Compagnon?label=release&amp;color=e5bc80" alt="Latest release"></a>
-  <img src="https://img.shields.io/badge/platform-Windows_x64-343434" alt="Windows x64">
-  <a href="docs/LANGUAGES.md"><img src="https://img.shields.io/badge/interface-7_languages-626262" alt="Seven interface languages"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPLv3-e5bc80" alt="GPLv3 license"></a>
+  <img src="docs/images/features.svg" alt="Windows x64 · Local voice · 7 languages · GPLv3" width="492">
 </p>
 
 <p align="center">
