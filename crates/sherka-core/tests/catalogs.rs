@@ -5,8 +5,8 @@ use sherka_core::{
 };
 use std::{
     collections::HashMap,
-    io::{Read, Write},
-    net::TcpListener,
+    io::{BufRead, BufReader, Read, Write},
+    net::{TcpListener, TcpStream},
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -31,12 +31,28 @@ impl Server {
             while !done.load(Ordering::Relaxed) {
                 match socket.accept() {
                     Ok((mut stream, _)) => {
+                        stream.set_nonblocking(false).unwrap();
                         stream
                             .set_read_timeout(Some(Duration::from_secs(2)))
                             .unwrap();
+                        // TCP can split a request at any byte. Closed/retried
+                        // connections are normal and must not kill the fixture.
                         let mut buffer = [0; 4096];
-                        let length = stream.read(&mut buffer).unwrap_or(0);
-                        let request = String::from_utf8_lossy(&buffer[..length]);
+                        let mut headers = Vec::new();
+                        while headers.len() <= 8192
+                            && !headers.windows(4).any(|part| part == b"\r\n\r\n")
+                        {
+                            match stream.read(&mut buffer) {
+                                Ok(length) if length > 0 => {
+                                    headers.extend_from_slice(&buffer[..length]);
+                                }
+                                _ => break,
+                            }
+                        }
+                        if !headers.windows(4).any(|part| part == b"\r\n\r\n") {
+                            continue;
+                        }
+                        let request = String::from_utf8_lossy(&headers);
                         assert!(request.starts_with("GET "));
                         let path = request.split_whitespace().nth(1).unwrap();
                         let (status, body) =
@@ -61,7 +77,10 @@ impl Server {
 impl Drop for Server {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Relaxed);
-        self.worker.take().unwrap().join().unwrap();
+        let result = self.worker.take().unwrap().join();
+        if !thread::panicking() {
+            result.expect("HTTP fixture worker failed");
+        }
     }
 }
 
@@ -72,6 +91,35 @@ fn routes() -> HashMap<String, (u16, String)> {
         .into_iter()
         .map(|(path, json)| (path, (200, json.to_string())))
         .collect()
+}
+
+#[test]
+fn mock_http_accepts_fragmented_headers_and_canceled_connections() {
+    let server = Server::new(HashMap::from([("/models".into(), (200, "{}".into()))]));
+    let address = server.url.strip_prefix("http://").unwrap();
+    drop(TcpStream::connect(address).unwrap());
+    let mut stream = TcpStream::connect(address).unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(2)))
+        .unwrap();
+    for part in ["G", "ET /models HTTP/1.1\r\nHost: local", "host\r\n\r\n"] {
+        stream.write_all(part.as_bytes()).unwrap();
+        thread::sleep(Duration::from_millis(20));
+    }
+    let mut stream = BufReader::new(stream);
+    let mut status = String::new();
+    stream.read_line(&mut status).unwrap();
+    assert!(status.starts_with("HTTP/1.1 200"));
+    loop {
+        let mut header = String::new();
+        assert!(stream.read_line(&mut header).unwrap() > 0);
+        if header == "\r\n" {
+            break;
+        }
+    }
+    let mut body = [0; 2];
+    stream.read_exact(&mut body).unwrap();
+    assert_eq!(&body, b"{}");
 }
 
 #[tokio::test]
