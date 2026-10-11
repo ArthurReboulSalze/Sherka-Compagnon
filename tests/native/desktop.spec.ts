@@ -578,8 +578,8 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
   // streaming and cancellation coverage there; exercise speech on a host
   // with a default audio device rather than assuming hardware from volume=0.
   const devices = await native<{outputs:{is_default:boolean}[]}>('get_audio_devices');
-  const canSpeak = devices.outputs.some(device => device.is_default);
-  console.log(`Native provider speech: ${canSpeak ? 'enabled' : 'no default audio output; text-only'}`);
+  const canSpeak = process.env.SHERKA_TEST_TEXT_ONLY !== '1' && devices.outputs.some(device => device.is_default);
+  console.log(`Native provider speech: ${canSpeak ? 'enabled' : 'text-only (requested or no default audio output)'}`);
   let interrupted: (() => void) | undefined;
   let number = 0;
   let contextAdvertised = true;
@@ -630,7 +630,15 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
     else expect(requests.filter(r=>r.path.endsWith('/speech'))).toHaveLength(0);
     expect(requests.find(r=>r.path.endsWith('/messages')&&r.body.stream)!.body.max_tokens).toBe(4096);
     contextAdvertised=false;
-    await native('apply_mutation',{mutation:{kind:'web_search',mode:'auto'}});
+    // Complete the first send, then change settings through the UI so its
+    // asynchronous snapshot refresh cannot race the next message submission.
+    await expect(panel.locator('#chat-text')).toHaveValue('');
+    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.locator('#web-search-mode').selectOption('auto');
+    await expect(panel.locator('.toast')).toContainText('Réglage de recherche Internet enregistré.');
+    await expect(panel.locator('body')).not.toHaveClass(/working/);
+    await expect.poll(async()=>(await native<any>('get_snapshot')).settings.web_search).toBe('auto');
+    await panel.getByRole('button',{name:'Conversation',exact:true}).click();
     await panel.getByLabel('Ou écris-lui ici').fill('Aujourd’hui je te raconte ma journée.');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();await expect.poll(()=>number).toBe(2);await expect(panel.locator('#live-reply')).toContainText('Bonjour depuis le cloud.');
     const fallback=await native<any>('get_conversation');expect(fallback.live.web).toBeNull();expect(fallback.live.budget.limit).toBe(64000);expect(fallback.live.budget.response_tokens).toBe(8192);
     expect(requests.filter(r=>r.path.endsWith('/messages')&&r.body.stream).at(-1)!.body.max_tokens).toBe(8192);

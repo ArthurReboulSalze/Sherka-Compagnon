@@ -42,6 +42,6 @@ Distribution instructions: [releasing](RELEASING.md).
 
 The native `hermes:` scenario uses an isolated HTTP server and temporary vault keys. It checks profile isolation, user-only requests, streamed text/speech, tool approvals, interruption, and the widget `/new` action. Unit tests cover private-address validation, persistent session mappings, export boundaries and the explicit exclusion from future emotional avatars.
 
-Set `SHERKA_TEST_TEXT_ONLY=1` to exercise that scenario without audio output, matching hosted Windows runners. The widget is explicitly shown before testing its controls.
+Set `SHERKA_TEST_TEXT_ONLY=1` to exercise the Hermes and provider scenarios without audio output, matching hosted Windows runners. The widget is explicitly shown before testing its controls.
 
 The optional `hermes live:` scenario uses `SHERKA_TEST_HERMES_URL` and a comma-separated `SHERKA_TEST_HERMES_PROFILES` (default `default`). Configure each profile’s key in Windows Credential Manager through Sherka first. The scenario creates isolated test conversations, sends short synthetic prompts through Hermes’s existing model, and verifies continuation. It may incur provider usage; no key values or existing conversations are logged. Do not enable Playwright tracing for this test.
