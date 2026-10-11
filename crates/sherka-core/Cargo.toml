@@ -17,6 +17,8 @@ base64 = "0.22"
 tokio-util = { version = "0.7", features = ["rt"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "multipart", "stream"] }
 url = "2"
+scraper = { version = "0.27", default-features = false }
+time = { version = "0.3", default-features = false, features = ["std"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "sync", "net"] }
 tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
 futures-util = { version = "0.3", features = ["sink"] }
@@ -27,4 +29,7 @@ ort = { version = "=2.0.0-rc.10", default-features = false, features = ["std", "
 
 [dev-dependencies]
 tempfile = "3"
+
+[target.'cfg(windows)'.dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["native-tls"] }
 

@@ -4,7 +4,9 @@
 
 Sherka turns your local AI models into someone you can talk to. A transparent desktop companion, a voice for each character, and memories that grow with your conversations — on your own PC.
 
-<img src="docs/images/sherka.png" alt="Sherka's control panel on a clean demo profile with no personal conversations" width="760">
+<img src="docs/images/sherka-widget.png" alt="Sherka's standalone desktop avatar with its controls revealed" width="260">
+
+**Your companion has its own transparent desktop widget.** Move it wherever you like and keep talking with the control panel closed. Hover or click to reveal its controls; move away to return to the avatar alone.
 
 [Download for Windows](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest) · [Get started](docs/GETTING_STARTED.md) · [Documentation](docs/README.md) · [Roadmap](docs/ROADMAP.md)
 
@@ -17,6 +19,9 @@ Sherka turns your local AI models into someone you can talk to. A transparent de
 - **Context awareness.** Sherka budgets against the model's loaded context and reserves room for its reply. Reasoning controls appear when supported.
 - **Simple updates.** Check GitHub from Settings and install a signed update, keeping your profiles and memories.
 - **Your language.** Seven interface languages and a ready-to-use Sherka in each one. Custom companions keep their own language. [Language settings](docs/LANGUAGES.md).
+- **Look things up.** Optional [DuckDuckGo search](docs/WEB_SEARCH.md), with source links and no account or API key. Off by default; search queries go online while conversation and speech models stay local.
+
+<img src="docs/images/sherka.png" alt="Sherka's optional control panel on a demo profile with no personal conversations" width="760">
 
 ## Local voice, local intelligence
 

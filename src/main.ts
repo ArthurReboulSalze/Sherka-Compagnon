@@ -13,6 +13,7 @@ import { memoryPanel, mountMemory } from './memory';
 import { paintProfileVoice, editProfileVoice } from './profile-voice';
 import { updatesView, mountUpdates, initializeUpdates } from './updates';
 import { bindRangeControls } from './settings-controls';
+import { webSettings } from './web';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 const widget = new URLSearchParams(location.search).get('view') === 'widget';
@@ -24,6 +25,9 @@ let busy = false;
 let requestVersion = 0;
 let historyVersion = 0;
 let widgetControlsPinned = false;
+let widgetPointerInside = false;
+let widgetKeyboardControls = false;
+let dismissWidgetControls: (() => void) | undefined;
 let widgetVisible = false;
 const notifications = document.createElement('div');
 notifications.className = 'notifications';
@@ -134,7 +138,7 @@ function render(): void {
     </aside>
     <main class="main-panel">
       <header class="topbar"><span class="breadcrumb">TON ESPACE <span>/</span> ${view === 'conversation' ? t('CONVERSATION') : view === 'profiles' ? t('COMPAGNONS') : view === 'memory' ? t('MÉMOIRE') : t('RÉGLAGES')}</span><button class="button quiet small" id="widget-visibility" data-action="toggle_widget" aria-pressed="${widgetVisible}">${widgetVisibilityLabel(widgetVisible)}</button></header>
-      <section class="content">${view === 'conversation' ? conversationView(activeProfile()!) : view === 'profiles' ? profilesView(profile) : view === 'memory' ? memoryView(profile) : settingsView()}</section>
+      <section class="content">${view === 'conversation' ? conversationView(activeProfile()!, state.settings.web_search) : view === 'profiles' ? profilesView(profile) : view === 'memory' ? memoryView(profile) : settingsView()}</section>
       <footer class="panel-footer"><span><i class="status-dot"></i> ${escape(activeProfile()?.name ?? 'Sherka')} est le compagnon actif</span><span>Chaque compagnon garde sa propre histoire.</span></footer>
     </main>
   </div>`;
@@ -185,12 +189,15 @@ function settingsView(): string {
   return html`<div class="page-heading"><div><p class="eyebrow">DISCRET, COMME TU L’AIMES</p><h1>À tes commandes<span>.</span></h1><p>La présence de Sherka sur ton bureau.</p></div></div>
     <section class="settings-card"><div class="section-heading"><h2>Le widget</h2>${icon('orbit')}</div><form id="preferences-form"><label class="setting-row"><span><strong>Toujours au premier plan</strong><small>Garder ton compagnon visible au-dessus des autres fenêtres.</small></span><input class="switch" type="checkbox" name="always_on_top" ${state!.settings.always_on_top ? 'checked' : ''} /></label><label class="setting-row"><span><strong>Taille du compagnon</strong><small>Tu peux aussi tirer le coin inférieur droit du widget.</small></span><span class="scale-control range-control"><input id="widget-scale" name="widget_scale" type="range" min="65" max="160" step="5" value="${state!.settings.widget_scale}" /><output id="scale-value" for="widget-scale" data-percent-scale="0.01">${state!.settings.widget_scale} %</output></span></label><div class="settings-actions"><button class="button primary" type="submit">${icon('check')} Enregistrer</button><button class="button secondary" type="button" data-action="restore_widget">Replacer le widget</button></div></form></section>
     <section class="settings-card"><h2>Passage des clics</h2><p>Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification Windows.</p><div class="settings-actions"><button class="button secondary" data-action="click_through">Laisser passer les clics</button><button class="text-button" data-action="restore_widget">Reprendre les clics</button></div></section>
-    ${interfaceLanguageView()}${updatesView()}<div id="connections-root"></div><div id="audio-settings-root"></div>
+    ${interfaceLanguageView()}${webSettings(state!.settings.web_search)}${updatesView()}<div id="connections-root"></div><div id="audio-settings-root"></div>
     <section class="settings-card"><h2>Quitter Sherka</h2><p>Arrête le micro et la réponse, puis décharge le modèle du compagnon dans LM Studio.</p><button class="button secondary" data-action="quit">Quitter Sherka</button></section>
     <section class="storage-card">${icon('shield')}<div><strong>Données conservées sur ce PC</strong><p class="storage-path">${escape(state!.data_directory)}</p><small>Un dossier et une base par compagnon. Aucun enregistrement audio.</small></div></section>`;
 }
 
 function bindPanel(): void {
+  document.querySelector<HTMLSelectElement>('#web-search-mode')?.addEventListener('change', event => {
+    void change({kind:'web_search', mode:(event.target as HTMLSelectElement).value as Snapshot['settings']['web_search']}, t('Réglage de recherche Internet enregistré.'));
+  });
   document.querySelector<HTMLSelectElement>('#interface-language')?.addEventListener('change', event => {
     const selectedLanguage = (event.target as HTMLSelectElement).value as Language;
     void change({kind:'interface_language',language:selectedLanguage}, 'Langue de l’interface enregistrée.');
@@ -234,6 +241,7 @@ function bindPanel(): void {
 
 function bindWindowActions(): void {
   document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach((button) => button.addEventListener('click', async () => {
+    if (widget && ['show_panel', 'hide_widget'].includes(button.dataset.action!)) dismissWidgetControls?.();
     button.disabled = true;
     try { await act(button.dataset.action as WidgetAction); }
     finally { button.disabled = false; }
@@ -310,17 +318,46 @@ async function loadHistory(id: string): Promise<void> {
 function renderWidget(): void {
   const profile = activeProfile();
   if (!profile) return;
-  app.innerHTML = html`<main class="widget accent-${profile.accent}${widgetControlsPinned ? ' controls-pinned' : ''}"><div class="widget-name widget-chrome"><i class="status-dot"></i><span>${escape(profile.name)}</span></div><button class="widget-portrait" id="drag-region" aria-label="Afficher ou masquer les commandes de ${escape(profile.name)}" aria-pressed="${widgetControlsPinned}" title="Survole pour les commandes, clique pour les garder, fais glisser pour déplacer"><img draggable="false" src="${portrait(profile)}" alt="${escape(profile.name)}" /></button><div class="widget-status widget-chrome">${icon('micOff')}<span data-session-status>Microphone coupé</span></div><div class="widget-toolbar widget-chrome"><button class="icon-button" id="choose-companion" aria-label="Changer de compagnon" title="Changer de compagnon" aria-expanded="false" aria-controls="widget-companions">${icon('profiles')}</button><button class="icon-button" data-action="show_panel" aria-label="Ouvrir le poste de bord" title="Poste de bord">${icon('settings')}</button><button class="icon-button" data-mic-toggle data-action="toggle_microphone" aria-label="Activer le micro" title="Activer le micro">${icon('micOff')}</button><button class="icon-button" data-action="stop_response" aria-label="Arrêter la réponse" title="Arrêter la réponse">${icon('stop')}</button><button class="icon-button" data-action="hide_widget" aria-label="Masquer le compagnon" title="Masquer (accessible dans la zone de notification)">${icon('close')}</button></div><div class="widget-companions" id="widget-companions" hidden><span>Ton compagnon</span><div role="group" aria-label="Choisir un compagnon">${state!.profiles.map(p => html`<button type="button" data-companion="${p.id}" aria-pressed="${p.id === profile.id}"><img src="${portrait(p)}" alt="" /><span>${escape(p.name)}</span>${p.id === profile.id ? icon('check') : ''}</button>`).join('')}</div></div><button class="resize-handle widget-chrome" id="resize-widget" aria-label="Redimensionner le widget" title="Redimensionner">${icon('resize')}</button></main>`;
+  app.innerHTML = html`<main class="widget accent-${profile.accent}${widgetPointerInside || widgetControlsPinned || widgetKeyboardControls ? ' controls-visible' : ''}"><div class="widget-name widget-chrome"><i class="status-dot"></i><span>${escape(profile.name)}</span></div><button class="widget-portrait" id="drag-region" aria-label="Afficher ou masquer les commandes de ${escape(profile.name)}" aria-pressed="${widgetControlsPinned}" title="Survole ou clique pour les commandes, fais glisser pour déplacer"><img draggable="false" src="${portrait(profile)}" alt="${escape(profile.name)}" /></button><div class="widget-status widget-chrome">${icon('micOff')}<span data-session-status>Microphone coupé</span></div><div class="widget-toolbar widget-chrome"><button class="icon-button" id="choose-companion" aria-label="Changer de compagnon" title="Changer de compagnon" aria-expanded="false" aria-controls="widget-companions">${icon('profiles')}</button><button class="icon-button" data-action="show_panel" aria-label="Ouvrir le poste de bord" title="Poste de bord">${icon('settings')}</button><button class="icon-button" data-mic-toggle data-action="toggle_microphone" aria-label="Activer le micro" title="Activer le micro">${icon('micOff')}</button><button class="icon-button" data-action="stop_response" aria-label="Arrêter la réponse" title="Arrêter la réponse">${icon('stop')}</button><button class="icon-button" data-action="hide_widget" aria-label="Masquer le compagnon" title="Masquer (accessible dans la zone de notification)">${icon('close')}</button></div><div class="widget-companions" id="widget-companions" hidden><span>Ton compagnon</span><div role="group" aria-label="Choisir un compagnon">${state!.profiles.map(p => html`<button type="button" data-companion="${p.id}" aria-pressed="${p.id === profile.id}"><img src="${portrait(p)}" alt="" /><span>${escape(p.name)}</span>${p.id === profile.id ? icon('check') : ''}</button>`).join('')}</div></div><button class="resize-handle widget-chrome" id="resize-widget" aria-label="Redimensionner le widget" title="Redimensionner">${icon('resize')}</button></main>`;
   bindWindowActions();
   const surface = document.querySelector<HTMLElement>('.widget')!;
   const portraitButton = document.querySelector<HTMLButtonElement>('#drag-region')!;
   const picker = document.querySelector<HTMLElement>('#widget-companions')!;
   const pickerButton = document.querySelector<HTMLButtonElement>('#choose-companion')!;
-  const closePicker = () => { picker.hidden = true; pickerButton.setAttribute('aria-expanded', 'false'); surface.classList.remove('choosing-companion'); };
+  const closePicker = () => { picker.hidden = true; pickerButton.setAttribute('aria-expanded', 'false'); };
+  const updateControls = () => {
+    surface.classList.toggle('controls-visible', widgetPointerInside || widgetControlsPinned || widgetKeyboardControls);
+    portraitButton.setAttribute('aria-pressed', String(widgetControlsPinned));
+  };
+  dismissWidgetControls = () => {
+    widgetControlsPinned = widgetPointerInside = widgetKeyboardControls = false;
+    closePicker();
+    if (surface.contains(document.activeElement)) (document.activeElement as HTMLElement)?.blur();
+    updateControls();
+  };
+  // Native dragging and window changes can leave CSS :hover / :focus-visible stale.
+  // Show controls only while a current pointer or keyboard interaction owns them.
+  for (const event of ['pointerenter', 'pointermove']) surface.addEventListener(event, () => {
+    if (!widgetPointerInside) { widgetPointerInside = true; updateControls(); }
+  });
+  surface.addEventListener('pointerleave', () => dismissWidgetControls?.());
+  surface.addEventListener('focusin', event => {
+    if ((event.target as Element).matches(':focus-visible')) { widgetKeyboardControls = true; updateControls(); }
+  });
+  surface.addEventListener('focusout', event => {
+    if (surface.contains(event.relatedTarget as Node | null)) return;
+    // Let the browser finish a focus transfer before closing the picker.
+    setTimeout(() => {
+      if (!surface.isConnected || surface.contains(document.activeElement)) return;
+      widgetControlsPinned = widgetKeyboardControls = false;
+      closePicker();
+      updateControls();
+    }, 0);
+  });
+  updateControls();
   pickerButton.addEventListener('click', () => {
     picker.hidden = !picker.hidden;
     pickerButton.setAttribute('aria-expanded', String(!picker.hidden));
-    surface.classList.toggle('choosing-companion', !picker.hidden);
     if (!picker.hidden) picker.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
   });
   surface.addEventListener('pointerdown', event => {
@@ -344,28 +381,27 @@ function renderWidget(): void {
     if (!press || Math.hypot(event.screenX - press.x, event.screenY - press.y) < 5) return;
     press = undefined;
     dragged = true;
+    event.stopPropagation();
     portraitButton.releasePointerCapture(event.pointerId);
+    dismissWidgetControls?.();
     void getCurrentWindow().startDragging().catch(report);
   });
   for (const event of ['pointerup', 'pointercancel']) portraitButton.addEventListener(event, () => { press = undefined; });
-  const updatePin = () => {
-    surface.classList.toggle('controls-pinned', widgetControlsPinned);
-    portraitButton.setAttribute('aria-pressed', String(widgetControlsPinned));
-  };
   portraitButton.addEventListener('click', () => {
     if (dragged) return;
     widgetControlsPinned = !widgetControlsPinned;
-    updatePin();
+    updateControls();
   });
   surface.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
     if (!picker.hidden) { closePicker(); pickerButton.focus(); return; }
-    widgetControlsPinned = false;
-    (document.activeElement as HTMLElement | null)?.blur();
-    updatePin();
+    dismissWidgetControls?.();
   });
   document.querySelector('#resize-widget')?.addEventListener('pointerdown', (event) => {
-    if ((event as PointerEvent).button === 0) void getCurrentWindow().startResizeDragging('SouthEast').catch(report);
+    if ((event as PointerEvent).button === 0) {
+      dismissWidgetControls?.();
+      void getCurrentWindow().startResizeDragging('SouthEast').catch(report);
+    }
   });
 }
 
@@ -376,6 +412,11 @@ async function start(): Promise<void> {
   }
   try {
     await api.onChanged(() => void refresh());
+    if (widget) {
+      window.addEventListener('blur', () => dismissWidgetControls?.());
+      document.addEventListener('visibilitychange', () => { if (document.hidden) dismissWidgetControls?.(); });
+      await getCurrentWindow().onFocusChanged(({ payload }) => { if (!payload) dismissWidgetControls?.(); });
+    }
     await mountVoiceService(() => { if (state) paintLive(state); });
     if (!widget) await initializeUpdates();
     if (!widget) {

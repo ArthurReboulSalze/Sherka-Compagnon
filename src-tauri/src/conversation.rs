@@ -535,6 +535,35 @@ async fn prepare_turn(
     .await?;
     let budget =
         sherka_core::conversation::budget(&profile.details, &model).map_err(|e| e.to_string())?;
+    let mode = with_core(shared.clone(), |c| Ok(c.web_search_mode())).await?;
+    let mut web = None;
+    if let Some(explicit) = sherka_core::web::explicit_query(user) {
+        if mode == sherka_core::web::SearchMode::Off {
+            web = Some(sherka_core::web::Report { error: Some("La recherche Internet est désactivée. Active-la dans Réglages pour chercher en ligne.".into()), ..Default::default() });
+        } else {
+            web =
+                Some(search_web(app, shared, tag, explicit, &provider.connections.language).await?);
+        }
+    } else if mode == sherka_core::web::SearchMode::Auto
+        && !sherka_core::memory::memory_intent(user)
+        && !sherka_core::web::forbids_search(user)
+    {
+        update(app, shared, tag, |c| {
+            c.live.notice = Some("Je vérifie si une recherche Internet est utile…".into());
+            Ok(())
+        })
+        .map_err(|e| e.to_string())?;
+        match provider.web_plan(user, budget.limit).await {
+            Ok(plan) if plan.search => web = Some(search_web(app, shared, tag, &plan.query, &provider.connections.language).await?),
+            Ok(_) => {}
+            Err(_) => web = Some(sherka_core::web::Report { error: Some("Le modèle n’a pas pu décider de la recherche. Utilise le bouton Chercher sur Internet ou une demande explicite.".into()), ..Default::default() }),
+        }
+        update(app, shared, tag, |c| {
+            c.live.notice = None;
+            Ok(())
+        })
+        .map_err(|e| e.to_string())?;
+    }
     let mut receipt = None;
     if sherka_core::memory::memory_intent(user) {
         let mut visible = visible;
@@ -593,20 +622,57 @@ async fn prepare_turn(
             .filter(|m| m.id != source.id)
             .collect::<Vec<_>>();
         let recall = c.store.recall(tag.profile_id, &text)?;
-        let prepared = sherka_core::conversation::prepare_context(
+        let prepared = sherka_core::conversation::prepare_context_with_web(
             &profile.details,
             &history,
             &text,
             &recall,
             budget,
             receipt.as_deref(),
+            web,
         )?;
         c.live.budget = Some(prepared.budget.clone());
+        c.live.web = prepared.web.clone();
         Ok(prepared)
     })
     .await?;
     emit(app, shared);
     Ok(prepared)
+}
+
+async fn search_web(
+    app: &AppHandle,
+    shared: &Shared,
+    tag: OperationTag,
+    query: &str,
+    language: &str,
+) -> std::result::Result<sherka_core::web::Report, String> {
+    let checked = sherka_core::web::query(query);
+    let mut report = sherka_core::web::Report {
+        query: checked.as_ref().cloned().unwrap_or_default(),
+        searching: true,
+        ..Default::default()
+    };
+    update(app, shared, tag, |c| {
+        c.live.web = Some(report.clone());
+        Ok(())
+    })
+    .map_err(|e| e.to_string())?;
+    let result = match checked {
+        Ok(query) => sherka_core::web::search(&query, language).await,
+        Err(error) => Err(error),
+    };
+    report.searching = false;
+    match result {
+        Ok(sources) => report.sources = sources,
+        Err(error) => report.error = Some(error.to_string()),
+    }
+    update(app, shared, tag, |c| {
+        c.live.web = Some(report.clone());
+        Ok(())
+    })
+    .map_err(|e| e.to_string())?;
+    Ok(report)
 }
 
 fn schedule_memory(app: AppHandle, shared: Shared, profile: Uuid, provider: Providers) {
@@ -747,22 +813,54 @@ async fn run_turn(
         return;
     }
     let (tokens_tx, mut tokens_rx) = mpsc::channel::<String>(64);
+    let web_reply = prepared
+        .web
+        .as_ref()
+        .is_some_and(|report| !report.sources.is_empty());
     let speech_text = SpeechText::shared();
     let (audio_tx, audio_rx) = mpsc::channel::<(String, Vec<i16>)>(1);
-    let generate = provider.chat_budgeted(
-        prepared.messages,
-        tokens_tx,
-        prepared.budget.response_tokens,
-    );
+    let fixed_reply = prepared
+        .web
+        .as_ref()
+        .and_then(|report| report.unavailable_reply(&provider.connections.language));
+    let unavailable = fixed_reply.is_some();
+    let generate = async {
+        if let Some(text) = fixed_reply {
+            tokens_tx
+                .send(text)
+                .await
+                .map_err(|_| Error::StaleOperation)?;
+            Ok(sherka_core::providers::ChatOutcome::default())
+        } else {
+            provider
+                .chat_budgeted(
+                    prepared.messages,
+                    tokens_tx,
+                    prepared.budget.response_tokens,
+                )
+                .await
+        }
+    };
     let consume = async {
+        let mut web_speech = sherka_core::web::SpeechFilter::default();
         while let Some(text) = tokens_rx.recv().await {
             update(&app, &shared, tag, |c| {
                 c.live.reply.push_str(&text);
                 Ok(())
             })?;
             if speak {
-                speech_text.push(&text)?;
+                let text = if web_reply {
+                    web_speech.push(&text)
+                } else {
+                    text
+                };
+                if !text.is_empty() {
+                    speech_text.push(&text)?;
+                }
             }
+        }
+        if speak && web_reply {
+            speech_text.push(&web_speech.finish())?;
         }
         Ok::<_, Error>(())
     };
@@ -838,15 +936,17 @@ async fn run_turn(
             let _ = with_core(shared.clone(), move |c| {
                 if !c.session.accepts(tag) {return Err(Error::StaleOperation);}
                 if outcome.length_limited {c.live.notice=Some("La réponse a atteint la réserve de tokens. Tu peux demander la suite ou augmenter cette réserve dans les réglages.".into());}
-                c.live.usage=Some(outcome);
+                c.live.usage=if unavailable {None} else {Some(outcome)};
                 c.finish_response(tag, delivery)
             }).await;
-            schedule_memory(
-                app.clone(),
-                shared.clone(),
-                tag.profile_id,
-                provider.clone(),
-            );
+            if !unavailable {
+                schedule_memory(
+                    app.clone(),
+                    shared.clone(),
+                    tag.profile_id,
+                    provider.clone(),
+                );
+            }
         }
         Some((llm, consumed, _)) => {
             let error = llm

@@ -15,7 +15,7 @@ use std::{
 };
 use uuid::Uuid;
 
-const SCHEMA_VERSION: i64 = 3;
+const SCHEMA_VERSION: i64 = 4;
 const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_EXPORT_BYTES: usize = 15 * 1024 * 1024;
 
@@ -37,6 +37,7 @@ pub enum Delivery {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Message {
+    pub web: Option<crate::web::Report>,
     pub id: String,
     pub role: MessageRole,
     pub content: String,
@@ -135,6 +136,13 @@ impl Store {
         if version < 3 {
             let tx = db.transaction()?;
             tx.execute_batch(include_str!("memory_schema.sql"))?;
+            tx.commit()?;
+        }
+        if version < 4 {
+            let tx = db.transaction()?;
+            tx.execute_batch(
+                "ALTER TABLE messages ADD COLUMN web_sources TEXT; PRAGMA user_version = 4;",
+            )?;
             tx.commit()?;
         }
         Ok(db)
@@ -365,7 +373,7 @@ impl Store {
 
     pub fn history(&self, id: Uuid, limit: u32) -> Result<Vec<Message>> {
         let db = self.db(id)?;
-        let mut query = db.prepare("SELECT id,role,content,delivery,created_at,heard_content FROM (SELECT seq,id,role,content,delivery,created_at,heard_content FROM messages ORDER BY seq DESC LIMIT ?1) ORDER BY seq")?;
+        let mut query = db.prepare("SELECT id,role,content,delivery,created_at,heard_content,web_sources FROM (SELECT seq,id,role,content,delivery,created_at,heard_content,web_sources FROM messages ORDER BY seq DESC LIMIT ?1) ORDER BY seq")?;
         let raw = query.query_map([limit.min(100)], |r| {
             Ok((
                 r.get::<_, String>(0)?,
@@ -374,11 +382,13 @@ impl Store {
                 r.get::<_, String>(3)?,
                 r.get::<_, i64>(4)?,
                 r.get::<_, String>(5)?,
+                r.get::<_, Option<String>>(6)?,
             ))
         })?;
         raw.map(|row| {
-            let (id, role, content, delivery, created_at, heard_content) = row?;
+            let (id, role, content, delivery, created_at, heard_content, web) = row?;
             Ok(Message {
+                web: web.map(|text| serde_json::from_str(&text)).transpose()?,
                 id,
                 role: serde_json::from_str(&role)?,
                 content,
@@ -406,6 +416,17 @@ impl Store {
         self.db(tag.profile_id)?.execute(
             "INSERT INTO messages(id,session_id,turn_id,generation_id,role,content,delivery,created_at,heard_content) VALUES(?1,?2,?3,?1,?4,?5,?6,?7,?8) ON CONFLICT(id) DO UPDATE SET content=excluded.content,delivery=excluded.delivery,heard_content=excluded.heard_content",
             params![tag.generation_id.to_string(), tag.session_id.to_string(), tag.turn_id.to_string(), serde_json::to_string(&MessageRole::Assistant)?,content,serde_json::to_string(&delivery)?,now(),heard])?;
+        Ok(())
+    }
+
+    pub fn save_web_sources(&self, tag: OperationTag, report: &crate::web::Report) -> Result<()> {
+        self.db(tag.profile_id)?.execute(
+            "UPDATE messages SET web_sources=?1 WHERE id=?2",
+            params![
+                serde_json::to_string(report)?,
+                tag.generation_id.to_string()
+            ],
+        )?;
         Ok(())
     }
 

@@ -16,6 +16,35 @@ static MICROPHONE_ACTIVE: AtomicBool = AtomicBool::new(false);
 // 0: running, 1: cleanup, 2: allowed to exit, 3: cleanup failed.
 static QUIT_STATE: AtomicU8 = AtomicU8::new(0);
 struct MicrophoneMenu(MenuItem<tauri::Wry>);
+pub fn open_web_url(url: &str) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::{Shell::ShellExecuteW, WindowsAndMessaging::SW_SHOWNORMAL};
+        let verb: Vec<u16> = "open".encode_utf16().chain(Some(0)).collect();
+        let url: Vec<u16> = url.encode_utf16().chain(Some(0)).collect();
+        // URL is selected from the stored search result and validated in Rust.
+        let result = unsafe {
+            ShellExecuteW(
+                std::ptr::null_mut(),
+                verb.as_ptr(),
+                url.as_ptr(),
+                std::ptr::null(),
+                std::ptr::null(),
+                SW_SHOWNORMAL,
+            )
+        };
+        if result as isize > 32 {
+            Ok(())
+        } else {
+            Err("Impossible d’ouvrir la source Internet.".into())
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = url;
+        Err("Impossible d’ouvrir la source Internet.".into())
+    }
+}
 struct LocalizedMenu(Vec<(MenuItem<tauri::Wry>, &'static str)>);
 
 pub fn set_language(app: &AppHandle, language: sherka_core::i18n::Language) -> tauri::Result<()> {

@@ -1,8 +1,10 @@
 # Project status
 
-Public version: **0.4.0**, October 11, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+Public version: **0.5.0**, October 11, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
 
-This release adds localized widget/tray controls, polished settings fields and a built-in Sherka personality in each language. The original Sherka follows the interface language; custom companions keep the language chosen at creation. Models and voices remain user-configured. See [languages](LANGUAGES.md).
+Optional DuckDuckGo search offers disabled, on-request and automatic modes, bounded snippets and persistent source links. Widget controls now dismiss on pointer exit, focus loss and opening the panel. See [web search](WEB_SEARCH.md).
+
+The public release adds localized widget/tray controls, polished settings fields and a built-in Sherka personality in each language. The original Sherka follows the interface language; custom companions keep the language chosen at creation. Models and voices remain user-configured. See [languages](LANGUAGES.md).
 
 ## Available
 

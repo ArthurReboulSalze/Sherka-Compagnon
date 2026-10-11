@@ -3783,14 +3783,6 @@
     "永久删除",
     "完全に削除"
   ],
-  "Survole pour les commandes, clique pour les garder, fais glisser pour déplacer": [
-    "Hover for controls, click to keep them, drag to move",
-    "Pasa el cursor para ver los controles, haz clic para fijarlos y arrastra para mover",
-    "Passa sopra per i comandi, clicca per tenerli, trascina per spostare",
-    "Zeigen: Maus darüber; festhalten: klicken; verschieben: ziehen",
-    "悬停显示控件，点击固定，拖动移动",
-    "カーソルを合わせると操作を表示、クリックで固定、ドラッグで移動"
-  ],
   "Taille du compagnon": [
     "Companion size",
     "Tamaño del compañero",
@@ -4550,5 +4542,309 @@
     "Die ursprüngliche Sherka folgt der Sprache der Oberfläche. Wenn du ihren Namen oder Charakter änderst, wird sie zu einer eigenen Begleiterin mit einer festen Sprache.",
     "原版 Sherka 使用界面语言。如果修改她的名字或性格，她就会成为语言固定的自定义伙伴。",
     "初期設定の Sherka は画面の言語に従います。名前や性格を変更すると、言語が固定されたカスタムの仲間になります。"
+  ],
+  "Accès Internet": [
+    "Internet access",
+    "Acceso a Internet",
+    "Accesso a Internet",
+    "Internetzugriff",
+    "互联网访问",
+    "インターネットへのアクセス"
+  ],
+  "Aucun résultat trouvé sur Internet.": [
+    "No web results found.",
+    "No se encontraron resultados en Internet.",
+    "Nessun risultato trovato su Internet.",
+    "Keine Ergebnisse im Internet gefunden.",
+    "未找到网络搜索结果。",
+    "ウェブ検索の結果が見つかりませんでした。"
+  ],
+  "Automatique": [
+    "Automatic",
+    "Automático",
+    "Automatico",
+    "Automatisch",
+    "自动",
+    "自動"
+  ],
+  "Cette adresse Internet n’est pas autorisée.": [
+    "This web address is not allowed.",
+    "Esta dirección web no está permitida.",
+    "Questo indirizzo web non è consentito.",
+    "Diese Internetadresse ist nicht erlaubt.",
+    "不允许使用此网址。",
+    "このウェブアドレスは許可されていません。"
+  ],
+  "Cette source Internet n’est plus disponible.": [
+    "This web source is no longer available.",
+    "Esta fuente web ya no está disponible.",
+    "Questa fonte web non è più disponibile.",
+    "Diese Internetquelle ist nicht mehr verfügbar.",
+    "此网络来源已不可用。",
+    "このウェブ情報源は利用できなくなりました。"
+  ],
+  "Chercher sur Internet pour ce message": [
+    "Search the web for this message",
+    "Buscar en Internet para este mensaje",
+    "Cerca su Internet per questo messaggio",
+    "Für diese Nachricht im Internet suchen",
+    "为这条消息进行网络搜索",
+    "このメッセージについてウェブ検索する"
+  ],
+  "Désactivé": [
+    "Disabled",
+    "Desactivado",
+    "Disattivato",
+    "Deaktiviert",
+    "已禁用",
+    "無効"
+  ],
+  "DuckDuckGo demande une vérification anti-robot. Réessaie plus tard ; aucun résultat n’a été récupéré.": [
+    "DuckDuckGo requires a bot check. Try again later; no results were retrieved.",
+    "DuckDuckGo solicita una verificación contra bots. Inténtalo más tarde; no se obtuvo ningún resultado.",
+    "DuckDuckGo richiede una verifica anti-bot. Riprova più tardi; nessun risultato è stato recuperato.",
+    "DuckDuckGo verlangt eine Bot-Prüfung. Versuche es später erneut; es wurden keine Ergebnisse abgerufen.",
+    "DuckDuckGo 要求进行反机器人验证。请稍后重试；未获取任何结果。",
+    "DuckDuckGo がボット対策の認証を求めています。後で再試行してください。結果は取得されていません。"
+  ],
+  "DuckDuckGo, sans compte ni clé API. La requête de recherche est envoyée sur Internet ; les souvenirs et l’historique ne sont pas joints.": [
+    "DuckDuckGo, with no account or API key. The search query is sent online; memories and history are not attached.",
+    "DuckDuckGo, sin cuenta ni clave API. La consulta se envía a Internet; los recuerdos y el historial no se adjuntan.",
+    "DuckDuckGo, senza account o chiave API. La query viene inviata su Internet; ricordi e cronologia non vengono allegati.",
+    "DuckDuckGo, ohne Konto oder API-Schlüssel. Die Suchanfrage wird ins Internet gesendet; Erinnerungen und Verlauf werden nicht angehängt.",
+    "使用 DuckDuckGo，无需账户或 API 密钥。搜索词会发送到互联网；不会附带记忆和历史记录。",
+    "DuckDuckGo をアカウントや API キーなしで使用します。検索クエリはインターネットに送信されますが、記憶や履歴は添付されません。"
+  ],
+  "Extraits du moteur de recherche ; les pages complètes n’ont pas été lues. Clique sur une source pour l’ouvrir dans ton navigateur.": [
+    "Search engine snippets; full pages have not been read. Click a source to open it in your browser.",
+    "Extractos del buscador; las páginas completas no se han leído. Haz clic en una fuente para abrirla en tu navegador.",
+    "Estratti del motore di ricerca; le pagine complete non sono state lette. Clicca su una fonte per aprirla nel browser.",
+    "Auszüge der Suchmaschine; vollständige Seiten wurden nicht gelesen. Klicke auf eine Quelle, um sie im Browser zu öffnen.",
+    "这些是搜索引擎摘要；未读取完整网页。点击来源可在浏览器中打开。",
+    "検索エンジンの抜粋です。ページ全体は読み込んでいません。情報源をクリックするとブラウザで開きます。"
+  ],
+  "Je vérifie si une recherche Internet est utile…": [
+    "Checking whether a web search would help…",
+    "Compruebo si una búsqueda web sería útil…",
+    "Verifico se una ricerca web può essere utile…",
+    "Ich prüfe, ob eine Internetsuche hilfreich wäre…",
+    "正在判断是否需要网络搜索…",
+    "ウェブ検索が役立つか確認しています…"
+  ],
+  "La décision de recherche Internet est illisible.": [
+    "The web search decision could not be read.",
+    "No se pudo leer la decisión de búsqueda web.",
+    "Impossibile leggere la decisione di ricerca web.",
+    "Die Entscheidung zur Internetsuche konnte nicht gelesen werden.",
+    "无法读取网络搜索决定。",
+    "ウェブ検索の判断を読み取れませんでした。"
+  ],
+  "La décision de recherche Internet est incomplète.": [
+    "The web search decision is incomplete.",
+    "La decisión de búsqueda web está incompleta.",
+    "La decisione di ricerca web è incompleta.",
+    "Die Entscheidung zur Internetsuche ist unvollständig.",
+    "网络搜索决定不完整。",
+    "ウェブ検索の判断が不完全です。"
+  ],
+  "La décision de recherche Internet est invalide.": [
+    "The web search decision is invalid.",
+    "La decisión de búsqueda web no es válida.",
+    "La decisione di ricerca web non è valida.",
+    "Die Entscheidung zur Internetsuche ist ungültig.",
+    "网络搜索决定无效。",
+    "ウェブ検索の判断が無効です。"
+  ],
+  "La décision de recherche Internet est trop longue.": [
+    "The web search decision is too long.",
+    "La decisión de búsqueda web es demasiado larga.",
+    "La decisione di ricerca web è troppo lunga.",
+    "Die Entscheidung zur Internetsuche ist zu lang.",
+    "网络搜索决定过长。",
+    "ウェブ検索の判断が長すぎます。"
+  ],
+  "La recherche doit contenir de 1 à 400 octets, sans caractère de contrôle.": [
+    "The search must contain 1 to 400 bytes, with no control characters.",
+    "La búsqueda debe contener de 1 a 400 bytes, sin caracteres de control.",
+    "La ricerca deve contenere da 1 a 400 byte, senza caratteri di controllo.",
+    "Die Suche muss 1 bis 400 Bytes ohne Steuerzeichen enthalten.",
+    "搜索词必须为 1 至 400 字节，且不能包含控制字符。",
+    "検索は 1～400 バイトで、制御文字を含めないでください。"
+  ],
+  "La recherche Internet a été interrompue.": [
+    "The web search was interrupted.",
+    "La búsqueda web se interrumpió.",
+    "La ricerca web è stata interrotta.",
+    "Die Internetsuche wurde unterbrochen.",
+    "网络搜索已中断。",
+    "ウェブ検索が中断されました。"
+  ],
+  "La recherche Internet est désactivée. Active-la dans Réglages pour chercher en ligne.": [
+    "Web search is disabled. Enable it in Settings to search online.",
+    "La búsqueda web está desactivada. Actívala en Ajustes para buscar en línea.",
+    "La ricerca web è disattivata. Attivala nelle Impostazioni per cercare online.",
+    "Die Internetsuche ist deaktiviert. Aktiviere sie in den Einstellungen, um online zu suchen.",
+    "网络搜索已禁用。请在设置中启用后再进行在线搜索。",
+    "ウェブ検索は無効です。オンライン検索するには設定で有効にしてください。"
+  ],
+  "La réponse du moteur de recherche est trop volumineuse.": [
+    "The search engine response is too large.",
+    "La respuesta del buscador es demasiado grande.",
+    "La risposta del motore di ricerca è troppo grande.",
+    "Die Antwort der Suchmaschine ist zu groß.",
+    "搜索引擎返回的数据过大。",
+    "検索エンジンの応答が大きすぎます。"
+  ],
+  "Le contexte disponible est trop petit pour décider de la recherche Internet.": [
+    "There is not enough context to decide whether to search the web.",
+    "No hay suficiente contexto para decidir si buscar en Internet.",
+    "Il contesto disponibile non basta per decidere se cercare sul web.",
+    "Es ist nicht genug Kontext vorhanden, um über eine Internetsuche zu entscheiden.",
+    "可用上下文不足，无法判断是否进行网络搜索。",
+    "ウェブ検索の要否を判断するためのコンテキストが不足しています。"
+  ],
+  "Le contexte disponible est trop petit pour les résultats Internet. Augmente le contexte ou raccourcis les instructions.": [
+    "There is not enough context for web results. Increase the context or shorten the instructions.",
+    "No hay suficiente contexto para los resultados web. Aumenta el contexto o acorta las instrucciones.",
+    "Il contesto non basta per i risultati web. Aumentalo o accorcia le istruzioni.",
+    "Es ist nicht genug Kontext für Internetergebnisse vorhanden. Vergrößere den Kontext oder kürze die Anweisungen.",
+    "可用上下文不足，无法容纳网络结果。请增加上下文或缩短指令。",
+    "ウェブ検索結果を含めるためのコンテキストが不足しています。コンテキストを増やすか指示を短くしてください。"
+  ],
+  "Le format de DuckDuckGo n’est pas reconnu. Aucun résultat fiable n’a été récupéré.": [
+    "DuckDuckGo's format was not recognized. No reliable results were retrieved.",
+    "No se reconoce el formato de DuckDuckGo. No se obtuvo ningún resultado fiable.",
+    "Il formato di DuckDuckGo non è riconosciuto. Nessun risultato affidabile è stato recuperato.",
+    "Das Format von DuckDuckGo wurde nicht erkannt. Es wurden keine verlässlichen Ergebnisse abgerufen.",
+    "无法识别 DuckDuckGo 的返回格式。未获取可靠结果。",
+    "DuckDuckGo の形式を認識できませんでした。信頼できる結果は取得されていません。"
+  ],
+  "Le modèle n’a pas pu décider de la recherche. Utilise le bouton Chercher sur Internet ou une demande explicite.": [
+    "The model could not decide whether to search. Use the Search the web control or an explicit request.",
+    "El modelo no pudo decidir si buscar. Usa el control Buscar en Internet o una petición explícita.",
+    "Il modello non ha potuto decidere se cercare. Usa il controllo Cerca su Internet o una richiesta esplicita.",
+    "Das Modell konnte nicht über die Suche entscheiden. Nutze die Internetsuche-Steuerung oder eine ausdrückliche Anfrage.",
+    "模型无法判断是否搜索。请使用网络搜索控件或明确提出搜索请求。",
+    "モデルが検索の要否を判断できませんでした。ウェブ検索の操作を使うか、検索を明示的に依頼してください。"
+  ],
+  "Le moteur de recherche a refusé la demande. Réessaie plus tard.": [
+    "The search engine rejected the request. Try again later.",
+    "El buscador rechazó la petición. Inténtalo más tarde.",
+    "Il motore di ricerca ha rifiutato la richiesta. Riprova più tardi.",
+    "Die Suchmaschine hat die Anfrage abgelehnt. Versuche es später erneut.",
+    "搜索引擎拒绝了请求。请稍后重试。",
+    "検索エンジンがリクエストを拒否しました。後で再試行してください。"
+  ],
+  "Le moteur de recherche ne répond pas. Vérifie ta connexion Internet.": [
+    "The search engine is not responding. Check your Internet connection.",
+    "El buscador no responde. Comprueba tu conexión a Internet.",
+    "Il motore di ricerca non risponde. Controlla la connessione Internet.",
+    "Die Suchmaschine antwortet nicht. Prüfe deine Internetverbindung.",
+    "搜索引擎无响应。请检查互联网连接。",
+    "検索エンジンが応答しません。インターネット接続を確認してください。"
+  ],
+  "Les réponses utilisent des extraits de résultats, avec des sources à ouvrir. DuckDuckGo peut demander une vérification anti-robot.": [
+    "Answers use result snippets, with sources you can open. DuckDuckGo may require a bot check.",
+    "Las respuestas usan extractos de resultados y fuentes que puedes abrir. DuckDuckGo puede solicitar una verificación contra bots.",
+    "Le risposte usano estratti dei risultati con fonti da aprire. DuckDuckGo può richiedere una verifica anti-bot.",
+    "Antworten nutzen Ergebnisauszüge mit Quellen zum Öffnen. DuckDuckGo kann eine Bot-Prüfung verlangen.",
+    "回答使用搜索结果摘要，并提供可打开的来源。DuckDuckGo 可能要求反机器人验证。",
+    "回答には検索結果の抜粋と開ける情報源を使用します。DuckDuckGo がボット対策の認証を求める場合があります。"
+  ],
+  "Recherche Internet": [
+    "Web search",
+    "Búsqueda en Internet",
+    "Ricerca Internet",
+    "Internetsuche",
+    "网络搜索",
+    "ウェブ検索"
+  ],
+  "Recherche sur Internet…": [
+    "Searching the web…",
+    "Buscando en Internet…",
+    "Ricerca sul web…",
+    "Suche im Internet…",
+    "正在搜索网络…",
+    "ウェブ検索中…"
+  ],
+  "Réglage de recherche Internet enregistré.": [
+    "Web search setting saved.",
+    "Ajuste de búsqueda web guardado.",
+    "Impostazione della ricerca web salvata.",
+    "Einstellung der Internetsuche gespeichert.",
+    "网络搜索设置已保存。",
+    "ウェブ検索の設定を保存しました。"
+  ],
+  "Résultats Internet": [
+    "Web results",
+    "Resultados de Internet",
+    "Risultati web",
+    "Internetergebnisse",
+    "网络搜索结果",
+    "ウェブ検索結果"
+  ],
+  "Sources de la recherche": [
+    "Search sources",
+    "Fuentes de la búsqueda",
+    "Fonti della ricerca",
+    "Quellen der Suche",
+    "搜索来源",
+    "検索の情報源"
+  ],
+  "Sur demande": [
+    "On request",
+    "A petición",
+    "Su richiesta",
+    "Auf Anfrage",
+    "按需",
+    "依頼時のみ"
+  ],
+  "Sur demande : utilise le bouton dans Conversation ou demande « cherche sur Internet ». Automatique : le modèle décide si une recherche est utile. Sa fiabilité dépend du modèle et ce mode ajoute un peu d’attente.": [
+    "On request: use the control in Conversation or ask to search the web. Automatic: the model decides whether a search would help. Reliability depends on the model, and this mode adds some waiting time.",
+    "A petición: usa el control en Conversación o pide buscar en Internet. Automático: el modelo decide si una búsqueda sería útil. La fiabilidad depende del modelo y este modo añade algo de espera.",
+    "Su richiesta: usa il controllo in Conversazione o chiedi di cercare su Internet. Automatico: il modello decide se una ricerca è utile. L'affidabilità dipende dal modello e questa modalità aggiunge un po' di attesa.",
+    "Auf Anfrage: nutze die Steuerung im Gespräch oder bitte um eine Internetsuche. Automatisch: das Modell entscheidet, ob eine Suche hilfreich wäre. Die Zuverlässigkeit hängt vom Modell ab, und dieser Modus verlängert die Wartezeit etwas.",
+    "按需：使用对话中的控件或明确要求网络搜索。自动：由模型判断搜索是否有帮助。可靠性取决于模型，此模式会增加一些等待时间。",
+    "依頼時のみ：会話の操作を使うか、ウェブ検索を依頼してください。自動：モデルが検索の必要性を判断します。信頼性はモデルによって異なり、このモードでは待ち時間が少し増えます。"
+  ],
+  "Impossible d’initialiser la recherche Internet.": [
+    "Could not initialize web search.",
+    "No se pudo iniciar la búsqueda web.",
+    "Impossibile inizializzare la ricerca web.",
+    "Die Internetsuche konnte nicht initialisiert werden.",
+    "无法初始化网络搜索。",
+    "ウェブ検索を初期化できませんでした。"
+  ],
+  "Impossible d’ouvrir la source Internet.": [
+    "Could not open the web source.",
+    "No se pudo abrir la fuente web.",
+    "Impossibile aprire la fonte web.",
+    "Die Internetquelle konnte nicht geöffnet werden.",
+    "无法打开网络来源。",
+    "ウェブ情報源を開けませんでした。"
+  ],
+  "Adresse de test de recherche invalide.": [
+    "Invalid test search address.",
+    "Dirección de búsqueda de prueba no válida.",
+    "Indirizzo di ricerca di prova non valido.",
+    "Ungültige Test-Suchadresse.",
+    "测试搜索地址无效。",
+    "検索テストのアドレスが無効です。"
+  ],
+  "Le système bloque l’accès Internet de Sherka. Vérifie son autorisation dans ton pare-feu, puis réessaie.": [
+    "System policy is blocking Sherka’s Internet access. Check its firewall permission, then try again.",
+    "El sistema bloquea el acceso de Sherka a Internet. Comprueba su permiso en el cortafuegos y vuelve a intentarlo.",
+    "Il sistema blocca l’accesso di Sherka a Internet. Controlla l’autorizzazione nel firewall, poi riprova.",
+    "Das System blockiert Sherkas Internetzugriff. Prüfe ihre Firewall-Berechtigung und versuche es erneut.",
+    "系统阻止了 Sherka 的互联网访问。请检查防火墙权限后重试。",
+    "システムが Sherka のインターネットアクセスをブロックしています。ファイアウォールの許可を確認して再試行してください。"
+  ],
+  "Survole ou clique pour les commandes, fais glisser pour déplacer": [
+    "Hover or click for controls, drag to move",
+    "Pasa el cursor o haz clic para ver los controles; arrastra para mover",
+    "Passa il mouse o fai clic per i comandi, trascina per spostare",
+    "Für Bedienelemente darüberfahren oder klicken, zum Verschieben ziehen",
+    "悬停或点击显示控件，拖动以移动",
+    "ホバーまたはクリックで操作ボタンを表示、ドラッグで移動"
   ]
 }

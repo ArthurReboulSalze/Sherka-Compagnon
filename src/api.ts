@@ -24,6 +24,7 @@ export const discoverVoices = (baseUrl: string) => invoke<VoiceCatalog>('discove
 export const audioDevices = () => invoke<AudioDevices>('get_audio_devices');
 export const conversation = () => invoke<LiveState>('get_conversation');
 export const sendMessage = (profileId: string, text: string, speak: boolean) => invoke<void>('send_message', { profileId, text, speak });
+export const openWebSource = (profileId: string, messageId: string | null, index: number) => invoke<void>('open_web_source', { profileId, messageId, index });
 export const onLive = (callback: (state: LiveState) => void) => listen<LiveState>('sherka:live', (e) => callback(e.payload));
 export const onHistory = (callback: (profileId: string) => void) => listen<string>('sherka:history', (e) => callback(e.payload));
 export const onMeter = (callback: (value: { level: number; speech: boolean }) => void) => listen<{ level: number; speech: boolean }>('sherka:meter', (e) => callback(e.payload));

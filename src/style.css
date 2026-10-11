@@ -257,7 +257,6 @@ html:has(.widget-body) { background: transparent; }
 .widget-companions img { width: 29px; height: 29px; object-fit: contain; }
 .widget-companions button span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
 .widget-companions svg { width: 14px; height: 14px; flex-shrink: 0; }
-.widget.choosing-companion .widget-chrome { visibility: visible; opacity: 1; pointer-events: auto; }
 .working .widget-companions { pointer-events: none; }
 .quit-status { position: fixed; inset: auto 12px 12px; padding: 12px; background: #121924f5; border: 1px solid #ffffff26; border-radius: 8px; text-align: center; font-size: 12px; z-index: 20; }
 .quitting #app { pointer-events: none; opacity: .65; }
@@ -265,7 +264,7 @@ html:has(.widget-body) { background: transparent; }
 .resize-handle svg { width: 14px; height: 14px; }
 .widget-body .toast { font-size: 10px; padding: 9px; }
 .widget-chrome { visibility: hidden; opacity: 0; pointer-events: none; transition: opacity .14s, visibility .14s; }
-.widget:hover .widget-chrome, .widget.controls-pinned .widget-chrome, .widget:has(:focus-visible) .widget-chrome { visibility: visible; opacity: 1; pointer-events: auto; }
+.widget.controls-visible .widget-chrome { visibility: visible; opacity: 1; pointer-events: auto; }
 .connections-card .profile-picker { flex-wrap: wrap; }
 .provider { margin: 22px 0 0; padding: 20px; border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
 .provider legend { padding: 0 8px; color: #edc38b; font-size: 14px; }
@@ -312,6 +311,18 @@ html:has(.widget-body) { background: transparent; }
 .inline-check input { width: auto; }
 .conversation-error { padding: 14px 18px; border: 1px solid #78584b; border-radius: 12px; color: #f2bba4; background: #362921; }
 [hidden] { display: none !important; }
+.web-report { margin: 12px 0; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; background: #19222a; font-size: 12px; }
+.web-report > small, .web-sources li > small { display: block; margin: 6px 0; color: var(--muted); overflow-wrap: anywhere; }
+.web-sources { margin-top: 12px; }
+.web-sources summary { cursor: pointer; color: var(--accent); }
+.web-sources ol { padding-left: 22px; }
+.web-sources li { margin: 12px 0; }
+.web-sources p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.web-source { border: 0; padding: 0; background: transparent; color: #edc38b; font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.web-source:hover { text-decoration: underline; }
+.web-source:focus-visible { outline: 2px solid #edc38b; outline-offset: 4px; border-radius: 3px; }
+.web-search-status { color: var(--muted); overflow-wrap: anywhere; }
+.message-actions { flex-wrap: wrap; }
 .microphone-on { color: #b3dfc2 !important; border-color: #75977f !important; }
 .mic-status.listening i, .widget.listening .status-dot { background: #9bc9ad; }
 .widget.speaking .widget-portrait img { animation: voice-glow 1s ease-in-out infinite alternate; }

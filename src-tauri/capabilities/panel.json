@@ -23,6 +23,7 @@
     "allow-get-audio-devices",
     "allow-get-conversation",
     "allow-send-message",
+    "allow-open-web-source",
     "allow-get-voice-service",
     "allow-retry-voice-service",
     "allow-get-update-status",

@@ -316,7 +316,7 @@ fn migration_v2_keeps_messages_and_memory_provenance() {
         .join("profile.sqlite3");
     let db = rusqlite::Connection::open(path).unwrap();
     // Reconstruct the previous shipped schema, not a version number alone.
-    db.execute_batch("DROP TRIGGER message_insert; DROP TRIGGER message_update; DROP TRIGGER message_delete; DROP TABLE messages_fts; DROP TABLE summary_sources; DROP TABLE memory_sources; DROP TABLE memory_meta; ALTER TABLE memories DROP COLUMN kind; ALTER TABLE memories DROP COLUMN approved; ALTER TABLE memories DROP COLUMN origin; PRAGMA user_version=2;").unwrap();
+    db.execute_batch("DROP TRIGGER message_insert; DROP TRIGGER message_update; DROP TRIGGER message_delete; DROP TABLE messages_fts; DROP TABLE summary_sources; DROP TABLE memory_sources; DROP TABLE memory_meta; ALTER TABLE memories DROP COLUMN kind; ALTER TABLE memories DROP COLUMN approved; ALTER TABLE memories DROP COLUMN origin; ALTER TABLE messages DROP COLUMN web_sources; PRAGMA user_version=2;").unwrap();
     db.execute("INSERT INTO memories(content,category,status,created_at,updated_at,operation_key) VALUES('astronomie','projet','active',1,1,'v2')",[]).unwrap();
     drop(db);
     let memory = app.store.memories(p.id, "").unwrap();

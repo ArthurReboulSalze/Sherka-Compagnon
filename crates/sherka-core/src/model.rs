@@ -65,6 +65,7 @@ pub struct Profile {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
+    pub web_search: crate::web::SearchMode,
     pub ui_language: crate::i18n::Language,
     pub default_companion: Option<Uuid>,
     pub default_companion_initialized: bool,
@@ -78,6 +79,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            web_search: Default::default(),
             ui_language: Default::default(),
             default_companion: None,
             default_companion_initialized: false,

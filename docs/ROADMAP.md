@@ -1,6 +1,6 @@
 # Roadmap
 
-Sherka 0.4.0 brings seven interface languages to the foundation of local conversations, interruption, independent characters and editable memories. These are directions, not delivery promises.
+Sherka 0.5.0 adds optional web search to the foundation of local conversations, interruption, independent characters, editable memories and seven interface languages. These are directions, not delivery promises.
 
 ## Bring companions to life
 
@@ -19,6 +19,7 @@ Sherka 0.4.0 brings seven interface languages to the foundation of local convers
 
 ## Expand intelligence and memory
 
+- Full web page reading and additional search providers after the initial DuckDuckGo snippet search.
 - Additional conversation providers; LM Studio is the only supported provider today.
 - Service authentication and secrets stored in the operating system vault.
 - Exact tokenizer counts, semantic retrieval and narrative summaries.

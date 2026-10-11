@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0 — 2026-10-11
+
+- Optional DuckDuckGo web search without an account or API key, disabled by default.
+- Explicit text/voice searches and automatic local search decisions, with cancellable requests.
+- Bounded search snippets within the loaded model's context budget; normal answer streaming continues.
+- Source links attached to each response, retained in profile-local history and omitted from character exports.
+- Search settings, progress and errors translated into all seven interface languages.
+- Fixed localized notices for failed/empty searches prevent fabricated verifications; safe source links and speech without source markers or URLs.
+- History schema 4 stores source receipts; upgraded data must not be opened with older binaries.
+- Widget controls and companion picker now dismiss when the pointer leaves, focus is lost or the control panel opens; clicking no longer leaves controls permanently pinned.
+- README showcases the independent transparent desktop widget alongside the optional control panel.
+
 ## 0.4.0 — 2026-10-11
 
 - Seven interface languages: French, English, Spanish, Italian, German, Simplified Chinese and Japanese.

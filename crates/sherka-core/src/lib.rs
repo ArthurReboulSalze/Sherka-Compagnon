@@ -15,6 +15,7 @@ pub mod session;
 mod speech_detector;
 pub mod storage;
 pub mod voice;
+pub mod web;
 pub mod window;
 
 pub use error::{Error, Result};

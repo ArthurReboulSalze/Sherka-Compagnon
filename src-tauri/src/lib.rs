@@ -27,6 +27,9 @@ struct Shared(Arc<Mutex<Companion>>);
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Mutation {
+    WebSearch {
+        mode: sherka_core::web::SearchMode,
+    },
     InterfaceLanguage {
         language: sherka_core::i18n::Language,
     },
@@ -165,6 +168,9 @@ async fn apply_mutation(
     .await?;
     let snapshot = with_core(shared.inner().clone(), move |core| {
         match mutation {
+            Mutation::WebSearch { mode } => {
+                core.set_web_search_mode(mode)?;
+            }
             Mutation::InterfaceLanguage { language } => core.set_interface_language(language)?,
             Mutation::CreateProfile { draft } => {
                 core.store.create(draft, None)?;
@@ -288,6 +294,43 @@ async fn send_message(
         speak,
     )
     .await
+}
+
+#[tauri::command]
+async fn open_web_source(
+    shared: State<'_, Shared>,
+    profile_id: Uuid,
+    message_id: Option<String>,
+    index: usize,
+) -> Result<(), String> {
+    let url = with_core(shared.inner().clone(), move |core| {
+        let report = if let Some(id) = message_id {
+            core.store
+                .history(profile_id, 100)?
+                .into_iter()
+                .find(|message| message.id == id)
+                .and_then(|message| message.web)
+        } else if core.session.snapshot().profile_id == profile_id {
+            core.live.web.clone()
+        } else {
+            None
+        };
+        let source = report
+            .as_ref()
+            .and_then(|report| report.sources.get(index))
+            .ok_or_else(|| {
+                sherka_core::Error::Validation(
+                    "Cette source Internet n’est plus disponible.".into(),
+                )
+            })?;
+        sherka_core::web::public_url(&source.url).ok_or_else(|| {
+            sherka_core::Error::Validation("Cette adresse Internet n’est pas autorisée.".into())
+        })
+    })
+    .await?;
+    tauri::async_runtime::spawn_blocking(move || windows::open_web_url(&url))
+        .await
+        .map_err(|_| "Impossible d’ouvrir la source Internet.".to_owned())?
 }
 
 #[tauri::command]
@@ -541,6 +584,7 @@ pub fn run() {
             get_audio_devices,
             get_conversation,
             send_message,
+            open_web_source,
             updates::get_update_status,
             updates::check_update,
             updates::install_update

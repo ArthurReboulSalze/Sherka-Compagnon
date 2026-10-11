@@ -52,7 +52,7 @@ fn version_one_profiles_migrate_without_losing_history() {
         .join(profile.id.to_string())
         .join("profile.sqlite3");
     let db = rusqlite::Connection::open(path).unwrap();
-    db.execute_batch("DROP TRIGGER message_insert; DROP TRIGGER message_update; DROP TRIGGER message_delete; DROP TABLE messages_fts; DROP TABLE summary_sources; DROP TABLE memory_sources; DROP TABLE memory_meta; ALTER TABLE memories DROP COLUMN kind; ALTER TABLE memories DROP COLUMN approved; ALTER TABLE memories DROP COLUMN origin; ALTER TABLE messages DROP COLUMN heard_content; PRAGMA user_version=1;")
+    db.execute_batch("DROP TRIGGER message_insert; DROP TRIGGER message_update; DROP TRIGGER message_delete; DROP TABLE messages_fts; DROP TABLE summary_sources; DROP TABLE memory_sources; DROP TABLE memory_meta; ALTER TABLE memories DROP COLUMN kind; ALTER TABLE memories DROP COLUMN approved; ALTER TABLE memories DROP COLUMN origin; ALTER TABLE messages DROP COLUMN heard_content; ALTER TABLE messages DROP COLUMN web_sources; PRAGMA user_version=1;")
         .unwrap();
     drop(db);
     let history = app.store.history(profile.id, 10).unwrap();

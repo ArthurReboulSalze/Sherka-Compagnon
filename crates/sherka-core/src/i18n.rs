@@ -68,7 +68,10 @@ pub fn ui_language() -> Language {
     Language::ALL[UI_LANGUAGE.load(Ordering::Relaxed) as usize]
 }
 pub fn text(source: &str) -> String {
-    let language = ui_language() as usize;
+    text_in(ui_language(), source)
+}
+pub fn text_in(language: Language, source: &str) -> String {
+    let language = language as usize;
     if language == 0 {
         return source.into();
     }

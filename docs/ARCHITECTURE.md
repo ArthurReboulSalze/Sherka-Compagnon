@@ -24,6 +24,8 @@ Context budgets use loaded capacity, reply reserve and margin. UTF-8 estimation 
 
 ## Lifecycles
 
+Optional web search runs before final generation, within the same cancellable profile/generation operation. Explicit requests skip the local structured search planner; automatic mode passes only the current question to it. The Rust client uses a fixed DuckDuckGo Lite endpoint, bounded HTML parsing and no arbitrary-page fetching. Evidence is included as untrusted user-role text, with whole sources bounded against the model context. Search receipts and the sources actually supplied are stored in the assistant's history row (schema 4), separate from memories and profile exports. The panel can open a source selected by profile/message/index; it cannot supply an arbitrary URL. The widget cannot invoke that command.
+
 `ModelManager` serializes loading, resolves aliases before deletion, rejects ambiguity and preserves foreign instances. Shutdown waits for loads, stops audio, saves geometry, unloads its instance and verifies the catalog. Failure offers retry/stay/explicit exit.
 
 `voice_startup` shares a cancellable readiness attempt; root cancellation prevents late launch during exit. `service_process` locates installed VoiceStudio and minimizes only a new window. No additional Python runtime or model download manager is added. LM Studio startup is independent.

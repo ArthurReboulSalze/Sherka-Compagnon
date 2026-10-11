@@ -19,6 +19,7 @@ export interface Profile extends ProfileDraft {
 export interface Snapshot {
   profiles: Profile[];
   settings: {
+    web_search: SearchMode;
     ui_language: import('./i18n').Language;
     default_companion: string | null;
     active_profile: string;
@@ -42,6 +43,7 @@ export interface Snapshot {
 }
 
 export interface Message {
+  web: WebReport | null;
   id: string;
   role: 'user' | 'assistant';
   content: string;
@@ -51,6 +53,7 @@ export interface Message {
 }
 
 export type Mutation =
+  | { kind: 'web_search'; mode: SearchMode }
   | { kind: 'interface_language'; language: import('./i18n').Language }
   | { kind: 'create_profile'; draft: ProfileDraft }
   | { kind: 'update_profile'; id: string; revision: number; draft: ProfileDraft }
@@ -66,7 +69,9 @@ export type WidgetAction = 'show_panel' | 'show_widget' | 'hide_widget' | 'toggl
 
 export interface AudioSettings { input_device: string | null; output_device: string | null; speakers: boolean; silence_ms: number; onset_ms: number; interruption_ms: number }
 export interface ContextBudget { model: string; max_context: number | null; loaded_context: number; limit: number; input_estimate: number; response_tokens: number; safety_tokens: number; history_kept: number; history_omitted: number; memories_used: number[]; memories_omitted: number }
-export interface LiveConversation { tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
+export type SearchMode = 'off' | 'on_request' | 'auto';
+export interface WebReport { query: string; searching: boolean; error: string | null; sources: {title:string;url:string;snippet:string}[] }
+export interface LiveConversation { web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
 export interface LiveState { session: Snapshot['session']; live: LiveConversation }
 export interface AudioDevices { inputs: { id: string; name: string; is_default: boolean }[]; outputs: { id: string; name: string; is_default: boolean }[] }
 

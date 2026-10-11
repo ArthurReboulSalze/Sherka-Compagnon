@@ -19,6 +19,7 @@ fn main() {
             "get_audio_devices",
             "get_conversation",
             "send_message",
+            "open_web_source",
             "get_update_status",
             "check_update",
             "install_update",

@@ -181,6 +181,19 @@ impl Companion {
         self.settings.audio.clone()
     }
 
+    pub fn web_search_mode(&self) -> crate::web::SearchMode {
+        self.settings.web_search
+    }
+
+    pub fn set_web_search_mode(&mut self, mode: crate::web::SearchMode) -> Result<()> {
+        self.stop_response()?;
+        let mut settings = self.settings.clone();
+        settings.web_search = mode;
+        self.store.save_settings(&settings)?;
+        self.settings = settings;
+        Ok(())
+    }
+
     pub fn set_audio_settings(&mut self, audio: crate::voice::AudioSettings) -> Result<()> {
         audio.validate()?;
         let mut next = self.settings.clone();
@@ -198,6 +211,12 @@ impl Companion {
         self.session.cancel();
         self.live.tag = None;
         self.live.transcript.clear();
+        if let Some(report) = &mut self.live.web
+            && report.searching
+        {
+            report.searching = false;
+            report.error = Some("La recherche Internet a été interrompue.".into());
+        }
         if let Some(tag) = tag {
             self.store.save_response(
                 tag,
@@ -205,6 +224,9 @@ impl Companion {
                 &self.live.heard,
                 crate::storage::Delivery::Interrupted,
             )?;
+            if let Some(report) = &self.live.web {
+                self.store.save_web_sources(tag, report)?;
+            }
         }
         Ok(())
     }
@@ -233,6 +255,9 @@ impl Companion {
         }
         self.store
             .save_response(tag, &self.live.reply, &self.live.heard, delivery)?;
+        if let Some(report) = &self.live.web {
+            self.store.save_web_sources(tag, report)?;
+        }
         self.session.complete(tag)?;
         self.live.tag = None;
         self.live.transcript.clear();
