@@ -24,10 +24,14 @@ jobs:
           toolchain: '1.92.0'
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
+        with:
+          cache-on-failure: true
       - run: npm ci
       - run: python scripts/audit_publication.py
       - run: npm run check
-      - run: cargo test --workspace --locked
+      - run: cargo test --workspace --locked -- --nocapture
+        env:
+          RUST_BACKTRACE: '1'
       - run: npm run tauri -- build --debug --no-bundle
       - name: Native UI and updater boundaries
         run: |
