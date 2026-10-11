@@ -1,6 +1,8 @@
 # Project status
 
-Public version: **0.5.0**, October 11, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+Public version: **0.5.1**, October 11, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+
+Startup recovery keeps signed updates available when settings or databases are incompatible or unreadable. Installed and no-install executables share data; keep their versions aligned. See [startup recovery](STARTUP_RECOVERY.md).
 
 Optional DuckDuckGo search offers disabled, on-request and automatic modes, bounded snippets and persistent source links. Widget controls now dismiss on pointer exit, focus loss and opening the panel. See [web search](WEB_SEARCH.md).
 

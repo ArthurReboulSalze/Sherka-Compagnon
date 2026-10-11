@@ -14,6 +14,7 @@ import { paintProfileVoice, editProfileVoice } from './profile-voice';
 import { updatesView, mountUpdates, initializeUpdates } from './updates';
 import { bindRangeControls } from './settings-controls';
 import { webSettings } from './web';
+import { mountStartupRecovery } from './startup-recovery';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 const widget = new URLSearchParams(location.search).get('view') === 'widget';
@@ -411,6 +412,10 @@ async function start(): Promise<void> {
     return;
   }
   try {
+    if (new URLSearchParams(location.search).get('view') === 'recovery') {
+      await mountStartupRecovery(app);
+      return;
+    }
     await api.onChanged(() => void refresh());
     if (widget) {
       window.addEventListener('blur', () => dismissWidgetControls?.());

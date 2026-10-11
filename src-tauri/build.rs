@@ -1,6 +1,8 @@
 fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "get_startup_issue",
+            "close_startup_recovery",
             "get_snapshot",
             "get_widget_visibility",
             "get_voice_service",

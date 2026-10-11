@@ -4846,5 +4846,61 @@
     "Für Bedienelemente darüberfahren oder klicken, zum Verschieben ziehen",
     "悬停或点击显示控件，拖动以移动",
     "ホバーまたはクリックで操作ボタンを表示、ドラッグで移動"
+  ],
+  "Sherka — Récupération": [
+    "Sherka — Recovery",
+    "Sherka — Recuperación",
+    "Sherka — Ripristino",
+    "Sherka — Wiederherstellung",
+    "Sherka — 恢复",
+    "Sherka — 復旧"
+  ],
+  "Le mode de récupération n’est pas actif.": [
+    "Recovery mode is not active.",
+    "El modo de recuperación no está activo.",
+    "La modalità di ripristino non è attiva.",
+    "Der Wiederherstellungsmodus ist nicht aktiv.",
+    "恢复模式未启用。",
+    "復旧モードは有効ではありません。"
+  ],
+  "Sherka ne peut pas ouvrir ses données": [
+    "Sherka cannot open its data",
+    "Sherka no puede abrir sus datos",
+    "Sherka non riesce ad aprire i suoi dati",
+    "Sherka kann ihre Daten nicht öffnen",
+    "Sherka 无法打开数据",
+    "Sherka はデータを開けません"
+  ],
+  "Une version plus récente peut être nécessaire. Vérifie les mises à jour avant de relancer Sherka.": [
+    "A newer version may be required. Check for updates before restarting Sherka.",
+    "Puede ser necesaria una versión más reciente. Busca actualizaciones antes de reiniciar Sherka.",
+    "Potrebbe servire una versione più recente. Cerca aggiornamenti prima di riavviare Sherka.",
+    "Möglicherweise ist eine neuere Version erforderlich. Suche nach Updates, bevor du Sherka neu startest.",
+    "可能需要更新的版本。重新启动 Sherka 前，请检查更新。",
+    "新しいバージョンが必要な場合があります。Sherka を再起動する前に更新を確認してください。"
+  ],
+  "Tes données n’ont pas été réinitialisées. La conversation et le micro sont désactivés dans ce mode.": [
+    "Your data has not been reset. Conversation and the microphone are disabled in this mode.",
+    "Tus datos no se han restablecido. La conversación y el micrófono están desactivados en este modo.",
+    "I tuoi dati non sono stati reimpostati. In questa modalità la conversazione e il microfono sono disattivati.",
+    "Deine Daten wurden nicht zurückgesetzt. Gespräche und Mikrofon sind in diesem Modus deaktiviert.",
+    "你的数据未被重置。此模式下对话和麦克风已禁用。",
+    "データはリセットされていません。このモードでは会話とマイクは無効です。"
+  ],
+  "Détail du démarrage": [
+    "Startup details",
+    "Detalles del inicio",
+    "Dettagli di avvio",
+    "Startdetails",
+    "启动详情",
+    "起動の詳細"
+  ],
+  "Les versions installable et sans installation partagent ces données.": [
+    "Installed and no-install versions share this data.",
+    "Las versiones instalable y sin instalación comparten estos datos.",
+    "La versione installata e quella senza installazione condividono questi dati.",
+    "Installierte und installationsfreie Versionen verwenden dieselben Daten.",
+    "安装版与免安装版共享这些数据。",
+    "インストール版とポータブル版はこのデータを共有します。"
   ]
 }

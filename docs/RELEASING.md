@@ -30,6 +30,8 @@ The no-install package uses the Windows user data folder. Updates replace only i
 
 ## Publish
 
+Run NSIS installation tests in a VM or isolated Windows account. A custom `/D=...` directory does not isolate the current user's installation registry entries or shortcuts and can redirect later updates. Use `SHERKA_DATA_DIR` for executable tests without installing on the developer's account.
+
 1. Review staged contents and screenshots; run the audit. Do not use a wholesale working-folder ZIP.
 2. Push source and verify CI against the exact commit.
 3. Tag that commit, create a draft release, attach the installer, portable ZIP, executable/signatures, `latest.json` and `SHA256SUMS.txt`.

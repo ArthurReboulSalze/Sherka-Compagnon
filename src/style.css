@@ -234,6 +234,10 @@ select { border: 1px solid #ffffff1c; border-radius: 9px; color: #cfd6db; paddin
 .startup-error { margin: 12vh auto; max-width: 600px; padding: 32px; }
 .startup-error .brand-symbol { margin-bottom: 24px; }
 .startup-error h1 { font-size: 28px; }
+.startup-recovery { margin: 40px auto; padding: 0 28px 32px; max-width: 850px; }
+.startup-recovery > p { color: var(--muted); line-height: 1.6; }
+.startup-recovery .settings-card { margin: 24px 0; }
+.startup-recovery summary { cursor: pointer; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .working .content { cursor: progress; }
 .working .content button { pointer-events: none; }

@@ -30,6 +30,12 @@ Under **Microphone & listening**, select input and output. Start with headphones
 
 ## Troubleshooting
 
+Installed, no-install and development executables share the same user data unless a development override is configured. Opening a newer copy can migrate that data; it does not update an older executable elsewhere on your PC.
+
+From 0.5.1 onward, incompatible or unreadable data opens a recovery screen with **Check for updates** and a local error detail. No conversation or voice service starts in that mode. Do not reset or delete your profiles to resolve a version mismatch.
+
+If an older release closes immediately with no screen, download the latest official installer and install it over the existing copy. Check the installation folder: Windows may remember a previous custom location. See [startup recovery](STARTUP_RECOVERY.md).
+
 - **VoiceStudio is preparing:** its first launch or model loading can take time. Check its window, then **Retry VoiceStudio**.
 - **No models:** check the LM Studio server, downloads and address, then refresh.
 - **No voice:** select a ready TTS engine and an existing VoiceStudio voice.

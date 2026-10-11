@@ -66,7 +66,7 @@ async function native<T>(command: string, args?: unknown): Promise<T> {
   }, { command, args }) as Promise<T>;
 }
 
-async function startApplication(hidden = true, autostartVoice = false): Promise<void> {
+async function startApplication(hidden = true, autostartVoice = false, recovery = false): Promise<void> {
   if (!existsSync(executable)) throw new Error('Construis le binaire : npm run tauri -- build --debug --no-bundle');
   // A new port prevents a closing WebView2 from satisfying the next launch.
   const port = await new Promise<number>((done,fail) => {
@@ -107,11 +107,11 @@ async function startApplication(hidden = true, autostartVoice = false): Promise<
   }
   await expect.poll(async () => {
     const pages = await (await fetch('http://127.0.0.1:' + port + '/json/list')).json() as {url:string}[];
-    return pages.some(p => p.url.includes('view=widget')) && pages.some(p => p.url.includes('tauri.localhost') && !p.url.includes('view=widget'));
+    return recovery ? pages.some(p => p.url.includes('view=recovery')) : pages.some(p => p.url.includes('view=widget')) && pages.some(p => p.url.includes('tauri.localhost') && !p.url.includes('view=widget'));
   }, {timeout:30_000}).toBe(true);
   browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
-  await expect.poll(() => browser.contexts().flatMap((c) => c.pages()).length).toBe(2);
-  await expect.poll(() => browser.contexts().flatMap((c) => c.pages()).some((p) => p.url().includes('view=widget'))).toBe(true);
+  await expect.poll(() => browser.contexts().flatMap((c) => c.pages()).length).toBe(recovery ? 1 : 2);
+  if (!recovery) await expect.poll(() => browser.contexts().flatMap((c) => c.pages()).some((p) => p.url().includes('view=widget'))).toBe(true);
   const pages = browser.contexts().flatMap((c) => c.pages());
   widget = pages.find((p) => p.url().includes('view=widget'))!;
   panel = pages.find((p) => !p.url().includes('view=widget'))!;
@@ -119,7 +119,7 @@ async function startApplication(hidden = true, autostartVoice = false): Promise<
     page.on('pageerror', (e) => consoleErrors.push(e.message));
     page.on('console', (e) => { if (e.type() === 'error') consoleErrors.push(e.text()); });
   }
-  await expect(panel.locator('#new-profile')).toBeVisible();
+  await expect(panel.locator(recovery ? '.startup-recovery' : '#new-profile')).toBeVisible();
 }
 
 async function stopApplication(): Promise<void> {
@@ -147,6 +147,59 @@ test.afterEach(async ({}, info) => {
     await widget?.screenshot({ path: info.outputPath('widget-failure.png') }).catch(() => {});
   }
   await stopApplication();
+});
+
+test('startup recovery: incompatible settings or schema keep data intact and updates accessible', async () => {
+  const routes: string[]=[];
+  const server=createServer((request,response)=>{
+    routes.push(request.url!);
+    response.writeHead(200,{'Content-Type':'application/json'});
+    const base=`http://127.0.0.1:${(server.address() as {port:number}).port}`;
+    response.end(JSON.stringify({version:currentVersion,platforms:{'windows-x86_64-portable':{url:`${base}/ArthurReboulSalze/Sherka-Compagnon/releases/download/v${currentVersion}/sherka-compagnon.exe`,signature:'invalid'}}}));
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
+  process.env.SHERKA_TEST_UPDATE_URL=`http://127.0.0.1:${(server.address() as {port:number}).port}/latest.json`;
+  try {
+    for (const failure of ['settings','schema','malformed']) {
+      await stopApplication();
+      const files=JSON.parse(execFileSync('python',['-c',`
+import json,sqlite3,sys
+from pathlib import Path
+root=Path(sys.argv[1]); failure=sys.argv[2]
+settings=root/'settings.sqlite3'; profile=next((root/'profiles').glob('*/profile.sqlite3'))
+with sqlite3.connect(settings) as db:
+    if failure=='settings':
+        data=json.loads(db.execute('SELECT value FROM settings WHERE id=1').fetchone()[0])
+        data['ui_language']='en'; data['future_test_flag']=True
+        value=json.dumps(data)
+    elif failure=='schema':
+        data=json.loads(db.execute('SELECT value FROM settings WHERE id=1').fetchone()[0])
+        data.pop('future_test_flag',None); value=json.dumps(data)
+    else: value='{'
+    db.execute('UPDATE settings SET value=? WHERE id=1',(value,))
+with sqlite3.connect(profile) as db: db.execute('PRAGMA user_version='+('99' if failure=='schema' else '4'))
+print(json.dumps([str(settings),str(profile)]))
+`,dataDirectory,failure],{encoding:'utf8'})) as string[];
+      const before=files.map(file=>readFileSync(file));
+      await startApplication(true,false,true);
+      await expect(panel.locator('#check-update')).toBeEnabled();
+      await expect(panel.getByRole('heading',{name:failure==='malformed'?'Sherka ne peut pas ouvrir ses données':'Sherka cannot open its data'})).toBeVisible();
+      expect(await native<any>('get_startup_issue')).toMatchObject({language:failure==='malformed'?'fr':'en'});
+      const rejected=await native('get_snapshot').then(()=>false,()=>true);
+      expect(rejected).toBe(true);
+      expect(routes).toHaveLength(failure==='settings'?0:failure==='schema'?1:2);
+      await panel.locator('#check-update').click();
+      await expect(panel.locator('#update-status')).toContainText(failure==='malformed'?'dernière version':'latest Sherka version');
+      files.forEach((file,index)=>expect(readFileSync(file).equals(before[index])).toBe(true));
+      expect(readFileSync(resolve(dataDirectory,'startup-error.log'),'utf8')).toContain(currentVersion);
+      await panel.locator('#close-recovery').click();
+      await expect.poll(()=>child.exitCode).toBe(0);
+    }
+    expect(consoleErrors).toEqual([]);
+  } finally {
+    delete process.env.SHERKA_TEST_UPDATE_URL;
+    server.closeAllConnections(); await new Promise<void>(done=>server.close(()=>done()));
+  }
 });
 
 test('languages: seven interfaces, opaque content, fixed profiles and restart', async () => {

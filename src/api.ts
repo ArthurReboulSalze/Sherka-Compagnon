@@ -4,6 +4,8 @@ import type { Message, Mutation, Snapshot, WidgetAction, LanguageCatalog, VoiceC
 import type { MemoryState, MemoryEdit, MemorySource } from './types';
 
 export const desktopAvailable = () => isTauri();
+export const getStartupIssue = () => invoke<{language:string;error:string;data_directory:string} | null>('get_startup_issue');
+export const closeStartupRecovery = () => invoke<void>('close_startup_recovery');
 export const getSnapshot = () => invoke<Snapshot>('get_snapshot');
 export const mutate = (mutation: Mutation) => invoke<Snapshot>('apply_mutation', { mutation });
 export const history = (profileId: string) => invoke<Message[]>('get_history', { profileId });

@@ -8,6 +8,8 @@
   "permissions": [
     "core:event:allow-listen",
     "core:event:allow-unlisten",
+    "allow-get-startup-issue",
+    "allow-close-startup-recovery",
     "allow-get-snapshot",
     "allow-get-widget-visibility",
     "allow-apply-mutation",

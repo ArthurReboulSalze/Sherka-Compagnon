@@ -68,6 +68,7 @@ fn connect(path: &Path, create: bool) -> Result<Connection> {
 impl Store {
     pub fn open(root: impl Into<PathBuf>) -> Result<Self> {
         let store = Self { root: root.into() };
+        Self::preflight(&store.root)?;
         fs::create_dir_all(store.root.join("profiles"))?;
         let mut db = connect(&store.root.join("settings.sqlite3"), true)?;
         let tx = db.transaction()?;
@@ -78,6 +79,82 @@ impl Store {
         )?;
         tx.commit()?;
         Ok(store)
+    }
+
+    /// Check compatibility before migrations or saving any settings. A newer
+    /// portable copy can share this directory with an older installed copy.
+    fn preflight(root: &Path) -> Result<()> {
+        let settings = root.join("settings.sqlite3");
+        if settings.is_file() {
+            let db = Self::read_only(&settings)?;
+            let exists: bool = db.query_row(
+                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE name='settings')",
+                [],
+                |row| row.get(0),
+            )?;
+            if exists {
+                let json: Option<String> = db
+                    .query_row("SELECT value FROM settings WHERE id=1", [], |row| {
+                        row.get(0)
+                    })
+                    .optional()?;
+                if let Some(json) = json {
+                    let settings: Settings = serde_json::from_str(&json)?;
+                    settings.audio.validate()?;
+                    if !(65..=160).contains(&settings.widget_scale) {
+                        return Err(Error::Validation(
+                            "La taille enregistrée du widget est invalide.".into(),
+                        ));
+                    }
+                }
+            }
+        }
+        let profiles = root.join("profiles");
+        if profiles.is_dir() {
+            for entry in fs::read_dir(profiles)? {
+                let entry = entry?;
+                if entry.file_type()?.is_dir()
+                    && Uuid::parse_str(&entry.file_name().to_string_lossy()).is_ok()
+                    && entry.path().join("profile.sqlite3").is_file()
+                {
+                    Self::read_only(&entry.path().join("profile.sqlite3"))?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn read_only(path: &Path) -> Result<Connection> {
+        let db = Connection::open_with_flags(
+            path,
+            OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+        )?;
+        db.busy_timeout(Duration::from_secs(3))?;
+        let version: i64 = db.query_row("PRAGMA user_version", [], |row| row.get(0))?;
+        if version > SCHEMA_VERSION {
+            return Err(Error::FutureSchema);
+        }
+        Ok(db)
+    }
+
+    /// The recovery interface needs the saved UI language even when unknown
+    /// fields prevent loading the rest of the configuration.
+    pub fn saved_language(root: &Path) -> crate::i18n::Language {
+        let read = || -> Option<crate::i18n::Language> {
+            let db = Connection::open_with_flags(
+                root.join("settings.sqlite3"),
+                OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+            )
+            .ok()?;
+            let json: String = db
+                .query_row("SELECT value FROM settings WHERE id=1", [], |row| {
+                    row.get(0)
+                })
+                .ok()?;
+            let value: serde_json::Value = serde_json::from_str(&json).ok()?;
+            serde_json::from_value(value.get("ui_language")?.clone()).ok()
+        };
+        read().unwrap_or_default()
     }
 
     pub fn root(&self) -> &Path {

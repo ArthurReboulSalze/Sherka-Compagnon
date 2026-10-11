@@ -259,6 +259,70 @@ fn profile_database_identity_and_future_versions_fail_closed() {
 }
 
 #[test]
+fn incompatible_startup_never_rewrites_settings_or_migrates_other_profiles() {
+    let dir = tempdir().unwrap();
+    let app = Companion::open(dir.path()).unwrap();
+    let id = app.session.snapshot().profile_id;
+    let other = app
+        .store
+        .create(
+            ProfileDraft {
+                name: "Vega".into(),
+                ..Default::default()
+            },
+            None,
+        )
+        .unwrap();
+    let settings = dir.path().join("settings.sqlite3");
+    let profile = dir
+        .path()
+        .join("profiles")
+        .join(id.to_string())
+        .join("profile.sqlite3");
+    drop(app);
+    let older_profile = dir
+        .path()
+        .join("profiles")
+        .join(other.id.to_string())
+        .join("profile.sqlite3");
+    let db = rusqlite::Connection::open(&older_profile).unwrap();
+    db.execute_batch("ALTER TABLE messages DROP COLUMN web_sources; PRAGMA user_version=3;")
+        .unwrap();
+    drop(db);
+    let older_before = std::fs::read(&older_profile).unwrap();
+    let db = rusqlite::Connection::open(&settings).unwrap();
+    let original: String = db
+        .query_row("SELECT value FROM settings WHERE id=1", [], |r| r.get(0))
+        .unwrap();
+    let mut future: serde_json::Value = serde_json::from_str(&original).unwrap();
+    future["future_test_flag"] = serde_json::json!(true);
+    db.execute(
+        "UPDATE settings SET value=?1 WHERE id=1",
+        [future.to_string()],
+    )
+    .unwrap();
+    drop(db);
+    let before = std::fs::read(&settings).unwrap();
+    assert!(Companion::open(dir.path()).is_err());
+    assert_eq!(std::fs::read(&settings).unwrap(), before);
+    assert_eq!(std::fs::read(&older_profile).unwrap(), older_before);
+    let db = rusqlite::Connection::open(&settings).unwrap();
+    db.execute("UPDATE settings SET value=?1 WHERE id=1", [&original])
+        .unwrap();
+    drop(db);
+    let db = rusqlite::Connection::open(&profile).unwrap();
+    db.execute_batch("PRAGMA user_version=99;").unwrap();
+    drop(db);
+    let before = std::fs::read(&settings).unwrap();
+    assert!(matches!(
+        Companion::open(dir.path()),
+        Err(Error::FutureSchema)
+    ));
+    assert_eq!(std::fs::read(&settings).unwrap(), before);
+    assert_eq!(std::fs::read(&older_profile).unwrap(), older_before);
+}
+
+#[test]
 fn image_import_decodes_real_pixels_and_rejects_disguised_code() {
     use std::io::Cursor;
     let dir = tempdir().unwrap();

@@ -1,6 +1,7 @@
 mod conversation;
 pub mod portable_update;
 mod service_process;
+mod startup;
 mod updates;
 mod voice_startup;
 mod windows;
@@ -559,6 +560,10 @@ async fn widget_action(
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            if app.try_state::<startup::Issue>().is_some() {
+                let _ = windows::show_panel(app);
+                return;
+            }
             if let Err(e) = windows::restore_widget(app) {
                 eprintln!("Impossible de restaurer la fenêtre : {e}");
             }
@@ -566,6 +571,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
+            startup::get_startup_issue,
+            startup::close_startup_recovery,
             get_snapshot,
             get_widget_visibility,
             get_voice_service,
@@ -595,8 +602,18 @@ pub fn run() {
             let directory = std::env::var_os("SHERKA_DATA_DIR")
                 .map(std::path::PathBuf::from)
                 .unwrap_or(app.path().app_local_data_dir()?);
-            let companion = Companion::open(directory)?;
-            let snapshot = companion.snapshot()?;
+            // Updates must remain available even if this version cannot load
+            // data last opened by a newer installed or no-install executable.
+            app.manage(updates::Updates::new());
+            let (companion, snapshot) = match Companion::open(&directory)
+                .and_then(|companion| companion.snapshot().map(|snapshot| (companion, snapshot)))
+            {
+                Ok(loaded) => loaded,
+                Err(error) => {
+                    startup::recover(app, &directory, &error)?;
+                    return Ok(());
+                }
+            };
             sherka_core::i18n::set_ui_language(snapshot.settings.ui_language);
             let shared = Shared(Arc::new(Mutex::new(companion)));
             app.manage(
@@ -604,7 +621,6 @@ pub fn run() {
                     .map_err(std::io::Error::other)?,
             );
             app.manage(shared.clone());
-            app.manage(updates::Updates::new());
             app.manage(Voice::setup(app.handle().clone(), shared));
             // Build webviews only after registering the engine. Config-created
             // webviews can execute JS before setup and race the first IPC call.

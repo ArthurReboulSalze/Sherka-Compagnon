@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1 — 2026-10-11
+
+- Startup recovery screen replaces silent exits when settings or profile databases cannot be opened, including data last used by a newer executable.
+- Signed GitHub update checks and installation remain available in recovery, without initializing voice, loading a model or resetting data.
+- Read-only compatibility checks run before settings writes or profile migrations; recovery follows the saved interface language where readable.
+- A local startup diagnostic records the version and error; documentation explains that installed and no-install copies share data and how to repair older releases.
+- Native recovery coverage for newer settings, newer profile schemas and malformed settings; installer validation guidance now requires an isolated Windows account or VM.
+
 ## 0.5.0 — 2026-10-11
 
 - Optional DuckDuckGo web search without an account or API key, disabled by default.

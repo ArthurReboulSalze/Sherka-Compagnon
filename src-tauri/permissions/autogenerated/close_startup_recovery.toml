@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-close-startup-recovery"
+description = "Enables the close_startup_recovery command without any pre-configured scope."
+commands.allow = ["close_startup_recovery"]
+
+[[permission]]
+identifier = "deny-close-startup-recovery"
+description = "Denies the close_startup_recovery command without any pre-configured scope."
+commands.deny = ["close_startup_recovery"]

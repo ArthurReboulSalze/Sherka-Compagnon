@@ -105,6 +105,11 @@ pub async fn prepare_shutdown(app: &AppHandle) -> Result<(), String> {
             matches!(s, 0 | 3).then_some(1)
         })
         .map_err(|_| "Une fermeture est déjà en cours.".to_string())?;
+    if app.try_state::<crate::startup::Issue>().is_some() {
+        // Recovery never initializes voice or owns a loaded model.
+        QUIT_STATE.store(2, Ordering::SeqCst);
+        return Ok(());
+    }
     app.state::<crate::voice_startup::VoiceStartup>().cancel();
     let _ = app.emit("sherka:quit", serde_json::json!({"stage":"unloading"}));
     let voice = app.state::<Voice>().inner().clone();
