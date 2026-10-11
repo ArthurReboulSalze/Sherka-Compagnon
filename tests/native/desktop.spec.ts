@@ -574,6 +574,12 @@ test('imports validés, texte non exécutable et permissions distinctes des fen�
 test('providers: API controls, protected keys, Anthropic streaming, cancellation and restart', async () => {
   const fixture = JSON.parse(readFileSync(resolve('tests/fixtures/services.json'), 'utf8'));
   const requests: {path:string; body:any; auth:string|undefined}[] = [];
+  // Hosted Windows machines may have no WASAPI output. Keep provider/key,
+  // streaming and cancellation coverage there; exercise speech on a host
+  // with a default audio device rather than assuming hardware from volume=0.
+  const devices = await native<{outputs:{is_default:boolean}[]}>('get_audio_devices');
+  const canSpeak = devices.outputs.some(device => device.is_default);
+  console.log(`Native provider speech: ${canSpeak ? 'enabled' : 'no default audio output; text-only'}`);
   let interrupted: (() => void) | undefined;
   let number = 0;
   const server = createServer((request,response) => {
@@ -612,11 +618,13 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
     expect(await widget.evaluate(async config=>{try {await (window as any).__TAURI_INTERNALS__.invoke('get_provider_key_status',{connections:config});return true;} catch {return false;}},configured)).toBe(false);
     await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...configured,voice_studio_url:url,tts_engine:'omni',tts_voice:'voice-test',volume:0}}});
     await panel.getByRole('button',{name:'Conversation',exact:true}).click();
+    if (!canSpeak) await panel.locator('#speak-reply').uncheck();
     await panel.getByLabel('Ou écris-lui ici').fill('Bonjour');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();
     await expect(panel.locator('#conversation-history')).toContainText('Bonjour depuis le cloud.');
     expect(requests.find(r=>r.path.endsWith('/messages'))!.body.system).toContain('Sherka');expect(requests.find(r=>r.path.endsWith('/messages'))!.body.thinking.type).toBe('adaptive');
     expect(requests.find(r=>r.path.endsWith('/messages'))!.auth).toBe('fixture-token');expect(requests.filter(r=>r.path.endsWith('/speech')).every(r=>!r.body.input.includes('REFLEXION SECRETE'))).toBe(true);
-    await expect.poll(()=>requests.filter(r=>r.path.endsWith('/speech')).length).toBeGreaterThan(0);
+    if (canSpeak) await expect.poll(()=>requests.filter(r=>r.path.endsWith('/speech')).length).toBeGreaterThan(0);
+    else expect(requests.filter(r=>r.path.endsWith('/speech'))).toHaveLength(0);
     await panel.getByLabel('Ou écris-lui ici').fill('Suite');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();await expect.poll(()=>number).toBe(2);await expect(panel.locator('#live-reply')).toContainText('Bonjour depuis le cloud.');
     await panel.getByRole('button',{name:'Arrêter la réponse',exact:true}).click();interrupted?.();
     await expect.poll(async()=> (await native<any[]>('get_history',{profileId:p.id})).at(-1)?.delivery).toBe('interrupted');
