@@ -6,6 +6,7 @@ const escape = (s: string) => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;
 const date = (n: number) => new Intl.DateTimeFormat(formatLocale(), {dateStyle:'medium',timeStyle:'short'}).format(n);
 
 export function memoryPanel(profile: Profile): string {
+  if (profile.connections.llm_provider === 'hermes') return html`<section class="settings-card"><h2>Mémoire Hermes</h2><p>Hermes gère sa personnalité et ses souvenirs sur le serveur. Demande-lui directement de retenir, corriger ou oublier une information.</p></section>`;
   return html`<section class="settings-card"><div class="section-heading"><h2>Son caractère</h2><button class="button quiet small" id="memory-personality">Modifier sa personnalité</button></div><p>` + escape(profile.personality) + html`</p><p class="connection-note">Le caractère guide ses réponses sans être récité. Il reste propre à ce compagnon, quel que soit son modèle.</p></section>`
     + '<section class="settings-card" id="memory-root" data-profile="' + profile.id + '">'
     + html`<div class="section-heading"><h2>Ses souvenirs</h2><button class="button secondary small" id="memory-export">Exporter les souvenirs</button></div>`

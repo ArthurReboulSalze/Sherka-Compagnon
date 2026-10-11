@@ -24,7 +24,9 @@ With a remote provider, the companion prompt, selected conversation history, rec
 
 ## Context and thinking
 
-LM Studio budgets against the context actually loaded. Remote budgets use advertised context and output limits, bounded by the companion ceiling. When context metadata is absent, a manual ceiling is required; Sherka does not guess a large context from a model name. Initial estimates include a safety margin and are distinct from API usage counts.
+LM Studio budgets against the context actually loaded. Remote budgets use advertised context and output limits, bounded by the companion ceiling. When context metadata is absent, Sherka uses a configurable **64,000-token fallback**. This is a budgeting default, not a claim about the model's actual capacity. A documented provider limit always takes precedence over a larger configured ceiling. Initial estimates include a safety margin and are distinct from API usage counts.
+
+The default reply reserve is **8,192 tokens**. This is a maximum, not a request to make every answer long. Small contexts and advertised output limits can reduce it. Upgrading from 0.6.0 raises the former 1,024-token default once on existing profiles; other saved reserves remain unchanged.
 
 OpenRouter thinking controls follow the catalog, including mandatory reasoning: disable is hidden when the model requires thinking. Z.ai uses its documented GLM thinking controls; for GLM 5.3 and Flash, thinking is mandatory and the accepted efforts are low, high and max. Choose low for shorter voice turns. Anthropic uses advertised adaptive thinking and effort when available, or a manual budget for explicit enabled thinking. Manual thinking needs more than 1,024 output tokens. Compatible APIs that omit capabilities offer explicit overrides; check your model’s documentation before using them. Defaults send no thinking override.
 
@@ -47,3 +49,7 @@ VoiceStudio is required for microphone input and spoken replies with every provi
 - Z.ai: choose **Z.ai API** for API credit or **Z.ai Coding Plan** for your coding subscription. Their keys are scoped separately; save the matching key for each connection. Coding Plan has separate model eligibility and [supported-tool rules](https://docs.z.ai/devpack/usage-policy). Check that your subscription permits your use; Sherka does not select or retry on the other endpoint automatically.
 
 See the official [OpenAI Chat Completions reference](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create), [Anthropic Messages](https://platform.claude.com/docs/en/api/messages/create), [OpenRouter catalog](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties), [OpenRouter reasoning](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens) and [Z.ai Chat Completions](https://docs.z.ai/api-reference/llm/chat-completion).
+
+## Hermes remote agent
+
+Choose **Hermes · remote agent** to use Sherka as a voice client for a server-owned agent. Select the server and profile and save that profile’s Hermes API key. See [Hermes setup](HERMES.md). Local personality, memory, search, token budgets and reasoning controls do not apply in this mode.

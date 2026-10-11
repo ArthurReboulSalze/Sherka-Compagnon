@@ -165,7 +165,7 @@ pub async fn toggle(
     }
     let connections=with_core(shared.clone(),|c| {
         let p=c.store.profile(c.session.snapshot().profile_id)?;
-        if p.details.connections.llm_model.is_none() || p.details.connections.stt_model.is_none() || p.details.connections.tts_engine.is_none() || p.details.connections.tts_voice.is_none() {
+        if (!p.details.connections.llm_provider.is_agent() && p.details.connections.llm_model.is_none()) || p.details.connections.stt_model.is_none() || p.details.connections.tts_engine.is_none() || p.details.connections.tts_voice.is_none() {
             return Err(Error::Validation("Choisis le modèle de conversation, le moteur de transcription et la voix dans les réglages avant d'activer le micro.".into()));
         }
         Ok(p.details.connections)
@@ -240,7 +240,9 @@ pub async fn send(
             return Err(Error::StaleOperation);
         }
         let profile = core.store.profile(profile_id)?;
-        if profile.details.connections.llm_model.is_none() {
+        if !profile.details.connections.llm_provider.is_agent()
+            && profile.details.connections.llm_model.is_none()
+        {
             return Err(Error::Validation(
                 "Choisis un modèle de conversation dans Réglages.".into(),
             ));
@@ -555,9 +557,22 @@ async fn prepare_turn(
         })
         .map_err(|e| e.to_string())?;
         match provider.web_plan(user, budget.limit).await {
-            Ok(plan) if plan.search => web = Some(search_web(app, shared, tag, &plan.query, &provider.connections.language).await?),
+            Ok(plan) if plan.search => {
+                web = Some(
+                    search_web(
+                        app,
+                        shared,
+                        tag,
+                        &plan.query,
+                        &provider.connections.language,
+                    )
+                    .await?,
+                )
+            }
             Ok(_) => {}
-            Err(_) => web = Some(sherka_core::web::Report { error: Some("Le modèle n’a pas pu décider de la recherche. Utilise le bouton Chercher sur Internet ou une demande explicite.".into()), ..Default::default() }),
+            // A planning failure is not a failed search. Keep the normal
+            // conversational reply; only an actual search produces a receipt.
+            Err(_) => {}
         }
         update(app, shared, tag, |c| {
             c.live.notice = None;
@@ -707,7 +722,8 @@ fn schedule_memory(app: AppHandle, shared: Shared, profile: Uuid, provider: Prov
             } else {
                 model
                     .max_context_length
-                    .or(provider.connections.context_limit.map(u64::from))?
+                    .or(provider.connections.context_limit.map(u64::from))
+                    .unwrap_or(sherka_core::connections::FALLBACK_CONTEXT_TOKENS)
             };
             let (messages, schema) = sherka_core::memory::consolidation_request(&batch);
             let value = provider
@@ -790,8 +806,11 @@ pub fn switch_model(
                     })
                 }
                 Ok(None) => {
-                    c.live.notice =
-                        Some("Choisis un modèle pour ce compagnon dans les réglages.".into())
+                    c.live.notice = Some(if next.llm_provider.is_agent() {
+                        "Hermes gère la conversation, sa mémoire et ses outils.".into()
+                    } else {
+                        "Choisis un modèle pour ce compagnon dans les réglages.".into()
+                    })
                 }
                 Err(Error::StaleOperation) => {}
                 Err(e) => c.live.error = Some(e.to_string()),
@@ -812,10 +831,39 @@ async fn run_turn(
     user: String,
     speak: bool,
 ) {
+    let agent = provider.connections.llm_provider.is_agent();
+    let hermes = sherka_core::hermes::HermesRun::new(provider.clone());
+    let mut remote_session = None;
+    let preparation = async {
+        if agent {
+            voice
+                .models
+                .activate(&provider.connections, None, || !token.is_cancelled())
+                .await
+                .map_err(|e| e.to_string())?;
+            let endpoint = provider.connections.api_base().map_err(|e| e.to_string())?;
+            remote_session = Some(
+                with_core(shared.clone(), move |c| {
+                    if !c.session.accepts(tag) {
+                        return Err(Error::StaleOperation);
+                    }
+                    let session = c.store.hermes_session(tag.profile_id, &endpoint)?;
+                    let tip = c.store.hermes_session_tip(&session)?;
+                    Ok((session, tip))
+                })
+                .await?,
+            );
+            Ok(None)
+        } else {
+            prepare_turn(&app, &shared, &voice, tag, &mut provider, &user)
+                .await
+                .map(Some)
+        }
+    };
     let prepared = tokio::select! {
         biased;
         _=token.cancelled()=>return,
-        result=prepare_turn(&app,&shared,&voice,tag,&mut provider,&user)=>result
+        result=preparation=>result
     };
     let prepared = match prepared {
         Ok(value) => value,
@@ -829,14 +877,14 @@ async fn run_turn(
     }
     let (tokens_tx, mut tokens_rx) = mpsc::channel::<String>(64);
     let web_reply = prepared
-        .web
         .as_ref()
+        .and_then(|p| p.web.as_ref())
         .is_some_and(|report| !report.sources.is_empty());
     let speech_text = SpeechText::shared();
     let (audio_tx, audio_rx) = mpsc::channel::<(String, Vec<i16>)>(1);
     let fixed_reply = prepared
-        .web
         .as_ref()
+        .and_then(|p| p.web.as_ref())
         .and_then(|report| report.unavailable_reply(&provider.connections.language));
     let unavailable = fixed_reply.is_some();
     let generate = async {
@@ -846,7 +894,33 @@ async fn run_turn(
                 .await
                 .map_err(|_| Error::StaleOperation)?;
             Ok(sherka_core::providers::ChatOutcome::default())
+        } else if let Some((session, tip)) = &remote_session {
+            hermes
+                .chat(tip, session, &user, tokens_tx, |event| {
+                    let needs_approval =
+                        matches!(&event, sherka_core::hermes::AgentEvent::Approval(Some(_)));
+                    let result = update(&app, &shared, tag, |c| {
+                        match event {
+                            sherka_core::hermes::AgentEvent::Session(tip) => {
+                                c.store.update_hermes_session_tip(session, &tip)?
+                            }
+                            sherka_core::hermes::AgentEvent::Notice(text) => {
+                                c.live.notice = Some(text.into())
+                            }
+                            sherka_core::hermes::AgentEvent::Approval(value) => {
+                                c.live.hermes_approval = value
+                            }
+                        }
+                        Ok(())
+                    });
+                    if result.is_ok() && needs_approval {
+                        let _ = crate::windows::show_panel(&app);
+                    }
+                    result
+                })
+                .await
         } else {
+            let prepared = prepared.ok_or(Error::StaleOperation)?;
             provider
                 .chat_budgeted(
                     prepared.messages,
@@ -930,6 +1004,9 @@ async fn run_turn(
     };
     match result {
         None => {
+            if agent {
+                let _ = hermes.stop().await;
+            }
             // The local audio worker can cancel before the desktop processes
             // Start. Persist only while this exact turn is still the live one.
             let _ = with_core(shared.clone(), move |c| {
@@ -954,7 +1031,7 @@ async fn run_turn(
                 c.live.usage=if unavailable {None} else {Some(outcome)};
                 c.finish_response(tag, delivery)
             }).await;
-            if !unavailable {
+            if !unavailable && !agent {
                 schedule_memory(
                     app.clone(),
                     shared.clone(),
@@ -964,6 +1041,9 @@ async fn run_turn(
             }
         }
         Some((llm, consumed, _)) => {
+            if agent {
+                let _ = hermes.stop().await;
+            }
             let error = llm
                 .err()
                 .or_else(|| consumed.err())

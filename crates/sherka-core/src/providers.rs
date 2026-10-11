@@ -359,7 +359,7 @@ impl Providers {
         }
         if !self.connections.llm_provider.is_local() {
             let plan: crate::web::Plan = self
-                .api_structured(messages, schema, 256, Duration::from_secs(20), limit)
+                .api_structured(messages, schema, 2048, Duration::from_secs(20), limit)
                 .await?;
             if plan.search {
                 crate::web::query(&plan.query)?;

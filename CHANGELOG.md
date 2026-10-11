@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0 — 2026-10-11
+
+- Connect to Hermes as a voice client, with per-server profile selection and protected profile-specific API keys.
+- Keep conversation, personality, memory, model selection and tools on Hermes; reuse Sherka’s avatar and VoiceStudio audio pipeline.
+- Stream replies, relay one-time tool approvals, and stop server work when interrupted.
+- Preserve separate sessions per companion, server and Hermes profile, including server-side context compression.
+- Start a new Hermes conversation from the widget or `/new`, preserving server memory and previous conversations.
+- Include connection/key setup help in seven languages. Remote-agent mode is explicitly excluded from future emotional-avatar behavior.
+
+### Conversation fixes (prepared in 0.6.1)
+
+- Continue ordinary conversation when automatic web search planning fails, instead of replacing the reply with a search error.
+- Clarify that personal stories, daily activities and feelings do not require web search; allow more room for structured planning on thinking API models.
+- Raise the default reply reserve to 8,192 tokens and upgrade the former 1,024-token profile default once, preserving other settings and history.
+- Use a configurable 64,000-token context fallback when a remote provider omits its limit; keep advertised context/output limits and the actual LM Studio context authoritative.
+- Explain the context fallback in all seven interface languages.
+
 ## 0.6.0 — 2026-10-11
 
 - Per-companion OpenRouter, Z.ai API and Coding Plan, OpenAI, Anthropic and compatible API providers alongside LM Studio.

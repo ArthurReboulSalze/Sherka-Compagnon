@@ -23,6 +23,10 @@ export const onQuit = (callback: (value: { stage: 'unloading' | 'failed'; error?
 export const onChanged = (callback: () => void) => listen('sherka:changed', callback);
 export const discoverLanguageModels = (config: string | Connections) => invoke<LanguageCatalog>('discover_language_models', typeof config === 'string' ? { baseUrl: config } : { connections: config });
 export const providerKeyStatus = (connections: Connections) => invoke<boolean>('get_provider_key_status', { connections });
+export const hermesProfiles = (server: string) => invoke<string[]>('get_hermes_profiles', { server });
+export const hermesServers = () => invoke<string[]>('get_hermes_servers');
+export const testHermes = (connections: Connections) => invoke<string[]>('test_hermes', { connections });
+export const answerHermesApproval = (runId: string, requestId: string | null, allow: boolean) => invoke<void>('answer_hermes_approval', { runId, requestId, allow });
 export const setProviderKey = (connections: Connections, key: string | null) => invoke<void>('set_provider_key', { connections, key });
 export const discoverVoices = (baseUrl: string) => invoke<VoiceCatalog>('discover_voices', { baseUrl });
 export const audioDevices = () => invoke<AudioDevices>('get_audio_devices');
@@ -44,3 +48,5 @@ export const getUpdateStatus = () => invoke<UpdateStatus>('get_update_status');
 export const checkUpdate = () => invoke<UpdateStatus>('check_update');
 export const installUpdate = () => invoke<UpdateStatus>('install_update');
 export const onUpdate = (callback: (value: UpdateStatus) => void) => listen<UpdateStatus>('sherka:update', event => callback(event.payload));
+
+export const newHermesConversation = (profileId: string) => invoke<Snapshot>('new_hermes_conversation', { profileId });

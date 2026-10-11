@@ -290,7 +290,7 @@ async fn anthropic_messages_system_headers_adaptive_thinking_usage_and_structure
 }
 
 #[tokio::test]
-async fn zai_manual_context_and_json_mode_preserve_mandatory_thinking() {
+async fn zai_fallback_context_and_json_mode_preserve_mandatory_thinking() {
     for kind in [LlmProvider::Zai, LlmProvider::ZaiCoding] {
         let server = Fixture::new(|path, _, body| {
             if path.ends_with("/models") {
@@ -310,14 +310,17 @@ async fn zai_manual_context_and_json_mode_preserve_mandatory_thinking() {
         let mut c = config(kind, &server.url);
         c.llm_model = Some("glm-5.3-flash".into());
         let provider = Providers::with_api_key(c.clone(), Some("fixture-token".into())).unwrap();
-        assert!(
-            provider
-                .remote_model()
-                .await
-                .unwrap_err()
-                .to_string()
-                .contains("plafond")
-        );
+        let model = provider.remote_model().await.unwrap();
+        let default_budget = budget(
+            &ProfileDraft {
+                connections: c.clone(),
+                ..Default::default()
+            },
+            &model,
+        )
+        .unwrap();
+        assert_eq!(default_budget.limit, 64_000);
+        assert_eq!(default_budget.response_tokens, 8192);
         c.context_limit = Some(8192);
         let mut provider = Providers::with_api_key(c, Some("fixture-token".into())).unwrap();
         let model = provider.remote_model().await.unwrap();

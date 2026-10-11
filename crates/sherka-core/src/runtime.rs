@@ -11,6 +11,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Snapshot {
+    pub companion_capabilities: CompanionCapabilities,
     pub profiles: Vec<Profile>,
     pub settings: Settings,
     pub session: SessionSnapshot,
@@ -18,6 +19,15 @@ pub struct Snapshot {
     pub audio_available: bool,
     pub conversation_available: bool,
     pub live: crate::conversation::LiveConversation,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CompanionCapabilities {
+    pub local_personality: bool,
+    pub local_memory: bool,
+    /// Contract for future emotional avatars; listening/speaking indicators
+    /// remain available for remote agents.
+    pub local_emotions: bool,
 }
 
 /// Access is serialized by the desktop adapter. A profile switch loads and
@@ -74,7 +84,19 @@ impl Companion {
     }
 
     pub fn snapshot(&self) -> Result<Snapshot> {
+        let local = !self
+            .store
+            .profile(self.session.snapshot().profile_id)?
+            .details
+            .connections
+            .llm_provider
+            .is_agent();
         Ok(Snapshot {
+            companion_capabilities: CompanionCapabilities {
+                local_personality: local,
+                local_memory: local,
+                local_emotions: local,
+            },
             profiles: self.store.list()?,
             settings: self.settings.clone(),
             session: self.session.snapshot(),
@@ -105,6 +127,17 @@ impl Companion {
         if previous.details.connections.language != draft.connections.language {
             return Err(Error::Validation("La langue du compagnon est fixée à sa création. Crée un autre compagnon pour utiliser une autre langue.".into()));
         }
+        let draft = draft.validated()?;
+        if previous.revision != revision {
+            return Err(Error::Conflict);
+        }
+        if self.settings.active_profile == Some(id)
+            && (previous.details.personality != draft.personality
+                || previous.details.instructions != draft.instructions
+                || previous.details.connections != draft.connections)
+        {
+            self.stop_response()?;
+        }
         let updated = self.store.update(id, revision, draft)?;
         if self.settings.default_companion == Some(id)
             && (previous.details.name != updated.details.name
@@ -115,13 +148,6 @@ impl Companion {
             next.default_companion = None;
             self.store.save_settings(&next)?;
             self.settings = next;
-        }
-        if self.settings.active_profile == Some(id)
-            && (previous.details.personality != updated.details.personality
-                || previous.details.instructions != updated.details.instructions
-                || previous.details.connections != updated.details.connections)
-        {
-            self.stop_response()?;
         }
         Ok(())
     }
@@ -204,6 +230,7 @@ impl Companion {
     }
 
     pub fn stop_response(&mut self) -> Result<()> {
+        self.live.hermes_approval = None;
         self.memory_job.cancel();
         // Invalidate first, even if disk persistence fails. Late workers cannot
         // append anything to this turn after the lock is released.
@@ -259,6 +286,7 @@ impl Companion {
             self.store.save_web_sources(tag, report)?;
         }
         self.session.complete(tag)?;
+        self.live.hermes_approval = None;
         self.live.tag = None;
         self.live.transcript.clear();
         Ok(())

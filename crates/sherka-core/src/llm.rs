@@ -75,7 +75,11 @@ impl Providers {
         Ok(request)
     }
 
-    async fn api_json(response: Response, service: &str, maximum: usize) -> Result<Value> {
+    pub(crate) async fn api_json(
+        response: Response,
+        service: &str,
+        maximum: usize,
+    ) -> Result<Value> {
         let mut response = Self::checked(response, service).await?;
         if response
             .content_length()
@@ -312,11 +316,6 @@ impl Providers {
                 allowed_options: choices.iter().map(|s| (*s).into()).collect(),
                 default: None,
             });
-        }
-        if model.max_context_length.is_none() && self.connections.context_limit.is_none() {
-            return Err(failure(
-                "Ce fournisseur ne fournit pas la limite de contexte. Indique le plafond du modèle dans Réglages avant de converser.",
-            ));
         }
         Ok(model)
     }

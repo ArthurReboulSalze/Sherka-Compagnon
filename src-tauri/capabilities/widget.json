@@ -12,6 +12,7 @@
     "core:window:allow-start-resize-dragging",
     "allow-get-snapshot",
     "allow-switch-companion",
+    "allow-new-hermes-conversation",
     "allow-widget-action",
     "allow-get-conversation",
     "allow-get-voice-service"

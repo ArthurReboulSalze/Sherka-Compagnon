@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-hermes-servers"
+description = "Enables the get_hermes_servers command without any pre-configured scope."
+commands.allow = ["get_hermes_servers"]
+
+[[permission]]
+identifier = "deny-get-hermes-servers"
+description = "Denies the get_hermes_servers command without any pre-configured scope."
+commands.deny = ["get_hermes_servers"]

@@ -12,3 +12,5 @@
 - [Connections](CONNECTIONS.md): LM Studio and VoiceStudio contracts.
 - [Architecture](ARCHITECTURE.md), [project status](PROJECT_STATE.md) and [artwork provenance](ASSET_PROVENANCE.md).
 - [Product specification](SPECIFICATION.md).
+
+- [Hermes voice client and profile setup](HERMES.md)

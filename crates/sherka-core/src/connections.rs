@@ -1,6 +1,9 @@
 use crate::{Error, Result};
 use serde::{Deserialize, Serialize};
 
+pub const DEFAULT_RESPONSE_TOKENS: u32 = 8192;
+pub const FALLBACK_CONTEXT_TOKENS: u64 = 64_000;
+
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum LlmProvider {
@@ -13,8 +16,12 @@ pub enum LlmProvider {
     Anthropic,
     CustomOpenAi,
     CustomAnthropic,
+    Hermes,
 }
 impl LlmProvider {
+    pub fn is_agent(self) -> bool {
+        self == Self::Hermes
+    }
     pub fn is_local(&self) -> bool {
         *self == Self::LmStudio
     }
@@ -34,6 +41,7 @@ impl LlmProvider {
             Self::Anthropic => "Anthropic",
             Self::CustomOpenAi => "API OpenAI",
             Self::CustomAnthropic => "API Anthropic",
+            Self::Hermes => "Hermes",
         }
     }
     pub fn default_url(self) -> Option<&'static str> {
@@ -54,6 +62,8 @@ impl LlmProvider {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Connections {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hermes_profile: Option<String>,
     #[serde(skip_serializing_if = "LlmProvider::is_local")]
     pub llm_provider: LlmProvider,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -76,6 +86,7 @@ pub struct Connections {
 impl Default for Connections {
     fn default() -> Self {
         Self {
+            hermes_profile: None,
             llm_provider: LlmProvider::LmStudio,
             llm_api_url: None,
             lm_studio_url: "http://127.0.0.1:1234".into(),
@@ -89,7 +100,7 @@ impl Default for Connections {
             speed: 1.0,
             volume: 0.8,
             context_limit: None,
-            response_tokens: 1024,
+            response_tokens: DEFAULT_RESPONSE_TOKENS,
             reasoning: None,
         }
     }
@@ -133,7 +144,16 @@ impl Connections {
         self.lm_studio_url = base_url(&self.lm_studio_url)?;
         self.voice_studio_url = base_url(&self.voice_studio_url)?;
         if let Some(value) = self.llm_api_url.take().filter(|s| !s.trim().is_empty()) {
-            self.llm_api_url = Some(api_base_url(&value)?);
+            self.llm_api_url = Some(if self.llm_provider.is_agent() {
+                crate::hermes::server_url(&value)?
+            } else {
+                api_base_url(&value)?
+            });
+        }
+        if self.llm_provider.is_agent() {
+            self.hermes_profile = Some(crate::hermes::profile_name(
+                self.hermes_profile.as_deref().unwrap_or("default"),
+            )?);
         }
         if !self.llm_provider.is_local() {
             self.api_base()?;
@@ -184,6 +204,9 @@ impl Connections {
     }
 
     pub fn api_base(&self) -> Result<String> {
+        if self.llm_provider.is_agent() {
+            return crate::hermes::profile_url(self);
+        }
         if self.llm_provider.is_local() {
             return Ok(format!("{}/v1", self.lm_studio_url));
         }

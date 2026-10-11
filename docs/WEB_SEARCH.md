@@ -1,6 +1,6 @@
 # Web search
 
-Sherka **0.5.0** adds optional DuckDuckGo search, with no account or API key. Conversation and speech models still run through your local providers. Web search requires an Internet connection.
+Sherka offers optional DuckDuckGo search, with no account or API key. Search planning uses the companion's selected conversation provider. Speech stays in VoiceStudio. Web search requires an Internet connection.
 
 ## Choose when to search
 
@@ -8,7 +8,7 @@ Open **Settings → Web search → Internet access**:
 
 - **Disabled** is the default. Sherka does not send search requests.
 - **On request** searches when you check **Search the web for this message** in Conversation, type `/web your question`, or explicitly ask to search the web. Voice requests work too; in French, say “cherche sur Internet…”.
-- **Automatic** asks the local conversation model whether the current question needs public, recent or verifiable information. It then runs at most one short search before answering. Greetings, creative writing and memory edits should stay local. Reliability depends on the model; use an explicit request if it misses a search.
+- **Automatic** asks the conversation model whether the current message requires external public information. It then runs at most one short search before answering. Personal stories, daily activities, feelings, greetings, creative writing and memory edits do not need search. If the planning request fails or returns invalid JSON, Sherka continues the ordinary conversation without claiming a search happened. Reliability depends on the model; use an explicit request if it misses a needed search.
 
 The setting applies across companions. Changing it stops the current response. Switching companions, interrupting, pausing or quitting cancels work in progress. The next response continues to use the companion's own personality, language, model and voice.
 
@@ -26,7 +26,7 @@ Local models can still misinterpret snippets or misattribute a citation, especia
 
 Only the short search query and a language/region preference go to DuckDuckGo, along with normal connection metadata such as your IP address. Sherka does not attach stored memories, voice recordings or conversation history. A query can still contain personal information from the question you ask; keep that in mind when enabling search.
 
-Automatic search decisions run in LM Studio using a bounded structured JSON request, separate from the spoken answer. No conversation or speech inference is moved to a cloud model. Search evidence is treated as untrusted text and cannot directly execute commands or edit memory. Links are validated in Rust and the model cannot fetch arbitrary URLs.
+Automatic search decisions use a bounded structured JSON request to the selected conversation provider, separate from the spoken answer. A remote conversation provider also receives this planning request; VoiceStudio remains local. Search evidence is treated as untrusted text and cannot directly execute commands or edit memory. Links are validated in Rust and the model cannot fetch arbitrary URLs.
 
 DuckDuckGo's HTML interface is not a guaranteed search API. It can change, rate-limit requests or demand a bot check. If a search fails or returns no usable evidence, Sherka speaks a fixed notice in the companion's language instead of letting the model fabricate a verification. It does not solve or bypass challenges, and does not silently switch to another provider. Try later or search in your browser.
 
@@ -34,7 +34,7 @@ With an outbound-blocking firewall such as Windows Firewall Control, allow Inter
 
 Search adds latency before the answer starts, especially in Automatic mode. There is no background polling or autonomous browsing. The provider request has a timeout and bounded response size.
 
-History storage uses database schema 4. Do not open an upgraded data folder with an older Sherka binary; use a separate backup if you need to return to 0.4.0.
+Search receipts were introduced with database schema 4. Version 0.6.1 upgrades profiles to schema 5 to raise the former reply default once. Older binaries open startup recovery for these profiles so an update remains possible. Keep installed and no-install versions aligned; use a separate backup to run an older version with its original data.
 
 ## Development checks
 

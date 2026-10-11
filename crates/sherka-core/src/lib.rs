@@ -5,6 +5,7 @@ pub mod connections;
 pub mod conversation;
 pub mod credentials;
 pub mod error;
+pub mod hermes;
 pub mod i18n;
 mod llm;
 pub mod memory;

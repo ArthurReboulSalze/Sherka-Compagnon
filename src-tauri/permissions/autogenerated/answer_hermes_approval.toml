@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-answer-hermes-approval"
+description = "Enables the answer_hermes_approval command without any pre-configured scope."
+commands.allow = ["answer_hermes_approval"]
+
+[[permission]]
+identifier = "deny-answer-hermes-approval"
+description = "Denies the answer_hermes_approval command without any pre-configured scope."
+commands.deny = ["answer_hermes_approval"]

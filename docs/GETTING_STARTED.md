@@ -24,7 +24,7 @@ The companion appears alone, with its microphone off. Hover over it, open the co
 
 The original Sherka comes with a personality and instructions in all seven languages and follows your interface choice automatically. You do not need to rewrite her character. Custom companions keep their own language.
 
-Sherka starts installed VoiceStudio when its local service is stopped. Typical addresses are `http://127.0.0.1:1234` for LM Studio and `http://127.0.0.1:3900` for VoiceStudio. Choose the conversation provider for this companion, refresh its catalog, choose a model, then choose the VoiceStudio TTS engine, voice and transcription model. Save the choices. For a remote provider, save a protected API key and enter a context ceiling if the catalog has no limit. Provider charges and privacy policies apply.
+Sherka starts installed VoiceStudio when its local service is stopped. Typical addresses are `http://127.0.0.1:1234` for LM Studio and `http://127.0.0.1:3900` for VoiceStudio. Choose the conversation provider for this companion, refresh its catalog, choose a model, then choose the VoiceStudio TTS engine, voice and transcription model. Save the choices. For a remote provider, save a protected API key. If the catalog has no context limit, Sherka uses 64,000 tokens by default; adjust the ceiling to your model if needed. Replies default to an 8,192-token reserve within the model's limits. Provider charges and privacy policies apply.
 
 Under **Microphone & listening**, select input and output. Start with headphones, enable the microphone and speak normally. Confirmed speech can interrupt the current response. You can also type, with or without spoken replies.
 
@@ -42,3 +42,5 @@ If an older release closes immediately with no screen, download the latest offic
 - **Interruptions or delays:** try headphones, check devices and reduce model load. Speaker echo needs further testing across rooms and hardware.
 
 Use **Quit Sherka** to exit completely. Closing the control panel only hides it.
+
+For an existing Hermes agent, choose **Hermes · remote agent** and follow the [Hermes connection guide](HERMES.md). Your server handles personality, memory and tools; VoiceStudio handles your local speech.

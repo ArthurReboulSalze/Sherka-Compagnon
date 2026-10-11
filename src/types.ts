@@ -17,6 +17,7 @@ export interface Profile extends ProfileDraft {
 }
 
 export interface Snapshot {
+  companion_capabilities: { local_personality: boolean; local_memory: boolean; local_emotions: boolean };
   profiles: Profile[];
   settings: {
     web_search: SearchMode;
@@ -71,11 +72,12 @@ export interface AudioSettings { input_device: string | null; output_device: str
 export interface ContextBudget { model: string; max_context: number | null; loaded_context: number; limit: number; input_estimate: number; response_tokens: number; safety_tokens: number; history_kept: number; history_omitted: number; memories_used: number[]; memories_omitted: number }
 export type SearchMode = 'off' | 'on_request' | 'auto';
 export interface WebReport { query: string; searching: boolean; error: string | null; sources: {title:string;url:string;snippet:string}[] }
-export interface LiveConversation { web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
+export interface LiveConversation { hermes_approval?: {run_id:string;request_id:string|null;description:string;allow_once:boolean}|null; web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
 export interface LiveState { session: Snapshot['session']; live: LiveConversation }
 export interface AudioDevices { inputs: { id: string; name: string; is_default: boolean }[]; outputs: { id: string; name: string; is_default: boolean }[] }
 
 export interface Connections {
+  hermes_profile?: string | null;
   llm_provider?: LlmProvider;
   llm_api_url?: string | null;
   lm_studio_url: string;
@@ -92,7 +94,7 @@ export interface Connections {
   response_tokens: number;
   reasoning: string | null;
 }
-export type LlmProvider = 'lm_studio' | 'open_router' | 'zai' | 'zai_coding' | 'open_ai' | 'anthropic' | 'custom_open_ai' | 'custom_anthropic';
+export type LlmProvider = 'lm_studio' | 'open_router' | 'zai' | 'zai_coding' | 'open_ai' | 'anthropic' | 'custom_open_ai' | 'custom_anthropic' | 'hermes';
 export interface LanguageCatalog {
   source: string;
   models: { id: string; key: string; label: string; loaded: boolean | null; quantization: string | null; max_context_length: number | null; loaded_context_length: number | null; reasoning: {allowed_options: string[];default: string | null} | null }[];

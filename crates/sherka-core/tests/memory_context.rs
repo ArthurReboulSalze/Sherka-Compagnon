@@ -42,7 +42,8 @@ fn budget_uses_loaded_context_and_explicit_response_reserve() {
     let p = ProfileDraft::default();
     let b = budget(&p, &model(262144, 8192)).unwrap();
     assert_eq!(b.limit, 8192);
-    assert_eq!(b.response_tokens, 1024);
+    assert_eq!(p.connections.response_tokens, 8192);
+    assert_eq!(b.response_tokens, 2048); // The small loaded context still constrains the reserve.
     let small = prepare_context(&p, &[], "Bonjour", &Default::default(), b, None).unwrap();
     assert!(
         small.messages[0]
@@ -84,6 +85,92 @@ fn budget_uses_loaded_context_and_explicit_response_reserve() {
         budget(&capped, &model(262144, 200000)).unwrap().limit,
         16000
     );
+}
+#[test]
+fn remote_context_fallback_and_known_limits_keep_the_default_reply_budget_usable() {
+    let mut p = ProfileDraft::default();
+    p.connections.llm_provider = sherka_core::connections::LlmProvider::OpenRouter;
+    let mut m = model(262144, 8192);
+    m.max_context_length = None;
+    m.loaded_context_length = None;
+    let b = budget(&p, &m).unwrap();
+    assert_eq!(b.limit, 64_000);
+    assert_eq!(b.max_context, None); // A configured fallback is not provider metadata.
+    assert_eq!(b.response_tokens, 8192);
+    p.connections.context_limit = Some(100_000);
+    assert_eq!(budget(&p, &m).unwrap().limit, 100_000);
+    m.max_context_length = Some(32_768);
+    assert_eq!(budget(&p, &m).unwrap().limit, 32_768);
+    p.connections.context_limit = Some(16_000);
+    assert_eq!(budget(&p, &m).unwrap().limit, 16_000);
+}
+
+#[test]
+fn legacy_reply_default_is_upgraded_once_without_changing_history_or_other_choices() {
+    for old_reserve in [1024, 3072] {
+        let dir = tempdir().unwrap();
+        let mut app = Companion::open(dir.path()).unwrap();
+        let id = app.session.snapshot().profile_id;
+        let old = app.store.profile(id).unwrap();
+        let mut draft = old.details;
+        draft.connections.response_tokens = old_reserve;
+        draft.connections.llm_model = Some("chosen-model".into());
+        draft.connections.tts_voice = Some("chosen-voice".into());
+        let old = app.store.update(id, old.revision, draft).unwrap();
+        record(&mut app, "Aujourd'hui j'ai fait une promenade.");
+        app.store
+            .write_memory(
+                &app.store.memory_guard(id).unwrap(),
+                None,
+                &self::draft("J'aime les promenades.", "essential"),
+            )
+            .unwrap();
+        let history = serde_json::to_value(app.store.history(id, 100).unwrap()).unwrap();
+        let memories = app.store.export_memories(id).unwrap();
+        let path = dir
+            .path()
+            .join("profiles")
+            .join(id.to_string())
+            .join("profile.sqlite3");
+        drop(app);
+        let db = rusqlite::Connection::open(&path).unwrap();
+        db.execute_batch("PRAGMA user_version = 4;").unwrap();
+        drop(db);
+        let app = Companion::open(dir.path()).unwrap();
+        let upgraded = app.store.profile(id).unwrap();
+        let mut expected = old.details;
+        if old_reserve == 1024 {
+            expected.connections.response_tokens = 8192;
+        }
+        assert_eq!(
+            serde_json::to_value(&upgraded.details).unwrap(),
+            serde_json::to_value(expected).unwrap()
+        );
+        assert_eq!(
+            upgraded.revision,
+            old.revision + i64::from(old_reserve == 1024)
+        );
+        assert_eq!(
+            serde_json::to_value(app.store.history(id, 100).unwrap()).unwrap(),
+            history
+        );
+        assert_eq!(app.store.export_memories(id).unwrap(), memories);
+        let mut edited = upgraded.details;
+        edited.connections.response_tokens = 1024;
+        app.store.update(id, upgraded.revision, edited).unwrap();
+        drop(app);
+        assert_eq!(
+            Companion::open(dir.path())
+                .unwrap()
+                .store
+                .profile(id)
+                .unwrap()
+                .details
+                .connections
+                .response_tokens,
+            1024
+        );
+    }
 }
 #[test]
 fn memory_is_profile_local_searchable_editable_and_forget_cannot_rehydrate_from_archives() {

@@ -239,6 +239,9 @@ async fn apply_mutation(
         .iter()
         .find(|p| p.id == snapshot.session.profile_id)
         && (previous.0 != active.id
+            || previous.1.llm_provider != active.details.connections.llm_provider
+            || previous.1.llm_api_url != active.details.connections.llm_api_url
+            || previous.1.hermes_profile != active.details.connections.hermes_profile
             || previous.1.llm_model != active.details.connections.llm_model
             || previous.1.lm_studio_url != active.details.connections.lm_studio_url)
     {
@@ -496,6 +499,124 @@ async fn discover_voices(base_url: String) -> Result<VoiceCatalog, String> {
 }
 
 #[tauri::command]
+async fn get_hermes_profiles(
+    shared: State<'_, Shared>,
+    server: String,
+) -> Result<Vec<String>, String> {
+    let server = sherka_core::hermes::server_url(&server).map_err(|e| e.to_string())?;
+    with_core(shared.inner().clone(), move |c| {
+        c.store.hermes_profiles(&server)
+    })
+    .await
+}
+
+#[tauri::command]
+async fn get_hermes_servers(shared: State<'_, Shared>) -> Result<Vec<String>, String> {
+    with_core(shared.inner().clone(), |c| c.store.hermes_servers()).await
+}
+
+#[tauri::command]
+async fn new_hermes_conversation(
+    app: AppHandle,
+    shared: State<'_, Shared>,
+    voice: State<'_, Voice>,
+    profile_id: Uuid,
+) -> Result<Snapshot, String> {
+    let _gate = voice.gate.lock().await;
+    voice.cancel_pending();
+    voice.playback.interrupt();
+    let snapshot = with_core(shared.inner().clone(), move |c| {
+        if c.session.snapshot().profile_id != profile_id
+            || !c
+                .store
+                .profile(profile_id)?
+                .details
+                .connections
+                .llm_provider
+                .is_agent()
+        {
+            return Err(Error::StaleOperation);
+        }
+        c.stop_response()?;
+        c.store.new_hermes_session(profile_id)?;
+        c.session.switch_profile(profile_id);
+        c.live = sherka_core::conversation::LiveConversation {
+            notice: Some("Nouvelle conversation Hermes. Sa mémoire est conservée.".into()),
+            ..Default::default()
+        };
+        c.snapshot()
+    })
+    .await?;
+    conversation::emit(&app, shared.inner());
+    let _ = app.emit("sherka:history", profile_id);
+    let _ = app.emit("sherka:changed", ());
+    Ok(snapshot)
+}
+
+#[tauri::command]
+async fn test_hermes(
+    shared: State<'_, Shared>,
+    connections: Connections,
+) -> Result<Vec<String>, String> {
+    let provider =
+        sherka_core::providers::Providers::new(connections).map_err(|e| e.to_string())?;
+    provider.hermes_probe().await.map_err(|e| e.to_string())?;
+    let config = provider.connections;
+    with_core(shared.inner().clone(), move |c| {
+        let server = config.llm_api_url.as_deref().ok_or(Error::StaleOperation)?;
+        c.store.remember_hermes_profile(
+            server,
+            config.hermes_profile.as_deref().unwrap_or("default"),
+        )?;
+        c.store.hermes_profiles(server)
+    })
+    .await
+}
+
+#[tauri::command]
+async fn answer_hermes_approval(
+    app: AppHandle,
+    shared: State<'_, Shared>,
+    run_id: String,
+    request_id: Option<String>,
+    allow: bool,
+) -> Result<(), String> {
+    let (tag, approval, config) = with_core(shared.inner().clone(), move |c| {
+        let tag = c.live.tag.ok_or(Error::StaleOperation)?;
+        let approval = c
+            .live
+            .hermes_approval
+            .clone()
+            .ok_or(Error::StaleOperation)?;
+        if approval.run_id != run_id || approval.request_id != request_id || !c.session.accepts(tag)
+        {
+            return Err(Error::StaleOperation);
+        }
+        let config = c.store.profile(tag.profile_id)?.details.connections;
+        c.live.hermes_approval = None;
+        Ok((tag, approval, config))
+    })
+    .await?;
+    conversation::emit(&app, shared.inner());
+    let result = sherka_core::providers::Providers::new(config)
+        .map_err(|e| e.to_string())?
+        .hermes_approve(&approval, allow)
+        .await
+        .map_err(|e| e.to_string());
+    if result.is_err() {
+        with_core(shared.inner().clone(), move |c| {
+            if c.session.accepts(tag) && c.live.hermes_approval.is_none() {
+                c.live.hermes_approval = Some(approval);
+            }
+            Ok(())
+        })
+        .await?;
+        conversation::emit(&app, shared.inner());
+    }
+    result
+}
+
+#[tauri::command]
 async fn export_profile(
     app: AppHandle,
     shared: State<'_, Shared>,
@@ -621,6 +742,11 @@ pub fn run() {
             export_memories,
             export_profile,
             discover_language_models,
+            get_hermes_profiles,
+            get_hermes_servers,
+            new_hermes_conversation,
+            test_hermes,
+            answer_hermes_approval,
             get_provider_key_status,
             set_provider_key,
             discover_voices,

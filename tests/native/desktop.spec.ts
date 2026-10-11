@@ -582,14 +582,16 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
   console.log(`Native provider speech: ${canSpeak ? 'enabled' : 'no default audio output; text-only'}`);
   let interrupted: (() => void) | undefined;
   let number = 0;
+  let contextAdvertised = true;
   const server = createServer((request,response) => {
-    if (request.url!.startsWith('/remote/v1/models')) { response.writeHead(200,{'Content-Type':'application/json'}); response.end(JSON.stringify({data:[{id:'cloud-test',display_name:'Cloud fixture',max_input_tokens:32768,max_tokens:4096,capabilities:{thinking:{supported:true,types:{adaptive:{supported:true},disabled:{supported:true}}},effort:{low:{supported:true}}}}],has_more:false})); return; }
+    if (request.url!.startsWith('/remote/v1/models')) { response.writeHead(200,{'Content-Type':'application/json'}); response.end(JSON.stringify({data:[{id:'cloud-test',display_name:'Cloud fixture',max_input_tokens:contextAdvertised?32768:undefined,max_tokens:contextAdvertised?4096:undefined,capabilities:{thinking:{supported:true,types:{adaptive:{supported:true},disabled:{supported:true}}},effort:{low:{supported:true}}}}],has_more:false})); return; }
     const catalog = fixture[request.url!]; if (catalog) { response.writeHead(200,{'Content-Type':'application/json'});response.end(JSON.stringify(catalog));return; }
     if (request.method==='GET') { response.writeHead(404);response.end('{}');return; }
     let raw='';request.on('data',bytes=>raw+=bytes);request.on('end',()=>{
       const body=JSON.parse(raw);requests.push({path:request.url!,body,auth:request.headers['x-api-key'] as string|undefined});
       if (request.url==='/v1/audio/speech') { expect(request.headers.authorization).toBeUndefined();expect(request.headers['x-api-key']).toBeUndefined();response.writeHead(200,{'Content-Type':'audio/pcm'});response.end(Buffer.alloc(24000));return; }
       expect(request.url).toBe('/remote/v1/messages');expect(request.headers['anthropic-version']).toBe('2023-06-01');
+      if (!body.stream) { response.writeHead(200,{'Content-Type':'application/json'});response.end(JSON.stringify({stop_reason:'max_tokens',content:[]}));return; }
       response.writeHead(200,{'Content-Type':'text/event-stream'});
       const event=(value:any)=>response.write('data: '+JSON.stringify(value)+'\n\n');
       event({type:'message_start',message:{usage:{input_tokens:120,output_tokens:1}}});event({type:'content_block_delta',delta:{type:'thinking_delta',thinking:'REFLEXION SECRETE'}});
@@ -615,6 +617,7 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
     await panel.getByRole('button',{name:'Enregistrer ces choix',exact:true}).click();
     let state=await native<any>('get_snapshot');let p=state.profiles[0];configured=p.connections;
     expect(p.connections.llm_provider).toBe('custom_anthropic');expect(JSON.stringify(state)).not.toContain('fixture-token');
+    expect(p.connections.response_tokens).toBe(8192);
     expect(await widget.evaluate(async config=>{try {await (window as any).__TAURI_INTERNALS__.invoke('get_provider_key_status',{connections:config});return true;} catch {return false;}},configured)).toBe(false);
     await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...configured,voice_studio_url:url,tts_engine:'omni',tts_voice:'voice-test',volume:0}}});
     await panel.getByRole('button',{name:'Conversation',exact:true}).click();
@@ -625,7 +628,12 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
     expect(requests.find(r=>r.path.endsWith('/messages'))!.auth).toBe('fixture-token');expect(requests.filter(r=>r.path.endsWith('/speech')).every(r=>!r.body.input.includes('REFLEXION SECRETE'))).toBe(true);
     if (canSpeak) await expect.poll(()=>requests.filter(r=>r.path.endsWith('/speech')).length).toBeGreaterThan(0);
     else expect(requests.filter(r=>r.path.endsWith('/speech'))).toHaveLength(0);
-    await panel.getByLabel('Ou écris-lui ici').fill('Suite');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();await expect.poll(()=>number).toBe(2);await expect(panel.locator('#live-reply')).toContainText('Bonjour depuis le cloud.');
+    expect(requests.find(r=>r.path.endsWith('/messages')&&r.body.stream)!.body.max_tokens).toBe(4096);
+    contextAdvertised=false;
+    await native('apply_mutation',{mutation:{kind:'web_search',mode:'auto'}});
+    await panel.getByLabel('Ou écris-lui ici').fill('Aujourd’hui je te raconte ma journée.');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();await expect.poll(()=>number).toBe(2);await expect(panel.locator('#live-reply')).toContainText('Bonjour depuis le cloud.');
+    const fallback=await native<any>('get_conversation');expect(fallback.live.web).toBeNull();expect(fallback.live.budget.limit).toBe(64000);expect(fallback.live.budget.response_tokens).toBe(8192);
+    expect(requests.filter(r=>r.path.endsWith('/messages')&&r.body.stream).at(-1)!.body.max_tokens).toBe(8192);
     await panel.getByRole('button',{name:'Arrêter la réponse',exact:true}).click();interrupted?.();
     await expect.poll(async()=> (await native<any[]>('get_history',{profileId:p.id})).at(-1)?.delivery).toBe('interrupted');
     expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('FIN ANCIENNE');
@@ -1507,6 +1515,8 @@ test('updates: signed portable replacement, graceful model unload and preserved 
 
 test('public screenshot: clean companion without personal data', async () => {
   test.skip(process.env.SHERKA_PUBLIC_SCREENSHOT !== '1', 'Explicit documentation capture');
+  await native('apply_mutation',{mutation:{kind:'interface_language',language:'en'}});
+  await expect(panel.locator('#new-profile')).toContainText('New companion');
   await native('widget_action',{action:'show_panel'});
   mkdirSync('docs/images',{recursive:true});
   await panel.screenshot({path:'docs/images/sherka.png'});
@@ -1528,6 +1538,7 @@ test('published update manifest: release binary checks the official GitHub versi
 test('web search: modes, sources, context, restart, failures and cancellation', async () => {
   test.setTimeout(150_000);
   let searchState: 'results'|'challenge'|'slow' = 'results';
+  let planningFails = false;
   const queries: string[] = []; const prompts: any[]=[]; const plans: any[]=[];
   let slowResponse: ServerResponse | undefined;
   const routes=modelRoutes(['web-fixture']);
@@ -1545,13 +1556,15 @@ test('web search: modes, sources, context, restart, failures and cancellation', 
         const body=JSON.parse(data);
         if(body.response_format?.json_schema?.name==='sherka_web_search') {
           plans.push(body);
+          if(planningFails) { response.writeHead(200,{'Content-Type':'application/json'});response.end(JSON.stringify({choices:[{finish_reason:'length',message:{content:''}}]}));return; }
           const search=body.messages.at(-1).content!=='Bonjour';
           response.writeHead(200,{'Content-Type':'application/json'});
           response.end(JSON.stringify({choices:[{finish_reason:'stop',message:{content:JSON.stringify({search,query:search?'NASA Moon distance':''})}}]}));
         } else {
           prompts.push(body);
           response.writeHead(200,{'Content-Type':'text/event-stream'});
-          response.end('data: '+JSON.stringify({choices:[{delta:{content:'La distance moyenne est de 384 400 km [1].'},finish_reason:'stop'}]})+'\n\ndata: [DONE]\n\n');
+          const reply=body.messages.at(-1).content.startsWith('Aujourd’hui')?'Ça a l’air d’une journée bien remplie.':'La distance moyenne est de 384 400 km [1].';
+          response.end('data: '+JSON.stringify({choices:[{delta:{content:reply},finish_reason:'stop'}]})+'\n\ndata: [DONE]\n\n');
         }
       });
     } else {response.writeHead(404);response.end();}
@@ -1603,6 +1616,18 @@ test('web search: modes, sources, context, restart, failures and cancellation', 
     await send('Quelle est la distance de la Lune ?');expect(queries.at(-1)).toBe('NASA Moon distance');
     expect(plans.at(-1).messages).toHaveLength(2);
     expect(JSON.stringify(plans)).not.toContain('PRIVATE_WEB_MARKER');
+    const searchCount = queries.length;
+    const beforeDailyStory = prompts.length;
+    planningFails = true;
+    await send('Aujourd’hui j’ai travaillé sur mon projet, puis je suis allé me promener.');
+    expect(queries).toHaveLength(searchCount);
+    expect(prompts).toHaveLength(beforeDailyStory + 1);
+    const dailyStory = await native<any>('get_conversation');
+    expect(dailyStory.live.web).toBeNull();expect(dailyStory.live.error).toBeNull();
+    expect(dailyStory.live.reply).toContain('journée bien remplie');
+    expect(prompts.at(-1).messages[0].content).toContain('Personal stories, daily activities');
+    expect(prompts.at(-1).messages[0].content).not.toContain('Web receipt: search failed');
+    planningFails = false;
     const promptsBeforeFailure=prompts.length;
     searchState='challenge';await send('/web Test challenge');
     expect((await native<any>('get_conversation')).live.web.error).toContain('anti-robot');
@@ -1648,4 +1673,107 @@ test('live web search: real DuckDuckGo and LM Studio answer with sources', async
     const after=await fetch('http://127.0.0.1:1234/api/v1/models').then(r=>r.json());
     expect(after.models.flatMap((m:any)=>m.loaded_instances??[]).map((i:any)=>i.id).sort()).toEqual(existing.sort());
   }
+});
+
+test('hermes: profiles, server sessions, streaming, voice, approvals and widget new conversation', async () => {
+  const fixture = JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
+  const requests: {path:string;profile:string;body:any;auth:string|undefined}[]=[];
+  const sessions=new Set<string>(); let seq=0; let stopped=0; let pending: (()=>void)|undefined;
+  const devices=await native<{outputs:{is_default:boolean}[]}>('get_audio_devices'); const canSpeak=devices.outputs.some(d=>d.is_default);
+  const server=createServer((req,res)=>{
+    const path=req.url!; const profile=path.startsWith('/p/maman/')?'maman':'default';const route=path.replace('/p/maman','');
+    if (fixture[path]) {res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(fixture[path]));return;}
+    if(path==='/v1/audio/speech') {let text='';req.on('data',v=>text+=v);req.on('end',()=>{requests.push({path,profile,body:JSON.parse(text),auth:req.headers.authorization});res.writeHead(200,{'Content-Type':'audio/pcm'});res.end(Buffer.alloc(24000));});return;}
+    if(req.headers.authorization!==`Bearer hermes-fixture-${profile}`){res.writeHead(401);res.end('{}');return;}
+    const json=(v:any,status=200)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(v));};
+    if(route==='/v1/capabilities'){json({platform:'hermes-agent',features:{run_stop:true},endpoints:{session_chat_stream:{path:'/api/sessions/{session_id}/chat/stream'}}});return;}
+    if(req.method==='GET'&&route.startsWith('/api/sessions/')) {json({},sessions.has(profile+route.slice('/api/sessions/'.length))?200:404);return;}
+    let raw='';req.on('data',v=>raw+=v);req.on('end',()=>{
+      const body=JSON.parse(raw||'{}');requests.push({path,profile,body,auth:req.headers.authorization});
+      if(route==='/api/sessions'){sessions.add(profile+body.id);json({},201);return;}
+      if(route.endsWith('/stop')) {stopped++;pending?.();pending=undefined;json({status:'stopping'});return;}
+      if(route.endsWith('/approval')) {expect(body.choice).toBe('once');expect(body.request_id).toBe('approval_1');pending?.();pending=undefined;json({resolved:1});return;}
+      if(route.endsWith('/chat/stream')) {
+        res.writeHead(200,{'Content-Type':'text/event-stream'});const run_id='run_'+(++seq);
+        const event=(name:string,v:any)=>res.write(`event: ${name}\r\ndata: ${JSON.stringify({run_id,...v})}\r\n\r\n`);
+        event('run.started',{});event('tool.progress',{delta:'SECRET REASONING'});event('tool.started',{preview:'SECRET TOOL ARGS'});
+        const finish=()=>{const content=`Bonjour ${profile}, été fluide.`;event('assistant.delta',{delta:content});event('assistant.completed',{content});event('run.completed',{usage:{input_tokens:20,output_tokens:12}});res.end();};
+        if(body.message==='attendre'){event('assistant.delta',{delta:'Réponse en cours. '});pending=finish;}
+        else if(body.message==='confirmer'){event('approval.request',{request_id:'approval_1',command:'<script>safe text</script>',choices:['once','deny']});pending=finish;}
+        else finish();return;
+      }
+      json({},404);
+    });
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));const base='http://127.0.0.1:'+(server.address() as {port:number}).port;
+  const initial=await native<any>('get_snapshot');const p=initial.profiles[0];let config={...p.connections,llm_provider:'hermes',llm_api_url:base,hermes_profile:'default',llm_model:null};
+  try {
+    await expect(widget.locator('#hermes-new')).toHaveCount(0);
+    await panel.getByRole('button',{name:'Réglages',exact:true}).click();await panel.locator('[name="llm_provider"]').selectOption('hermes');
+    await panel.locator('[name="llm_api_url"]').fill(base);await panel.locator('[name="hermes_profile"]').click();
+    await expect(panel.locator('[name="llm_model"]')).toHaveCount(0);await expect(panel.locator('[name="response_tokens"]')).toHaveCount(0);
+    await panel.locator('#provider-api-key').fill('hermes-fixture-default');await panel.locator('#save-provider-key').click();
+    await expect(panel.locator('#provider-key-status')).toContainText('Clé protégée');await panel.locator('[data-refresh="lm"]').click();await expect(panel.getByText('Profil Hermes connecté · sessions et streaming disponibles')).toBeVisible();
+    await panel.locator('[name="hermes_profile"]').fill('maman');await panel.locator('[name="hermes_profile"]').press('Tab');await expect(panel.locator('#provider-key-status')).toContainText('Aucune clé');
+    await panel.locator('#provider-api-key').fill('hermes-fixture-maman');await panel.locator('#save-provider-key').click();await expect(panel.locator('#provider-key-status')).toContainText('Clé protégée');
+    await panel.locator('[data-refresh="lm"]').click();await expect(panel.locator('#hermes-profiles option')).toHaveCount(2);
+    await panel.locator('#save-connections').click();await expect.poll(async()=>(await native<any>('get_snapshot')).profiles[0].connections.hermes_profile).toBe('maman');
+    let current=(await native<any>('get_snapshot')).profiles[0];config={...current.connections,voice_studio_url:base,tts_engine:'omni',tts_voice:'voice-test',volume:0};
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:current.revision,connections:config}});
+    await native('apply_mutation',{mutation:{kind:'web_search',mode:'auto'}});
+    await panel.screenshot({path:'artifacts/hermes-settings.png',fullPage:true});
+    await panel.getByRole('button',{name:'Conversation',exact:true}).click();if(!canSpeak) await panel.locator('#speak-reply').uncheck();
+    const send=async(text:string)=>{await panel.locator('#chat-text').fill(text);await panel.getByRole('button',{name:'Envoyer',exact:true}).click();};
+    await send('Retiens que je raconte ma journée.');await expect(panel.locator('#conversation-history')).toContainText('Bonjour maman, été fluide.');
+    const first=requests.find(r=>r.path.endsWith('/chat/stream'))!;expect(first.body).toEqual({message:'Retiens que je raconte ma journée.'});
+    const live=await native<any>('get_conversation');expect(live.live.budget).toBeNull();expect(live.live.web).toBeNull();
+    expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('SECRET');
+    if(canSpeak){await expect.poll(()=>requests.filter(r=>r.path==='/v1/audio/speech').length).toBeGreaterThan(0);for(const r of requests.filter(r=>r.path==='/v1/audio/speech')){expect(r.auth).toBeUndefined();expect(r.body.input).not.toContain('SECRET');}}
+    await send('suite');await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).length).toBe(2);await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    expect(requests.filter(r=>r.path.endsWith('/chat/stream'))[1].path).toBe(first.path);
+    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await native('send_message',{profileId:p.id,text:'confirmer',speak:false});await expect(panel.locator('#hermes-approval')).toBeVisible();await expect(panel.locator('#hermes-approval script')).toHaveCount(0);await panel.getByRole('button',{name:'Autoriser une fois',exact:true}).click();await expect(panel.locator('#hermes-approval')).toBeHidden();
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    await send('attendre');await expect(panel.locator('#live-reply')).toContainText('Réponse en cours.');
+    await expect(widget.locator('#hermes-new')).toHaveCount(1);await widget.locator('#drag-region').hover();await widget.locator('#hermes-new').click({force:true});
+    await expect.poll(()=>stopped).toBe(1);await expect.poll(async()=>(await native<any[]>('get_history',{profileId:p.id})).length).toBe(0);
+    await send('nouveau fil');await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)?.body.message).toBe('nouveau fil');await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();await expect(panel.locator('#conversation-history')).toContainText('Bonjour maman, été fluide.');expect(requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path).not.toBe(first.path);
+    expect(sessions.size).toBe(2);
+    await send('/new');await expect.poll(async()=>(await native<any[]>('get_history',{profileId:p.id})).length).toBe(0);
+    current=(await native<any>('get_snapshot')).profiles[0];await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:current.revision,connections:{...config,hermes_profile:'default'}}});
+    await send('bonjour principal');await expect(panel.locator('#conversation-history')).toContainText('Bonjour default, été fluide.');expect(requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path).not.toContain('/p/maman/');
+    expect(JSON.stringify(await native('get_snapshot'))).not.toContain('hermes-fixture');
+    expect(requests.filter(r=>r.path.endsWith('/chat/stream')).every(r=>Object.keys(r.body).join()==='message')).toBe(true);
+  } finally {
+    for(const profile of ['default','maman']) await native('set_provider_key',{connections:{...config,hermes_profile:profile},key:null}).catch(()=>{});
+    server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));
+  }
+});
+
+test('hermes live: two server profiles and persistent conversation', async () => {
+  test.skip(!process.env.SHERKA_TEST_HERMES_URL, 'Opt-in live Hermes server; keys remain in Windows Credential Manager.');
+  test.setTimeout(180000);
+  const base=process.env.SHERKA_TEST_HERMES_URL!;
+  const profiles=(process.env.SHERKA_TEST_HERMES_PROFILES??'default').split(',');
+  const marker='ORCHIDEE'+randomUUID().replaceAll('-','').slice(0,10).toUpperCase();
+  const report:any[]=[];
+  for(const name of profiles) {
+    const state=await native<any>('get_snapshot');const p=state.profiles[0];
+    const config={...p.connections,llm_provider:'hermes',llm_api_url:base,hermes_profile:name,llm_model:null};
+    expect(await native('get_provider_key_status',{connections:config})).toBe(true);
+    await native('test_hermes',{connections:config});
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:config}});
+    await native('apply_mutation',{mutation:{kind:'web_search',mode:'auto'}});
+    await native('send_message',{profileId:p.id,text:`Test technique éphémère. N'utilise aucun outil et ne crée aucun souvenir durable. Réponds uniquement avec ce mot : ${marker}`,speak:false});
+    await expect.poll(async()=>{const v=await native<any>('get_conversation');if(v.live.error)throw new Error(v.live.error);return v.live.tag;},{timeout:90000}).toBeNull();
+    let v=await native<any>('get_conversation');expect(v.live.reply).toContain(marker);expect(v.live.budget).toBeNull();expect(v.live.web).toBeNull();
+    expect((await native<any>('get_snapshot')).companion_capabilities.local_emotions).toBe(false);
+    if(name===profiles[0]) {
+      await native('send_message',{profileId:p.id,text:'Quel était le mot de mon message précédent ? Réponds seulement avec ce mot, sans outil ni souvenir durable.',speak:false});
+      await expect.poll(async()=>{const v=await native<any>('get_conversation');if(v.live.error)throw new Error(v.live.error);return v.live.tag;},{timeout:90000}).toBeNull();
+      v=await native<any>('get_conversation');expect(v.live.reply).toContain(marker);
+    }
+    report.push({profile:name,passed:true,usage:v.live.usage});
+  }
+  writeFileSync('artifacts/hermes-live-validation.json',JSON.stringify({profiles:report,physical_audio_test:false},null,2));
 });

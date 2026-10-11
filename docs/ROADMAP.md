@@ -1,12 +1,12 @@
 # Roadmap
 
-Sherka 0.6.0 adds remote conversation providers and protected API keys alongside local conversations, web search, independent characters, editable memories and seven interface languages. These are directions, not delivery promises.
+Sherka 0.7.0 adds Hermes agent conversations alongside local and API models, web search, independent characters, editable memories and seven interface languages. These are directions, not delivery promises.
 
 ## Bring companions to life
 
 - Easier avatar customization and a character gallery.
 - Idle, listening, thinking and speaking animations.
-- Expressions, moods and reactions matching each personality.
+- Expressions, moods and reactions matching each personality. Hermes remote-agent mode is excluded: it keeps a neutral avatar and listening/speaking indicators, with no emotion prompts or analysis.
 - Voice-driven mouth or portrait animation and natural transitions.
 - Animated formats and shareable character packs without personal data.
 

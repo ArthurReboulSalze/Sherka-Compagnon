@@ -15,7 +15,7 @@ use std::{
 };
 use uuid::Uuid;
 
-const SCHEMA_VERSION: i64 = 4;
+const SCHEMA_VERSION: i64 = 5;
 const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_EXPORT_BYTES: usize = 15 * 1024 * 1024;
 
@@ -73,12 +73,105 @@ impl Store {
         let mut db = connect(&store.root.join("settings.sqlite3"), true)?;
         let tx = db.transaction()?;
         tx.execute_batch("CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); PRAGMA user_version = 1;")?;
+        tx.execute_batch("CREATE TABLE IF NOT EXISTS hermes_sessions (companion TEXT NOT NULL, endpoint TEXT NOT NULL, session TEXT NOT NULL, PRIMARY KEY(companion, endpoint)); CREATE TABLE IF NOT EXISTS hermes_session_tips (session TEXT PRIMARY KEY, tip TEXT NOT NULL); CREATE TABLE IF NOT EXISTS hermes_profiles (server TEXT NOT NULL, profile TEXT NOT NULL, PRIMARY KEY(server, profile));")?;
         tx.execute(
             "INSERT OR IGNORE INTO settings(id,value) VALUES(1,?1)",
             [serde_json::to_string(&Settings::default())?],
         )?;
         tx.commit()?;
         Ok(store)
+    }
+
+    /// Remote conversation identifiers are device-local, never profile exports.
+    pub fn hermes_session(&self, companion: Uuid, endpoint: &str) -> Result<String> {
+        self.profile(companion)?;
+        let db = connect(&self.root.join("settings.sqlite3"), false)?;
+        db.execute(
+            "INSERT OR IGNORE INTO hermes_sessions(companion,endpoint,session) VALUES(?1,?2,?3)",
+            params![
+                companion.to_string(),
+                endpoint,
+                format!("sherka_{}", Uuid::new_v4().simple())
+            ],
+        )?;
+        Ok(db.query_row(
+            "SELECT session FROM hermes_sessions WHERE companion=?1 AND endpoint=?2",
+            params![companion.to_string(), endpoint],
+            |r| r.get(0),
+        )?)
+    }
+
+    pub fn hermes_session_tip(&self, session: &str) -> Result<String> {
+        let db = connect(&self.root.join("settings.sqlite3"), false)?;
+        let tip: Option<String> = db
+            .query_row(
+                "SELECT tip FROM hermes_session_tips WHERE session=?1",
+                [session],
+                |r| r.get(0),
+            )
+            .optional()?;
+        Ok(tip.unwrap_or_else(|| session.to_owned()))
+    }
+    pub fn update_hermes_session_tip(&self, session: &str, tip: &str) -> Result<()> {
+        let db = connect(&self.root.join("settings.sqlite3"), false)?;
+        db.execute("INSERT INTO hermes_session_tips(session,tip) VALUES(?1,?2) ON CONFLICT(session) DO UPDATE SET tip=excluded.tip",params![session,tip])?;
+        Ok(())
+    }
+
+    pub fn hermes_profiles(&self, server: &str) -> Result<Vec<String>> {
+        let db = connect(&self.root.join("settings.sqlite3"), false)?;
+        let mut query =
+            db.prepare("SELECT profile FROM hermes_profiles WHERE server=?1 ORDER BY profile")?;
+        let mut names = query
+            .query_map([server], |r| r.get::<_, String>(0))?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        if !names.iter().any(|s| s == "default") {
+            names.insert(0, "default".into());
+        }
+        Ok(names)
+    }
+
+    pub fn hermes_servers(&self) -> Result<Vec<String>> {
+        let db = connect(&self.root.join("settings.sqlite3"), false)?;
+        let mut query =
+            db.prepare("SELECT DISTINCT server FROM hermes_profiles ORDER BY server")?;
+        Ok(query
+            .query_map([], |r| r.get(0))?
+            .collect::<std::result::Result<Vec<_>, _>>()?)
+    }
+
+    pub fn new_hermes_session(&self, companion: Uuid) -> Result<()> {
+        let config = self.profile(companion)?.details.connections;
+        if !config.llm_provider.is_agent() {
+            return Err(Error::StaleOperation);
+        }
+        let db = connect(&self.root.join("settings.sqlite3"), false)?;
+        db.execute(
+            "DELETE FROM hermes_sessions WHERE companion=?1 AND endpoint=?2",
+            params![companion.to_string(), config.api_base()?],
+        )?;
+        self.hermes_session(companion, &config.api_base()?)?;
+        Ok(())
+    }
+
+    fn transcript_session(&self, id: Uuid) -> Result<Option<String>> {
+        let config = self.profile(id)?.details.connections;
+        if config.llm_provider.is_agent() {
+            self.hermes_session(id, &config.api_base()?).map(Some)
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn remember_hermes_profile(&self, server: &str, profile: &str) -> Result<()> {
+        let server = crate::hermes::server_url(server)?;
+        let profile = crate::hermes::profile_name(profile)?;
+        let db = connect(&self.root.join("settings.sqlite3"), false)?;
+        db.execute(
+            "INSERT OR IGNORE INTO hermes_profiles(server,profile) VALUES(?1,?2)",
+            params![server, profile],
+        )?;
+        Ok(())
     }
 
     /// Check compatibility before migrations or saving any settings. A newer
@@ -222,6 +315,30 @@ impl Store {
             )?;
             tx.commit()?;
         }
+        if version < 5 {
+            let tx = db.transaction()?;
+            let json: String =
+                tx.query_row("SELECT details FROM profile WHERE singleton=1", [], |row| {
+                    row.get(0)
+                })?;
+            let mut details: serde_json::Value = serde_json::from_str(&json)?;
+            // Upgrade the previously shipped default once. Other explicit
+            // budgets and all identity, voice, history and memory data stay intact.
+            if details
+                .pointer("/connections/response_tokens")
+                .and_then(|n| n.as_u64())
+                == Some(1024)
+            {
+                details["connections"]["response_tokens"] =
+                    crate::connections::DEFAULT_RESPONSE_TOKENS.into();
+                tx.execute(
+                    "UPDATE profile SET details=?1,revision=revision+1,updated_at=?2 WHERE singleton=1",
+                    params![serde_json::to_string(&details)?, now()],
+                )?;
+            }
+            tx.execute_batch("PRAGMA user_version = 5;")?;
+            tx.commit()?;
+        }
         Ok(db)
     }
 
@@ -294,6 +411,9 @@ impl Store {
             let tx = db.transaction()?;
             tx.execute_batch(include_str!("schema.sql"))?;
             tx.execute_batch(include_str!("memory_schema.sql"))?;
+            tx.execute_batch(
+                "ALTER TABLE messages ADD COLUMN web_sources TEXT; PRAGMA user_version = 5;",
+            )?;
             tx.execute("INSERT INTO profile(singleton,id,revision,created_at,updated_at,details,avatar) VALUES(1,?1,1,?2,?2,?3,?4)",
                 params![id.to_string(), now(), serde_json::to_string(&draft)?, avatar])?;
             tx.commit()?;
@@ -443,15 +563,15 @@ impl Store {
             ));
         }
         let db = self.db(tag.profile_id)?;
-        db.execute("INSERT INTO messages(id,session_id,turn_id,generation_id,role,content,delivery,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)",
-            params![Uuid::new_v4().to_string(), tag.session_id.to_string(), tag.turn_id.to_string(), tag.generation_id.to_string(), serde_json::to_string(&role)?, content, serde_json::to_string(&delivery)?, now()])?;
+        db.execute("INSERT INTO messages(id,session_id,turn_id,generation_id,role,content,delivery,created_at,extraction_allowed) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)",
+            params![Uuid::new_v4().to_string(), self.transcript_session(tag.profile_id)?.unwrap_or_else(||tag.session_id.to_string()), tag.turn_id.to_string(), tag.generation_id.to_string(), serde_json::to_string(&role)?, content, serde_json::to_string(&delivery)?, now(), self.transcript_session(tag.profile_id)?.is_none()])?;
         Ok(())
     }
 
     pub fn history(&self, id: Uuid, limit: u32) -> Result<Vec<Message>> {
         let db = self.db(id)?;
-        let mut query = db.prepare("SELECT id,role,content,delivery,created_at,heard_content,web_sources FROM (SELECT seq,id,role,content,delivery,created_at,heard_content,web_sources FROM messages ORDER BY seq DESC LIMIT ?1) ORDER BY seq")?;
-        let raw = query.query_map([limit.min(100)], |r| {
+        let mut query = db.prepare("SELECT id,role,content,delivery,created_at,heard_content,web_sources FROM (SELECT seq,id,role,content,delivery,created_at,heard_content,web_sources FROM messages WHERE (?2 IS NULL OR session_id=?2) ORDER BY seq DESC LIMIT ?1) ORDER BY seq")?;
+        let raw = query.query_map(params![limit.min(100), self.transcript_session(id)?], |r| {
             Ok((
                 r.get::<_, String>(0)?,
                 r.get::<_, String>(1)?,
@@ -487,12 +607,12 @@ impl Store {
         if content.trim().is_empty() {
             return Ok(());
         }
-        if content.len() > 64_000 || heard.len() > 64_000 {
+        if content.len() > 512_000 || heard.len() > 512_000 {
             return Err(Error::Validation("Réponse trop longue.".into()));
         }
         self.db(tag.profile_id)?.execute(
-            "INSERT INTO messages(id,session_id,turn_id,generation_id,role,content,delivery,created_at,heard_content) VALUES(?1,?2,?3,?1,?4,?5,?6,?7,?8) ON CONFLICT(id) DO UPDATE SET content=excluded.content,delivery=excluded.delivery,heard_content=excluded.heard_content",
-            params![tag.generation_id.to_string(), tag.session_id.to_string(), tag.turn_id.to_string(), serde_json::to_string(&MessageRole::Assistant)?,content,serde_json::to_string(&delivery)?,now(),heard])?;
+            "INSERT INTO messages(id,session_id,turn_id,generation_id,role,content,delivery,created_at,heard_content,extraction_allowed) VALUES(?1,?2,?3,?1,?4,?5,?6,?7,?8,?9) ON CONFLICT(id) DO UPDATE SET content=excluded.content,delivery=excluded.delivery,heard_content=excluded.heard_content",
+            params![tag.generation_id.to_string(), self.transcript_session(tag.profile_id)?.unwrap_or_else(||tag.session_id.to_string()), tag.turn_id.to_string(), serde_json::to_string(&MessageRole::Assistant)?,content,serde_json::to_string(&delivery)?,now(),heard,self.transcript_session(tag.profile_id)?.is_none()])?;
         Ok(())
     }
 

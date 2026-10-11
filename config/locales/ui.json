@@ -5422,5 +5422,309 @@
     "Vom Anbieter gemeldeter Verbrauch: {0} Eingabe, {1} Ausgabe{2}.",
     "提供商报告的用量：输入 {0}，输出 {1}{2}。",
     "プロバイダーからの使用量：入力 {0}、出力 {1}{2}。"
+  ],
+  "Choisis un modèle du catalogue ou saisis son identifiant. Si la limite de contexte est inconnue, Sherka utilise 64 000 tokens par défaut. Tu peux ajuster ce plafond.": [
+    "Choose a catalog model or enter its ID. If the context limit is unknown, Sherka uses 64,000 tokens by default. You can adjust this ceiling.",
+    "Elige un modelo del catálogo o introduce su identificador. Si se desconoce el límite de contexto, Sherka usa 64 000 tokens por defecto. Puedes ajustar este límite.",
+    "Scegli un modello dal catalogo o inserisci il suo identificativo. Se il limite di contesto è sconosciuto, Sherka usa 64.000 token per impostazione predefinita. Puoi modificare questo limite.",
+    "Wähle ein Modell aus dem Katalog oder gib seine Kennung ein. Ist das Kontextlimit unbekannt, verwendet Sherka standardmäßig 64.000 Tokens. Du kannst diese Grenze anpassen.",
+    "选择目录中的模型或输入其标识符。如果上下文上限未知，Sherka 默认使用 64,000 个 token。你可以调整此上限。",
+    "一覧からモデルを選ぶか、モデル ID を入力してください。コンテキスト上限が不明な場合、Sherka は既定で 64,000 トークンを使用します。この上限は変更できます。"
+  ],
+  "64 000 tokens par défaut": [
+    "64,000 tokens by default",
+    "64 000 tokens por defecto",
+    "64.000 token predefiniti",
+    "Standardmäßig 64.000 Tokens",
+    "默认 64,000 个 token",
+    "既定値：64,000 トークン"
+  ],
+  "Hermes · agent distant": [
+    "Hermes · remote agent",
+    "Hermes · agente remoto",
+    "Hermes · agente remoto",
+    "Hermes · Remote-Agent",
+    "Hermes · 远程智能体",
+    "Hermes · リモートエージェント"
+  ],
+  "Autoriser une fois": [
+    "Allow once",
+    "Permitir una vez",
+    "Consenti una volta",
+    "Einmal erlauben",
+    "允许一次",
+    "今回のみ許可"
+  ],
+  "Refuser": [
+    "Deny",
+    "Rechazar",
+    "Rifiuta",
+    "Ablehnen",
+    "拒绝",
+    "拒否"
+  ],
+  "Profil Hermes": [
+    "Hermes profile",
+    "Perfil de Hermes",
+    "Profilo Hermes",
+    "Hermes-Profil",
+    "Hermes 配置档",
+    "Hermes プロファイル"
+  ],
+  "Mémoire Hermes": [
+    "Hermes memory",
+    "Memoria de Hermes",
+    "Memoria Hermes",
+    "Hermes-Gedächtnis",
+    "Hermes 记忆",
+    "Hermes のメモリ"
+  ],
+  "Connecter ton serveur Hermes": [
+    "Connect your Hermes server",
+    "Conecta tu servidor Hermes",
+    "Collega il tuo server Hermes",
+    "Deinen Hermes-Server verbinden",
+    "连接你的 Hermes 服务器",
+    "Hermes サーバーを接続"
+  ],
+  "Nouvelle conversation Hermes": [
+    "New Hermes conversation",
+    "Nueva conversación con Hermes",
+    "Nuova conversazione Hermes",
+    "Neue Hermes-Unterhaltung",
+    "新建 Hermes 对话",
+    "新しい Hermes 会話"
+  ],
+  "Nouvelle conversation Hermes. Sa mémoire est conservée.": [
+    "New Hermes conversation. Its memory is preserved.",
+    "Nueva conversación con Hermes. Su memoria se conserva.",
+    "Nuova conversazione Hermes. La sua memoria è conservata.",
+    "Neue Hermes-Unterhaltung. Das Gedächtnis bleibt erhalten.",
+    "已新建 Hermes 对话。其记忆会保留。",
+    "新しい Hermes 会話を開始しました。メモリは保持されます。"
+  ],
+  "Hermes demande ton accord": [
+    "Hermes needs your approval",
+    "Hermes necesita tu aprobación",
+    "Hermes richiede la tua autorizzazione",
+    "Hermes benötigt deine Zustimmung",
+    "Hermes 需要你的批准",
+    "Hermes が承認を求めています"
+  ],
+  "Hermes utilise ses outils…": [
+    "Hermes is using its tools…",
+    "Hermes está usando sus herramientas…",
+    "Hermes sta usando i suoi strumenti…",
+    "Hermes verwendet seine Werkzeuge…",
+    "Hermes 正在使用工具…",
+    "Hermes がツールを使用中…"
+  ],
+  "Hermes prépare sa réponse…": [
+    "Hermes is preparing its reply…",
+    "Hermes está preparando su respuesta…",
+    "Hermes sta preparando la risposta…",
+    "Hermes bereitet seine Antwort vor…",
+    "Hermes 正在准备回答…",
+    "Hermes が回答を準備中…"
+  ],
+  "Hermes gère la conversation, sa mémoire et ses outils.": [
+    "Hermes manages the conversation, its memory and its tools.",
+    "Hermes gestiona la conversación, su memoria y sus herramientas.",
+    "Hermes gestisce la conversazione, la memoria e gli strumenti.",
+    "Hermes verwaltet die Unterhaltung, sein Gedächtnis und seine Werkzeuge.",
+    "Hermes 管理对话、记忆和工具。",
+    "Hermes が会話、メモリ、ツールを管理します。"
+  ],
+  "Hermes gère la conversation, sa mémoire et ses outils. Sherka transmet tes messages et lit ses réponses avec VoiceStudio.": [
+    "Hermes manages the conversation, its memory and its tools. Sherka sends your messages and reads its replies using VoiceStudio.",
+    "Hermes gestiona la conversación, su memoria y sus herramientas. Sherka envía tus mensajes y lee sus respuestas con VoiceStudio.",
+    "Hermes gestisce conversazione, memoria e strumenti. Sherka invia i tuoi messaggi e legge le risposte con VoiceStudio.",
+    "Hermes verwaltet Unterhaltung, Gedächtnis und Werkzeuge. Sherka sendet deine Nachrichten und liest die Antworten mit VoiceStudio vor.",
+    "Hermes 管理对话、记忆和工具。Sherka 发送你的消息，并通过 VoiceStudio 朗读回复。",
+    "Hermes が会話、メモリ、ツールを管理します。Sherka はメッセージを送信し、VoiceStudio で返信を読み上げます。"
+  ],
+  "Hermes gère sa personnalité et ses souvenirs sur le serveur. Demande-lui directement de retenir, corriger ou oublier une information.": [
+    "Hermes manages its personality and memories on the server. Ask it directly to remember, correct or forget information.",
+    "Hermes gestiona su personalidad y recuerdos en el servidor. Pídele directamente que recuerde, corrija u olvide información.",
+    "Hermes gestisce personalità e ricordi sul server. Chiedigli direttamente di ricordare, correggere o dimenticare informazioni.",
+    "Hermes verwaltet Persönlichkeit und Erinnerungen auf dem Server. Bitte es direkt, Informationen zu merken, zu korrigieren oder zu vergessen.",
+    "Hermes 在服务器上管理自身性格和记忆。直接请它记住、纠正或忘记信息即可。",
+    "Hermes の性格とメモリはサーバーで管理されます。情報の記憶、訂正、削除は直接 Hermes に依頼してください。"
+  ],
+  "Profil Hermes connecté · sessions et streaming disponibles": [
+    "Hermes profile connected · sessions and streaming available",
+    "Perfil de Hermes conectado · sesiones y streaming disponibles",
+    "Profilo Hermes connesso · sessioni e streaming disponibili",
+    "Hermes-Profil verbunden · Sitzungen und Streaming verfügbar",
+    "Hermes 配置档已连接 · 支持会话和流式回复",
+    "Hermes プロファイルに接続済み · セッションとストリーミングが利用可能"
+  ],
+  "Choisis un profil enregistré ou saisis son nom exact. Chaque profil utilise sa propre clé API et sa propre conversation.": [
+    "Choose a saved profile or enter its exact name. Each profile uses its own API key and conversation.",
+    "Elige un perfil guardado o escribe su nombre exacto. Cada perfil usa su propia clave API y conversación.",
+    "Scegli un profilo salvato o inserisci il nome esatto. Ogni profilo usa la propria chiave API e conversazione.",
+    "Wähle ein gespeichertes Profil oder gib seinen genauen Namen ein. Jedes Profil verwendet einen eigenen API-Schlüssel und eine eigene Unterhaltung.",
+    "选择已保存的配置档或输入其准确名称。每个配置档使用独立的 API 密钥和对话。",
+    "保存済みのプロファイルを選ぶか、正確な名前を入力してください。プロファイルごとに API キーと会話が分かれています。"
+  ],
+  "Sur le serveur, crée une clé aléatoire avec cette commande :": [
+    "On the server, generate a random key with this command:",
+    "En el servidor, genera una clave aleatoria con este comando:",
+    "Sul server, genera una chiave casuale con questo comando:",
+    "Erzeuge auf dem Server mit diesem Befehl einen zufälligen Schlüssel:",
+    "在服务器上运行以下命令生成随机密钥：",
+    "サーバーで次のコマンドを実行し、ランダムなキーを生成します："
+  ],
+  "Dans le fichier .env du profil Hermes, ajoute API_SERVER_ENABLED=true et API_SERVER_KEY=ta_nouvelle_cle. Le profil principal utilise ~/.hermes/.env ; un autre profil utilise ~/.hermes/profiles/nom/.env.": [
+    "In the Hermes profile’s .env file, add API_SERVER_ENABLED=true and API_SERVER_KEY=your_new_key. The default profile uses ~/.hermes/.env; a named profile uses ~/.hermes/profiles/name/.env.",
+    "En el archivo .env del perfil de Hermes, añade API_SERVER_ENABLED=true y API_SERVER_KEY=tu_nueva_clave. El perfil principal usa ~/.hermes/.env; otro perfil usa ~/.hermes/profiles/nombre/.env.",
+    "Nel file .env del profilo Hermes, aggiungi API_SERVER_ENABLED=true e API_SERVER_KEY=la_tua_nuova_chiave. Il profilo principale usa ~/.hermes/.env; gli altri usano ~/.hermes/profiles/nome/.env.",
+    "Ergänze API_SERVER_ENABLED=true und API_SERVER_KEY=dein_neuer_schluessel in der .env-Datei des Hermes-Profils. Das Standardprofil verwendet ~/.hermes/.env, ein benanntes Profil ~/.hermes/profiles/name/.env.",
+    "在 Hermes 配置档的 .env 文件中添加 API_SERVER_ENABLED=true 和 API_SERVER_KEY=你的新密钥。默认配置档使用 ~/.hermes/.env，其他配置档使用 ~/.hermes/profiles/名称/.env。",
+    "Hermes プロファイルの .env に API_SERVER_ENABLED=true と API_SERVER_KEY=新しいキー を追加します。既定プロファイルは ~/.hermes/.env、名前付きプロファイルは ~/.hermes/profiles/名前/.env を使います。"
+  ],
+  "Pour un serveur sur ton réseau, règle API_SERVER_HOST sur son adresse IP privée. Le port habituel est 8642. Redémarre la passerelle Hermes pour appliquer ces réglages.": [
+    "For a server on your network, set API_SERVER_HOST to its private IP address. The usual port is 8642. Restart the Hermes gateway to apply these settings.",
+    "Para un servidor en tu red, establece API_SERVER_HOST en su dirección IP privada. El puerto habitual es 8642. Reinicia la pasarela Hermes para aplicar los cambios.",
+    "Per un server nella tua rete, imposta API_SERVER_HOST sul suo indirizzo IP privato. La porta abituale è 8642. Riavvia il gateway Hermes per applicare le impostazioni.",
+    "Setze API_SERVER_HOST bei einem Server im lokalen Netzwerk auf dessen private IP-Adresse. Der übliche Port ist 8642. Starte das Hermes-Gateway neu, um die Einstellungen anzuwenden.",
+    "对于局域网服务器，将 API_SERVER_HOST 设置为其私有 IP 地址。常用端口为 8642。重启 Hermes 网关以应用设置。",
+    "ローカルネットワークのサーバーでは、API_SERVER_HOST にプライベート IP アドレスを設定します。通常のポートは 8642 です。設定後、Hermes ゲートウェイを再起動してください。"
+  ],
+  "Pour plusieurs profils sur le même port, active gateway.multiplex_profiles: true dans la configuration Hermes et crée une clé propre à chaque profil. Un profil sur un port séparé utilise sa propre adresse avec le profil default ici.": [
+    "For several profiles on one port, enable gateway.multiplex_profiles: true in the Hermes configuration and create a key for each profile. For a profile on a separate port, use its own address and select default here.",
+    "Para varios perfiles en el mismo puerto, activa gateway.multiplex_profiles: true en la configuración de Hermes y crea una clave por perfil. Si un perfil usa otro puerto, indica su dirección y elige default aquí.",
+    "Per più profili sulla stessa porta, attiva gateway.multiplex_profiles: true nella configurazione Hermes e crea una chiave per ogni profilo. Per un profilo su una porta separata, usa il suo indirizzo e scegli default qui.",
+    "Aktiviere für mehrere Profile an einem Port gateway.multiplex_profiles: true in der Hermes-Konfiguration und erstelle für jedes Profil einen Schlüssel. Für ein Profil an einem eigenen Port verwende dessen Adresse und wähle hier default.",
+    "多个配置档共用端口时，在 Hermes 配置中启用 gateway.multiplex_profiles: true，并为每个配置档创建独立密钥。若配置档使用独立端口，请填写其地址，并在此选择 default。",
+    "同じポートで複数のプロファイルを使う場合は、Hermes の設定で gateway.multiplex_profiles: true を有効にし、それぞれにキーを作成します。別ポートのプロファイルはそのアドレスを入力し、ここでは default を選びます。"
+  ],
+  "Dans Sherka, renseigne l’adresse du serveur, choisis le profil, enregistre sa clé puis clique sur Tester et actualiser. Cette clé donne accès à Hermes : ce n’est pas une clé OpenRouter ou Z.ai.": [
+    "In Sherka, enter the server address, choose the profile, save its key, then click Test and refresh. This key grants access to Hermes; it is not an OpenRouter or Z.ai key.",
+    "En Sherka, introduce la dirección del servidor, elige el perfil, guarda su clave y pulsa Probar y actualizar. Esta clave da acceso a Hermes; no es una clave de OpenRouter ni de Z.ai.",
+    "In Sherka, inserisci l’indirizzo del server, scegli il profilo, salva la chiave e fai clic su Prova e aggiorna. Questa chiave dà accesso a Hermes; non è una chiave OpenRouter o Z.ai.",
+    "Gib in Sherka die Serveradresse ein, wähle das Profil, speichere dessen Schlüssel und klicke auf Testen und aktualisieren. Dieser Schlüssel gewährt Zugriff auf Hermes und stammt nicht von OpenRouter oder Z.ai.",
+    "在 Sherka 中输入服务器地址、选择配置档、保存其密钥，然后点击测试并刷新。这是访问 Hermes 的密钥，不是 OpenRouter 或 Z.ai 密钥。",
+    "Sherka でサーバーのアドレスを入力し、プロファイルを選び、キーを保存してからテストと更新を実行します。このキーは Hermes へのアクセス用で、OpenRouter や Z.ai のキーではありません。"
+  ],
+  "La liste contient les profils déjà configurés dans Sherka. L’API de conversation Hermes ne publie pas d’annuaire des profils. La conversation est conservée sur le serveur ; Sherka crée un fil distinct de Telegram.": [
+    "The list contains profiles already configured in Sherka. The Hermes conversation API does not provide a profile directory. Conversations stay on the server; Sherka creates a separate thread from Telegram.",
+    "La lista contiene los perfiles ya configurados en Sherka. La API de conversación de Hermes no ofrece un directorio de perfiles. Las conversaciones se guardan en el servidor; Sherka crea un hilo separado de Telegram.",
+    "L’elenco contiene i profili già configurati in Sherka. L’API di conversazione Hermes non fornisce un elenco dei profili. Le conversazioni restano sul server; Sherka crea un thread distinto da Telegram.",
+    "Die Liste enthält die bereits in Sherka eingerichteten Profile. Die Hermes-Konversations-API bietet kein Profilverzeichnis. Unterhaltungen bleiben auf dem Server; Sherka erstellt einen von Telegram getrennten Verlauf.",
+    "列表显示已在 Sherka 中配置的配置档。Hermes 对话 API 不提供配置档目录。对话保存在服务器上；Sherka 创建独立于 Telegram 的会话。",
+    "一覧には Sherka で設定済みのプロファイルが表示されます。Hermes の会話 API はプロファイル一覧を提供しません。会話はサーバーに保存され、Telegram とは別のスレッドになります。"
+  ],
+  "Cette version de Hermes ne propose pas les sessions vocales requises. Mets Hermes à jour.": [
+    "This Hermes version lacks the required voice-session APIs. Update Hermes.",
+    "Esta versión de Hermes no ofrece las API necesarias para sesiones de voz. Actualiza Hermes.",
+    "Questa versione di Hermes non offre le API richieste per le sessioni vocali. Aggiorna Hermes.",
+    "Dieser Hermes-Version fehlen die benötigten APIs für Sprachsitzungen. Aktualisiere Hermes.",
+    "此 Hermes 版本缺少语音会话所需的 API。请更新 Hermes。",
+    "この Hermes バージョンには音声セッションに必要な API がありません。Hermes を更新してください。"
+  ],
+  "Enregistre la clé API du profil Hermes dans Réglages.": [
+    "Save the Hermes profile’s API key in Settings.",
+    "Guarda la clave API del perfil de Hermes en Ajustes.",
+    "Salva la chiave API del profilo Hermes nelle Impostazioni.",
+    "Speichere den API-Schlüssel des Hermes-Profils in den Einstellungen.",
+    "请在设置中保存该 Hermes 配置档的 API 密钥。",
+    "設定で Hermes プロファイルの API キーを保存してください。"
+  ],
+  "Hermes exige HTTPS ou une adresse IP privée. Indique le serveur sans préfixe de profil.": [
+    "Hermes requires HTTPS or a private IP address. Enter the server without a profile prefix.",
+    "Hermes requiere HTTPS o una dirección IP privada. Introduce el servidor sin prefijo de perfil.",
+    "Hermes richiede HTTPS o un indirizzo IP privato. Inserisci il server senza prefisso del profilo.",
+    "Hermes erfordert HTTPS oder eine private IP-Adresse. Gib den Server ohne Profilpräfix ein.",
+    "Hermes 要求使用 HTTPS 或私有 IP 地址。请填写不含配置档前缀的服务器地址。",
+    "Hermes には HTTPS またはプライベート IP アドレスが必要です。プロファイルの接頭辞を含めずにサーバーを入力してください。"
+  ],
+  "Hermes a interrompu la réponse.": [
+    "Hermes interrupted the reply.",
+    "Hermes interrumpió la respuesta.",
+    "Hermes ha interrotto la risposta.",
+    "Hermes hat die Antwort unterbrochen.",
+    "Hermes 已中断回复。",
+    "Hermes が回答を中断しました。"
+  ],
+  "Hermes n’a pas pu terminer la réponse. Consulte ses journaux.": [
+    "Hermes could not finish the reply. Check its logs.",
+    "Hermes no pudo terminar la respuesta. Consulta sus registros.",
+    "Hermes non ha potuto completare la risposta. Controlla i suoi log.",
+    "Hermes konnte die Antwort nicht abschließen. Prüfe seine Protokolle.",
+    "Hermes 未能完成回复。请查看其日志。",
+    "Hermes が回答を完了できませんでした。ログを確認してください。"
+  ],
+  "Hermes ne transmet plus de réponse. Vérifie la connexion au serveur.": [
+    "Hermes stopped sending a reply. Check the server connection.",
+    "Hermes dejó de enviar la respuesta. Comprueba la conexión al servidor.",
+    "Hermes ha smesso di inviare la risposta. Controlla la connessione al server.",
+    "Hermes sendet keine Antwort mehr. Prüfe die Serververbindung.",
+    "Hermes 已停止发送回复。请检查服务器连接。",
+    "Hermes からの応答が途絶えました。サーバー接続を確認してください。"
+  ],
+  "La connexion Hermes s’est fermée avant la fin de la réponse.": [
+    "The Hermes connection closed before the reply finished.",
+    "La conexión con Hermes se cerró antes de terminar la respuesta.",
+    "La connessione Hermes si è chiusa prima della fine della risposta.",
+    "Die Hermes-Verbindung wurde vor Ende der Antwort geschlossen.",
+    "Hermes 连接在回复完成前已关闭。",
+    "回答が完了する前に Hermes 接続が閉じられました。"
+  ],
+  "Le nom du profil Hermes est invalide.": [
+    "The Hermes profile name is invalid.",
+    "El nombre del perfil de Hermes no es válido.",
+    "Il nome del profilo Hermes non è valido.",
+    "Der Hermes-Profilname ist ungültig.",
+    "Hermes 配置档名称无效。",
+    "Hermes プロファイル名が無効です。"
+  ],
+  "Flux Hermes incompatible.": [
+    "Incompatible Hermes stream.",
+    "Flujo de Hermes incompatible.",
+    "Flusso Hermes incompatibile.",
+    "Inkompatibler Hermes-Datenstrom.",
+    "Hermes 数据流不兼容。",
+    "Hermes ストリームに互換性がありません。"
+  ],
+  "Réponse Hermes trop volumineuse.": [
+    "Hermes reply is too large.",
+    "La respuesta de Hermes es demasiado grande.",
+    "La risposta Hermes è troppo grande.",
+    "Die Hermes-Antwort ist zu groß.",
+    "Hermes 回复过大。",
+    "Hermes の回答が大きすぎます。"
+  ],
+  "Adresse Hermes invalide.": [
+    "Invalid Hermes address.",
+    "Dirección de Hermes no válida.",
+    "Indirizzo Hermes non valido.",
+    "Ungültige Hermes-Adresse.",
+    "Hermes 地址无效。",
+    "Hermes アドレスが無効です。"
+  ],
+  "Indique l’adresse du serveur Hermes.": [
+    "Enter the Hermes server address.",
+    "Introduce la dirección del servidor Hermes.",
+    "Inserisci l’indirizzo del server Hermes.",
+    "Gib die Adresse des Hermes-Servers ein.",
+    "请输入 Hermes 服务器地址。",
+    "Hermes サーバーのアドレスを入力してください。"
+  ],
+  "Identifiant Hermes invalide.": [
+    "Invalid Hermes identifier.",
+    "Identificador de Hermes no válido.",
+    "Identificativo Hermes non valido.",
+    "Ungültige Hermes-Kennung.",
+    "Hermes 标识符无效。",
+    "Hermes 識別子が無効です。"
+  ],
+  "python -c \"import secrets; print(secrets.token_urlsafe(32))\"": [
+    "python -c \"import secrets; print(secrets.token_urlsafe(32))\"",
+    "python -c \"import secrets; print(secrets.token_urlsafe(32))\"",
+    "python -c \"import secrets; print(secrets.token_urlsafe(32))\"",
+    "python -c \"import secrets; print(secrets.token_urlsafe(32))\"",
+    "python -c \"import secrets; print(secrets.token_urlsafe(32))\"",
+    "python -c \"import secrets; print(secrets.token_urlsafe(32))\""
   ]
 }

@@ -41,3 +41,9 @@ Installed copies use NSIS. Directly launched copies prepare a verified new execu
 A restrictive CSP limits the webview. Provider responses and release notes are untrusted text. Update test overrides are debug-only, loopback-only, with isolated data.
 
 References: [capabilities](https://v2.tauri.app/security/capabilities/), [updater](https://v2.tauri.app/plugin/updater/), [WebView2 testing](https://playwright.dev/docs/webview2), [contracts](CONNECTIONS.md).
+
+## Hermes agent mode
+
+`hermes` is a distinct remote-agent provider. Native session SSE carries user text only: local prompt construction, web planning, memory operations, model/context management and future emotional-avatar behavior are bypassed. `Snapshot.companion_capabilities` exposes `local_personality`, `local_memory` and `local_emotions`; all are false in Hermes mode. Future emotion renderers and generators must honor this contract.
+
+The official `/api/sessions` and session-chat stream APIs own the transcript. Device-local SQLite mappings isolate each companion and profile endpoint and retain the server’s current session after compression while keeping the displayed transcript stable. `/new` rotates the mapping without deleting history or remote memory. Profile exports contain connection preferences only. Keys are scoped to the exact routed endpoint in Windows Credential Manager; technical events and tool results never enter TTS. Approval responses are tied to the active generation and only offer once/deny.

@@ -22,10 +22,11 @@ export function conversationView(profile: Profile, mode: Snapshot['settings']['w
   return html`<div class="page-heading"><div><p class="eyebrow">UNE CONVERSATION, TOUT SIMPLEMENT</p><h1>Avec ${escape(profile.name)}<span>.</span></h1><p>Active le micro, parle naturellement. Tu peux l’interrompre à tout moment.</p></div></div>
     <section class="conversation-controls"><button class="button primary" data-action="toggle_microphone" data-mic-toggle>${icon('mic')} <span>Activer le micro</span></button><button class="button secondary" data-action="stop_response">${icon('stop')} Arrêter la réponse</button><div class="voice-indicator"><span data-session-status></span><meter data-meter min="0" max="1" value="0" aria-label="Niveau du microphone"></meter><small data-speech-indicator>Microphone coupé</small></div></section>
     <p class="conversation-error" id="conversation-error" role="alert" hidden></p><p class="muted" id="conversation-notice" hidden></p>
+    <section class="settings-card" id="hermes-approval" hidden></section>
     <p class="memory-receipt" id="memory-receipt" role="status" hidden></p>
     <details class="context-info" id="context-info" hidden><summary>Contexte & mémoire</summary><p id="context-budget"></p></details>
     <section class="conversation-log" id="conversation-log" aria-label="Conversation avec ${escape(profile.name)}"><div id="conversation-history" data-profile="${profile.id}"></div><article class="message user live-message" id="live-transcript" hidden><strong>Toi · transcription en cours</strong><p></p></article><article class="message assistant live-message" id="live-reply" hidden><strong>${escape(profile.name)}</strong><p></p></article><div id="web-report"></div></section>
-    <form id="message-form" class="message-form"><label for="chat-text">Ou écris-lui ici</label><textarea id="chat-text" name="text" rows="2" maxlength="128000" placeholder="Qu’est-ce que tu as en tête ?">${escape(drafts.get(profile.id) ?? '')}</textarea><div class="message-actions"><label class="inline-check"><input id="speak-reply" type="checkbox" ${spoken ? 'checked' : ''} /> Lire la réponse à voix haute</label><label class="inline-check"><input id="search-message" type="checkbox" ${mode==='off'?'disabled':''} /> Chercher sur Internet pour ce message</label><button type="submit" class="button primary">Envoyer ${icon('arrow')}</button></div></form>`;
+    <form id="message-form" class="message-form"><label for="chat-text">Ou écris-lui ici</label><textarea id="chat-text" name="text" rows="2" maxlength="128000" placeholder="Qu’est-ce que tu as en tête ?">${escape(drafts.get(profile.id) ?? '')}</textarea><div class="message-actions"><label class="inline-check"><input id="speak-reply" type="checkbox" ${spoken ? 'checked' : ''} /> Lire la réponse à voix haute</label><label class="inline-check"><input id="search-message" type="checkbox" ${mode==='off'||profile.connections.llm_provider==='hermes'?'disabled':''} /> Chercher sur Internet pour ce message</label><button type="submit" class="button primary">Envoyer ${icon('arrow')}</button></div></form>`;
 }
 
 export function mountConversation(profile: Profile, report: (e: unknown) => void): void {
@@ -42,6 +43,7 @@ export function mountConversation(profile: Profile, report: (e: unknown) => void
     if (button.disabled) return;
     button.disabled = true;
     try {
+      if (profile.connections.llm_provider === 'hermes' && text === '/new') { await api.newHermesConversation(profile.id); input.value = ''; drafts.delete(profile.id); return; }
       await api.sendMessage(profile.id, form.querySelector<HTMLInputElement>('#search-message')!.checked ? '/web '+text : text, spoken);
       form.querySelector<HTMLInputElement>('#search-message')!.checked = false;
       if (input.value.trim() === text) { input.value = ''; drafts.delete(profile.id); }
@@ -93,6 +95,30 @@ export function paintLive(value: LiveState): void {
   document.querySelector('.widget')?.classList.toggle('listening', on);
   const web = document.querySelector<HTMLElement>('#web-report');
   if (web) { const content=webReport(value.live.tag ? value.live.web : null,value.session.profile_id,null); if(web.innerHTML!==content)web.innerHTML=content; }
+  const approvalRoot = document.querySelector<HTMLElement>('#hermes-approval');
+  const approval = value.live.hermes_approval;
+  if (approvalRoot) {
+    approvalRoot.hidden = !approval;
+    if (approval) {
+      const identity = JSON.stringify([approval.run_id, approval.request_id]);
+      if (approvalRoot.dataset.identity !== identity) {
+        approvalRoot.dataset.identity = identity;
+        approvalRoot.innerHTML = html`<h3>Hermes demande ton accord</h3><pre></pre><div class="settings-actions"><button type="button" class="button primary" data-allow ${approval.allow_once ? '' : 'disabled'}>Autoriser une fois</button><button type="button" class="button secondary" data-deny>Refuser</button></div><p role="alert"></p>`;
+        approvalRoot.querySelector('pre')!.textContent = approval.description;
+        for (const [selector, allow] of [['[data-allow]',true],['[data-deny]',false]] as const) approvalRoot.querySelector<HTMLButtonElement>(selector)!.onclick = async () => {
+          approvalRoot.querySelectorAll<HTMLButtonElement>('button').forEach(b => b.disabled = true);
+          try { await api.answerHermesApproval(approval.run_id, approval.request_id, allow); }
+          catch (error) {
+            if (approvalRoot.dataset.identity === identity) {
+              approvalRoot.querySelector('[role="alert"]')!.textContent = feedback(String(error));
+              approvalRoot.querySelector<HTMLButtonElement>('[data-allow]')!.disabled = !approval.allow_once;
+              approvalRoot.querySelector<HTMLButtonElement>('[data-deny]')!.disabled = false;
+            }
+          }
+        };
+      }
+    } else { approvalRoot.dataset.identity = ''; approvalRoot.replaceChildren(); }
+  }
   const error = document.querySelector<HTMLElement>('#conversation-error');
   if (error) { error.textContent = feedback(value.live.error); error.hidden = !value.live.error; }
   const notice = document.querySelector<HTMLElement>('#conversation-notice');

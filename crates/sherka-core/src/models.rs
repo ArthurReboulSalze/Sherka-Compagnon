@@ -78,7 +78,10 @@ impl ModelManager {
                     })?
                     .clone(),
             ),
-            _ if !next.llm_provider.is_local() && next.llm_model.is_some() => {
+            _ if !next.llm_provider.is_local()
+                && !next.llm_provider.is_agent()
+                && next.llm_model.is_some() =>
+            {
                 Some(provider.remote_model().await?)
             }
             _ => None,
