@@ -2,6 +2,8 @@
 
 Install Rust MSVC **1.91+**, Visual Studio C++ tools, Node.js **22.12+**, WebView2 and Python **3.11+** for release scripts. Use a local path or mapped drive rather than an UNC npm directory.
 
+CI and releases use **Rust 1.92.0**, matching the tested release compiler.
+
 ```powershell
 npm.cmd ci
 npm.cmd run desktop
