@@ -1743,8 +1743,14 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
     await send('nouveau fil');await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)?.body.message).toBe('nouveau fil');await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();await expect(panel.locator('#conversation-history')).toContainText('Bonjour maman, été fluide.');expect(requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path).not.toBe(first.path);
     expect(sessions.size).toBe(2);
     await send('/new');await expect.poll(async()=>(await native<any[]>('get_history',{profileId:p.id})).length).toBe(0);
-    current=(await native<any>('get_snapshot')).profiles[0];await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:current.revision,connections:{...config,hermes_profile:'default'}}});
-    await send('bonjour principal');await expect(panel.locator('#conversation-history')).toContainText('Bonjour default, été fluide.');expect(requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path).not.toContain('/p/maman/');
+    await expect(panel.locator('#chat-text')).toHaveValue('');
+    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.locator('[name="hermes_profile"]').fill('default');await panel.locator('[name="hermes_profile"]').press('Tab');
+    await expect(panel.locator('#provider-key-status')).toContainText('Clé protégée');
+    await panel.locator('#save-connections').click();await expect(panel.locator('#connection-dirty')).toHaveText('Réglages propres à ce compagnon');
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles[0].connections.hermes_profile).toBe('default');
+    await panel.getByRole('button',{name:'Conversation',exact:true}).click();
+    await send('bonjour principal');await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)?.body.message).toBe('bonjour principal');await expect(panel.locator('#conversation-history')).toContainText('Bonjour default, été fluide.');expect(requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path).not.toContain('/p/maman/');
     expect(JSON.stringify(await native('get_snapshot'))).not.toContain('hermes-fixture');
     expect(requests.filter(r=>r.path.endsWith('/chat/stream')).every(r=>Object.keys(r.body).join()==='message')).toBe(true);
   } finally {
