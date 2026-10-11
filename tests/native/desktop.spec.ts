@@ -1150,3 +1150,13 @@ test('public screenshot: clean companion without personal data', async () => {
   expect(history).toHaveLength(0);
   expect(consoleErrors).toEqual([]);
 });
+
+test('published update manifest: release binary checks the official GitHub version', async () => {
+  test.skip(process.env.SHERKA_RELEASE_UPDATE_CHECK !== '1', 'Check only after publishing the release');
+  await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+  await expect(panel.locator('#update-version')).toContainText('0.3.3');
+  await panel.locator('#check-update').click();
+  await expect(panel.locator('#update-status')).toContainText('dernière version',{timeout:30_000});
+  expect((await native<any>('get_update_status')).phase).toBe('current');
+  expect(consoleErrors).toEqual([]);
+});
