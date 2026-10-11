@@ -69,10 +69,15 @@ async function startApplication(hidden = true, autostartVoice = false): Promise<
   });
   child.stderr?.on('data', (data) => process.stderr.write(data));
   child.stdout?.on('data', (data) => process.stdout.write(data));
-  await expect.poll(async () => {
+  try { await expect.poll(async () => {
     if (child.exitCode !== null) throw new Error(`Sherka s'est arrêtée : ${child.exitCode}`);
     try { return (await fetch(`http://127.0.0.1:${port}/json/version`)).ok; } catch { return false; }
-  }, { timeout: 30_000 }).toBe(true);
+  }, { timeout: 30_000 }).toBe(true); } catch (error) {
+    if (child.pid) {
+      try { console.error('Native startup diagnostics:', execFileSync('powershell.exe', ['-NoProfile','-ExecutionPolicy','Bypass','-File','tests/native/startup-diagnostics.ps1','-TargetProcessId',String(child.pid)], {encoding:'utf8',windowsHide:true,timeout:10_000})); } catch {}
+    }
+    throw error;
+  }
   await expect.poll(async () => {
     const pages = await (await fetch('http://127.0.0.1:' + port + '/json/list')).json() as {url:string}[];
     return pages.some(p => p.url.includes('view=widget')) && pages.some(p => p.url.includes('tauri.localhost') && !p.url.includes('view=widget'));

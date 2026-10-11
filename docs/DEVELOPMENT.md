@@ -26,6 +26,8 @@ Native tests use isolated databases under `artifacts/native`, without normal use
 
 Windows CI checks Rust, TypeScript and native flows without external services or real audio hardware. A network simulation does not validate acoustic interruption: distinguish automated, real-service and headphone/speaker tests.
 
+CI prepares WebView2 and native inference library search paths before launching the UI tests on Windows Server.
+
 ## Contribute
 
 Read [architecture](ARCHITECTURE.md) and [contracts](CONNECTIONS.md), then open an issue or pull request with appropriate validation. Preserve isolation, cancellation and separate widget/panel permissions. Never attach databases, personal exports, recordings, secrets or `.env`. Contributions are GPL-3.0-only.

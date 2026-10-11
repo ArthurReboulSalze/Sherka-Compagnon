@@ -16,6 +16,8 @@ From [official Releases](https://github.com/ArthurReboulSalze/Sherka-Compagnon/r
 
 Windows 11 x64 is the tested platform. Windows 10 with WebView2 may work but has not received equivalent validation. Executables do not carry an Authenticode certificate, so SmartScreen may ask for confirmation. Sherka update signatures are a separate mechanism.
 
+The [Microsoft Visual C++ v14 x64 runtime](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) is also required. Install its current x64 package if it is missing; the Sherka installer does not bundle it.
+
 ## Your first conversation
 
 The companion appears alone, with its microphone off. Hover over it, open the control panel, then **Réglages → Voix & modèles**. The current UI is in French; this means Settings → Voice & models.

@@ -27,7 +27,7 @@ Install both applications and their models separately. Once downloaded, conversa
 
 ## Install it, or just run it
 
-Choose the **Windows x64 installer** or the **no-install ZIP** from [Releases](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest). Both require WebView2 and store data in your Windows user folder. The current application interface is in French.
+Choose the **Windows x64 installer** or the **no-install ZIP** from [Releases](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest). Both require WebView2 and the Visual C++ x64 runtime, and store data in your Windows user folder. The current application interface is in French.
 
 Sherka is a working early project. Next come richer avatar customization, speaking and listening animations, expressions and moods. See the [roadmap and current limitations](docs/ROADMAP.md).
 
