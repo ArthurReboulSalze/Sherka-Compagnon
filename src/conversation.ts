@@ -1,3 +1,4 @@
+import { t, html, feedback, formatLocale } from './i18n';
 import * as api from './api';
 import { icon } from './icons';
 import type { Profile, Snapshot, LiveState } from './types';
@@ -8,16 +9,16 @@ let spoken = true;
 let historyRequest = 0;
 
 export function status(session: Snapshot['session']): string {
-  if (session.transcription === 'capturing') return 'Je t’écoute…';
-  if (session.transcription === 'transcribing') return 'Je transcris ta phrase…';
-  if (session.response === 'speaking') return 'Je te réponds…';
-  if (session.response === 'generating') return 'Je prépare ma réponse…';
-  if (session.microphone === 'unavailable') return 'Microphone indisponible';
-  return session.microphone === 'listening' ? 'À ton écoute' : 'Microphone coupé';
+  if (session.transcription === 'capturing') return t('Je t’écoute…');
+  if (session.transcription === 'transcribing') return t('Je transcris ta phrase…');
+  if (session.response === 'speaking') return t('Je te réponds…');
+  if (session.response === 'generating') return t('Je prépare ma réponse…');
+  if (session.microphone === 'unavailable') return t('Microphone indisponible');
+  return session.microphone === 'listening' ? t('À ton écoute') : t('Microphone coupé');
 }
 
 export function conversationView(profile: Profile): string {
-  return `<div class="page-heading"><div><p class="eyebrow">UNE CONVERSATION, TOUT SIMPLEMENT</p><h1>Avec ${escape(profile.name)}<span>.</span></h1><p>Active le micro, parle naturellement. Tu peux l’interrompre à tout moment.</p></div></div>
+  return html`<div class="page-heading"><div><p class="eyebrow">UNE CONVERSATION, TOUT SIMPLEMENT</p><h1>Avec ${escape(profile.name)}<span>.</span></h1><p>Active le micro, parle naturellement. Tu peux l’interrompre à tout moment.</p></div></div>
     <section class="conversation-controls"><button class="button primary" data-action="toggle_microphone" data-mic-toggle>${icon('mic')} <span>Activer le micro</span></button><button class="button secondary" data-action="stop_response">${icon('stop')} Arrêter la réponse</button><div class="voice-indicator"><span data-session-status></span><meter data-meter min="0" max="1" value="0" aria-label="Niveau du microphone"></meter><small data-speech-indicator>Microphone coupé</small></div></section>
     <p class="conversation-error" id="conversation-error" role="alert" hidden></p><p class="muted" id="conversation-notice" hidden></p>
     <p class="memory-receipt" id="memory-receipt" role="status" hidden></p>
@@ -56,7 +57,7 @@ export async function loadConversationHistory(profileId: string): Promise<void> 
   const request = ++historyRequest;
   const messages = await api.history(profileId);
   if (request !== historyRequest || !root.isConnected) return;
-  root.innerHTML = messages.length ? messages.map((m) => `<article class="message ${m.role}"><div><strong>${m.role === 'user' ? 'Toi' : 'Réponse'}</strong><small>${new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' }).format(m.created_at)}${m.delivery === 'interrupted' ? ' · interrompue' : m.delivery === 'uncertain' ? ' · lecture incomplète' : m.delivery === 'text_only' ? ' · texte' : ' · diffusée'}</small></div><p>${escape(m.content)}</p>${['interrupted','uncertain'].includes(m.delivery) ? `<details><summary>Partie diffusée en entier</summary><p>${escape(m.heard_content || 'Aucune phrase complète confirmée. Le dernier fragment a pu être entendu en partie.')}</p></details>` : ''}</article>`).join('') : '<div class="empty-state"><h3>Fais-lui signe.</h3><p>Le micro s’active seulement quand tu le demandes.<br>Tu peux aussi commencer par un message écrit.</p></div>';
+  root.innerHTML = messages.length ? messages.map((m) => html`<article class="message ${m.role}"><div><strong>${m.role === 'user' ? t('Toi') : t('Réponse')}</strong><small>${new Intl.DateTimeFormat(formatLocale(), { hour: '2-digit', minute: '2-digit' }).format(m.created_at)}${m.delivery === 'interrupted' ? t(' · interrompue') : m.delivery === 'uncertain' ? t(' · lecture incomplète') : m.delivery === 'text_only' ? t(' · texte') : t(' · diffusée')}</small></div><p>${escape(m.content)}</p>${['interrupted','uncertain'].includes(m.delivery) ? html`<details><summary>Partie diffusée en entier</summary><p>${escape(m.heard_content || t('Aucune phrase complète confirmée. Le dernier fragment a pu être entendu en partie.'))}</p></details>` : ''}</article>`).join('') : html`<div class="empty-state"><h3>Fais-lui signe.</h3><p>Le micro s’active seulement quand tu le demandes.<br>Tu peux aussi commencer par un message écrit.</p></div>`;
   scrollConversation();
 }
 
@@ -69,27 +70,27 @@ export function paintLive(value: LiveState): void {
   const on = value.session.microphone === 'listening';
   document.querySelectorAll('[data-session-status]').forEach((el) => { el.textContent = status(value.session); });
   document.querySelectorAll<HTMLElement>('[data-mic-toggle]').forEach((el) => {
-    const label = on ? 'Couper le micro' : 'Activer le micro';
+    const label = on ? t('Couper le micro') : t('Activer le micro');
     el.setAttribute('aria-label', label); el.title = label;
     el.classList.toggle('microphone-on', on);
-    el.innerHTML = `${icon(on ? 'mic' : 'micOff')}${el.classList.contains('button') ? `<span>${label}</span>` : ''}`;
+    el.innerHTML = `${icon(on ? 'mic' : 'micOff')}${el.classList.contains('button') ? html`<span>${label}</span>` : ''}`;
   });
-  document.querySelectorAll('.mic-status').forEach((el) => { el.classList.toggle('listening', on); const span = el.querySelector('span'); if (span) span.textContent = on ? 'Microphone actif' : 'Microphone coupé'; });
+  document.querySelectorAll('.mic-status').forEach((el) => { el.classList.toggle('listening', on); const span = el.querySelector('span'); if (span) span.textContent = on ? t('Microphone actif') : t('Microphone coupé'); });
   document.querySelector('.widget')?.classList.toggle('speaking', value.session.response === 'speaking');
   document.querySelector('.widget')?.classList.toggle('listening', on);
   const error = document.querySelector<HTMLElement>('#conversation-error');
-  if (error) { error.textContent = value.live.error; error.hidden = !value.live.error; }
+  if (error) { error.textContent = feedback(value.live.error); error.hidden = !value.live.error; }
   const notice = document.querySelector<HTMLElement>('#conversation-notice');
-  if (notice) { notice.textContent = value.live.notice; notice.hidden = !value.live.notice; }
+  if (notice) { notice.textContent = feedback(value.live.notice); notice.hidden = !value.live.notice; }
   const receipt = document.querySelector<HTMLElement>('#memory-receipt');
-  if (receipt) { receipt.textContent = value.live.memory_receipt; receipt.hidden = !value.live.memory_receipt; }
+  if (receipt) { receipt.textContent = feedback(value.live.memory_receipt); receipt.hidden = !value.live.memory_receipt; }
   const context = document.querySelector<HTMLElement>('#context-info');
   if (context) {
     const b = value.live.budget;
     context.hidden = !b;
     if (b) {
-      const n = (v: number) => v.toLocaleString('fr-FR');
-      context.querySelector('p')!.textContent = `Budget : ${n(b.limit)} tokens (${n(b.loaded_context)} chargés). Entrée : estimation prudente ${n(b.input_estimate)} ; réponse réservée : ${n(b.response_tokens)} ; marge : ${n(b.safety_tokens)}. ${b.memories_used.length} souvenir(s), ${b.history_kept} échange(s) transmis, ${b.history_omitted} écarté(s)${b.memories_omitted ? ` ; ${b.memories_omitted} souvenir(s) hors budget` : ''}.${value.live.usage?.prompt_tokens != null ? ` Usage renvoyé par LM Studio : ${n(value.live.usage.prompt_tokens)} en entrée, ${n(value.live.usage.completion_tokens ?? 0)} en sortie${value.live.usage.reasoning_tokens != null ? `, dont ${n(value.live.usage.reasoning_tokens)} de réflexion` : ''}.` : ''}`;
+      const n = (v: number) => v.toLocaleString(formatLocale());
+      context.querySelector('p')!.textContent = t`Budget : ${n(b.limit)} tokens (${n(b.loaded_context)} chargés). Entrée : estimation prudente ${n(b.input_estimate)} ; réponse réservée : ${n(b.response_tokens)} ; marge : ${n(b.safety_tokens)}. ${b.memories_used.length} souvenir(s), ${b.history_kept} échange(s) transmis, ${b.history_omitted} écarté(s)${b.memories_omitted ? t` ; ${b.memories_omitted} souvenir(s) hors budget` : ''}.${value.live.usage?.prompt_tokens != null ? t` Usage renvoyé par LM Studio : ${n(value.live.usage.prompt_tokens)} en entrée, ${n(value.live.usage.completion_tokens ?? 0)} en sortie${value.live.usage.reasoning_tokens != null ? t`, dont ${n(value.live.usage.reasoning_tokens)} de réflexion` : ''}.` : ''}`;
     }
   }
   for (const [selector, text, visible] of [
@@ -105,5 +106,5 @@ export function paintLive(value: LiveState): void {
 
 export function paintMeter(value: { level: number; speech: boolean }, on = true): void {
   document.querySelectorAll<HTMLMeterElement>('[data-meter]').forEach((el) => { el.value = value.level; });
-  document.querySelectorAll('[data-speech-indicator]').forEach((el) => { el.textContent = on ? value.speech ? 'Parole détectée' : 'Écoute continue' : 'Microphone coupé'; });
+  document.querySelectorAll('[data-speech-indicator]').forEach((el) => { el.textContent = on ? value.speech ? t('Parole détectée') : t('Écoute continue') : t('Microphone coupé'); });
 }

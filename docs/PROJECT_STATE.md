@@ -1,6 +1,8 @@
 # Project status
 
-Public version: **0.3.3**, October 11, 2026. Windows x64, Rust/Tauri 2, French application UI.
+Public version: **0.4.0**, October 11, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+
+This release adds localized widget/tray controls, polished settings fields and a built-in Sherka personality in each language. The original Sherka follows the interface language; custom companions keep the language chosen at creation. Models and voices remain user-configured. See [languages](LANGUAGES.md).
 
 ## Available
 

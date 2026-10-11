@@ -20,17 +20,19 @@ The [Microsoft Visual C++ v14 x64 runtime](https://learn.microsoft.com/en-us/cpp
 
 ## Your first conversation
 
-The companion appears alone, with its microphone off. Hover over it, open the control panel, then **Réglages → Voix & modèles**. The current UI is in French; this means Settings → Voice & models.
+The companion appears alone, with its microphone off. Hover over it, open the control panel, then **Settings → Voices & models** (**Réglages → Voix & modèles** in French). Choose your [interface language](LANGUAGES.md) in Settings.
+
+The original Sherka comes with a personality and instructions in all seven languages and follows your interface choice automatically. You do not need to rewrite her character. Custom companions keep their own language.
 
 Sherka starts installed VoiceStudio when its local service is stopped. Typical addresses are `http://127.0.0.1:1234` for LM Studio and `http://127.0.0.1:3900` for VoiceStudio. Refresh the catalogs, choose the conversation model, TTS engine, voice and transcription model, then save. Choose items from your own installation.
 
-Under **Microphone & écoute**, select input and output. Start with headphones, enable the microphone and speak normally. Confirmed speech can interrupt the current response. You can also type, with or without spoken replies.
+Under **Microphone & listening**, select input and output. Start with headphones, enable the microphone and speak normally. Confirmed speech can interrupt the current response. You can also type, with or without spoken replies.
 
 ## Troubleshooting
 
-- **VoiceStudio is preparing:** its first launch or model loading can take time. Check its window, then **Réessayer VoiceStudio**.
+- **VoiceStudio is preparing:** its first launch or model loading can take time. Check its window, then **Retry VoiceStudio**.
 - **No models:** check the LM Studio server, downloads and address, then refresh.
 - **No voice:** select a ready TTS engine and an existing VoiceStudio voice.
 - **Interruptions or delays:** try headphones, check devices and reduce model load. Speaker echo needs further testing across rooms and hardware.
 
-Use **Quitter Sherka** to exit completely. Closing the control panel only hides it.
+Use **Quit Sherka** to exit completely. Closing the control panel only hides it.

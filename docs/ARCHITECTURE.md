@@ -8,6 +8,10 @@ Tauri 2 hosts a Windows desktop application. Rust owns SQLite, providers and aud
 
 Essential and topical memories use profile-local FTS5. Structured proposals are validated against revisions, epochs and quoted sources before a transaction. Corrections/forgetting exclude obsolete exchanges from future context while retaining archives. Automatic extraction requires review.
 
+The interface locale is a global settings preference. TypeScript and Rust tray labels share the same seven-language catalog; only authored UI text is translated before inserting dynamic values. Custom personality, dialogue, memories and provider identifiers remain opaque. Custom profile language is fixed at creation, and the conversation prompt follows it.
+
+The original Sherka's UUID is registered in settings. Her built-in personality and instructions follow the interface locale from seven authored presets, preserving provider choices. Personalization detaches the preset; copies and imports are independent. Locale changes bypass voice cancellation unless they change the active built-in character's language. That case cancels the old generation and stops capture before continuing with the new prompt language.
+
 ## Sessions and audio
 
 Capture and response belong to a profile and generation. Switching, interruption and pause cancel obsolete work; late events cannot reactivate it. Voice commands release their gate while awaiting VoiceStudio, keeping settings and exit responsive. A separate pending token handles pre-session waits.

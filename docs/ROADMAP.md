@@ -1,6 +1,6 @@
 # Roadmap
 
-Sherka 0.3.3 establishes the foundation: local conversations, interruption, independent characters and editable memories. These are directions, not delivery promises.
+Sherka 0.4.0 brings seven interface languages to the foundation of local conversations, interruption, independent characters and editable memories. These are directions, not delivery promises.
 
 ## Bring companions to life
 
@@ -28,7 +28,7 @@ Sherka 0.3.3 establishes the foundation: local conversations, interruption, inde
 
 - A Windows signing certificate to reduce SmartScreen friction.
 - More Windows configurations and audio devices tested.
-- Accessibility, localization and guided backup/restore.
+- Accessibility, translation review and guided backup/restore.
 - Ongoing update and migration validation between published versions.
 
 Visual effects must respect reduced-motion preferences and keep the desktop widget unobtrusive.

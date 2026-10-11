@@ -1,9 +1,10 @@
+import { t, html, feedback } from './i18n';
 import { getUpdateStatus, checkUpdate, installUpdate, onUpdate, type UpdateStatus } from './api';
 
 let status: UpdateStatus | undefined;
 
 export function updatesView(): string {
-  return `<section class="settings-card" id="updates-card"><h2>Mises à jour</h2><p>Retrouve les nouvelles versions de Sherka sur GitHub. La vérification se lance à ta demande.</p><small id="update-version"></small><p id="update-status" role="status"></p><progress id="update-progress" hidden></progress><details id="update-notes" hidden><summary>Ce qui change</summary><p></p></details><div class="settings-actions"><button class="button secondary" id="check-update">Vérifier les mises à jour</button><button class="button primary" id="install-update" hidden>Mettre à jour et redémarrer</button></div><small>Les profils et les souvenirs sont conservés. La voix s’arrête avant le redémarrage.</small></section>`;
+  return html`<section class="settings-card" id="updates-card"><h2>Mises à jour</h2><p>Retrouve les nouvelles versions de Sherka sur GitHub. La vérification se lance à ta demande.</p><small id="update-version"></small><p id="update-status" role="status"></p><progress id="update-progress" hidden></progress><details id="update-notes" hidden><summary>Ce qui change</summary><p></p></details><div class="settings-actions"><button class="button secondary" id="check-update">Vérifier les mises à jour</button><button class="button primary" id="install-update" hidden>Mettre à jour et redémarrer</button></div><small>Les profils et les souvenirs sont conservés. La voix s’arrête avant le redémarrage.</small></section>`;
 }
 
 export function paintUpdate(): void {
@@ -11,8 +12,8 @@ export function paintUpdate(): void {
   const card = document.querySelector<HTMLElement>('#updates-card');
   if (!card) return;
   const busy = ['checking', 'downloading', 'installing'].includes(status.phase);
-  card.querySelector('#update-version')!.textContent = `Version ${status.current_version} · ${status.mode === 'portable' ? 'Sans installation' : 'Installée'}`;
-  card.querySelector('#update-status')!.textContent = status.message;
+  card.querySelector('#update-version')!.textContent = t`Version ${status.current_version} · ${status.mode === 'portable' ? t('Sans installation') : t('Installée')}`;
+  card.querySelector('#update-status')!.textContent = feedback(status.message);
   const check = card.querySelector<HTMLButtonElement>('#check-update')!;
   const install = card.querySelector<HTMLButtonElement>('#install-update')!;
   check.disabled = busy;

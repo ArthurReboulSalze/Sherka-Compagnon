@@ -225,6 +225,33 @@ impl Store {
 
     pub fn update(&self, id: Uuid, revision: i64, draft: ProfileDraft) -> Result<Profile> {
         let draft = draft.validated()?;
+        if self.profile(id)?.details.connections.language != draft.connections.language {
+            return Err(Error::Validation("La langue du compagnon est fixée à sa création. Crée un autre compagnon pour utiliser une autre langue.".into()));
+        }
+        self.write_profile(id, revision, draft)
+    }
+
+    pub(crate) fn localize_default_companion(
+        &self,
+        id: Uuid,
+        language: crate::i18n::Language,
+    ) -> Result<Option<Profile>> {
+        let previous = self.profile(id)?;
+        if !crate::presets::is_builtin_sherka(&previous.details) {
+            return Ok(None);
+        }
+        if previous.details.connections.language == language.code() {
+            return Ok(Some(previous));
+        }
+        let character = crate::presets::sherka(language);
+        let mut draft = previous.details;
+        draft.personality = character.personality;
+        draft.instructions = character.instructions;
+        draft.connections.language = language.code().into();
+        self.write_profile(id, previous.revision, draft).map(Some)
+    }
+
+    fn write_profile(&self, id: Uuid, revision: i64, draft: ProfileDraft) -> Result<Profile> {
         let db = self.db(id)?;
         let count = db.execute("UPDATE profile SET details=?1,revision=revision+1,updated_at=?2 WHERE singleton=1 AND revision=?3",
             params![serde_json::to_string(&draft)?, now(), revision])?;

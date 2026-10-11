@@ -33,11 +33,31 @@ pub struct Companion {
 impl Companion {
     pub fn open(root: impl Into<PathBuf>) -> Result<Self> {
         let store = Store::open(root)?;
+        let mut settings = store.settings()?;
         let mut profiles = store.list()?;
         if profiles.is_empty() {
-            profiles.push(store.create(ProfileDraft::default(), None)?);
+            let profile = store.create(crate::presets::sherka(settings.ui_language), None)?;
+            settings.default_companion = Some(profile.id);
+            settings.default_companion_initialized = true;
+            profiles.push(profile);
+        } else if !settings.default_companion_initialized {
+            let mut originals = profiles
+                .iter()
+                .filter(|profile| crate::presets::is_builtin_sherka(&profile.details));
+            settings.default_companion = originals.next().map(|profile| profile.id);
+            if originals.next().is_some() {
+                settings.default_companion = None;
+            }
+            settings.default_companion_initialized = true;
         }
-        let mut settings = store.settings()?;
+        if let Some(id) = settings.default_companion
+            && (!profiles.iter().any(|profile| profile.id == id)
+                || store
+                    .localize_default_companion(id, settings.ui_language)?
+                    .is_none())
+        {
+            settings.default_companion = None;
+        }
         let active = settings
             .active_profile
             .filter(|id| profiles.iter().any(|p| p.id == *id))
@@ -82,7 +102,20 @@ impl Companion {
 
     pub fn update_profile(&mut self, id: Uuid, revision: i64, draft: ProfileDraft) -> Result<()> {
         let previous = self.store.profile(id)?;
+        if previous.details.connections.language != draft.connections.language {
+            return Err(Error::Validation("La langue du compagnon est fixée à sa création. Crée un autre compagnon pour utiliser une autre langue.".into()));
+        }
         let updated = self.store.update(id, revision, draft)?;
+        if self.settings.default_companion == Some(id)
+            && (previous.details.name != updated.details.name
+                || previous.details.personality != updated.details.personality
+                || previous.details.instructions != updated.details.instructions)
+        {
+            let mut next = self.settings.clone();
+            next.default_companion = None;
+            self.store.save_settings(&next)?;
+            self.settings = next;
+        }
         if self.settings.active_profile == Some(id)
             && (previous.details.personality != updated.details.personality
                 || previous.details.instructions != updated.details.instructions
@@ -101,6 +134,36 @@ impl Companion {
         self.store.save_settings(&next)?;
         self.settings = next;
         Ok(())
+    }
+
+    pub fn set_interface_language(&mut self, language: crate::i18n::Language) -> Result<()> {
+        let mut next = self.settings.clone();
+        next.ui_language = language;
+        if let Some(id) = next.default_companion {
+            if self.interface_language_changes_active_companion(language)? {
+                self.pause_voice()?;
+            }
+            match self.store.localize_default_companion(id, language) {
+                Ok(Some(_)) => {}
+                Ok(None) | Err(Error::ProfileNotFound) => next.default_companion = None,
+                Err(error) => return Err(error),
+            }
+        }
+        self.store.save_settings(&next)?;
+        self.settings = next;
+        Ok(())
+    }
+
+    pub fn interface_language_changes_active_companion(
+        &self,
+        language: crate::i18n::Language,
+    ) -> Result<bool> {
+        if self.settings.default_companion != self.settings.active_profile {
+            return Ok(false);
+        }
+        let profile = self.store.profile(self.session.snapshot().profile_id)?;
+        Ok(crate::presets::is_builtin_sherka(&profile.details)
+            && profile.details.connections.language != language.code())
     }
 
     pub fn save_bounds(&mut self, bounds: Bounds) -> Result<()> {

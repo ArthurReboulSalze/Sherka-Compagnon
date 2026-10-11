@@ -1,0 +1,4554 @@
+{
+  ", dont {0} de réflexion": [
+    ", including {0} reasoning",
+    ", incluidos {0} de razonamiento",
+    ", di cui {0} di ragionamento",
+    ", davon {0} für Denkprozesse",
+    "，其中推理占 {0}",
+    "、うち思考 {0}"
+  ],
+  "; {0} souvenir(s) hors budget": [
+    "; {0} memories outside budget",
+    "; {0} recuerdos fuera del presupuesto",
+    "; {0} ricordi oltre il budget",
+    "; {0} Erinnerungen außerhalb des Budgets",
+    "；{0} 条记忆超出预算",
+    "；{0} 件の記憶が予算外"
+  ],
+  "· {0} autre(s) modèle(s) écarté(s)": [
+    "· {0} other models excluded",
+    "· {0} modelos adicionales excluidos",
+    "· {0} altri modelli esclusi",
+    "· {0} weitere Modelle ausgeschlossen",
+    "· 已排除其他 {0} 个模型",
+    "· 他の {0} モデルを除外"
+  ],
+  "· à installer dans VoiceStudio": [
+    "· install in VoiceStudio",
+    "· instalar en VoiceStudio",
+    "· da installare in VoiceStudio",
+    "· in VoiceStudio installieren",
+    "· 需在 VoiceStudio 中安装",
+    "· VoiceStudio にインストールが必要"
+  ],
+  "· actif dans VoiceStudio": [
+    "· active in VoiceStudio",
+    "· activo en VoiceStudio",
+    "· attivo in VoiceStudio",
+    "· in VoiceStudio aktiv",
+    "· 在 VoiceStudio 中启用",
+    "· VoiceStudio で有効"
+  ],
+  "· diffusée": [
+    "· spoken",
+    "· reproducida",
+    "· riprodotta",
+    "· vorgelesen",
+    "· 已播放",
+    "· 読み上げ済み"
+  ],
+  "· diffusion incomplète": [
+    "· incomplete delivery",
+    "· reproducción incompleta",
+    "· riproduzione incompleta",
+    "· unvollständig vorgelesen",
+    "· 播放未完成",
+    "· 読み上げ未完了"
+  ],
+  "· HTTP disponible": [
+    "· HTTP available",
+    "· HTTP disponible",
+    "· HTTP disponibile",
+    "· HTTP verfügbar",
+    "· HTTP 可用",
+    "· HTTP 利用可能"
+  ],
+  "· interrompue": [
+    "· interrupted",
+    "· interrumpida",
+    "· interrotta",
+    "· unterbrochen",
+    "· 已中断",
+    "· 中断"
+  ],
+  "· lecture incomplète": [
+    "· incomplete playback",
+    "· lectura incompleta",
+    "· lettura incompleta",
+    "· Wiedergabe unvollständig",
+    "· 朗读未完成",
+    "· 再生未完了"
+  ],
+  "· par défaut": [
+    "· default",
+    "· predeterminado",
+    "· predefinito",
+    "· Standard",
+    "· 默认",
+    "· 既定"
+  ],
+  "· texte": [
+    "· text",
+    "· texto",
+    "· testo",
+    "· Text",
+    "· 文本",
+    "· テキスト"
+  ],
+  "{0} · choix enregistré, non vérifié": [
+    "{0} · saved choice, unverified",
+    "{0} · selección guardada, sin verificar",
+    "{0} · scelta salvata, non verificata",
+    "{0} · gespeicherte Auswahl, ungeprüft",
+    "{0} · 已保存，尚未验证",
+    "{0} · 保存済み、未確認"
+  ],
+  "{0} · dictée directe · {1}{2}": [
+    "{0} · live dictation · {1}{2}",
+    "{0} · dictado en directo · {1}{2}",
+    "{0} · dettatura dal vivo · {1}{2}",
+    "{0} · Live-Diktat · {1}{2}",
+    "{0} · 实时听写 · {1}{2}",
+    "{0} · リアルタイム音声認識 · {1}{2}"
+  ],
+  "{0} · transcription HTTP": [
+    "{0} · HTTP transcription",
+    "{0} · transcripción HTTP",
+    "{0} · trascrizione HTTP",
+    "{0} · HTTP-Transkription",
+    "{0} · HTTP 转录",
+    "{0} · HTTP 音声認識"
+  ],
+  "{0} a refusé la demande (HTTP {1}). {2}": [
+    "{0} refused the request (HTTP {1}). {2}",
+    "{0} rechazó la solicitud (HTTP {1}). {2}",
+    "{0} ha rifiutato la richiesta (HTTP {1}). {2}",
+    "{0} hat die Anfrage abgelehnt (HTTP {1}). {2}",
+    "{0} 拒绝了请求（HTTP {1}）。{2}",
+    "{0} がリクエストを拒否しました（HTTP {1}）。{2}"
+  ],
+  "{0} Activer ce compagnon": [
+    "{0} Activate this companion",
+    "{0} Activar este compañero",
+    "{0} Attiva questo compagno",
+    "{0} Begleiter aktivieren",
+    "{0} 启用此伙伴",
+    "{0} このコンパニオンを有効にする"
+  ],
+  "{0} Afficher le widget": [
+    "{0} Show widget",
+    "{0} Mostrar widget",
+    "{0} Mostra widget",
+    "{0} Widget anzeigen",
+    "{0} 显示小组件",
+    "{0} ウィジェットを表示"
+  ],
+  "{0} Arrêter la réponse": [
+    "{0} Stop response",
+    "{0} Detener respuesta",
+    "{0} Interrompi risposta",
+    "{0} Antwort stoppen",
+    "{0} 停止回复",
+    "{0} 応答を停止"
+  ],
+  "{0} Changer l’image": [
+    "{0} Change image",
+    "{0} Cambiar imagen",
+    "{0} Cambia immagine",
+    "{0} Bild ändern",
+    "{0} 更换图片",
+    "{0} 画像を変更"
+  ],
+  "{0} chargé · contexte : {1} tokens.": [
+    "{0} loaded · context: {1} tokens.",
+    "{0} cargado · contexto: {1} tokens.",
+    "{0} caricato · contesto: {1} token.",
+    "{0} geladen · Kontext: {1} Tokens.",
+    "{0} 已加载 · 上下文：{1} 个 token。",
+    "{0} 読み込み済み · コンテキスト：{1} トークン。"
+  ],
+  "{0} Dupliquer": [
+    "{0} Duplicate",
+    "{0} Duplicar",
+    "{0} Duplica",
+    "{0} Duplizieren",
+    "{0} 复制",
+    "{0} 複製"
+  ],
+  "{0} Enregistrer": [
+    "{0} Save",
+    "{0} Guardar",
+    "{0} Salva",
+    "{0} Speichern",
+    "{0} 保存",
+    "{0} 保存"
+  ],
+  "{0} est le compagnon actif": [
+    "{0} is the active companion",
+    "{0} es el compañero activo",
+    "{0} è il compagno attivo",
+    "{0} ist der aktive Begleiter",
+    "{0} 是当前伙伴",
+    "現在のコンパニオンは {0} です"
+  ],
+  "{0} est maintenant actif.": [
+    "{0} is now active.",
+    "{0} está activo ahora.",
+    "{0} è ora attivo.",
+    "{0} ist jetzt aktiv.",
+    "{0} 现已启用。",
+    "{0} が有効になりました。"
+  ],
+  "{0} Exporter": [
+    "{0} Export",
+    "{0} Exportar",
+    "{0} Esporta",
+    "{0} Exportieren",
+    "{0} 导出",
+    "{0} エクスポート"
+  ],
+  "{0} La réflexion partage la réserve de tokens avec la réponse. Seule la réponse finale est lue à voix haute.": [
+    "{0} Reasoning shares the token reserve with the response. Only the final answer is spoken.",
+    "{0} El razonamiento comparte la reserva de tokens con la respuesta. Solo se lee la respuesta final.",
+    "{0} Il ragionamento condivide la riserva di token con la risposta. Viene letta solo la risposta finale.",
+    "{0} Denkprozesse und Antwort teilen sich das Token-Budget. Nur die endgültige Antwort wird vorgelesen.",
+    "{0} 推理与回复共用预留 token。仅朗读最终答案。",
+    "{0} 思考と応答はトークンの予約枠を共有します。最終的な回答だけを読み上げます。"
+  ],
+  "{0} La réponse écrite reste disponible.": [
+    "{0} The written response remains available.",
+    "{0} La respuesta escrita sigue disponible.",
+    "{0} La risposta scritta resta disponibile.",
+    "{0} Die schriftliche Antwort bleibt verfügbar.",
+    "{0} 文字回复仍可查看。",
+    "{0} テキストの応答は引き続き閲覧できます。"
+  ],
+  "{0} Le changement de compagnon décharge son ancien modèle avant de charger le nouveau ; un modèle commun reste chargé.": [
+    "{0} Switching companions unloads the previous model before loading the next; a shared model stays loaded.",
+    "{0} Al cambiar de compañero se descarga el modelo anterior antes de cargar el siguiente; un modelo compartido sigue cargado.",
+    "{0} Cambiando compagno si scarica il modello precedente prima di caricare il nuovo; un modello condiviso resta caricato.",
+    "{0} Beim Wechsel des Begleiters wird das bisherige Modell vor dem neuen entladen; ein gemeinsames Modell bleibt geladen.",
+    "{0} 切换伙伴时，先卸载旧模型再加载新模型；共用的模型会保持加载。",
+    "{0} コンパニオンを切り替えると、前のモデルを解放してから新しいモデルを読み込みます。共通のモデルは保持されます。"
+  ],
+  "{0} Masquer le widget": [
+    "{0} Hide widget",
+    "{0} Ocultar widget",
+    "{0} Nascondi widget",
+    "{0} Widget ausblenden",
+    "{0} 隐藏小组件",
+    "{0} ウィジェットを非表示"
+  ],
+  "{0} met trop de temps à répondre. Vérifie le chargement du modèle et la mémoire GPU.": [
+    "{0} is taking too long to respond. Check model loading and GPU memory.",
+    "{0} tarda demasiado en responder. Comprueba la carga del modelo y la memoria de la GPU.",
+    "{0} impiega troppo a rispondere. Controlla il caricamento del modello e la memoria GPU.",
+    "{0} braucht zu lange für die Antwort. Prüfe den Modellladevorgang und den GPU-Speicher.",
+    "{0} 响应超时。请检查模型加载状态和 GPU 内存。",
+    "{0} の応答に時間がかかりすぎています。モデルの読み込みと GPU メモリを確認してください。"
+  ],
+  "{0} modèle(s) de conversation détecté(s) · {1} chargé(s){2}": [
+    "{0} conversation models found · {1} loaded{2}",
+    "{0} modelos de conversación detectados · {1} cargados{2}",
+    "{0} modelli di conversazione rilevati · {1} caricati{2}",
+    "{0} Gesprächsmodelle gefunden · {1} geladen{2}",
+    "检测到 {0} 个对话模型 · 已加载 {1} 个{2}",
+    "会話モデル {0} 件を検出 · {1} 件読み込み済み{2}"
+  ],
+  "{0} Nouveau compagnon": [
+    "{0} New companion",
+    "{0} Nuevo compañero",
+    "{0} Nuovo compagno",
+    "{0} Neuer Begleiter",
+    "{0} 新建伙伴",
+    "{0} 新しいコンパニオン"
+  ],
+  "{0} Retrouver {1}": [
+    "{0} Show {1}",
+    "{0} Mostrar {1}",
+    "{0} Mostra {1}",
+    "{0} {1} anzeigen",
+    "{0} 显示 {1}",
+    "{0} {1} を表示"
+  ],
+  "{0} Supprimer": [
+    "{0} Delete",
+    "{0} Eliminar",
+    "{0} Elimina",
+    "{0} Löschen",
+    "{0} 删除",
+    "{0} 削除"
+  ],
+  "01 / PRÉSENCE": [
+    "01 / PRESENCE",
+    "01 / PRESENCIA",
+    "01 / PRESENZA",
+    "01 / PRÄSENZ",
+    "01 / 陪伴",
+    "01 / 存在"
+  ],
+  "À choisir": [
+    "Choose",
+    "Por elegir",
+    "Da scegliere",
+    "Auswählen",
+    "待选择",
+    "選択してください"
+  ],
+  "À tes commandes": [
+    "At your command",
+    "A tus órdenes",
+    "Ai tuoi ordini",
+    "Zu deinen Diensten",
+    "听候指令",
+    "いつでもどうぞ"
+  ],
+  "À ton écoute": [
+    "Listening to you",
+    "Te escucho",
+    "Ti ascolto",
+    "Ich höre zu",
+    "正在聆听",
+    "聞いています"
+  ],
+  "À valider": [
+    "Needs approval",
+    "Por validar",
+    "Da approvare",
+    "Freigabe ausstehend",
+    "待确认",
+    "確認待ち"
+  ],
+  "à vérifier au chargement": [
+    "checked when loading",
+    "se verificará al cargar",
+    "da verificare al caricamento",
+    "wird beim Laden geprüft",
+    "加载时验证",
+    "読み込み時に確認"
+  ],
+  "ACTIF SUR TON BUREAU": [
+    "ACTIVE ON YOUR DESKTOP",
+    "ACTIVO EN TU ESCRITORIO",
+    "ATTIVO SUL DESKTOP",
+    "AUF DEINEM DESKTOP AKTIV",
+    "已在桌面启用",
+    "デスクトップで有効"
+  ],
+  "Action mémoire inconnue.": [
+    "Unknown memory action.",
+    "Acción de memoria desconocida.",
+    "Azione di memoria sconosciuta.",
+    "Unbekannte Speicheraktion.",
+    "未知的记忆操作。",
+    "不明な記憶操作です。"
+  ],
+  "Active le micro, parle naturellement. Tu peux l’interrompre à tout moment.": [
+    "Turn on the mic and speak naturally. You can interrupt at any time.",
+    "Activa el micrófono y habla con naturalidad. Puedes interrumpir en cualquier momento.",
+    "Attiva il microfono e parla naturalmente. Puoi interrompere in qualsiasi momento.",
+    "Schalte das Mikrofon ein und sprich ganz natürlich. Du kannst jederzeit unterbrechen.",
+    "打开麦克风，自然交谈。你可以随时打断回复。",
+    "マイクを有効にして、自然に話しかけてください。いつでも応答を中断できます。"
+  ],
+  "Active un autre compagnon avant de supprimer celui-ci.": [
+    "Activate another companion before deleting this one.",
+    "Activa otro compañero antes de eliminar este.",
+    "Attiva un altro compagno prima di eliminare questo.",
+    "Aktiviere einen anderen Begleiter, bevor du diesen löschst.",
+    "请先启用其他伙伴，再删除此伙伴。",
+    "削除する前に別のコンパニオンを有効にしてください。"
+  ],
+  "Activée": [
+    "On",
+    "Activada",
+    "Attivata",
+    "Aktiviert",
+    "已启用",
+    "有効"
+  ],
+  "Activer le micro": [
+    "Turn on microphone",
+    "Activar micrófono",
+    "Attiva microfono",
+    "Mikrofon einschalten",
+    "开启麦克风",
+    "マイクを有効にする"
+  ],
+  "Actualiser les périphériques": [
+    "Refresh devices",
+    "Actualizar dispositivos",
+    "Aggiorna dispositivi",
+    "Geräte aktualisieren",
+    "刷新设备",
+    "デバイスを更新"
+  ],
+  "Adresse de LM Studio": [
+    "LM Studio address",
+    "Dirección de LM Studio",
+    "Indirizzo di LM Studio",
+    "LM-Studio-Adresse",
+    "LM Studio 地址",
+    "LM Studio のアドレス"
+  ],
+  "Adresse de VoiceStudio": [
+    "VoiceStudio address",
+    "Dirección de VoiceStudio",
+    "Indirizzo di VoiceStudio",
+    "VoiceStudio-Adresse",
+    "VoiceStudio 地址",
+    "VoiceStudio のアドレス"
+  ],
+  "Afficher ou masquer les commandes de {0}": [
+    "Show or hide {0}'s controls",
+    "Mostrar u ocultar los controles de {0}",
+    "Mostra o nascondi i comandi di {0}",
+    "Steuerelemente von {0} ein- oder ausblenden",
+    "显示或隐藏 {0} 的控制按钮",
+    "{0} の操作ボタンを表示・非表示"
+  ],
+  "Ajouter un souvenir": [
+    "Add a memory",
+    "Añadir un recuerdo",
+    "Aggiungi un ricordo",
+    "Erinnerung hinzufügen",
+    "添加记忆",
+    "記憶を追加"
+  ],
+  "Ambre": [
+    "Amber",
+    "Ámbar",
+    "Ambra",
+    "Bernstein",
+    "琥珀色",
+    "琥珀"
+  ],
+  "Annuler": [
+    "Cancel",
+    "Cancelar",
+    "Annulla",
+    "Abbrechen",
+    "取消",
+    "キャンセル"
+  ],
+  "Apparence de {0}": [
+    "{0}'s appearance",
+    "Apariencia de {0}",
+    "Aspetto di {0}",
+    "Aussehen von {0}",
+    "{0} 的外观",
+    "{0} の外観"
+  ],
+  "Apparence de départ rétablie.": [
+    "Original appearance restored.",
+    "Apariencia original restaurada.",
+    "Aspetto originale ripristinato.",
+    "Ursprüngliches Aussehen wiederhergestellt.",
+    "已恢复初始外观。",
+    "元の外観に戻しました。"
+  ],
+  "Arrête le micro et la réponse, puis décharge le modèle du compagnon dans LM Studio.": [
+    "Stops the mic and response, then unloads the companion's model from LM Studio.",
+    "Detiene el micrófono y la respuesta y descarga el modelo del compañero de LM Studio.",
+    "Ferma il microfono e la risposta, poi scarica il modello del compagno da LM Studio.",
+    "Stoppt Mikrofon und Antwort und entlädt dann das Modell des Begleiters in LM Studio.",
+    "停止麦克风和回复，然后在 LM Studio 中卸载伙伴的模型。",
+    "マイクと応答を停止してから、LM Studio のコンパニオンのモデルを解放します。"
+  ],
+  "Arrêter la réponse": [
+    "Stop response",
+    "Detener respuesta",
+    "Interrompi risposta",
+    "Antwort stoppen",
+    "停止回复",
+    "応答を停止"
+  ],
+  "Associer cette voix": [
+    "Assign this voice",
+    "Asignar esta voz",
+    "Associa questa voce",
+    "Diese Stimme zuweisen",
+    "绑定此声音",
+    "この声を割り当てる"
+  ],
+  "Aucun échange trouvé.": [
+    "No conversations found.",
+    "No se encontraron conversaciones.",
+    "Nessuna conversazione trovata.",
+    "Keine Gespräche gefunden.",
+    "未找到对话。",
+    "会話が見つかりません。"
+  ],
+  "Aucun modèle TTS installé annoncé par VoiceStudio.": [
+    "VoiceStudio reports no installed TTS models.",
+    "VoiceStudio no indica ningún modelo TTS instalado.",
+    "VoiceStudio non segnala modelli TTS installati.",
+    "VoiceStudio meldet keine installierten TTS-Modelle.",
+    "VoiceStudio 未报告已安装的 TTS 模型。",
+    "VoiceStudio にインストール済みの TTS モデルがありません。"
+  ],
+  "Aucun moteur de transcription HTTP de repli n'est disponible dans VoiceStudio.": [
+    "No fallback HTTP transcription engine is available in VoiceStudio.",
+    "VoiceStudio no tiene ningún motor HTTP de transcripción de respaldo disponible.",
+    "Nessun motore HTTP di trascrizione di riserva è disponibile in VoiceStudio.",
+    "In VoiceStudio ist keine HTTP-Transkription als Ausweichlösung verfügbar.",
+    "VoiceStudio 中没有可用的 HTTP 转录备用引擎。",
+    "VoiceStudio に代替の HTTP 音声認識エンジンがありません。"
+  ],
+  "Aucun souvenir ici.": [
+    "No memories here.",
+    "No hay recuerdos aquí.",
+    "Nessun ricordo qui.",
+    "Hier gibt es noch keine Erinnerungen.",
+    "这里还没有记忆。",
+    "記憶はまだありません。"
+  ],
+  "aucune écriture pour ce tour.": [
+    "no memory changes this turn.",
+    "sin cambios de memoria en este turno.",
+    "nessuna modifica alla memoria in questo turno.",
+    "keine Speicheränderungen in dieser Runde.",
+    "本轮未修改记忆。",
+    "このターンでは記憶の変更はありません。"
+  ],
+  "Aucune modification de mémoire effectuée : {0}": [
+    "No memory changes made: {0}",
+    "No se modificó la memoria: {0}",
+    "Nessuna modifica alla memoria: {0}",
+    "Keine Erinnerungen geändert: {0}",
+    "未修改记忆：{0}",
+    "記憶は変更されていません：{0}"
+  ],
+  "Aucune modification de mémoire effectuée.": [
+    "No memory changes made.",
+    "No se modificó la memoria.",
+    "Nessuna modifica alla memoria.",
+    "Keine Erinnerungen geändert.",
+    "未修改记忆。",
+    "記憶は変更されていません。"
+  ],
+  "Aucune phrase complète confirmée. Le dernier fragment a pu être entendu en partie.": [
+    "No complete sentence confirmed. The last fragment may have been partly heard.",
+    "Ninguna frase completa confirmada. El último fragmento puede haberse oído en parte.",
+    "Nessuna frase completa confermata. L'ultimo frammento potrebbe essere stato ascoltato in parte.",
+    "Kein vollständiger Satz bestätigt. Das letzte Fragment wurde möglicherweise teilweise gehört.",
+    "没有确认完整播放的句子。最后一个片段可能已被部分听到。",
+    "完全に再生された文は確認できません。最後の断片は一部聞こえていた可能性があります。"
+  ],
+  "Aucune voix choisie": [
+    "No voice selected",
+    "Ninguna voz seleccionada",
+    "Nessuna voce scelta",
+    "Keine Stimme gewählt",
+    "未选择声音",
+    "声が未選択"
+  ],
+  "Avec {0}": [
+    "With {0}",
+    "Con {0}",
+    "Con {0}",
+    "Mit {0}",
+    "与 {0}",
+    "{0} と"
+  ],
+  "Budget : {0} tokens ({1} chargés). Entrée : estimation prudente {2} ; réponse réservée : {3} ; marge : {4}. {5} souvenir(s), {6} échange(s) transmis, {7} écarté(s){8}.{9}": [
+    "Budget: {0} tokens ({1} loaded). Input: conservative estimate {2}; response reserve: {3}; margin: {4}. {5} memories, {6} turns included, {7} excluded{8}.{9}",
+    "Presupuesto: {0} tokens ({1} cargados). Entrada: estimación prudente {2}; reserva de respuesta: {3}; margen: {4}. {5} recuerdos, {6} turnos incluidos, {7} excluidos{8}.{9}",
+    "Budget: {0} token ({1} caricati). Input: stima prudente {2}; riserva risposta: {3}; margine: {4}. {5} ricordi, {6} scambi inclusi, {7} esclusi{8}.{9}",
+    "Budget: {0} Tokens ({1} geladen). Eingabe: vorsichtige Schätzung {2}; Antwortreserve: {3}; Puffer: {4}. {5} Erinnerungen, {6} Gesprächsrunden enthalten, {7} ausgelassen{8}.{9}",
+    "预算：{0} 个 token（已加载 {1} 个）。输入保守估计 {2}；回复预留 {3}；余量 {4}。包含 {5} 条记忆、{6} 轮对话，已排除 {7} 轮{8}。{9}",
+    "予算：{0} トークン（読み込み済み {1}）。入力の安全側の推定 {2}、応答予約 {3}、余裕 {4}。記憶 {5} 件、会話 {6} ターンを使用、{7} ターンを除外{8}。{9}"
+  ],
+  "Budget de conversation": [
+    "Conversation budget",
+    "Presupuesto de conversación",
+    "Budget della conversazione",
+    "Gesprächsbudget",
+    "对话预算",
+    "会話の予算"
+  ],
+  "Ce choix traduit les commandes et les messages de Sherka. Les profils, les conversations, les modèles et les voix restent inchangés.": [
+    "This translates Sherka's controls and messages. Profiles, conversations, models and voices remain unchanged.",
+    "Esta opción traduce los controles y mensajes de Sherka. Los perfiles, conversaciones, modelos y voces permanecen intactos.",
+    "Questa scelta traduce i comandi e i messaggi di Sherka. Profili, conversazioni, modelli e voci restano invariati.",
+    "Diese Auswahl übersetzt Sherkas Bedienelemente und Meldungen. Profile, Gespräche, Modelle und Stimmen bleiben unverändert.",
+    "此选项翻译 Sherka 的控件和提示。不会更改档案、对话、模型或声音。",
+    "Sherka の操作画面とメッセージを翻訳します。プロフィール、会話、モデル、声は変更されません。"
+  ],
+  "Ce compagnon n'existe plus.": [
+    "This companion no longer exists.",
+    "Este compañero ya no existe.",
+    "Questo compagno non esiste più.",
+    "Dieser Begleiter existiert nicht mehr.",
+    "此伙伴已不存在。",
+    "このコンパニオンは存在しません。"
+  ],
+  "Ce dossier n’est pas accessible en écriture. Déplace Sherka dans un dossier à toi ou télécharge la version depuis GitHub : {0}": [
+    "This folder is not writable. Move Sherka to a folder you own or download it from GitHub: {0}",
+    "No se puede escribir en esta carpeta. Mueve Sherka a una carpeta tuya o descárgalo de GitHub: {0}",
+    "Questa cartella non è scrivibile. Sposta Sherka in una tua cartella o scaricalo da GitHub: {0}",
+    "In diesen Ordner kann nicht geschrieben werden. Verschiebe Sherka in einen eigenen Ordner oder lade es von GitHub herunter: {0}",
+    "此文件夹不可写。请将 Sherka 移到你自己的文件夹，或从 GitHub 下载：{0}",
+    "このフォルダーに書き込めません。Sherka を自分のフォルダーに移動するか、GitHub からダウンロードしてください：{0}"
+  ],
+  "Ce fichier dépasse la limite de 15 Mio.": [
+    "This file exceeds the 15 MiB limit.",
+    "Este archivo supera el límite de 15 MiB.",
+    "Il file supera il limite di 15 MiB.",
+    "Diese Datei überschreitet die Grenze von 15 MiB.",
+    "文件超过 15 MiB 的限制。",
+    "ファイルが 15 MiB の上限を超えています。"
+  ],
+  "Ce modèle ne propose pas le réglage de pensée enregistré. Actualise ses options dans Réglages.": [
+    "This model does not support the saved reasoning setting. Refresh its options in Settings.",
+    "Este modelo no admite el ajuste de razonamiento guardado. Actualiza sus opciones en Ajustes.",
+    "Questo modello non supporta il ragionamento salvato. Aggiorna le opzioni nelle Impostazioni.",
+    "Dieses Modell unterstützt die gespeicherte Denkeinstellung nicht. Aktualisiere seine Optionen in den Einstellungen.",
+    "此模型不支持已保存的推理设置。请在设置中刷新选项。",
+    "このモデルは保存済みの思考設定に対応していません。設定でオプションを更新してください。"
+  ],
+  "Ce modèle propose marche/arrêt, sans réglage d’intensité.": [
+    "This model supports on/off, with no intensity setting.",
+    "Este modelo permite activar o desactivar, sin ajustar la intensidad.",
+    "Questo modello permette solo attivazione e disattivazione, senza intensità.",
+    "Dieses Modell unterstützt Ein/Aus ohne Intensitätseinstellung.",
+    "此模型仅支持开关，无法调节强度。",
+    "このモデルはオン・オフのみ対応し、強度は調整できません。"
+  ],
+  "Ce moteur ne prend pas en charge les profils vocaux personnalisés de VoiceStudio.": [
+    "This engine does not support VoiceStudio's custom voice profiles.",
+    "Este motor no admite los perfiles de voz personalizados de VoiceStudio.",
+    "Questo motore non supporta i profili vocali personalizzati di VoiceStudio.",
+    "Diese Engine unterstützt keine benutzerdefinierten VoiceStudio-Stimmprofile.",
+    "此引擎不支持 VoiceStudio 的自定义声音档案。",
+    "このエンジンは VoiceStudio のカスタム音声プロフィールに対応していません。"
+  ],
+  "Ce moteur ne prend pas en charge tes profils vocaux personnalisés.": [
+    "This engine does not support your custom voice profiles.",
+    "Este motor no admite tus perfiles de voz personalizados.",
+    "Questo motore non supporta i tuoi profili vocali personalizzati.",
+    "Diese Engine unterstützt deine benutzerdefinierten Stimmprofile nicht.",
+    "此引擎不支持你的自定义声音档案。",
+    "このエンジンはカスタム音声プロフィールに対応していません。"
+  ],
+  "Ce profil a changé. Recharge-le avant de l'enregistrer.": [
+    "This profile has changed. Reload it before saving.",
+    "Este perfil ha cambiado. Recárgalo antes de guardar.",
+    "Questo profilo è cambiato. Ricaricalo prima di salvarlo.",
+    "Dieses Profil wurde geändert. Lade es vor dem Speichern neu.",
+    "此档案已更改。请重新加载后再保存。",
+    "プロフィールが変更されています。保存する前に再読み込みしてください。"
+  ],
+  "Ce qui change": [
+    "What's new",
+    "Novedades",
+    "Novità",
+    "Was ist neu",
+    "更新内容",
+    "変更内容"
+  ],
+  "Cette adresse ne renvoie pas une réponse VoiceStudio valide.": [
+    "This address does not return a valid VoiceStudio response.",
+    "Esta dirección no devuelve una respuesta válida de VoiceStudio.",
+    "Questo indirizzo non restituisce una risposta VoiceStudio valida.",
+    "Diese Adresse liefert keine gültige VoiceStudio-Antwort.",
+    "此地址未返回有效的 VoiceStudio 响应。",
+    "このアドレスから有効な VoiceStudio の応答が返されません。"
+  ],
+  "Cette couleur de profil n'est pas disponible.": [
+    "This profile color is not available.",
+    "Este color de perfil no está disponible.",
+    "Questo colore del profilo non è disponibile.",
+    "Diese Profilfarbe ist nicht verfügbar.",
+    "此档案颜色不可用。",
+    "このプロフィールの色は利用できません。"
+  ],
+  "Cette mise à jour est destinée à Windows.": [
+    "This update is for Windows.",
+    "Esta actualización es para Windows.",
+    "Questo aggiornamento è per Windows.",
+    "Dieses Update ist für Windows.",
+    "此更新适用于 Windows。",
+    "この更新は Windows 用です。"
+  ],
+  "Cette mise à jour ne provient pas de la release officielle Sherka.": [
+    "This update is not from an official Sherka release.",
+    "Esta actualización no procede de una versión oficial de Sherka.",
+    "Questo aggiornamento non proviene da una release ufficiale di Sherka.",
+    "Dieses Update stammt nicht aus einer offiziellen Sherka-Version.",
+    "此更新并非来自 Sherka 官方发行版。",
+    "この更新は Sherka の公式リリースではありません。"
+  ],
+  "Cette prise de parole est trop longue pour le contexte choisi. Fais une pause et reprends avec une phrase plus courte.": [
+    "This utterance is too long for the selected context. Pause and try a shorter sentence.",
+    "Esta intervención es demasiado larga para el contexto elegido. Haz una pausa y prueba con una frase más corta.",
+    "Questa frase è troppo lunga per il contesto scelto. Fai una pausa e riprova con una frase più breve.",
+    "Diese Äußerung ist für den gewählten Kontext zu lang. Mach eine Pause und versuche einen kürzeren Satz.",
+    "这段话超出了所选上下文。请暂停，再用较短的句子表达。",
+    "発言が選択したコンテキストには長すぎます。いったん区切って、短い文で話しかけてください。"
+  ],
+  "Cette voix sera reprise à chaque activation de {0}.": [
+    "This voice will be used whenever {0} is activated.",
+    "Esta voz se usará cada vez que actives a {0}.",
+    "Questa voce verrà usata ogni volta che attivi {0}.",
+    "Diese Stimme wird bei jeder Aktivierung von {0} verwendet.",
+    "每次启用 {0} 都将使用此声音。",
+    "{0} を有効にするたびに、この声を使用します。"
+  ],
+  "Changer ces réglages coupe le micro. Réactive-le ensuite pour reprendre.": [
+    "Changing these settings turns off the mic. Turn it back on to resume.",
+    "Cambiar estos ajustes desactiva el micrófono. Actívalo de nuevo para continuar.",
+    "Modificare queste impostazioni spegne il microfono. Riattivalo per riprendere.",
+    "Das Ändern dieser Einstellungen schaltet das Mikrofon aus. Schalte es danach wieder ein.",
+    "更改这些设置会关闭麦克风。重新开启即可继续。",
+    "この設定を変更するとマイクが無効になります。再度有効にして続けてください。"
+  ],
+  "Changer de compagnon": [
+    "Switch companion",
+    "Cambiar compañero",
+    "Cambia compagno",
+    "Begleiter wechseln",
+    "切换伙伴",
+    "コンパニオンを切り替える"
+  ],
+  "Changer de compagnon change de mémoire. Une copie reprend sa personnalité et son apparence, avec une histoire vierge.": [
+    "Switching companions also switches memories. A copy keeps the personality and appearance, with a fresh history.",
+    "Cambiar de compañero cambia sus recuerdos. Una copia conserva la personalidad y apariencia, con un historial nuevo.",
+    "Cambiando compagno cambia anche la memoria. Una copia conserva personalità e aspetto, con una storia nuova.",
+    "Beim Wechsel des Begleiters wechseln auch die Erinnerungen. Eine Kopie behält Persönlichkeit und Aussehen und beginnt mit einem leeren Verlauf.",
+    "切换伙伴也会切换记忆。副本保留个性与外观，但对话历史从零开始。",
+    "コンパニオンを切り替えると記憶も切り替わります。複製は性格と外観を引き継ぎ、履歴は新しく始まります。"
+  ],
+  "Chaque compagnon garde sa propre histoire.": [
+    "Each companion keeps its own story.",
+    "Cada compañero conserva su propia historia.",
+    "Ogni compagno conserva la propria storia.",
+    "Jeder Begleiter behält seine eigene Geschichte.",
+    "每个伙伴都有自己的故事。",
+    "それぞれのコンパニオンが自分の履歴を持ちます。"
+  ],
+  "chargé": [
+    "loaded",
+    "cargado",
+    "caricato",
+    "geladen",
+    "已加载",
+    "読み込み済み"
+  ],
+  "Chargement des souvenirs…": [
+    "Loading memories…",
+    "Cargando recuerdos…",
+    "Caricamento dei ricordi…",
+    "Erinnerungen werden geladen…",
+    "正在加载记忆…",
+    "記憶を読み込み中…"
+  ],
+  "Chargement…": [
+    "Loading…",
+    "Cargando…",
+    "Caricamento…",
+    "Wird geladen…",
+    "正在加载…",
+    "読み込み中…"
+  ],
+  "Chemin invalide.": [
+    "Invalid path.",
+    "Ruta no válida.",
+    "Percorso non valido.",
+    "Ungültiger Pfad.",
+    "路径无效。",
+    "無効なパスです。"
+  ],
+  "Choisir sa voix →": [
+    "Choose a voice →",
+    "Elegir su voz →",
+    "Scegli la voce →",
+    "Stimme auswählen →",
+    "选择声音 →",
+    "声を選ぶ →"
+  ],
+  "Choisir un compagnon": [
+    "Choose a companion",
+    "Elegir un compañero",
+    "Scegli un compagno",
+    "Begleiter auswählen",
+    "选择伙伴",
+    "コンパニオンを選ぶ"
+  ],
+  "Choisis le modèle LM Studio, le moteur de transcription et la voix dans les réglages avant d'activer le micro.": [
+    "Choose the LM Studio model, transcription engine and voice in Settings before turning on the mic.",
+    "Elige el modelo de LM Studio, el motor de transcripción y la voz en Ajustes antes de activar el micrófono.",
+    "Scegli modello LM Studio, motore di trascrizione e voce nelle Impostazioni prima di attivare il microfono.",
+    "Wähle vor dem Einschalten des Mikrofons das LM-Studio-Modell, die Spracherkennung und die Stimme in den Einstellungen.",
+    "开启麦克风前，请在设置中选择 LM Studio 模型、转录引擎和声音。",
+    "マイクを有効にする前に、設定で LM Studio のモデル、音声認識エンジン、声を選んでください。"
+  ],
+  "Choisis le moteur vocal de ce compagnon.": [
+    "Choose this companion's speech engine.",
+    "Elige el motor de voz de este compañero.",
+    "Scegli il motore vocale di questo compagno.",
+    "Wähle die Sprachsynthese für diesen Begleiter.",
+    "选择此伙伴的语音合成引擎。",
+    "このコンパニオンの音声合成エンジンを選んでください。"
+  ],
+  "Choisis les modèles et la voix de chaque compagnon. Ces choix sont utilisés dès le prochain échange.": [
+    "Choose each companion's models and voice. These choices apply to the next conversation.",
+    "Elige los modelos y la voz de cada compañero. Se usarán desde la siguiente conversación.",
+    "Scegli modelli e voce di ogni compagno. Saranno usati dal prossimo scambio.",
+    "Wähle Modelle und Stimme für jeden Begleiter. Sie werden ab dem nächsten Gespräch verwendet.",
+    "选择每个伙伴的模型和声音。这些选项将在下一次对话中使用。",
+    "各コンパニオンのモデルと声を選んでください。次の会話から適用されます。"
+  ],
+  "Choisis un format Windows PCM 16/32 bits ou flottant.": [
+    "Choose a Windows PCM 16/32-bit or floating-point format.",
+    "Elige un formato Windows PCM de 16/32 bits o flotante.",
+    "Scegli un formato Windows PCM a 16/32 bit o in virgola mobile.",
+    "Wähle ein Windows-Format mit PCM 16/32 Bit oder Fließkomma.",
+    "请选择 Windows PCM 16/32 位或浮点格式。",
+    "Windows の PCM 16/32 ビットまたは浮動小数点形式を選んでください。"
+  ],
+  "Choisis un microphone PCM 16/32 bits ou flottant.": [
+    "Choose a PCM 16/32-bit or floating-point microphone.",
+    "Elige un micrófono PCM de 16/32 bits o flotante.",
+    "Scegli un microfono PCM a 16/32 bit o in virgola mobile.",
+    "Wähle ein Mikrofon mit PCM 16/32 Bit oder Fließkomma.",
+    "请选择 PCM 16/32 位或浮点格式的麦克风。",
+    "PCM 16/32 ビットまたは浮動小数点形式のマイクを選んでください。"
+  ],
+  "Choisis un modèle LM Studio dans les réglages.": [
+    "Choose an LM Studio model in Settings.",
+    "Elige un modelo de LM Studio en Ajustes.",
+    "Scegli un modello LM Studio nelle Impostazioni.",
+    "Wähle ein LM-Studio-Modell in den Einstellungen.",
+    "请在设置中选择 LM Studio 模型。",
+    "設定で LM Studio のモデルを選んでください。"
+  ],
+  "Choisis un modèle LM Studio.": [
+    "Choose an LM Studio model.",
+    "Elige un modelo de LM Studio.",
+    "Scegli un modello LM Studio.",
+    "Wähle ein LM-Studio-Modell.",
+    "请选择 LM Studio 模型。",
+    "LM Studio のモデルを選んでください。"
+  ],
+  "Choisis un modèle pour ce compagnon dans les réglages.": [
+    "Choose a model for this companion in Settings.",
+    "Elige un modelo para este compañero en Ajustes.",
+    "Scegli un modello per questo compagno nelle Impostazioni.",
+    "Wähle ein Modell für diesen Begleiter in den Einstellungen.",
+    "请在设置中为此伙伴选择模型。",
+    "設定でこのコンパニオンのモデルを選んでください。"
+  ],
+  "Choisis un moteur de transcription dans les réglages.": [
+    "Choose a transcription engine in Settings.",
+    "Elige un motor de transcripción en Ajustes.",
+    "Scegli un motore di trascrizione nelle Impostazioni.",
+    "Wähle eine Spracherkennung in den Einstellungen.",
+    "请在设置中选择转录引擎。",
+    "設定で音声認識エンジンを選んでください。"
+  ],
+  "Choisis un moteur vocal dans les réglages.": [
+    "Choose a speech engine in Settings.",
+    "Elige un motor de voz en Ajustes.",
+    "Scegli un motore vocale nelle Impostazioni.",
+    "Wähle eine Sprachsynthese in den Einstellungen.",
+    "请在设置中选择语音合成引擎。",
+    "設定で音声合成エンジンを選んでください。"
+  ],
+  "Choisis un moteur vocal et une voix, ou désactive la lecture de la réponse.": [
+    "Choose a speech engine and voice, or turn off spoken responses.",
+    "Elige un motor y una voz, o desactiva la lectura de respuestas.",
+    "Scegli motore e voce oppure disattiva la lettura delle risposte.",
+    "Wähle Sprachsynthese und Stimme oder deaktiviere das Vorlesen.",
+    "请选择语音引擎和声音，或关闭回复朗读。",
+    "音声合成エンジンと声を選ぶか、応答の読み上げを無効にしてください。"
+  ],
+  "Choisis un nom de 1 à 60 caractères, sur une ligne.": [
+    "Choose a name of 1 to 60 characters on one line.",
+    "Elige un nombre de 1 a 60 caracteres en una sola línea.",
+    "Scegli un nome da 1 a 60 caratteri su una sola riga.",
+    "Wähle einen einzeiligen Namen mit 1 bis 60 Zeichen.",
+    "名称须为单行，长度为 1 至 60 个字符。",
+    "名前は 1〜60 文字で、1 行に収めてください。"
+  ],
+  "Choisis une fréquence Windows entre 8 et 96 kHz (44,1 ou 48 kHz conseillés).": [
+    "Choose a Windows sample rate from 8 to 96 kHz (44.1 or 48 kHz recommended).",
+    "Elige una frecuencia Windows de 8 a 96 kHz (se recomienda 44,1 o 48 kHz).",
+    "Scegli una frequenza Windows da 8 a 96 kHz (consigliati 44,1 o 48 kHz).",
+    "Wähle eine Windows-Abtastrate von 8 bis 96 kHz (44,1 oder 48 kHz empfohlen).",
+    "请选择 8 至 96 kHz 的 Windows 采样率（推荐 44.1 或 48 kHz）。",
+    "Windows のサンプルレートは 8〜96 kHz にしてください（44.1 または 48 kHz 推奨）。"
+  ],
+  "Choisis une image de moins de 10 Mio.": [
+    "Choose an image smaller than 10 MiB.",
+    "Elige una imagen de menos de 10 MiB.",
+    "Scegli un'immagine inferiore a 10 MiB.",
+    "Wähle ein Bild unter 10 MiB.",
+    "请选择小于 10 MiB 的图片。",
+    "10 MiB 未満の画像を選んでください。"
+  ],
+  "Choisis une image PNG ou WebP.": [
+    "Choose a PNG or WebP image.",
+    "Elige una imagen PNG o WebP.",
+    "Scegli un'immagine PNG o WebP.",
+    "Wähle ein PNG- oder WebP-Bild.",
+    "请选择 PNG 或 WebP 图片。",
+    "PNG または WebP 画像を選んでください。"
+  ],
+  "Choisis une intensité plus faible pour réduire le temps de réflexion.": [
+    "Choose a lower intensity to reduce reasoning time.",
+    "Elige una intensidad menor para reducir el tiempo de razonamiento.",
+    "Scegli un'intensità minore per ridurre il tempo di ragionamento.",
+    "Wähle eine geringere Intensität für kürzere Denkzeiten.",
+    "降低强度可缩短推理时间。",
+    "強度を下げると、思考にかかる時間を短縮できます。"
+  ],
+  "Choisis une voix dans les réglages.": [
+    "Choose a voice in Settings.",
+    "Elige una voz en Ajustes.",
+    "Scegli una voce nelle Impostazioni.",
+    "Wähle eine Stimme in den Einstellungen.",
+    "请在设置中选择声音。",
+    "設定で声を選んでください。"
+  ],
+  "Choix enregistré non disponible · à modifier": [
+    "Saved choice unavailable · change it",
+    "Selección guardada no disponible · cámbiala",
+    "Scelta salvata non disponibile · da cambiare",
+    "Gespeicherte Auswahl nicht verfügbar · bitte ändern",
+    "已保存的选项不可用 · 请更改",
+    "保存済みの選択は利用不可 · 変更が必要"
+  ],
+  "Clé publique absente.": [
+    "Public key missing.",
+    "Falta la clave pública.",
+    "Chiave pubblica mancante.",
+    "Öffentlicher Schlüssel fehlt.",
+    "缺少公钥。",
+    "公開鍵がありません。"
+  ],
+  "Commande de fenêtre impossible : {0}": [
+    "Window action failed: {0}",
+    "Falló la acción de ventana: {0}",
+    "Azione finestra non riuscita: {0}",
+    "Fensteraktion fehlgeschlagen: {0}",
+    "窗口操作失败：{0}",
+    "ウィンドウ操作に失敗しました：{0}"
+  ],
+  "Commence un échange dans l’onglet Conversation ou active le micro du compagnon.": [
+    "Start a conversation in the Conversation tab or turn on the companion's mic.",
+    "Inicia un intercambio en la pestaña Conversación o activa el micrófono del compañero.",
+    "Inizia uno scambio nella scheda Conversazione o attiva il microfono del compagno.",
+    "Beginne ein Gespräch im Bereich Gespräch oder schalte das Mikrofon ein.",
+    "在对话页面开始交谈，或开启伙伴的麦克风。",
+    "会話タブで話しかけるか、コンパニオンのマイクを有効にしてください。"
+  ],
+  "Compagnon": [
+    "Companion",
+    "Compañero",
+    "Compagno",
+    "Begleiter",
+    "伙伴",
+    "コンパニオン"
+  ],
+  "Compagnon à configurer": [
+    "Companion to configure",
+    "Compañero que configurar",
+    "Compagno da configurare",
+    "Zu konfigurierender Begleiter",
+    "待配置的伙伴",
+    "設定するコンパニオン"
+  ],
+  "Compagnon actif": [
+    "Active companion",
+    "Compañero activo",
+    "Compagno attivo",
+    "Aktiver Begleiter",
+    "当前伙伴",
+    "現在のコンパニオン"
+  ],
+  "COMPAGNON DE BUREAU": [
+    "DESKTOP COMPANION",
+    "COMPAÑERO DE ESCRITORIO",
+    "COMPAGNO DESKTOP",
+    "DESKTOP-BEGLEITER",
+    "桌面伙伴",
+    "デスクトップのコンパニオン"
+  ],
+  "Compagnon dupliqué avec une histoire vierge.": [
+    "Companion duplicated with a fresh history.",
+    "Compañero duplicado con un historial nuevo.",
+    "Compagno duplicato con una storia nuova.",
+    "Begleiter mit leerem Verlauf dupliziert.",
+    "已复制伙伴，对话历史为空。",
+    "コンパニオンを複製しました。履歴は空です。"
+  ],
+  "Compagnon importé dans un nouvel espace.": [
+    "Companion imported into a new space.",
+    "Compañero importado en un espacio nuevo.",
+    "Compagno importato in un nuovo spazio.",
+    "Begleiter in einen neuen Bereich importiert.",
+    "已将伙伴导入新的空间。",
+    "新しいスペースにコンパニオンをインポートしました。"
+  ],
+  "Compagnon supprimé.": [
+    "Companion deleted.",
+    "Compañero eliminado.",
+    "Compagno eliminato.",
+    "Begleiter gelöscht.",
+    "已删除伙伴。",
+    "コンパニオンを削除しました。"
+  ],
+  "Compagnons": [
+    "Companions",
+    "Compañeros",
+    "Compagni",
+    "Begleiter",
+    "伙伴",
+    "コンパニオン"
+  ],
+  "COMPAGNONS": [
+    "COMPANIONS",
+    "COMPAÑEROS",
+    "COMPAGNI",
+    "BEGLEITER",
+    "伙伴",
+    "コンパニオン"
+  ],
+  "Confirmation d’une interruption (ms)": [
+    "Interruption confirmation (ms)",
+    "Confirmación de interrupción (ms)",
+    "Conferma interruzione (ms)",
+    "Unterbrechung bestätigen (ms)",
+    "中断确认时间（ms）",
+    "割り込みの確認時間（ms）"
+  ],
+  "Confirmation d’une phrase (ms)": [
+    "Sentence confirmation (ms)",
+    "Confirmación de frase (ms)",
+    "Conferma frase (ms)",
+    "Satz bestätigen (ms)",
+    "语句确认时间（ms）",
+    "発話の確認時間（ms）"
+  ],
+  "Connexion à {0} interrompue. Vérifie que son serveur est démarré.": [
+    "Connection to {0} interrupted. Check that its server is running.",
+    "Conexión con {0} interrumpida. Comprueba que su servidor esté iniciado.",
+    "Connessione a {0} interrotta. Verifica che il server sia avviato.",
+    "Verbindung zu {0} unterbrochen. Prüfe, ob der Server läuft.",
+    "与 {0} 的连接已中断。请确认服务器已启动。",
+    "{0} への接続が切れました。サーバーが起動しているか確認してください。"
+  ],
+  "Connexion à VoiceStudio…": [
+    "Connecting to VoiceStudio…",
+    "Conectando con VoiceStudio…",
+    "Connessione a VoiceStudio…",
+    "Verbindung zu VoiceStudio wird hergestellt…",
+    "正在连接 VoiceStudio…",
+    "VoiceStudio に接続中…"
+  ],
+  "Connexions de {0} enregistrées.": [
+    "{0}'s connections saved.",
+    "Conexiones de {0} guardadas.",
+    "Connessioni di {0} salvate.",
+    "Verbindungen von {0} gespeichert.",
+    "已保存 {0} 的连接设置。",
+    "{0} の接続設定を保存しました。"
+  ],
+  "CONNEXIONS LOCALES": [
+    "LOCAL CONNECTIONS",
+    "CONEXIONES LOCALES",
+    "CONNESSIONI LOCALI",
+    "LOKALE VERBINDUNGEN",
+    "本地连接",
+    "ローカル接続"
+  ],
+  "Consultation de l’historique complet, y compris les échanges exclus de la mémoire.": [
+    "Browse the full history, including conversations excluded from memory.",
+    "Consulta el historial completo, incluidos los intercambios excluidos de la memoria.",
+    "Consulta la cronologia completa, compresi gli scambi esclusi dalla memoria.",
+    "Sieh den vollständigen Verlauf einschließlich der aus dem Gedächtnis ausgeschlossenen Gespräche ein.",
+    "查看完整历史，包括已从记忆上下文中排除的对话。",
+    "記憶から除外された会話も含め、すべての履歴を閲覧できます。"
+  ],
+  "Contenu": [
+    "Content",
+    "Contenido",
+    "Contenuto",
+    "Inhalt",
+    "内容",
+    "内容"
+  ],
+  "Contexte & mémoire": [
+    "Context & memory",
+    "Contexto y memoria",
+    "Contesto e memoria",
+    "Kontext und Gedächtnis",
+    "上下文与记忆",
+    "コンテキストと記憶"
+  ],
+  "Contexte chargé dans LM Studio": [
+    "Context loaded in LM Studio",
+    "Contexto cargado en LM Studio",
+    "Contesto caricato in LM Studio",
+    "In LM Studio geladener Kontext",
+    "LM Studio 已加载的上下文",
+    "LM Studio に読み込まれたコンテキスト"
+  ],
+  "Conversation": [
+    "Conversation",
+    "Conversación",
+    "Conversazione",
+    "Gespräch",
+    "对话",
+    "会話"
+  ],
+  "CONVERSATION": [
+    "CONVERSATION",
+    "CONVERSACIÓN",
+    "CONVERSAZIONE",
+    "GESPRÄCH",
+    "对话",
+    "会話"
+  ],
+  "Conversation avec {0}": [
+    "Conversation with {0}",
+    "Conversación con {0}",
+    "Conversazione con {0}",
+    "Gespräch mit {0}",
+    "与 {0} 对话",
+    "{0} との会話"
+  ],
+  "Corail": [
+    "Coral",
+    "Coral",
+    "Corallo",
+    "Koralle",
+    "珊瑚色",
+    "コーラル"
+  ],
+  "corrigé": [
+    "corrected",
+    "corregido",
+    "corretto",
+    "korrigiert",
+    "已更正",
+    "修正済み"
+  ],
+  "Corriger": [
+    "Correct",
+    "Corregir",
+    "Correggi",
+    "Korrigieren",
+    "更正",
+    "修正"
+  ],
+  "Corriger ce souvenir": [
+    "Correct this memory",
+    "Corregir este recuerdo",
+    "Correggi questo ricordo",
+    "Diese Erinnerung korrigieren",
+    "更正此记忆",
+    "この記憶を修正"
+  ],
+  "Couleur de l’espace": [
+    "Space color",
+    "Color del espacio",
+    "Colore dello spazio",
+    "Farbe des Bereichs",
+    "空间颜色",
+    "スペースの色"
+  ],
+  "Couper le micro": [
+    "Mute microphone",
+    "Silenciar micrófono",
+    "Disattiva microfono",
+    "Mikrofon ausschalten",
+    "关闭麦克风",
+    "マイクを無効にする"
+  ],
+  "Créé le {0}": [
+    "Created on {0}",
+    "Creado el {0}",
+    "Creato il {0}",
+    "Erstellt am {0}",
+    "创建于 {0}",
+    "作成日：{0}"
+  ],
+  "Créer le compagnon": [
+    "Create companion",
+    "Crear compañero",
+    "Crea compagno",
+    "Begleiter erstellen",
+    "创建伙伴",
+    "コンパニオンを作成"
+  ],
+  "demande explicite": [
+    "explicit request",
+    "solicitud explícita",
+    "richiesta esplicita",
+    "ausdrückliche Bitte",
+    "明确请求",
+    "明示的な依頼"
+  ],
+  "Demande vocale annulée.": [
+    "Voice request cancelled.",
+    "Solicitud de voz cancelada.",
+    "Richiesta vocale annullata.",
+    "Sprachanfrage abgebrochen.",
+    "语音请求已取消。",
+    "音声リクエストをキャンセルしました。"
+  ],
+  "Démarrage de VoiceStudio annulé.": [
+    "VoiceStudio startup cancelled.",
+    "Inicio de VoiceStudio cancelado.",
+    "Avvio di VoiceStudio annullato.",
+    "Start von VoiceStudio abgebrochen.",
+    "已取消启动 VoiceStudio。",
+    "VoiceStudio の起動をキャンセルしました。"
+  ],
+  "Démarrage de VoiceStudio…": [
+    "Starting VoiceStudio…",
+    "Iniciando VoiceStudio…",
+    "Avvio di VoiceStudio…",
+    "VoiceStudio wird gestartet…",
+    "正在启动 VoiceStudio…",
+    "VoiceStudio を起動中…"
+  ],
+  "Démarrage indisponible.": [
+    "Startup unavailable.",
+    "Inicio no disponible.",
+    "Avvio non disponibile.",
+    "Start nicht verfügbar.",
+    "无法启动。",
+    "起動できません。"
+  ],
+  "Des haut-parleurs · réduction d’écho": [
+    "Speakers · echo reduction",
+    "Altavoces · reducción de eco",
+    "Altoparlanti · riduzione eco",
+    "Lautsprecher · Echoreduzierung",
+    "扬声器 · 回声抑制",
+    "スピーカー · エコー低減"
+  ],
+  "Désactivée": [
+    "Off",
+    "Desactivada",
+    "Disattivata",
+    "Deaktiviert",
+    "已禁用",
+    "無効"
+  ],
+  "Détail": [
+    "Detail",
+    "Detalle",
+    "Dettaglio",
+    "Detail",
+    "详细",
+    "詳細"
+  ],
+  "Détection de la parole": [
+    "Speech detection",
+    "Detección de voz",
+    "Rilevamento del parlato",
+    "Spracherkennung",
+    "语音活动检测",
+    "発話検出"
+  ],
+  "Dictée directe indisponible : transcription HTTP avec {0}.": [
+    "Live dictation unavailable: HTTP transcription with {0}.",
+    "Dictado en directo no disponible: transcripción HTTP con {0}.",
+    "Dettatura dal vivo non disponibile: trascrizione HTTP con {0}.",
+    "Live-Diktat nicht verfügbar: HTTP-Transkription mit {0}.",
+    "实时听写不可用：使用 {0} 进行 HTTP 转录。",
+    "リアルタイム音声認識は利用できません：{0} で HTTP 音声認識を使用します。"
+  ],
+  "Dis-lui « retiens que… », « corrige ce souvenir… » ou « oublie… ». Les autres faits repérés après quelques échanges sont proposés ici pour validation.": [
+    "Say “remember that…”, “correct this memory…” or “forget…”. Other facts found after a few exchanges appear here for approval.",
+    "Dile «recuerda que…», «corrige este recuerdo…» u «olvida…». Los demás hechos detectados tras varios intercambios se proponen aquí para tu aprobación.",
+    "Digli «ricorda che…», «correggi questo ricordo…» o «dimentica…». Gli altri fatti rilevati dopo alcuni scambi sono proposti qui per l'approvazione.",
+    "Sag „merke dir…“, „korrigiere diese Erinnerung…“ oder „vergiss…“. Weitere Fakten werden nach einigen Gesprächsrunden hier zur Freigabe vorgeschlagen.",
+    "可以说“记住…”、“更正这条记忆…”或“忘记…”。几轮对话后发现的其他事实将在这里等待确认。",
+    "「覚えて…」「この記憶を修正して…」「忘れて…」と伝えてください。数回の会話から見つかった他の情報は、ここで確認できます。"
+  ],
+  "DISCRET, COMME TU L’AIMES": [
+    "QUIET, JUST HOW YOU LIKE IT",
+    "DISCRETO, A TU GUSTO",
+    "DISCRETO, COME PIACE A TE",
+    "DEZENT, WIE DU ES MAGST",
+    "安静陪伴，如你所愿",
+    "さりげなく、あなたの好みに"
+  ],
+  "Données conservées sur ce PC": [
+    "Data stored on this PC",
+    "Datos guardados en este PC",
+    "Dati conservati su questo PC",
+    "Daten auf diesem PC gespeichert",
+    "数据保存在此电脑",
+    "データはこの PC に保存"
+  ],
+  "Écarter": [
+    "Dismiss",
+    "Descartar",
+    "Scarta",
+    "Verwerfen",
+    "忽略",
+    "却下"
+  ],
+  "Écoute continue": [
+    "Continuous listening",
+    "Escucha continua",
+    "Ascolto continuo",
+    "Dauerhaftes Zuhören",
+    "持续聆听",
+    "継続的に聞き取る"
+  ],
+  "Écris son nom pour confirmer": [
+    "Type its name to confirm",
+    "Escribe su nombre para confirmar",
+    "Scrivi il nome per confermare",
+    "Gib den Namen zur Bestätigung ein",
+    "输入名称以确认",
+    "名前を入力して確認"
+  ],
+  "Écris un message de 1 à 128 000 octets.": [
+    "Write a message of 1 to 128,000 bytes.",
+    "Escribe un mensaje de 1 a 128 000 bytes.",
+    "Scrivi un messaggio da 1 a 128.000 byte.",
+    "Schreibe eine Nachricht mit 1 bis 128.000 Bytes.",
+    "消息长度须为 1 至 128,000 字节。",
+    "メッセージは 1〜128,000 バイトにしてください。"
+  ],
+  "enregistré": [
+    "saved",
+    "guardado",
+    "salvato",
+    "gespeichert",
+    "已保存",
+    "保存済み"
+  ],
+  "Enregistré sur ce PC.": [
+    "Saved on this PC.",
+    "Guardado en este PC.",
+    "Salvato su questo PC.",
+    "Auf diesem PC gespeichert.",
+    "已保存在此电脑。",
+    "この PC に保存しました。"
+  ],
+  "Enregistrement…": [
+    "Saving…",
+    "Guardando…",
+    "Salvataggio…",
+    "Wird gespeichert…",
+    "正在保存…",
+    "保存中…"
+  ],
+  "Enregistrer": [
+    "Save",
+    "Guardar",
+    "Salva",
+    "Speichern",
+    "保存",
+    "保存"
+  ],
+  "Enregistrer ces choix": [
+    "Save these choices",
+    "Guardar estas opciones",
+    "Salva queste scelte",
+    "Auswahl speichern",
+    "保存这些选项",
+    "選択内容を保存"
+  ],
+  "Enregistrer l’audio": [
+    "Save audio",
+    "Guardar audio",
+    "Salva audio",
+    "Audio speichern",
+    "保存音频",
+    "音声設定を保存"
+  ],
+  "Enregistrer le souvenir": [
+    "Save memory",
+    "Guardar recuerdo",
+    "Salva ricordo",
+    "Erinnerung speichern",
+    "保存记忆",
+    "記憶を保存"
+  ],
+  "Envoyer {0}": [
+    "Send {0}",
+    "Enviar {0}",
+    "Invia {0}",
+    "Senden {0}",
+    "发送 {0}",
+    "送信 {0}"
+  ],
+  "Espace indépendant": [
+    "Independent space",
+    "Espacio independiente",
+    "Spazio indipendente",
+    "Eigener Bereich",
+    "独立空间",
+    "独立したスペース"
+  ],
+  "Essentiel": [
+    "Essential",
+    "Esencial",
+    "Essenziale",
+    "Wesentlich",
+    "重要",
+    "重要"
+  ],
+  "Essentiel · rappel régulier": [
+    "Essential · regular recall",
+    "Esencial · recordatorio habitual",
+    "Essenziale · richiamo regolare",
+    "Wesentlich · regelmäßige Erinnerung",
+    "重要 · 定期回顾",
+    "重要 · 定期的に思い出す"
+  ],
+  "état inconnu": [
+    "unknown state",
+    "estado desconocido",
+    "stato sconosciuto",
+    "unbekannter Zustand",
+    "状态未知",
+    "状態不明"
+  ],
+  "Événement de transcription illisible.": [
+    "Unreadable transcription event.",
+    "Evento de transcripción ilegible.",
+    "Evento di trascrizione illeggibile.",
+    "Unlesbares Transkriptionsereignis.",
+    "转录事件无法读取。",
+    "音声認識イベントを読み取れません。"
+  ],
+  "Événement SSE trop volumineux.": [
+    "SSE event too large.",
+    "Evento SSE demasiado grande.",
+    "Evento SSE troppo grande.",
+    "SSE-Ereignis zu groß.",
+    "SSE 事件过大。",
+    "SSE イベントが大きすぎます。"
+  ],
+  "Exporter le compagnon sans souvenirs": [
+    "Export companion without memories",
+    "Exportar compañero sin recuerdos",
+    "Esporta compagno senza ricordi",
+    "Begleiter ohne Erinnerungen exportieren",
+    "导出伙伴（不含记忆）",
+    "記憶を含めずにコンパニオンをエクスポート"
+  ],
+  "Exporter les souvenirs": [
+    "Export memories",
+    "Exportar recuerdos",
+    "Esporta ricordi",
+    "Erinnerungen exportieren",
+    "导出记忆",
+    "記憶をエクスポート"
+  ],
+  "Exporter les souvenirs et leurs sources": [
+    "Export memories and sources",
+    "Exportar recuerdos y fuentes",
+    "Esporta ricordi e fonti",
+    "Erinnerungen und Quellen exportieren",
+    "导出记忆及来源",
+    "記憶と出典をエクスポート"
+  ],
+  "Fais-lui signe.": [
+    "Say hello.",
+    "Salúdalo.",
+    "Fatti sentire.",
+    "Sag Hallo.",
+    "打个招呼。",
+    "声をかけてみよう。"
+  ],
+  "Fais-lui une place.": [
+    "Make room for a companion.",
+    "Hazle un sitio.",
+    "Fagli spazio.",
+    "Gib ihm einen Platz.",
+    "为伙伴留个位置。",
+    "コンパニオンを迎えよう。"
+  ],
+  "Fermer": [
+    "Close",
+    "Cerrar",
+    "Chiudi",
+    "Schließen",
+    "关闭",
+    "閉じる"
+  ],
+  "Fermeture · déchargement du modèle dans LM Studio…": [
+    "Closing · unloading the model from LM Studio…",
+    "Cerrando · descargando el modelo de LM Studio…",
+    "Chiusura · rilascio del modello da LM Studio…",
+    "Wird geschlossen · Modell in LM Studio wird entladen…",
+    "正在退出 · 正在从 LM Studio 卸载模型…",
+    "終了中 · LM Studio のモデルを解放中…"
+  ],
+  "Fichiers présents": [
+    "Files present",
+    "Archivos presentes",
+    "File presenti",
+    "Vorhandene Dateien",
+    "已有文件",
+    "保存済みのファイル"
+  ],
+  "Flux audio interrompu ou saturé. Vérifie les périphériques puis réactive le micro.": [
+    "Audio stream interrupted or overloaded. Check devices, then turn the mic back on.",
+    "Flujo de audio interrumpido o saturado. Comprueba los dispositivos y reactiva el micrófono.",
+    "Flusso audio interrotto o saturo. Controlla i dispositivi e riattiva il microfono.",
+    "Audiostream unterbrochen oder überlastet. Prüfe die Geräte und schalte das Mikrofon wieder ein.",
+    "音频流已中断或过载。请检查设备，再开启麦克风。",
+    "音声ストリームが切断または過負荷になりました。デバイスを確認してマイクを再度有効にしてください。"
+  ],
+  "Format de détection vocale invalide.": [
+    "Invalid speech detection format.",
+    "Formato de detección de voz no válido.",
+    "Formato di rilevamento vocale non valido.",
+    "Ungültiges Format für die Spracherkennung.",
+    "语音检测格式无效。",
+    "発話検出の形式が無効です。"
+  ],
+  "Format du microphone indisponible.": [
+    "Microphone format unavailable.",
+    "Formato del micrófono no disponible.",
+    "Formato del microfono non disponibile.",
+    "Mikrofonformat nicht verfügbar.",
+    "麦克风格式不可用。",
+    "マイクの形式が利用できません。"
+  ],
+  "Galerie des compagnons": [
+    "Companion gallery",
+    "Galería de compañeros",
+    "Galleria dei compagni",
+    "Begleitergalerie",
+    "伙伴库",
+    "コンパニオン一覧"
+  ],
+  "Garder ce compagnon": [
+    "Keep this companion",
+    "Conservar este compañero",
+    "Tieni questo compagno",
+    "Diesen Begleiter behalten",
+    "保留此伙伴",
+    "このコンパニオンを残す"
+  ],
+  "Garder ton compagnon visible au-dessus des autres fenêtres.": [
+    "Keep your companion visible above other windows.",
+    "Mantén tu compañero visible por encima de otras ventanas.",
+    "Mantieni il compagno visibile sopra le altre finestre.",
+    "Halte deinen Begleiter über anderen Fenstern sichtbar.",
+    "让伙伴始终显示在其他窗口上方。",
+    "コンパニオンを他のウィンドウより手前に表示します。"
+  ],
+  "GitHub ne répond pas. Tu peux réessayer plus tard.": [
+    "GitHub is not responding. Try again later.",
+    "GitHub no responde. Inténtalo más tarde.",
+    "GitHub non risponde. Riprova più tardi.",
+    "GitHub antwortet nicht. Versuche es später erneut.",
+    "GitHub 没有响应，请稍后重试。",
+    "GitHub が応答しません。後でもう一度お試しください。"
+  ],
+  "Historique de {0}": [
+    "{0}'s history",
+    "Historial de {0}",
+    "Cronologia di {0}",
+    "Verlauf von {0}",
+    "{0} 的历史",
+    "{0} の履歴"
+  ],
+  "IDENTITÉ DU COMPAGNON": [
+    "COMPANION IDENTITY",
+    "IDENTIDAD DEL COMPAÑERO",
+    "IDENTITÀ DEL COMPAGNO",
+    "IDENTITÄT DES BEGLEITERS",
+    "伙伴身份",
+    "コンパニオンの個性"
+  ],
+  "Il faut conserver au moins un compagnon.": [
+    "Keep at least one companion.",
+    "Debes conservar al menos un compañero.",
+    "Devi conservare almeno un compagno.",
+    "Mindestens ein Begleiter muss erhalten bleiben.",
+    "至少需要保留一个伙伴。",
+    "最低 1 つのコンパニオンを残してください。"
+  ],
+  "Importer": [
+    "Import",
+    "Importar",
+    "Importa",
+    "Importieren",
+    "导入",
+    "インポート"
+  ],
+  "Impossible d'accéder aux fichiers : {0}": [
+    "Cannot access files: {0}",
+    "No se puede acceder a los archivos: {0}",
+    "Impossibile accedere ai file: {0}",
+    "Kein Zugriff auf Dateien: {0}",
+    "无法访问文件：{0}",
+    "ファイルにアクセスできません：{0}"
+  ],
+  "Impossible d'identifier l'ancienne instance à décharger ; choisis son identifiant précis dans LM Studio.": [
+    "Cannot identify the previous instance to unload; select its exact identifier in LM Studio.",
+    "No se puede identificar la instancia anterior para descargarla; selecciona su identificador exacto en LM Studio.",
+    "Impossibile identificare l'istanza da scaricare; scegli il suo identificativo esatto in LM Studio.",
+    "Die bisherige Instanz kann nicht zum Entladen identifiziert werden. Wähle ihre genaue Kennung in LM Studio.",
+    "无法确定要卸载的旧实例；请在 LM Studio 中选择其准确标识。",
+    "解放する前のインスタンスを特定できません。LM Studio で正確な識別子を選んでください。"
+  ],
+  "Impossible de démarrer la sortie audio.": [
+    "Cannot start audio output.",
+    "No se puede iniciar la salida de audio.",
+    "Impossibile avviare l'uscita audio.",
+    "Audioausgabe kann nicht gestartet werden.",
+    "无法启动音频输出。",
+    "音声出力を開始できません。"
+  ],
+  "Impossible de démarrer le microphone.": [
+    "Cannot start microphone.",
+    "No se puede iniciar el micrófono.",
+    "Impossibile avviare il microfono.",
+    "Mikrofon kann nicht gestartet werden.",
+    "无法启动麦克风。",
+    "マイクを開始できません。"
+  ],
+  "Impossible de démarrer VoiceStudio.": [
+    "Cannot start VoiceStudio.",
+    "No se puede iniciar VoiceStudio.",
+    "Impossibile avviare VoiceStudio.",
+    "VoiceStudio kann nicht gestartet werden.",
+    "无法启动 VoiceStudio。",
+    "VoiceStudio を起動できません。"
+  ],
+  "Impossible de joindre VoiceStudio. Vérifie son adresse.": [
+    "Cannot reach VoiceStudio. Check its address.",
+    "No se puede conectar con VoiceStudio. Comprueba su dirección.",
+    "Impossibile raggiungere VoiceStudio. Controlla l'indirizzo.",
+    "VoiceStudio ist nicht erreichbar. Prüfe die Adresse.",
+    "无法连接 VoiceStudio。请检查地址。",
+    "VoiceStudio に接続できません。アドレスを確認してください。"
+  ],
+  "Impossible de lire les périphériques audio.": [
+    "Cannot read audio devices.",
+    "No se pueden leer los dispositivos de audio.",
+    "Impossibile leggere i dispositivi audio.",
+    "Audiogeräte können nicht gelesen werden.",
+    "无法读取音频设备。",
+    "音声デバイスを取得できません。"
+  ],
+  "Impossible de lister les microphones Windows.": [
+    "Cannot list Windows microphones.",
+    "No se pueden listar los micrófonos de Windows.",
+    "Impossibile elencare i microfoni Windows.",
+    "Windows-Mikrofone können nicht aufgelistet werden.",
+    "无法列出 Windows 麦克风。",
+    "Windows のマイク一覧を取得できません。"
+  ],
+  "Impossible de masquer la fenêtre : {0}": [
+    "Cannot hide window: {0}",
+    "No se puede ocultar la ventana: {0}",
+    "Impossibile nascondere la finestra: {0}",
+    "Fenster kann nicht ausgeblendet werden: {0}",
+    "无法隐藏窗口：{0}",
+    "ウィンドウを非表示にできません：{0}"
+  ],
+  "Impossible de restaurer la fenêtre : {0}": [
+    "Cannot restore window: {0}",
+    "No se puede restaurar la ventana: {0}",
+    "Impossibile ripristinare la finestra: {0}",
+    "Fenster kann nicht wiederhergestellt werden: {0}",
+    "无法恢复窗口：{0}",
+    "ウィンドウを復元できません：{0}"
+  ],
+  "Impossible de vérifier GitHub. Vérifie ta connexion et réessaie.": [
+    "Cannot check GitHub. Check your connection and try again.",
+    "No se puede consultar GitHub. Comprueba la conexión y reinténtalo.",
+    "Impossibile verificare GitHub. Controlla la connessione e riprova.",
+    "GitHub kann nicht geprüft werden. Prüfe deine Verbindung und versuche es erneut.",
+    "无法检查 GitHub。请检查网络连接后重试。",
+    "GitHub を確認できません。接続を確認して再試行してください。"
+  ],
+  "Impossible de vérifier les applications déjà ouvertes.": [
+    "Cannot check running applications.",
+    "No se pueden comprobar las aplicaciones abiertas.",
+    "Impossibile verificare le applicazioni aperte.",
+    "Laufende Anwendungen können nicht geprüft werden.",
+    "无法检查已运行的应用。",
+    "起動中のアプリを確認できません。"
+  ],
+  "Impossible de vérifier les capacités de VoiceStudio.": [
+    "Cannot check VoiceStudio capabilities.",
+    "No se pueden comprobar las capacidades de VoiceStudio.",
+    "Impossibile verificare le funzionalità di VoiceStudio.",
+    "VoiceStudio-Funktionen können nicht geprüft werden.",
+    "无法检查 VoiceStudio 的功能。",
+    "VoiceStudio の機能を確認できません。"
+  ],
+  "Indépendant": [
+    "Independent",
+    "Independiente",
+    "Indipendente",
+    "Unabhängig",
+    "独立",
+    "独立"
+  ],
+  "Indique l'adresse HTTP ou HTTPS du serveur, sans clé, mot de passe ni paramètres.": [
+    "Enter the server's HTTP or HTTPS address without keys, passwords or parameters.",
+    "Indica la dirección HTTP o HTTPS del servidor sin claves, contraseñas ni parámetros.",
+    "Inserisci l'indirizzo HTTP o HTTPS del server senza chiavi, password o parametri.",
+    "Gib die HTTP- oder HTTPS-Adresse ohne Schlüssel, Passwort oder Parameter ein.",
+    "请输入服务器的 HTTP 或 HTTPS 地址，不含密钥、密码或参数。",
+    "キー、パスワード、パラメーターを含めず、サーバーの HTTP または HTTPS アドレスを入力してください。"
+  ],
+  "Installation du modèle non confirmée": [
+    "Model installation unconfirmed",
+    "Instalación del modelo sin confirmar",
+    "Installazione del modello non confermata",
+    "Modellinstallation unbestätigt",
+    "模型安装尚未确认",
+    "モデルのインストール未確認"
+  ],
+  "Installée": [
+    "Installed",
+    "Instalada",
+    "Installata",
+    "Installiert",
+    "已安装",
+    "インストール済み"
+  ],
+  "Instructions complémentaires": [
+    "Additional instructions",
+    "Instrucciones adicionales",
+    "Istruzioni aggiuntive",
+    "Zusätzliche Anweisungen",
+    "补充指令",
+    "追加の指示"
+  ],
+  "Iris": [
+    "Iris",
+    "Iris",
+    "Iris",
+    "Iris",
+    "鸢尾色",
+    "アイリス"
+  ],
+  "Je prépare ma réponse…": [
+    "Preparing my response…",
+    "Preparo mi respuesta…",
+    "Preparo la risposta…",
+    "Ich bereite meine Antwort vor…",
+    "正在准备回复…",
+    "応答を準備中…"
+  ],
+  "Je t’écoute…": [
+    "Listening…",
+    "Te escucho…",
+    "Ti ascolto…",
+    "Ich höre zu…",
+    "正在聆听…",
+    "聞いています…"
+  ],
+  "Je te réponds…": [
+    "Responding…",
+    "Te respondo…",
+    "Ti rispondo…",
+    "Ich antworte…",
+    "正在回复…",
+    "応答中…"
+  ],
+  "Je transcris ta phrase…": [
+    "Transcribing your words…",
+    "Transcribo tu frase…",
+    "Trascrivo la tua frase…",
+    "Ich transkribiere deine Worte…",
+    "正在转录你的话…",
+    "発言を文字にしています…"
+  ],
+  "L'authentification du serveur est activée ; les clés protégées ne sont pas encore prises en charge.": [
+    "Server authentication is enabled; protected keys are not supported yet.",
+    "La autenticación del servidor está activada; aún no se admiten claves protegidas.",
+    "L'autenticazione del server è attiva; le chiavi protette non sono ancora supportate.",
+    "Die Server-Authentifizierung ist aktiviert. Geschützte Schlüssel werden noch nicht unterstützt.",
+    "服务器已启用身份验证；暂不支持受保护的密钥。",
+    "サーバー認証が有効です。保護されたキーにはまだ対応していません。"
+  ],
+  "L'export n'a pas pu se terminer.": [
+    "Export could not finish.",
+    "No se pudo completar la exportación.",
+    "Impossibile completare l'esportazione.",
+    "Export konnte nicht abgeschlossen werden.",
+    "无法完成导出。",
+    "エクスポートを完了できませんでした。"
+  ],
+  "L'identifiant de modèle ou de voix est invalide.": [
+    "Invalid model or voice identifier.",
+    "Identificador de modelo o voz no válido.",
+    "Identificativo del modello o della voce non valido.",
+    "Ungültige Modell- oder Stimmkennung.",
+    "模型或声音标识无效。",
+    "モデルまたは声の識別子が無効です。"
+  ],
+  "L'identité de la base ne correspond pas à son dossier.": [
+    "Database identity does not match its folder.",
+    "La identidad de la base no coincide con su carpeta.",
+    "L'identità del database non corrisponde alla cartella.",
+    "Die Datenbankkennung stimmt nicht mit dem Ordner überein.",
+    "数据库标识与文件夹不匹配。",
+    "データベースの識別子がフォルダーと一致しません。"
+  ],
+  "L'image dépasse la limite de 10 Mio.": [
+    "Image exceeds the 10 MiB limit.",
+    "La imagen supera el límite de 10 MiB.",
+    "L'immagine supera il limite di 10 MiB.",
+    "Das Bild überschreitet die Grenze von 10 MiB.",
+    "图片超过 10 MiB 的限制。",
+    "画像が 10 MiB の上限を超えています。"
+  ],
+  "L'image du profil est invalide.": [
+    "Invalid profile image.",
+    "Imagen de perfil no válida.",
+    "Immagine del profilo non valida.",
+    "Ungültiges Profilbild.",
+    "档案图片无效。",
+    "プロフィール画像が無効です。"
+  ],
+  "L'image est invalide.": [
+    "Invalid image.",
+    "Imagen no válida.",
+    "Immagine non valida.",
+    "Ungültiges Bild.",
+    "图片无效。",
+    "画像が無効です。"
+  ],
+  "L'image PNG ou WebP n'est pas lisible : {0}": [
+    "Cannot read PNG or WebP image: {0}",
+    "No se puede leer la imagen PNG o WebP: {0}",
+    "Impossibile leggere l'immagine PNG o WebP: {0}",
+    "PNG- oder WebP-Bild kann nicht gelesen werden: {0}",
+    "无法读取 PNG 或 WebP 图片：{0}",
+    "PNG または WebP 画像を読み取れません：{0}"
+  ],
+  "L’installation n’a pas démarré : {0}": [
+    "Installation did not start: {0}",
+    "La instalación no se inició: {0}",
+    "L'installazione non è iniziata: {0}",
+    "Installation wurde nicht gestartet: {0}",
+    "安装未启动：{0}",
+    "インストールが開始されませんでした：{0}"
+  ],
+  "L'ouverture du périphérique audio a expiré.": [
+    "Audio device opening timed out.",
+    "Se agotó el tiempo al abrir el dispositivo de audio.",
+    "Apertura del dispositivo audio scaduta.",
+    "Zeitüberschreitung beim Öffnen des Audiogeräts.",
+    "打开音频设备超时。",
+    "音声デバイスの起動がタイムアウトしました。"
+  ],
+  "L'utilisateur a dit : {0}": [
+    "The user said: {0}",
+    "El usuario dijo: {0}",
+    "L'utente ha detto: {0}",
+    "Der Benutzer sagte: {0}",
+    "用户说：{0}",
+    "ユーザーの発言：{0}"
+  ],
+  "La base a été créée par une version plus récente de Sherka.": [
+    "Database created by a newer Sherka version.",
+    "La base fue creada por una versión más reciente de Sherka.",
+    "Il database è stato creato da una versione più recente di Sherka.",
+    "Diese Datenbank wurde von einer neueren Sherka-Version erstellt.",
+    "数据库由更新版本的 Sherka 创建。",
+    "データベースは新しいバージョンの Sherka で作成されています。"
+  ],
+  "La commande de session a échoué.": [
+    "Session command failed.",
+    "Falló el comando de sesión.",
+    "Comando di sessione non riuscito.",
+    "Sitzungsbefehl fehlgeschlagen.",
+    "会话命令失败。",
+    "セッションの操作に失敗しました。"
+  ],
+  "La connexion vocale a changé. Réessaie avec le compagnon actif.": [
+    "Voice connection changed. Retry with the active companion.",
+    "La conexión de voz cambió. Reinténtalo con el compañero activo.",
+    "La connessione vocale è cambiata. Riprova con il compagno attivo.",
+    "Die Sprachverbindung wurde geändert. Versuche es mit dem aktiven Begleiter erneut.",
+    "语音连接已更改。请使用当前伙伴重试。",
+    "音声接続が変更されました。現在のコンパニオンで再試行してください。"
+  ],
+  "La demande de mémoire dépasse le budget du modèle. Utilise une demande plus courte ou le panneau Mémoire.": [
+    "Memory request exceeds the model's budget. Use a shorter request or the Memory panel.",
+    "La solicitud de memoria supera el presupuesto del modelo. Usa una solicitud más corta o el panel Memoria.",
+    "La richiesta di memoria supera il budget del modello. Usa una richiesta più breve o il pannello Memoria.",
+    "Die Speicheranfrage überschreitet das Modellbudget. Kürze sie oder nutze den Gedächtnisbereich.",
+    "记忆请求超出模型预算。请缩短请求，或使用记忆面板。",
+    "記憶への依頼がモデルの予算を超えています。短くするか、記憶パネルを使用してください。"
+  ],
+  "La détection de parole locale a échoué. Réactive le micro.": [
+    "Local speech detection failed. Turn the mic back on.",
+    "Falló la detección de voz local. Reactiva el micrófono.",
+    "Rilevamento vocale locale non riuscito. Riattiva il microfono.",
+    "Lokale Spracherkennung fehlgeschlagen. Schalte das Mikrofon wieder ein.",
+    "本地语音检测失败。请重新开启麦克风。",
+    "ローカルの発話検出に失敗しました。マイクを再度有効にしてください。"
+  ],
+  "La fermeture de Sherka a expiré. Aucun remplacement effectué.": [
+    "Sherka shutdown timed out. No replacement made.",
+    "Se agotó el tiempo para cerrar Sherka. No se sustituyó nada.",
+    "Chiusura di Sherka scaduta. Nessuna sostituzione eseguita.",
+    "Zeitüberschreitung beim Beenden von Sherka. Nichts wurde ersetzt.",
+    "Sherka 退出超时。未替换任何文件。",
+    "Sherka の終了がタイムアウトしました。ファイルは置き換えていません。"
+  ],
+  "La langue de l’interface ne change pas celle du compagnon. Choisis toi-même des modèles et des voix compatibles avec sa langue dans LM Studio et VoiceStudio.": [
+    "The interface language does not change the companion's language. Choose compatible models and voices yourself in LM Studio and VoiceStudio.",
+    "El idioma de la interfaz no cambia el del compañero. Elige tú los modelos y voces compatibles en LM Studio y VoiceStudio.",
+    "La lingua dell'interfaccia non cambia quella del compagno. Scegli tu modelli e voci compatibili in LM Studio e VoiceStudio.",
+    "Die Sprache der Oberfläche ändert nicht die Sprache des Begleiters. Wähle passende Modelle und Stimmen selbst in LM Studio und VoiceStudio.",
+    "界面语言不会改变伙伴的语言。请自行在 LM Studio 和 VoiceStudio 中选择兼容的模型和声音。",
+    "画面の言語を変えてもコンパニオンの言語は変わりません。LM Studio と VoiceStudio で対応するモデルと声を選んでください。"
+  ],
+  "La langue du compagnon est fixée à sa création. Crée un autre compagnon pour utiliser une autre langue.": [
+    "A companion's language is fixed at creation. Create another companion for a different language.",
+    "El idioma del compañero se fija al crearlo. Crea otro compañero para usar otro idioma.",
+    "La lingua del compagno è fissata alla creazione. Crea un altro compagno per usare un'altra lingua.",
+    "Die Sprache des Begleiters wird bei der Erstellung festgelegt. Erstelle für eine andere Sprache einen neuen Begleiter.",
+    "伙伴的语言在创建时固定。需要其他语言时，请创建新的伙伴。",
+    "コンパニオンの言語は作成時に固定されます。別の言語を使う場合は新しく作成してください。"
+  ],
+  "La langue est choisie à la création et reste fixe. Écris sa personnalité dans cette langue. Choisis ensuite un modèle et une voix compatibles dans les réglages.": [
+    "Language is chosen at creation and stays fixed. Write the personality in that language, then select compatible models and a voice in Settings.",
+    "El idioma se elige al crear y queda fijo. Escribe la personalidad en ese idioma y elige modelos y voz compatibles en Ajustes.",
+    "La lingua si sceglie alla creazione e resta fissa. Scrivi la personalità in quella lingua, poi scegli modelli e voce compatibili nelle Impostazioni.",
+    "Die Sprache wird bei der Erstellung festgelegt. Schreibe die Persönlichkeit in dieser Sprache und wähle passende Modelle und eine Stimme in den Einstellungen.",
+    "语言在创建时选择，此后固定。请用该语言编写个性，再在设置中选择兼容的模型和声音。",
+    "言語は作成時に選び、その後は固定されます。その言語で性格を記述し、設定で対応するモデルと声を選んでください。"
+  ],
+  "La langue, la vitesse ou le volume vocal est invalide.": [
+    "Invalid language, speech speed or volume.",
+    "Idioma, velocidad o volumen de voz no válido.",
+    "Lingua, velocità o volume della voce non validi.",
+    "Ungültige Sprache, Sprechgeschwindigkeit oder Lautstärke.",
+    "语言、语速或音量无效。",
+    "言語、話す速さ、または音量が無効です。"
+  ],
+  "La mise à jour n’a pas abouti. La version précédente a été conservée.\n{0}": [
+    "Update failed. The previous version was kept.\n{0}",
+    "La actualización falló. Se conservó la versión anterior.\n{0}",
+    "Aggiornamento non riuscito. È stata conservata la versione precedente.\n{0}",
+    "Update fehlgeschlagen. Die bisherige Version wurde beibehalten.\n{0}",
+    "更新失败。已保留旧版本。\n{0}",
+    "更新に失敗しました。以前のバージョンを保持しています。\n{0}"
+  ],
+  "La mise à jour n’a pas pu être téléchargée ou sa signature est invalide. Aucune installation effectuée.": [
+    "Update download failed or signature invalid. Nothing installed.",
+    "La descarga falló o la firma no es válida. No se instaló nada.",
+    "Download non riuscito o firma non valida. Nessuna installazione eseguita.",
+    "Download fehlgeschlagen oder Signatur ungültig. Nichts wurde installiert.",
+    "更新下载失败或签名无效。未进行安装。",
+    "更新のダウンロードに失敗したか、署名が無効です。インストールしていません。"
+  ],
+  "La personnalité et les instructions sont limitées à 12 000 caractères chacune.": [
+    "Personality and instructions are limited to 12,000 characters each.",
+    "La personalidad y las instrucciones tienen un límite de 12 000 caracteres cada una.",
+    "Personalità e istruzioni sono limitate a 12.000 caratteri ciascuna.",
+    "Persönlichkeit und Anweisungen sind auf jeweils 12.000 Zeichen begrenzt.",
+    "个性和指令各限 12,000 个字符。",
+    "性格と指示はそれぞれ 12,000 文字までです。"
+  ],
+  "La phrase audio dépasse 45 secondes.": [
+    "Audio utterance exceeds 45 seconds.",
+    "La frase de audio supera los 45 segundos.",
+    "La frase audio supera 45 secondi.",
+    "Die Audioäußerung überschreitet 45 Sekunden.",
+    "语音片段超过 45 秒。",
+    "音声の発話が 45 秒を超えています。"
+  ],
+  "La position du widget n'a pas été enregistrée.": [
+    "Widget position not saved.",
+    "No se guardó la posición del widget.",
+    "Posizione del widget non salvata.",
+    "Widget-Position wurde nicht gespeichert.",
+    "小组件位置未保存。",
+    "ウィジェットの位置を保存できませんでした。"
+  ],
+  "La première page reste à écrire.": [
+    "The first page is still unwritten.",
+    "La primera página está por escribir.",
+    "La prima pagina è ancora da scrivere.",
+    "Die erste Seite ist noch ungeschrieben.",
+    "第一页还等待书写。",
+    "最初のページはこれから。"
+  ],
+  "La préparation de la mise à jour a expiré. L’application reste ouverte.": [
+    "Update preparation timed out. The app remains open.",
+    "Se agotó el tiempo de preparación. La aplicación sigue abierta.",
+    "Preparazione dell'aggiornamento scaduta. L'app resta aperta.",
+    "Update-Vorbereitung hat zu lange gedauert. Die App bleibt geöffnet.",
+    "更新准备超时。应用仍保持打开。",
+    "更新の準備がタイムアウトしました。アプリは開いたままです。"
+  ],
+  "La présence de Sherka sur ton bureau.": [
+    "Sherka's presence on your desktop.",
+    "La presencia de Sherka en tu escritorio.",
+    "La presenza di Sherka sul tuo desktop.",
+    "Sherkas Präsenz auf deinem Desktop.",
+    "Sherka 在桌面上的陪伴。",
+    "デスクトップにいる Sherka。"
+  ],
+  "La proposition de mémoire est incomplète ; aucune modification n'a été faite.": [
+    "Memory proposal incomplete; no changes made.",
+    "Propuesta de memoria incompleta; no se hicieron cambios.",
+    "Proposta di memoria incompleta; nessuna modifica eseguita.",
+    "Erinnerungsvorschlag unvollständig; nichts wurde geändert.",
+    "记忆建议不完整；未进行更改。",
+    "記憶の提案が不完全です。変更はありません。"
+  ],
+  "La proposition de mémoire est trop longue.": [
+    "Memory proposal too long.",
+    "Propuesta de memoria demasiado larga.",
+    "Proposta di memoria troppo lunga.",
+    "Erinnerungsvorschlag zu lang.",
+    "记忆建议过长。",
+    "記憶の提案が長すぎます。"
+  ],
+  "La proposition de mémoire n'a pas le format attendu ; aucune modification n'a été faite.": [
+    "Memory proposal has an unexpected format; no changes made.",
+    "La propuesta de memoria tiene un formato inesperado; no se hicieron cambios.",
+    "Formato della proposta di memoria inatteso; nessuna modifica eseguita.",
+    "Unerwartetes Format des Erinnerungsvorschlags; nichts wurde geändert.",
+    "记忆建议格式不符合预期；未进行更改。",
+    "記憶の提案が想定した形式ではありません。変更はありません。"
+  ],
+  "La réponse a atteint la réserve de tokens. Tu peux demander la suite ou augmenter cette réserve dans les réglages.": [
+    "Response reached its token reserve. Ask for more or increase the reserve in Settings.",
+    "La respuesta alcanzó su reserva de tokens. Pide que continúe o aumenta la reserva en Ajustes.",
+    "La risposta ha raggiunto la riserva di token. Chiedi di continuare o aumenta la riserva nelle Impostazioni.",
+    "Die Antwort hat die Token-Reserve erreicht. Bitte um Fortsetzung oder erhöhe die Reserve in den Einstellungen.",
+    "回复已用完预留 token。可以要求继续，或在设置中增加预留量。",
+    "応答がトークンの予約枠に達しました。続きを頼むか、設定で予約枠を増やしてください。"
+  ],
+  "La réponse a été interrompue.": [
+    "Response interrupted.",
+    "Respuesta interrumpida.",
+    "Risposta interrotta.",
+    "Antwort unterbrochen.",
+    "回复已中断。",
+    "応答が中断されました。"
+  ],
+  "La réponse dépasse la limite de sécurité de Sherka.": [
+    "Response exceeds Sherka's safety limit.",
+    "La respuesta supera el límite de seguridad de Sherka.",
+    "La risposta supera il limite di sicurezza di Sherka.",
+    "Die Antwort überschreitet Sherkas Sicherheitsgrenze.",
+    "回复超过 Sherka 的安全上限。",
+    "応答が Sherka の安全上限を超えています。"
+  ],
+  "La sortie audio doit être redémarrée.": [
+    "Audio output needs restarting.",
+    "La salida de audio debe reiniciarse.",
+    "L'uscita audio deve essere riavviata.",
+    "Die Audioausgabe muss neu gestartet werden.",
+    "需要重启音频输出。",
+    "音声出力を再起動してください。"
+  ],
+  "La tâche locale n'a pas pu se terminer.": [
+    "Local task could not finish.",
+    "La tarea local no pudo terminar.",
+    "Impossibile completare l'attività locale.",
+    "Die lokale Aufgabe konnte nicht beendet werden.",
+    "本地任务未能完成。",
+    "ローカルの処理を完了できませんでした。"
+  ],
+  "La taille du widget doit être comprise entre 65 et 160 %.": [
+    "Widget size must be between 65 and 160%.",
+    "El tamaño del widget debe estar entre el 65 y el 160 %.",
+    "La dimensione del widget deve essere tra il 65 e il 160%.",
+    "Die Widget-Größe muss zwischen 65 und 160 % liegen.",
+    "小组件大小须为 65% 至 160%。",
+    "ウィジェットのサイズは 65〜160% にしてください。"
+  ],
+  "La taille enregistrée du widget est invalide.": [
+    "Invalid saved widget size.",
+    "Tamaño guardado del widget no válido.",
+    "Dimensione salvata del widget non valida.",
+    "Gespeicherte Widget-Größe ist ungültig.",
+    "已保存的小组件大小无效。",
+    "保存済みのウィジェットのサイズが無効です。"
+  ],
+  "La transcription VoiceStudio ne contient pas de texte.": [
+    "VoiceStudio transcription contains no text.",
+    "La transcripción de VoiceStudio no contiene texto.",
+    "La trascrizione VoiceStudio non contiene testo.",
+    "Die VoiceStudio-Transkription enthält keinen Text.",
+    "VoiceStudio 转录结果没有文本。",
+    "VoiceStudio の音声認識結果にテキストがありません。"
+  ],
+  "La version téléchargée ne correspond pas à la mise à jour annoncée.": [
+    "Downloaded version does not match the announced update.",
+    "La versión descargada no coincide con la actualización anunciada.",
+    "La versione scaricata non corrisponde all'aggiornamento annunciato.",
+    "Die heruntergeladene Version entspricht nicht dem angekündigten Update.",
+    "下载的版本与公布的更新不一致。",
+    "ダウンロードしたバージョンが告知された更新と一致しません。"
+  ],
+  "La voix de {0}": [
+    "{0}'s voice",
+    "La voz de {0}",
+    "La voce di {0}",
+    "Die Stimme von {0}",
+    "{0} 的声音",
+    "{0} の声"
+  ],
+  "La voix enregistrée est absente du catalogue : choisis-en une disponible.": [
+    "Saved voice missing from catalog: choose an available voice.",
+    "La voz guardada no está en el catálogo: elige una disponible.",
+    "La voce salvata manca dal catalogo: scegline una disponibile.",
+    "Die gespeicherte Stimme fehlt im Katalog. Wähle eine verfügbare Stimme.",
+    "已保存的声音不在列表中，请选择可用声音。",
+    "保存済みの声が一覧にありません。利用可能な声を選んでください。"
+  ],
+  "La zone de notification doit être disponible pour reprendre le contrôle.": [
+    "The notification area must be available to regain control.",
+    "El área de notificación debe estar disponible para recuperar el control.",
+    "L'area di notifica deve essere disponibile per riprendere il controllo.",
+    "Der Infobereich muss verfügbar sein, um die Steuerung wiederherzustellen.",
+    "必须能使用通知区域才能恢复控制。",
+    "操作を再開するには通知領域が利用可能である必要があります。"
+  ],
+  "Laisser passer les clics": [
+    "Pass clicks through",
+    "Dejar pasar los clics",
+    "Lascia passare i clic",
+    "Klicks durchlassen",
+    "穿透点击",
+    "クリックを透過"
+  ],
+  "Langue de l’interface": [
+    "Interface language",
+    "Idioma de la interfaz",
+    "Lingua dell'interfaccia",
+    "Sprache der Oberfläche",
+    "界面语言",
+    "画面の言語"
+  ],
+  "Langue de l’interface enregistrée.": [
+    "Interface language saved.",
+    "Idioma de la interfaz guardado.",
+    "Lingua dell'interfaccia salvata.",
+    "Sprache der Oberfläche gespeichert.",
+    "已保存界面语言。",
+    "画面の言語を保存しました。"
+  ],
+  "Langue du compagnon": [
+    "Companion language",
+    "Idioma del compañero",
+    "Lingua del compagno",
+    "Sprache des Begleiters",
+    "伙伴语言",
+    "コンパニオンの言語"
+  ],
+  "Langues, modèles et voix": [
+    "Languages, models and voices",
+    "Idiomas, modelos y voces",
+    "Lingue, modelli e voci",
+    "Sprachen, Modelle und Stimmen",
+    "语言、模型与声音",
+    "言語、モデル、声"
+  ],
+  "Le caractère guide ses réponses sans être récité. Il reste propre à ce compagnon, quel que soit son modèle.": [
+    "Personality guides replies without being recited. It belongs to this companion regardless of the model.",
+    "La personalidad guía sus respuestas sin recitarse. Pertenece a este compañero sea cual sea su modelo.",
+    "La personalità guida le risposte senza essere recitata. Resta propria del compagno, qualunque sia il modello.",
+    "Die Persönlichkeit prägt die Antworten, ohne aufgesagt zu werden. Sie gehört zum Begleiter, unabhängig vom Modell.",
+    "个性引导回复，无需反复自我介绍。无论使用哪个模型，它始终属于此伙伴。",
+    "性格は自己紹介として繰り返さず、応答に反映されます。モデルに関係なく、このコンパニオン固有のものです。"
+  ],
+  "Le catalogue reçu dépasse la limite de 2 Mio.": [
+    "Received catalog exceeds 2 MiB.",
+    "El catálogo recibido supera los 2 MiB.",
+    "Il catalogo ricevuto supera 2 MiB.",
+    "Der empfangene Katalog überschreitet 2 MiB.",
+    "收到的列表超过 2 MiB。",
+    "受信した一覧が 2 MiB を超えています。"
+  ],
+  "Le chargement du modèle a échoué.": [
+    "Model loading failed.",
+    "Falló la carga del modelo.",
+    "Caricamento del modello non riuscito.",
+    "Laden des Modells fehlgeschlagen.",
+    "模型加载失败。",
+    "モデルの読み込みに失敗しました。"
+  ],
+  "Le chemin choisi est invalide.": [
+    "Selected path is invalid.",
+    "La ruta elegida no es válida.",
+    "Il percorso scelto non è valido.",
+    "Der ausgewählte Pfad ist ungültig.",
+    "所选路径无效。",
+    "選択したパスが無効です。"
+  ],
+  "Le choix est propre à ce compagnon. Les réglages globaux de VoiceStudio restent libres.": [
+    "This choice belongs to this companion. VoiceStudio's global settings remain independent.",
+    "La selección es propia de este compañero. Los ajustes globales de VoiceStudio quedan independientes.",
+    "La scelta è propria del compagno. Le impostazioni globali di VoiceStudio restano indipendenti.",
+    "Diese Auswahl gilt für diesen Begleiter. Die globalen VoiceStudio-Einstellungen bleiben unabhängig.",
+    "此选项属于该伙伴。VoiceStudio 的全局设置仍可独立调整。",
+    "この選択はコンパニオン固有です。VoiceStudio の全体設定は独立しています。"
+  ],
+  "Le contexte réel sera vérifié avant chaque réponse.": [
+    "Actual context checked before each response.",
+    "El contexto real se comprobará antes de cada respuesta.",
+    "Il contesto reale viene verificato prima di ogni risposta.",
+    "Der tatsächliche Kontext wird vor jeder Antwort geprüft.",
+    "每次回复前都会检查实际上下文。",
+    "各応答の前に実際のコンテキストを確認します。"
+  ],
+  "Le déchargement doit être tenté avant de quitter.": [
+    "Try unloading before quitting.",
+    "Hay que intentar descargar el modelo antes de salir.",
+    "Devi tentare il rilascio del modello prima di uscire.",
+    "Vor dem Beenden muss das Entladen versucht werden.",
+    "退出前需先尝试卸载模型。",
+    "終了する前にモデルの解放を試してください。"
+  ],
+  "Le fichier est encore verrouillé ou protégé. Réessaie depuis GitHub.": [
+    "File still locked or protected. Retry from GitHub.",
+    "El archivo sigue bloqueado o protegido. Reinténtalo desde GitHub.",
+    "Il file è ancora bloccato o protetto. Riprova da GitHub.",
+    "Die Datei ist noch gesperrt oder geschützt. Versuche es über GitHub erneut.",
+    "文件仍被锁定或受保护。请从 GitHub 重试。",
+    "ファイルがロックまたは保護されています。GitHub から再試行してください。"
+  ],
+  "Le flux LM Studio contient un événement illisible.": [
+    "LM Studio stream contains an unreadable event.",
+    "El flujo de LM Studio contiene un evento ilegible.",
+    "Il flusso LM Studio contiene un evento illeggibile.",
+    "Der LM-Studio-Stream enthält ein unlesbares Ereignis.",
+    "LM Studio 流中包含无法读取的事件。",
+    "LM Studio のストリームに読み取れないイベントがあります。"
+  ],
+  "Le format de configuration n'est pas valide : {0}": [
+    "Invalid configuration format: {0}",
+    "Formato de configuración no válido: {0}",
+    "Formato di configurazione non valido: {0}",
+    "Ungültiges Konfigurationsformat: {0}",
+    "配置格式无效：{0}",
+    "設定の形式が無効です：{0}"
+  ],
+  "Le format ou la version de ce profil n'est pas pris en charge.": [
+    "This profile format or version is not supported.",
+    "El formato o la versión del perfil no es compatible.",
+    "Il formato o la versione del profilo non è supportato.",
+    "Dieses Profilformat oder diese Version wird nicht unterstützt.",
+    "不支持此档案格式或版本。",
+    "このプロフィールの形式またはバージョンに対応していません。"
+  ],
+  "Le message est vide ou trop long.": [
+    "Message empty or too long.",
+    "El mensaje está vacío o es demasiado largo.",
+    "Messaggio vuoto o troppo lungo.",
+    "Nachricht ist leer oder zu lang.",
+    "消息为空或过长。",
+    "メッセージが空か長すぎます。"
+  ],
+  "Le micro reste coupé au lancement. Une fois activé, il continue à t’écouter pendant les réponses.": [
+    "The mic starts off. Once enabled, it keeps listening during responses.",
+    "El micrófono está apagado al iniciar. Una vez activado, sigue escuchando durante las respuestas.",
+    "Il microfono è spento all'avvio. Una volta attivo, continua ad ascoltare durante le risposte.",
+    "Das Mikrofon ist beim Start ausgeschaltet. Nach dem Einschalten hört es während der Antworten weiter zu.",
+    "启动时麦克风默认关闭。开启后，回复期间仍会持续聆听。",
+    "起動時はマイクが無効です。有効にすると、応答中も聞き取りを続けます。"
+  ],
+  "Le micro s’active seulement quand tu le demandes.": [
+    "The mic activates only when you ask.",
+    "El micrófono solo se activa cuando tú lo pides.",
+    "Il microfono si attiva solo quando lo chiedi.",
+    "Das Mikrofon wird nur auf deinen Wunsch eingeschaltet.",
+    "麦克风仅在你主动开启时启用。",
+    "マイクは操作したときだけ有効になります。"
+  ],
+  "Le microphone est coupé.": [
+    "Microphone is off.",
+    "El micrófono está apagado.",
+    "Il microfono è spento.",
+    "Das Mikrofon ist ausgeschaltet.",
+    "麦克风已关闭。",
+    "マイクは無効です。"
+  ],
+  "Le modèle a épuisé sa réserve de réponse pendant la réflexion. Réduis la pensée ou augmente les tokens réservés à la réponse dans Réglages.": [
+    "The model used its response reserve on reasoning. Reduce reasoning or increase the response tokens in Settings.",
+    "El modelo agotó la reserva de respuesta razonando. Reduce el razonamiento o aumenta los tokens de respuesta en Ajustes.",
+    "Il modello ha esaurito la riserva di risposta nel ragionamento. Riduci il ragionamento o aumenta i token della risposta nelle Impostazioni.",
+    "Das Modell hat die Antwortreserve beim Denken verbraucht. Reduziere Denkprozesse oder erhöhe die Antwort-Tokens in den Einstellungen.",
+    "模型在推理阶段用完了回复预留量。请降低推理强度，或在设置中增加回复 token。",
+    "モデルが思考で応答予約枠を使い切りました。思考を減らすか、設定で応答トークンを増やしてください。"
+  ],
+  "Le modèle choisi n'est plus disponible dans LM Studio. Vérifie ce profil.": [
+    "Selected model is no longer available in LM Studio. Check this profile.",
+    "El modelo elegido ya no está disponible en LM Studio. Revisa este perfil.",
+    "Il modello scelto non è più disponibile in LM Studio. Controlla il profilo.",
+    "Das gewählte Modell ist in LM Studio nicht mehr verfügbar. Prüfe dieses Profil.",
+    "所选模型已不在 LM Studio 中。请检查此档案。",
+    "選択したモデルが LM Studio にありません。プロフィールを確認してください。"
+  ],
+  "Le modèle n’a pas pu être déchargé": [
+    "Model could not be unloaded",
+    "No se pudo descargar el modelo",
+    "Impossibile rilasciare il modello",
+    "Modell konnte nicht entladen werden",
+    "无法卸载模型",
+    "モデルを解放できませんでした"
+  ],
+  "Le moteur audio n'a pas démarré.": [
+    "Audio engine did not start.",
+    "El motor de audio no se inició.",
+    "Il motore audio non si è avviato.",
+    "Audio-Engine wurde nicht gestartet.",
+    "音频引擎未启动。",
+    "音声エンジンが起動していません。"
+  ],
+  "Le moteur de Sherka doit être redémarré.": [
+    "Sherka's engine needs restarting.",
+    "El motor de Sherka debe reiniciarse.",
+    "Il motore di Sherka deve essere riavviato.",
+    "Sherkas Engine muss neu gestartet werden.",
+    "需要重启 Sherka 引擎。",
+    "Sherka のエンジンを再起動してください。"
+  ],
+  "Le moteur STT choisi n'est plus actif dans VoiceStudio. Actualise les réglages.": [
+    "Selected STT engine is no longer active in VoiceStudio. Refresh Settings.",
+    "El motor STT elegido ya no está activo en VoiceStudio. Actualiza los ajustes.",
+    "Il motore STT scelto non è più attivo in VoiceStudio. Aggiorna le impostazioni.",
+    "Die gewählte STT-Engine ist in VoiceStudio nicht mehr aktiv. Aktualisiere die Einstellungen.",
+    "所选 STT 引擎已不在 VoiceStudio 中启用。请刷新设置。",
+    "選択した STT エンジンが VoiceStudio で有効ではありません。設定を更新してください。"
+  ],
+  "Le périphérique Windows par défaut a changé. Réactive le micro pour utiliser le nouveau périphérique.": [
+    "Default Windows device changed. Turn the mic back on to use the new device.",
+    "El dispositivo predeterminado de Windows cambió. Reactiva el micrófono para usar el nuevo.",
+    "Il dispositivo predefinito Windows è cambiato. Riattiva il microfono per usare il nuovo.",
+    "Das Windows-Standardgerät wurde geändert. Schalte das Mikrofon erneut ein, um das neue Gerät zu nutzen.",
+    "Windows 默认设备已更改。重新开启麦克风以使用新设备。",
+    "Windows の既定デバイスが変わりました。マイクを再度有効にして新しいデバイスを使用してください。"
+  ],
+  "Le plafond de contexte ou la réserve de réponse est invalide.": [
+    "Invalid context limit or response reserve.",
+    "Límite de contexto o reserva de respuesta no válido.",
+    "Limite di contesto o riserva della risposta non validi.",
+    "Ungültige Kontextgrenze oder Antwortreserve.",
+    "上下文上限或回复预留量无效。",
+    "コンテキスト上限または応答予約枠が無効です。"
+  ],
+  "Le plafond Sherka ne modifie pas le chargement dans LM Studio. Le budget utilise une estimation prudente et une marge de sécurité ; les anciens échanges sont écartés si nécessaire, sans couper ton nouveau message.": [
+    "Sherka's limit does not change what LM Studio loads. The budget uses a conservative estimate and safety margin; older turns are excluded if needed without cutting your new message.",
+    "El límite de Sherka no cambia la carga en LM Studio. El presupuesto usa una estimación prudente y margen de seguridad; excluye turnos antiguos si hace falta sin recortar tu mensaje nuevo.",
+    "Il limite Sherka non cambia il caricamento in LM Studio. Il budget usa una stima prudente e un margine di sicurezza; esclude scambi vecchi se necessario senza tagliare il nuovo messaggio.",
+    "Sherkas Grenze ändert nicht den in LM Studio geladenen Kontext. Das Budget nutzt eine vorsichtige Schätzung und einen Puffer; ältere Runden werden bei Bedarf ausgelassen, ohne deine neue Nachricht zu kürzen.",
+    "Sherka 的上限不会改变 LM Studio 的加载配置。预算采用保守估计和安全余量，必要时排除旧对话，不会截断新消息。",
+    "Sherka の上限は LM Studio の読み込み設定を変えません。安全側の推定と余裕を使い、必要なら古い会話を除外します。新しいメッセージは切りません。"
+  ],
+  "Le processus d’origine ne correspond pas à l’exécutable.": [
+    "Original process does not match the executable.",
+    "El proceso original no coincide con el ejecutable.",
+    "Il processo originale non corrisponde all'eseguibile.",
+    "Der ursprüngliche Prozess passt nicht zur ausführbaren Datei.",
+    "原进程与可执行文件不匹配。",
+    "元のプロセスが実行ファイルと一致しません。"
+  ],
+  "Le processus d’origine ne peut pas être vérifié.": [
+    "Original process cannot be verified.",
+    "No se puede verificar el proceso original.",
+    "Impossibile verificare il processo originale.",
+    "Der ursprüngliche Prozess kann nicht geprüft werden.",
+    "无法验证原进程。",
+    "元のプロセスを確認できません。"
+  ],
+  "Le redémarrage a échoué : {0}": [
+    "Restart failed: {0}",
+    "El reinicio falló: {0}",
+    "Riavvio non riuscito: {0}",
+    "Neustart fehlgeschlagen: {0}",
+    "重启失败：{0}",
+    "再起動に失敗しました：{0}"
+  ],
+  "Le réglage de pensée est invalide.": [
+    "Invalid reasoning setting.",
+    "Ajuste de razonamiento no válido.",
+    "Impostazione di ragionamento non valida.",
+    "Ungültige Denkeinstellung.",
+    "推理设置无效。",
+    "思考の設定が無効です。"
+  ],
+  "Le remplacement n’a pas pu être préparé. L’application reste ouverte.": [
+    "Replacement could not be prepared. The app remains open.",
+    "No se pudo preparar la sustitución. La aplicación sigue abierta.",
+    "Impossibile preparare la sostituzione. L'app resta aperta.",
+    "Ersetzen konnte nicht vorbereitet werden. Die App bleibt geöffnet.",
+    "无法准备替换文件。应用仍保持打开。",
+    "置き換えを準備できませんでした。アプリは開いたままです。"
+  ],
+  "Le serveur a mis trop de temps à répondre. Tu peux réessayer.": [
+    "Server response timed out. Try again.",
+    "El servidor tardó demasiado en responder. Reinténtalo.",
+    "Il server ha impiegato troppo a rispondere. Riprova.",
+    "Die Serverantwort hat zu lange gedauert. Versuche es erneut.",
+    "服务器响应超时。请重试。",
+    "サーバーの応答がタイムアウトしました。再試行してください。"
+  ],
+  "Le serveur a renvoyé HTTP {0} sur {1}.": [
+    "Server returned HTTP {0} on {1}.",
+    "El servidor devolvió HTTP {0} en {1}.",
+    "Il server ha restituito HTTP {0} su {1}.",
+    "Der Server meldet HTTP {0} unter {1}.",
+    "服务器在 {1} 返回 HTTP {0}。",
+    "サーバーが {1} で HTTP {0} を返しました。"
+  ],
+  "Le serveur a renvoyé un catalogue incompatible sur {0}.": [
+    "Server returned an incompatible catalog on {0}.",
+    "El servidor devolvió un catálogo incompatible en {0}.",
+    "Il server ha restituito un catalogo incompatibile su {0}.",
+    "Der Server liefert unter {0} einen inkompatiblen Katalog.",
+    "服务器在 {0} 返回不兼容的列表。",
+    "サーバーが {0} で互換性のない一覧を返しました。"
+  ],
+  "Le serveur de test doit être local.": [
+    "Test server must be local.",
+    "El servidor de prueba debe ser local.",
+    "Il server di test deve essere locale.",
+    "Der Testserver muss lokal sein.",
+    "测试服务器必须在本地。",
+    "テストサーバーはローカルにしてください。"
+  ],
+  "Le serveur demande une authentification. Cette connexion locale ne gère pas encore les jetons d'accès.": [
+    "Server requires authentication. This local connection does not support access tokens yet.",
+    "El servidor requiere autenticación. Esta conexión local aún no admite tokens de acceso.",
+    "Il server richiede autenticazione. Questa connessione locale non supporta ancora i token di accesso.",
+    "Der Server verlangt Authentifizierung. Diese lokale Verbindung unterstützt noch keine Zugriffstokens.",
+    "服务器需要身份验证。此本地连接暂不支持访问令牌。",
+    "サーバーに認証が必要です。このローカル接続はアクセストークンにまだ対応していません。"
+  ],
+  "Le serveur est occupé. Attends la fin de son calcul avant de réessayer.": [
+    "Server is busy. Wait for its computation to finish before retrying.",
+    "El servidor está ocupado. Espera a que termine el cálculo antes de reintentar.",
+    "Il server è occupato. Attendi la fine del calcolo prima di riprovare.",
+    "Der Server ist beschäftigt. Warte vor dem nächsten Versuch, bis die Berechnung beendet ist.",
+    "服务器繁忙。请等待计算结束后重试。",
+    "サーバーが処理中です。計算が終わってから再試行してください。"
+  ],
+  "Le serveur ne répond pas. Vérifie qu'il est démarré et que son adresse est correcte.": [
+    "Server is not responding. Check that it is running and its address is correct.",
+    "El servidor no responde. Comprueba que esté iniciado y su dirección sea correcta.",
+    "Il server non risponde. Verifica che sia avviato e l'indirizzo sia corretto.",
+    "Der Server antwortet nicht. Prüfe, ob er läuft und die Adresse stimmt.",
+    "服务器没有响应。请确认已启动且地址正确。",
+    "サーバーが応答しません。起動状態とアドレスを確認してください。"
+  ],
+  "Le souvenir proposé n'est pas un extrait vérifiable.": [
+    "Proposed memory is not a verifiable excerpt.",
+    "El recuerdo propuesto no es un extracto verificable.",
+    "Il ricordo proposto non è un estratto verificabile.",
+    "Der Erinnerungsvorschlag ist kein überprüfbarer Auszug.",
+    "建议的记忆不是可验证的摘录。",
+    "提案された記憶が確認可能な引用ではありません。"
+  ],
+  "Le tampon de lecture audio est plein.": [
+    "Audio playback buffer is full.",
+    "El búfer de reproducción está lleno.",
+    "Il buffer di riproduzione audio è pieno.",
+    "Der Audiowiedergabepuffer ist voll.",
+    "音频播放缓冲区已满。",
+    "音声再生バッファーがいっぱいです。"
+  ],
+  "Le ton et l’attitude qu’il adoptera dans vos échanges.": [
+    "The tone and attitude used in your conversations.",
+    "El tono y la actitud de vuestras conversaciones.",
+    "Il tono e l'atteggiamento delle vostre conversazioni.",
+    "Ton und Haltung in euren Gesprächen.",
+    "对话中的语气与态度。",
+    "会話で使う口調と態度。"
+  ],
+  "Le traitement vocal n'arrive plus à suivre le microphone. Réactive-le pour reprendre.": [
+    "Voice processing cannot keep up with the mic. Turn it back on to resume.",
+    "El procesamiento de voz no sigue al micrófono. Reactívalo para continuar.",
+    "L'elaborazione vocale non tiene il passo del microfono. Riattivalo per riprendere.",
+    "Die Sprachverarbeitung kommt nicht mit dem Mikrofon mit. Schalte es erneut ein, um fortzufahren.",
+    "语音处理跟不上麦克风。重新开启即可继续。",
+    "音声処理がマイクに追いついていません。再度有効にして続けてください。"
+  ],
+  "Le widget": [
+    "The widget",
+    "El widget",
+    "Il widget",
+    "Das Widget",
+    "小组件",
+    "ウィジェット"
+  ],
+  "Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification Windows.": [
+    "The widget can pass clicks to windows behind it. To regain control, click Sherka's icon in the Windows notification area.",
+    "El widget puede dejar pasar clics a lo que tiene detrás. Para recuperar el control, haz clic en el icono de Sherka en el área de notificación de Windows.",
+    "Il widget può lasciare passare i clic alle finestre sottostanti. Per riprendere il controllo, clicca su Sherka nell'area di notifica Windows.",
+    "Das Widget kann Klicks an dahinterliegende Fenster durchlassen. Klicke zum Wiederherstellen der Steuerung auf Sherka im Windows-Infobereich.",
+    "小组件可将点击传递到后方窗口。要恢复控制，请点击 Windows 通知区域中的 Sherka 图标。",
+    "ウィジェットは背後のウィンドウへクリックを通せます。操作を戻すには Windows の通知領域の Sherka アイコンをクリックしてください。"
+  ],
+  "Lecture de sa voix…": [
+    "Playing its voice…",
+    "Reproduciendo su voz…",
+    "Riproduzione della voce…",
+    "Stimme wird abgespielt…",
+    "正在播放声音…",
+    "声を再生中…"
+  ],
+  "Lecture des périphériques Windows…": [
+    "Reading Windows devices…",
+    "Leyendo dispositivos de Windows…",
+    "Lettura dei dispositivi Windows…",
+    "Windows-Geräte werden gelesen…",
+    "正在读取 Windows 设备…",
+    "Windows のデバイスを取得中…"
+  ],
+  "Lecture des voix VoiceStudio…": [
+    "Reading VoiceStudio voices…",
+    "Leyendo voces de VoiceStudio…",
+    "Lettura delle voci VoiceStudio…",
+    "VoiceStudio-Stimmen werden gelesen…",
+    "正在读取 VoiceStudio 声音…",
+    "VoiceStudio の声を取得中…"
+  ],
+  "Lecture du catalogue…": [
+    "Reading catalog…",
+    "Leyendo catálogo…",
+    "Lettura del catalogo…",
+    "Katalog wird gelesen…",
+    "正在读取列表…",
+    "一覧を取得中…"
+  ],
+  "Les alias comme « alloy » ou « nova » désignent la voix par défaut du moteur ; ils ne constituent pas des voix supplémentaires.": [
+    "Aliases such as “alloy” or “nova” refer to the engine's default voice, not additional voices.",
+    "Los alias como «alloy» o «nova» se refieren a la voz predeterminada del motor, no a voces adicionales.",
+    "Alias come «alloy» o «nova» indicano la voce predefinita del motore, non voci aggiuntive.",
+    "Aliasse wie „alloy“ oder „nova“ bezeichnen die Standardstimme der Engine, keine zusätzlichen Stimmen.",
+    "“alloy”或“nova”等别名指向引擎默认声音，并不是额外的声音。",
+    "「alloy」「nova」などの別名はエンジンの既定の声を指し、追加の声ではありません。"
+  ],
+  "Les échanges de chaque compagnon restent dans son espace.": [
+    "Each companion's conversations stay in its own space.",
+    "Las conversaciones de cada compañero quedan en su espacio.",
+    "Le conversazioni di ogni compagno restano nel suo spazio.",
+    "Die Gespräche jedes Begleiters bleiben in seinem eigenen Bereich.",
+    "每个伙伴的对话都保存在自己的空间。",
+    "各コンパニオンの会話は、それぞれのスペースに保存されます。"
+  ],
+  "Les options de pensée apparaîtront après lecture du modèle.": [
+    "Reasoning options appear after reading the model.",
+    "Las opciones de razonamiento aparecerán tras leer el modelo.",
+    "Le opzioni di ragionamento appaiono dopo aver letto il modello.",
+    "Denkoptionen erscheinen nach dem Einlesen des Modells.",
+    "读取模型后将显示推理选项。",
+    "モデルを取得すると思考オプションが表示されます。"
+  ],
+  "Les périphériques audio Windows sont indisponibles.": [
+    "Windows audio devices unavailable.",
+    "Dispositivos de audio Windows no disponibles.",
+    "Dispositivi audio Windows non disponibili.",
+    "Windows-Audiogeräte nicht verfügbar.",
+    "Windows 音频设备不可用。",
+    "Windows の音声デバイスが利用できません。"
+  ],
+  "Les profils et les souvenirs sont conservés. La voix s’arrête avant le redémarrage.": [
+    "Profiles and memories are kept. Speech stops before restart.",
+    "Los perfiles y recuerdos se conservan. La voz se detiene antes del reinicio.",
+    "Profili e ricordi vengono conservati. La voce si interrompe prima del riavvio.",
+    "Profile und Erinnerungen bleiben erhalten. Die Sprachausgabe stoppt vor dem Neustart.",
+    "会保留档案和记忆。重启前停止语音。",
+    "プロフィールと記憶は保持されます。再起動前に音声が停止します。"
+  ],
+  "Les réglages du microphone sont invalides.": [
+    "Invalid microphone settings.",
+    "Ajustes del micrófono no válidos.",
+    "Impostazioni del microfono non valide.",
+    "Ungültige Mikrofoneinstellungen.",
+    "麦克风设置无效。",
+    "マイクの設定が無効です。"
+  ],
+  "Les repères se construiront après quelques échanges, pendant une pause.": [
+    "Conversation notes build up after a few exchanges, during a pause.",
+    "Las notas se crearán tras varios intercambios, durante una pausa.",
+    "Le note si costruiranno dopo alcuni scambi, durante una pausa.",
+    "Gesprächsnotizen entstehen nach einigen Runden während einer Pause.",
+    "几轮对话后，会在暂停时整理对话要点。",
+    "数回会話すると、休憩中に会話の要点が作られます。"
+  ],
+  "Les tiroirs": [
+    "Memory drawers",
+    "Cajones de recuerdos",
+    "Cassetti dei ricordi",
+    "Erinnerungsfächer",
+    "记忆抽屉",
+    "記憶の引き出し"
+  ],
+  "Lire la réponse à voix haute": [
+    "Read replies aloud",
+    "Leer respuestas en voz alta",
+    "Leggi le risposte ad alta voce",
+    "Antworten vorlesen",
+    "朗读回复",
+    "応答を読み上げる"
+  ],
+  "LM Studio": [
+    "LM Studio",
+    "LM Studio",
+    "LM Studio",
+    "LM Studio",
+    "LM Studio",
+    "LM Studio"
+  ],
+  "LM Studio (déchargement)": [
+    "LM Studio (unloading)",
+    "LM Studio (descarga del modelo)",
+    "LM Studio (rilascio)",
+    "LM Studio (Entladen)",
+    "LM Studio（卸载）",
+    "LM Studio（解放）"
+  ],
+  "LM Studio (mémoire)": [
+    "LM Studio (memory)",
+    "LM Studio (memoria)",
+    "LM Studio (memoria)",
+    "LM Studio (Gedächtnis)",
+    "LM Studio（记忆）",
+    "LM Studio（記憶）"
+  ],
+  "LM Studio a fermé la connexion avant la fin de sa réponse.": [
+    "LM Studio closed the connection before finishing its response.",
+    "LM Studio cerró la conexión antes de terminar la respuesta.",
+    "LM Studio ha chiuso la connessione prima di terminare la risposta.",
+    "LM Studio hat die Verbindung vor Ende der Antwort geschlossen.",
+    "LM Studio 在回复结束前关闭了连接。",
+    "LM Studio が応答の完了前に接続を閉じました。"
+  ],
+  "LM Studio a renvoyé une réponse vide.": [
+    "LM Studio returned an empty response.",
+    "LM Studio devolvió una respuesta vacía.",
+    "LM Studio ha restituito una risposta vuota.",
+    "LM Studio hat eine leere Antwort geliefert.",
+    "LM Studio 返回了空回复。",
+    "LM Studio が空の応答を返しました。"
+  ],
+  "LM Studio a signalé une erreur pendant la réponse. Vérifie ses journaux.": [
+    "LM Studio reported an error during the response. Check its logs.",
+    "LM Studio indicó un error durante la respuesta. Revisa sus registros.",
+    "LM Studio ha segnalato un errore nella risposta. Controlla i log.",
+    "LM Studio hat einen Fehler während der Antwort gemeldet. Prüfe die Protokolle.",
+    "LM Studio 在回复期间报告错误。请检查日志。",
+    "LM Studio が応答中にエラーを報告しました。ログを確認してください。"
+  ],
+  "LM Studio est indisponible.": [
+    "LM Studio unavailable.",
+    "LM Studio no disponible.",
+    "LM Studio non disponibile.",
+    "LM Studio nicht verfügbar.",
+    "LM Studio 不可用。",
+    "LM Studio が利用できません。"
+  ],
+  "LM Studio n'a pas confirmé le déchargement de l'ancien modèle. Le nouveau n'a pas été chargé.": [
+    "LM Studio did not confirm the previous model was unloaded. The new model was not loaded.",
+    "LM Studio no confirmó la descarga del modelo anterior. No se cargó el nuevo.",
+    "LM Studio non ha confermato il rilascio del modello precedente. Il nuovo non è stato caricato.",
+    "LM Studio hat das Entladen des bisherigen Modells nicht bestätigt. Das neue Modell wurde nicht geladen.",
+    "LM Studio 未确认旧模型已卸载。未加载新模型。",
+    "LM Studio が前のモデルの解放を確認できませんでした。新しいモデルは読み込んでいません。"
+  ],
+  "LM Studio n'a pas confirmé le modèle et son contexte chargé.": [
+    "LM Studio did not confirm the loaded model and context.",
+    "LM Studio no confirmó el modelo y su contexto cargado.",
+    "LM Studio non ha confermato modello e contesto caricati.",
+    "LM Studio hat Modell und geladenen Kontext nicht bestätigt.",
+    "LM Studio 未确认已加载的模型和上下文。",
+    "LM Studio が読み込み済みモデルとコンテキストを確認できませんでした。"
+  ],
+  "LM Studio n'a pas renvoyé un flux de conversation SSE.": [
+    "LM Studio did not return an SSE conversation stream.",
+    "LM Studio no devolvió un flujo SSE de conversación.",
+    "LM Studio non ha restituito un flusso SSE di conversazione.",
+    "LM Studio hat keinen SSE-Gesprächsstream geliefert.",
+    "LM Studio 未返回 SSE 对话流。",
+    "LM Studio が会話の SSE ストリームを返しませんでした。"
+  ],
+  "LM Studio ne fournit pas le contexte réellement chargé. Actualise LM Studio et recharge ce modèle.": [
+    "LM Studio does not report the loaded context. Update LM Studio and reload this model.",
+    "LM Studio no indica el contexto cargado. Actualiza LM Studio y recarga el modelo.",
+    "LM Studio non indica il contesto caricato. Aggiorna LM Studio e ricarica il modello.",
+    "LM Studio meldet den geladenen Kontext nicht. Aktualisiere LM Studio und lade das Modell neu.",
+    "LM Studio 未提供实际加载的上下文。请更新 LM Studio 并重新加载模型。",
+    "LM Studio が読み込まれたコンテキストを返していません。LM Studio を更新し、モデルを再読み込みしてください。"
+  ],
+  "LM Studio ne signale aucun réglage de pensée pour ce modèle.": [
+    "LM Studio reports no reasoning settings for this model.",
+    "LM Studio no indica ajustes de razonamiento para este modelo.",
+    "LM Studio non indica impostazioni di ragionamento per questo modello.",
+    "LM Studio meldet keine Denkeinstellungen für dieses Modell.",
+    "LM Studio 未报告此模型的推理选项。",
+    "LM Studio にこのモデルの思考設定はありません。"
+  ],
+  "Masquer (accessible dans la zone de notification)": [
+    "Hide (accessible from the notification area)",
+    "Ocultar (accesible desde el área de notificación)",
+    "Nascondi (accessibile dall'area di notifica)",
+    "Ausblenden (über Infobereich erreichbar)",
+    "隐藏（可从通知区域恢复）",
+    "非表示（通知領域から戻せます）"
+  ],
+  "Masquer le compagnon": [
+    "Hide companion",
+    "Ocultar compañero",
+    "Nascondi compagno",
+    "Begleiter ausblenden",
+    "隐藏伙伴",
+    "コンパニオンを非表示"
+  ],
+  "Maximum du modèle : {0} tokens. Contexte chargé : {1}.": [
+    "Model maximum: {0} tokens. Loaded context: {1}.",
+    "Máximo del modelo: {0} tokens. Contexto cargado: {1}.",
+    "Massimo del modello: {0} token. Contesto caricato: {1}.",
+    "Modellmaximum: {0} Tokens. Geladener Kontext: {1}.",
+    "模型上限：{0} 个 token。已加载上下文：{1}。",
+    "モデルの最大値：{0} トークン。読み込み済みコンテキスト：{1}。"
+  ],
+  "MÉMOIRE": [
+    "MEMORY",
+    "MEMORIA",
+    "MEMORIA",
+    "GEDÄCHTNIS",
+    "记忆",
+    "記憶"
+  ],
+  "Mémoire & histoire": [
+    "Memory & history",
+    "Memoria e historial",
+    "Memoria e storia",
+    "Gedächtnis und Verlauf",
+    "记忆与历史",
+    "記憶と履歴"
+  ],
+  "Mémoire enregistrée.": [
+    "Memory saved.",
+    "Memoria guardada.",
+    "Memoria salvata.",
+    "Erinnerung gespeichert.",
+    "已保存记忆。",
+    "記憶を保存しました。"
+  ],
+  "Mémoire Sherka": [
+    "Sherka memory",
+    "Memoria de Sherka",
+    "Memoria Sherka",
+    "Sherka-Gedächtnis",
+    "Sherka 记忆",
+    "Sherka の記憶"
+  ],
+  "messages": [
+    "messages",
+    "mensajes",
+    "messaggi",
+    "Nachrichten",
+    "消息",
+    "メッセージ"
+  ],
+  "Mettre à jour et redémarrer": [
+    "Update and restart",
+    "Actualizar y reiniciar",
+    "Aggiorna e riavvia",
+    "Aktualisieren und neu starten",
+    "更新并重启",
+    "更新して再起動"
+  ],
+  "Microphone": [
+    "Microphone",
+    "Micrófono",
+    "Microfono",
+    "Mikrofon",
+    "麦克风",
+    "マイク"
+  ],
+  "Microphone & écoute": [
+    "Microphone & listening",
+    "Micrófono y escucha",
+    "Microfono e ascolto",
+    "Mikrofon und Zuhören",
+    "麦克风与聆听",
+    "マイクと聞き取り"
+  ],
+  "Microphone actif": [
+    "Microphone on",
+    "Micrófono activo",
+    "Microfono attivo",
+    "Mikrofon eingeschaltet",
+    "麦克风已开启",
+    "マイク有効"
+  ],
+  "Microphone actif · écoute continue": [
+    "Microphone on · continuous listening",
+    "Micrófono activo · escucha continua",
+    "Microfono attivo · ascolto continuo",
+    "Mikrofon eingeschaltet · dauerhaftes Zuhören",
+    "麦克风已开启 · 持续聆听",
+    "マイク有効 · 継続的に聞き取り"
+  ],
+  "Microphone coupé": [
+    "Microphone off",
+    "Micrófono apagado",
+    "Microfono spento",
+    "Mikrofon ausgeschaltet",
+    "麦克风已关闭",
+    "マイク無効"
+  ],
+  "Microphone débranché.": [
+    "Microphone disconnected.",
+    "Micrófono desconectado.",
+    "Microfono scollegato.",
+    "Mikrofon getrennt.",
+    "麦克风已断开。",
+    "マイクの接続が切れました。"
+  ],
+  "Microphone indisponible": [
+    "Microphone unavailable",
+    "Micrófono no disponible",
+    "Microfono non disponibile",
+    "Mikrofon nicht verfügbar",
+    "麦克风不可用",
+    "マイク利用不可"
+  ],
+  "Microphone introuvable. Choisis un périphérique dans les réglages.": [
+    "Microphone not found. Choose a device in Settings.",
+    "No se encontró el micrófono. Elige un dispositivo en Ajustes.",
+    "Microfono non trovato. Scegli un dispositivo nelle Impostazioni.",
+    "Mikrofon nicht gefunden. Wähle ein Gerät in den Einstellungen.",
+    "未找到麦克风。请在设置中选择设备。",
+    "マイクが見つかりません。設定でデバイスを選んでください。"
+  ],
+  "Mise à jour suspendue : {0}": [
+    "Update paused: {0}",
+    "Actualización suspendida: {0}",
+    "Aggiornamento sospeso: {0}",
+    "Update angehalten: {0}",
+    "更新已暂停：{0}",
+    "更新を停止しました：{0}"
+  ],
+  "Mises à jour": [
+    "Updates",
+    "Actualizaciones",
+    "Aggiornamenti",
+    "Updates",
+    "更新",
+    "更新"
+  ],
+  "Modèle à installer dans VoiceStudio": [
+    "Model to install in VoiceStudio",
+    "Modelo por instalar en VoiceStudio",
+    "Modello da installare in VoiceStudio",
+    "In VoiceStudio zu installierendes Modell",
+    "需在 VoiceStudio 中安装的模型",
+    "VoiceStudio にインストールするモデル"
+  ],
+  "Modèle de conversation": [
+    "Conversation model",
+    "Modelo de conversación",
+    "Modello di conversazione",
+    "Gesprächsmodell",
+    "对话模型",
+    "会話モデル"
+  ],
+  "Modèle de transcription": [
+    "Transcription model",
+    "Modelo de transcripción",
+    "Modello di trascrizione",
+    "Spracherkennungsmodell",
+    "转录模型",
+    "音声認識モデル"
+  ],
+  "Modèles TTS présents et moteurs disponibles": [
+    "Installed TTS models and available engines",
+    "Modelos TTS instalados y motores disponibles",
+    "Modelli TTS installati e motori disponibili",
+    "Installierte TTS-Modelle und verfügbare Engines",
+    "已安装的 TTS 模型与可用引擎",
+    "インストール済み TTS モデルと利用可能なエンジン"
+  ],
+  "Modifications non enregistrées": [
+    "Unsaved changes",
+    "Cambios sin guardar",
+    "Modifiche non salvate",
+    "Ungespeicherte Änderungen",
+    "未保存的更改",
+    "未保存の変更"
+  ],
+  "Modifier": [
+    "Edit",
+    "Editar",
+    "Modifica",
+    "Bearbeiten",
+    "编辑",
+    "編集"
+  ],
+  "Modifier le compagnon": [
+    "Edit companion",
+    "Editar compañero",
+    "Modifica compagno",
+    "Begleiter bearbeiten",
+    "编辑伙伴",
+    "コンパニオンを編集"
+  ],
+  "Modifier sa personnalité": [
+    "Edit personality",
+    "Editar personalidad",
+    "Modifica personalità",
+    "Persönlichkeit bearbeiten",
+    "编辑个性",
+    "性格を編集"
+  ],
+  "Modifier sa personnalité conserve son histoire et ses souvenirs.": [
+    "Editing personality preserves history and memories.",
+    "Editar su personalidad conserva el historial y los recuerdos.",
+    "Modificare la personalità conserva storia e ricordi.",
+    "Das Bearbeiten der Persönlichkeit erhält Verlauf und Erinnerungen.",
+    "编辑个性会保留对话历史和记忆。",
+    "性格を編集しても履歴と記憶は保持されます。"
+  ],
+  "Moteur de synthèse vocale": [
+    "Speech synthesis engine",
+    "Motor de síntesis de voz",
+    "Motore di sintesi vocale",
+    "Sprachsynthese-Engine",
+    "语音合成引擎",
+    "音声合成エンジン"
+  ],
+  "Moteur indisponible": [
+    "Engine unavailable",
+    "Motor no disponible",
+    "Motore non disponibile",
+    "Engine nicht verfügbar",
+    "引擎不可用",
+    "エンジン利用不可"
+  ],
+  "Navigation principale": [
+    "Main navigation",
+    "Navegación principal",
+    "Navigazione principale",
+    "Hauptnavigation",
+    "主导航",
+    "メインナビゲーション"
+  ],
+  "Niveau": [
+    "Level",
+    "Nivel",
+    "Livello",
+    "Stufe",
+    "级别",
+    "レベル"
+  ],
+  "Niveau du microphone": [
+    "Microphone level",
+    "Nivel del micrófono",
+    "Livello del microfono",
+    "Mikrofonpegel",
+    "麦克风电平",
+    "マイク音量"
+  ],
+  "Nom du compagnon": [
+    "Companion name",
+    "Nombre del compañero",
+    "Nome del compagno",
+    "Name des Begleiters",
+    "伙伴名称",
+    "コンパニオンの名前"
+  ],
+  "non chargé": [
+    "not loaded",
+    "sin cargar",
+    "non caricato",
+    "nicht geladen",
+    "未加载",
+    "未読み込み"
+  ],
+  "Non pris en charge sur ce PC": [
+    "Unsupported on this PC",
+    "No compatible con este PC",
+    "Non supportato su questo PC",
+    "Auf diesem PC nicht unterstützt",
+    "此电脑不支持",
+    "この PC では未対応"
+  ],
+  "Nouveau souvenir": [
+    "New memory",
+    "Nuevo recuerdo",
+    "Nuovo ricordo",
+    "Neue Erinnerung",
+    "新记忆",
+    "新しい記憶"
+  ],
+  "Nouvelle apparence enregistrée.": [
+    "New appearance saved.",
+    "Nueva apariencia guardada.",
+    "Nuovo aspetto salvato.",
+    "Neues Aussehen gespeichert.",
+    "已保存新外观。",
+    "新しい外観を保存しました。"
+  ],
+  "Ou écris-lui ici": [
+    "Or write here",
+    "O escríbele aquí",
+    "Oppure scrivi qui",
+    "Oder schreib hier",
+    "也可以在这里输入",
+    "ここに入力しても話せます"
+  ],
+  "Oublier": [
+    "Forget",
+    "Olvidar",
+    "Dimentica",
+    "Vergessen",
+    "忘记",
+    "忘れる"
+  ],
+  "Ouvre l’application de bureau avec « npm run desktop ». Cette page seule ne peut pas accéder à tes compagnons.": [
+    "Open the desktop app with “npm run desktop”. This page alone cannot access your companions.",
+    "Abre la aplicación con «npm run desktop». Esta página sola no puede acceder a tus compañeros.",
+    "Apri l'app desktop con «npm run desktop». Questa pagina da sola non può accedere ai compagni.",
+    "Öffne die Desktop-App mit „npm run desktop“. Diese Seite allein kann nicht auf deine Begleiter zugreifen.",
+    "请使用“npm run desktop”打开桌面应用。仅此页面无法访问伙伴。",
+    "「npm run desktop」でデスクトップアプリを開いてください。このページだけではコンパニオンにアクセスできません。"
+  ],
+  "Ouvrir le poste de bord": [
+    "Open control panel",
+    "Abrir panel de control",
+    "Apri pannello di controllo",
+    "Steuerzentrale öffnen",
+    "打开控制面板",
+    "コントロールパネルを開く"
+  ],
+  "Par exemple, Vega": [
+    "For example, Vega",
+    "Por ejemplo, Vega",
+    "Per esempio, Vega",
+    "Zum Beispiel Vega",
+    "例如，Vega",
+    "例：Vega"
+  ],
+  "Vérifie que le modèle de conversation, la reconnaissance vocale et la voix choisis prennent en charge la langue du compagnon. Leurs réglages se font dans LM Studio et VoiceStudio.": [
+    "Check that your conversation model, speech recognition and voice support the companion's language. Configure them in LM Studio and VoiceStudio.",
+    "Comprueba que el modelo de conversación, el reconocimiento de voz y la voz admitan el idioma del compañero. Configúralos en LM Studio y VoiceStudio.",
+    "Verifica che modello di conversazione, riconoscimento vocale e voce supportino la lingua del compagno. Configurali in LM Studio e VoiceStudio.",
+    "Prüfe, ob Gesprächsmodell, Spracherkennung und Stimme die Sprache des Begleiters unterstützen. Richte sie in LM Studio und VoiceStudio ein.",
+    "请确认对话模型、语音识别和声音支持伙伴的语言。在 LM Studio 和 VoiceStudio 中进行配置。",
+    "会話モデル、音声認識、声がコンパニオンの言語に対応しているか確認してください。LM Studio と VoiceStudio で設定できます。"
+  ],
+  "Parole détectée": [
+    "Speech detected",
+    "Voz detectada",
+    "Parlato rilevato",
+    "Sprache erkannt",
+    "检测到语音",
+    "発話を検出"
+  ],
+  "Partie diffusée en entier": [
+    "Fully spoken portion",
+    "Parte reproducida completa",
+    "Parte riprodotta interamente",
+    "Vollständig vorgelesener Teil",
+    "已完整播放的部分",
+    "完全に読み上げた部分"
+  ],
+  "pas de streaming annoncé": [
+    "no streaming reported",
+    "sin streaming anunciado",
+    "streaming non dichiarato",
+    "kein Streaming gemeldet",
+    "未报告流式输出",
+    "ストリーミング未報告"
+  ],
+  "Passage des clics": [
+    "Click through",
+    "Paso de clics",
+    "Passaggio dei clic",
+    "Klickdurchleitung",
+    "点击穿透",
+    "クリック透過"
+  ],
+  "Pensée": [
+    "Reasoning",
+    "Razonamiento",
+    "Ragionamento",
+    "Denken",
+    "推理",
+    "思考"
+  ],
+  "Périphérique enregistré indisponible": [
+    "Saved device unavailable",
+    "Dispositivo guardado no disponible",
+    "Dispositivo salvato non disponibile",
+    "Gespeichertes Gerät nicht verfügbar",
+    "已保存的设备不可用",
+    "保存済みデバイスは利用不可"
+  ],
+  "Périphérique Windows par défaut": [
+    "Default Windows device",
+    "Dispositivo predeterminado de Windows",
+    "Dispositivo predefinito Windows",
+    "Windows-Standardgerät",
+    "Windows 默认设备",
+    "Windows の既定デバイス"
+  ],
+  "Personnalité": [
+    "Personality",
+    "Personalidad",
+    "Personalità",
+    "Persönlichkeit",
+    "个性",
+    "性格"
+  ],
+  "Personnalité {0}": [
+    "Personality {0}",
+    "Personalidad {0}",
+    "Personalità {0}",
+    "Persönlichkeit {0}",
+    "个性 {0}",
+    "性格 {0}"
+  ],
+  "Personnalité enregistrée.": [
+    "Personality saved.",
+    "Personalidad guardada.",
+    "Personalità salvata.",
+    "Persönlichkeit gespeichert.",
+    "已保存个性。",
+    "性格を保存しました。"
+  ],
+  "Plafond de contexte (vide = automatique)": [
+    "Context limit (empty = automatic)",
+    "Límite de contexto (vacío = automático)",
+    "Limite contesto (vuoto = automatico)",
+    "Kontextgrenze (leer = automatisch)",
+    "上下文上限（空白为自动）",
+    "コンテキスト上限（空欄で自動）"
+  ],
+  "Plusieurs instances de ce modèle sont chargées. Choisis l'instance voulue dans les réglages.": [
+    "Multiple instances of this model are loaded. Choose the desired instance in Settings.",
+    "Hay varias instancias del modelo cargadas. Elige la deseada en Ajustes.",
+    "Sono caricate più istanze del modello. Scegli quella desiderata nelle Impostazioni.",
+    "Mehrere Instanzen dieses Modells sind geladen. Wähle die gewünschte in den Einstellungen.",
+    "此模型已加载多个实例。请在设置中选择所需实例。",
+    "このモデルの複数のインスタンスが読み込まれています。設定で使用するものを選んでください。"
+  ],
+  "Poste de bord": [
+    "Control panel",
+    "Panel de control",
+    "Pannello di controllo",
+    "Steuerzentrale",
+    "控制面板",
+    "コントロールパネル"
+  ],
+  "POSTE DE BORD": [
+    "CONTROL PANEL",
+    "PANEL DE CONTROL",
+    "PANNELLO DI CONTROLLO",
+    "STEUERZENTRALE",
+    "控制面板",
+    "コントロールパネル"
+  ],
+  "Pour reprendre le contrôle, clique sur Sherka dans la zone de notification.": [
+    "To regain control, click Sherka in the notification area.",
+    "Para recuperar el control, haz clic en Sherka en el área de notificación.",
+    "Per riprendere il controllo, clicca su Sherka nell'area di notifica.",
+    "Klicke auf Sherka im Infobereich, um die Steuerung wiederherzustellen.",
+    "要恢复控制，请点击通知区域中的 Sherka。",
+    "操作を戻すには、通知領域の Sherka をクリックしてください。"
+  ],
+  "Préférences enregistrées.": [
+    "Preferences saved.",
+    "Preferencias guardadas.",
+    "Preferenze salvate.",
+    "Einstellungen gespeichert.",
+    "已保存偏好设置。",
+    "環境設定を保存しました。"
+  ],
+  "Préparation du redémarrage · arrêt de la voix et déchargement du modèle…": [
+    "Preparing restart · stopping speech and unloading model…",
+    "Preparando reinicio · deteniendo voz y descargando modelo…",
+    "Preparazione riavvio · arresto voce e rilascio modello…",
+    "Neustart wird vorbereitet · Sprachausgabe stoppen und Modell entladen…",
+    "正在准备重启 · 停止语音并卸载模型…",
+    "再起動を準備中 · 音声停止とモデル解放…"
+  ],
+  "Prêt": [
+    "Ready",
+    "Listo",
+    "Pronto",
+    "Bereit",
+    "就绪",
+    "準備完了"
+  ],
+  "PRÊT À ÊTRE ACTIVÉ": [
+    "READY TO ACTIVATE",
+    "LISTO PARA ACTIVAR",
+    "PRONTO DA ATTIVARE",
+    "BEREIT ZUR AKTIVIERUNG",
+    "可启用",
+    "有効にできます"
+  ],
+  "Profil exporté sans historique, souvenirs ni clés.": [
+    "Profile exported without history, memories or keys.",
+    "Perfil exportado sin historial, recuerdos ni claves.",
+    "Profilo esportato senza cronologia, ricordi o chiavi.",
+    "Profil ohne Verlauf, Erinnerungen oder Schlüssel exportiert.",
+    "已导出档案，不含对话历史、记忆或密钥。",
+    "履歴、記憶、キーを含めずにプロフィールをエクスポートしました。"
+  ],
+  "Profil Sherka": [
+    "Sherka profile",
+    "Perfil Sherka",
+    "Profilo Sherka",
+    "Sherka-Profil",
+    "Sherka 档案",
+    "Sherka プロフィール"
+  ],
+  "proposition automatique": [
+    "automatic proposal",
+    "propuesta automática",
+    "proposta automatica",
+    "automatischer Vorschlag",
+    "自动建议",
+    "自動提案"
+  ],
+  "Proposition de mémoire illisible.": [
+    "Unreadable memory proposal.",
+    "Propuesta de memoria ilegible.",
+    "Proposta di memoria illeggibile.",
+    "Unlesbarer Erinnerungsvorschlag.",
+    "无法读取记忆建议。",
+    "記憶の提案を読み取れません。"
+  ],
+  "Qu’est-ce que tu as en tête ?": [
+    "What's on your mind?",
+    "¿Qué tienes en mente?",
+    "A cosa pensi?",
+    "Was beschäftigt dich?",
+    "你在想什么？",
+    "何を話そうか？"
+  ],
+  "Quitter quand même": [
+    "Quit anyway",
+    "Salir de todos modos",
+    "Esci comunque",
+    "Trotzdem beenden",
+    "仍然退出",
+    "そのまま終了"
+  ],
+  "Quitter Sherka": [
+    "Quit Sherka",
+    "Salir de Sherka",
+    "Esci da Sherka",
+    "Sherka beenden",
+    "退出 Sherka",
+    "Sherka を終了"
+  ],
+  "Recherche dans les archives": [
+    "Archive search",
+    "Búsqueda en archivos",
+    "Ricerca negli archivi",
+    "Archivsuche",
+    "历史检索",
+    "履歴の検索"
+  ],
+  "Rechercher dans les archives": [
+    "Search archives",
+    "Buscar en archivos",
+    "Cerca negli archivi",
+    "Archive durchsuchen",
+    "搜索历史",
+    "履歴を検索"
+  ],
+  "Rechercher dans les souvenirs": [
+    "Search memories",
+    "Buscar recuerdos",
+    "Cerca nei ricordi",
+    "Erinnerungen durchsuchen",
+    "搜索记忆",
+    "記憶を検索"
+  ],
+  "Redimensionner": [
+    "Resize",
+    "Redimensionar",
+    "Ridimensiona",
+    "Größe ändern",
+    "调整大小",
+    "サイズ変更"
+  ],
+  "Redimensionner le widget": [
+    "Resize widget",
+    "Redimensionar widget",
+    "Ridimensiona widget",
+    "Widget-Größe ändern",
+    "调整小组件大小",
+    "ウィジェットのサイズ変更"
+  ],
+  "Réessayer": [
+    "Try again",
+    "Reintentar",
+    "Riprova",
+    "Erneut versuchen",
+    "重试",
+    "再試行"
+  ],
+  "Réessayer VoiceStudio": [
+    "Retry VoiceStudio",
+    "Reintentar VoiceStudio",
+    "Riprova VoiceStudio",
+    "VoiceStudio erneut versuchen",
+    "重试 VoiceStudio",
+    "VoiceStudio を再試行"
+  ],
+  "Référence d'écho audio invalide.": [
+    "Invalid audio echo reference.",
+    "Referencia de eco no válida.",
+    "Riferimento eco audio non valido.",
+    "Ungültige Audio-Echoreferenz.",
+    "音频回声参考无效。",
+    "音声のエコー参照が無効です。"
+  ],
+  "Réglage de LM Studio{0}": [
+    "LM Studio setting{0}",
+    "Ajuste de LM Studio{0}",
+    "Impostazione LM Studio{0}",
+    "LM-Studio-Einstellung{0}",
+    "LM Studio 设置{0}",
+    "LM Studio の設定{0}"
+  ],
+  "Réglages": [
+    "Settings",
+    "Ajustes",
+    "Impostazioni",
+    "Einstellungen",
+    "设置",
+    "設定"
+  ],
+  "RÉGLAGES": [
+    "SETTINGS",
+    "AJUSTES",
+    "IMPOSTAZIONI",
+    "EINSTELLUNGEN",
+    "设置",
+    "設定"
+  ],
+  "Réglages audio enregistrés.": [
+    "Audio settings saved.",
+    "Ajustes de audio guardados.",
+    "Impostazioni audio salvate.",
+    "Audioeinstellungen gespeichert.",
+    "已保存音频设置。",
+    "音声設定を保存しました。"
+  ],
+  "Réglages propres à ce compagnon": [
+    "Settings for this companion",
+    "Ajustes de este compañero",
+    "Impostazioni di questo compagno",
+    "Einstellungen für diesen Begleiter",
+    "此伙伴的设置",
+    "このコンパニオンの設定"
+  ],
+  "Réinitialiser": [
+    "Reset",
+    "Restablecer",
+    "Ripristina",
+    "Zurücksetzen",
+    "重置",
+    "リセット"
+  ],
+  "Repères de conversation": [
+    "Conversation notes",
+    "Notas de conversación",
+    "Note di conversazione",
+    "Gesprächsnotizen",
+    "对话要点",
+    "会話の要点"
+  ],
+  "Repères de conversation (extraits) :\n{0}": [
+    "Conversation notes (excerpts):\n{0}",
+    "Notas de conversación (extractos):\n{0}",
+    "Note di conversazione (estratti):\n{0}",
+    "Gesprächsnotizen (Auszüge):\n{0}",
+    "对话要点（摘录）：\n{0}",
+    "会話の要点（抜粋）：\n{0}"
+  ],
+  "Replacer le widget": [
+    "Reposition widget",
+    "Reposicionar widget",
+    "Riposiziona widget",
+    "Widget neu positionieren",
+    "重新放置小组件",
+    "ウィジェットの位置を戻す"
+  ],
+  "Réponse": [
+    "Response",
+    "Respuesta",
+    "Risposta",
+    "Antwort",
+    "回复",
+    "応答"
+  ],
+  "Réponse trop longue.": [
+    "Response too long.",
+    "Respuesta demasiado larga.",
+    "Risposta troppo lunga.",
+    "Antwort zu lang.",
+    "回复过长。",
+    "応答が長すぎます。"
+  ],
+  "Réponse VoiceStudio interrompue.": [
+    "VoiceStudio response interrupted.",
+    "Respuesta de VoiceStudio interrumpida.",
+    "Risposta VoiceStudio interrotta.",
+    "VoiceStudio-Antwort unterbrochen.",
+    "VoiceStudio 响应已中断。",
+    "VoiceStudio の応答が中断されました。"
+  ],
+  "Réponse VoiceStudio trop volumineuse.": [
+    "VoiceStudio response too large.",
+    "Respuesta de VoiceStudio demasiado grande.",
+    "Risposta VoiceStudio troppo grande.",
+    "VoiceStudio-Antwort zu groß.",
+    "VoiceStudio 响应过大。",
+    "VoiceStudio の応答が大きすぎます。"
+  ],
+  "Reprendre les clics": [
+    "Restore clicks",
+    "Recuperar clics",
+    "Ripristina i clic",
+    "Klicks wieder aktivieren",
+    "恢复点击控制",
+    "クリック操作を戻す"
+  ],
+  "Rester": [
+    "Stay",
+    "Quedarse",
+    "Resta",
+    "Bleiben",
+    "留下",
+    "続ける"
+  ],
+  "Retenir ce souvenir": [
+    "Remember this",
+    "Recordar esto",
+    "Ricorda questo",
+    "Dies merken",
+    "记住此内容",
+    "この記憶を覚える"
+  ],
+  "Retrouve les nouvelles versions de Sherka sur GitHub. La vérification se lance à ta demande.": [
+    "Find new Sherka versions on GitHub. Checks run when you ask.",
+    "Encuentra nuevas versiones de Sherka en GitHub. La comprobación se hace cuando tú lo pides.",
+    "Trova nuove versioni di Sherka su GitHub. La verifica parte quando lo chiedi.",
+    "Neue Sherka-Versionen findest du auf GitHub. Die Prüfung startet auf deinen Wunsch.",
+    "在 GitHub 查找 Sherka 的新版本。仅在你主动操作时检查。",
+    "GitHub で Sherka の新しいバージョンを確認できます。確認は操作したときに実行します。"
+  ],
+  "Revenir à l’image de départ": [
+    "Restore original image",
+    "Restaurar imagen original",
+    "Ripristina immagine originale",
+    "Ursprüngliches Bild wiederherstellen",
+    "恢复初始图片",
+    "元の画像に戻す"
+  ],
+  "Sa personnalité": [
+    "Its personality",
+    "Su personalidad",
+    "La sua personalità",
+    "Seine Persönlichkeit",
+    "伙伴的个性",
+    "コンパニオンの性格"
+  ],
+  "Sa personnalité reste à écrire. Donne-lui une façon bien à lui de t’accompagner.": [
+    "Its personality is still unwritten. Give it a way of being there for you.",
+    "Su personalidad está por escribir. Dale su propia forma de acompañarte.",
+    "La sua personalità è ancora da scrivere. Dagli un modo tutto suo di accompagnarti.",
+    "Seine Persönlichkeit ist noch ungeschrieben. Gib ihm seine eigene Art, dich zu begleiten.",
+    "个性还等待编写。赋予它独特的陪伴方式。",
+    "性格はまだ白紙です。その子らしい寄り添い方を決めてください。"
+  ],
+  "Saisi ou corrigé directement dans ce panneau.": [
+    "Entered or corrected directly in this panel.",
+    "Introducido o corregido directamente en este panel.",
+    "Inserito o corretto direttamente in questo pannello.",
+    "Direkt in diesem Bereich eingetragen oder korrigiert.",
+    "直接在此面板输入或更正。",
+    "このパネルで直接入力または修正しました。"
+  ],
+  "saisie dans le panneau": [
+    "entered in panel",
+    "introducido en el panel",
+    "inserito nel pannello",
+    "im Bereich eingegeben",
+    "面板输入",
+    "パネルで入力"
+  ],
+  "Sans installation": [
+    "Portable",
+    "Sin instalación",
+    "Senza installazione",
+    "Ohne Installation",
+    "免安装",
+    "インストール不要"
+  ],
+  "Sauge": [
+    "Sage",
+    "Salvia",
+    "Salvia",
+    "Salbei",
+    "鼠尾草色",
+    "セージ"
+  ],
+  "Ses souvenirs": [
+    "Its memories",
+    "Sus recuerdos",
+    "I suoi ricordi",
+    "Seine Erinnerungen",
+    "伙伴的记忆",
+    "コンパニオンの記憶"
+  ],
+  "SHERKA": [
+    "SHERKA",
+    "SHERKA",
+    "SHERKA",
+    "SHERKA",
+    "SHERKA",
+    "SHERKA"
+  ],
+  "Sherka — Compagnon": [
+    "Sherka — Companion",
+    "Sherka — Compañero",
+    "Sherka — Compagno",
+    "Sherka — Begleiter",
+    "Sherka — 伙伴",
+    "Sherka — コンパニオン"
+  ],
+  "Sherka — Compagnon de bureau": [
+    "Sherka — Desktop Companion",
+    "Sherka — Compañero de escritorio",
+    "Sherka — Compagno desktop",
+    "Sherka — Desktop-Begleiter",
+    "Sherka — 桌面伙伴",
+    "Sherka — デスクトップのコンパニオン"
+  ],
+  "Sherka — Poste de bord": [
+    "Sherka — Control panel",
+    "Sherka — Panel de control",
+    "Sherka — Pannello di controllo",
+    "Sherka — Steuerzentrale",
+    "Sherka — 控制面板",
+    "Sherka — コントロールパネル"
+  ],
+  "Sherka · microphone actif, écoute continue": [
+    "Sherka · microphone on, continuous listening",
+    "Sherka · micrófono activo, escucha continua",
+    "Sherka · microfono attivo, ascolto continuo",
+    "Sherka · Mikrofon eingeschaltet, dauerhaftes Zuhören",
+    "Sherka · 麦克风已开启，持续聆听",
+    "Sherka · マイク有効、継続的に聞き取り"
+  ],
+  "Sherka · microphone coupé": [
+    "Sherka · microphone off",
+    "Sherka · micrófono apagado",
+    "Sherka · microfono spento",
+    "Sherka · Mikrofon ausgeschaltet",
+    "Sherka · 麦克风已关闭",
+    "Sherka · マイク無効"
+  ],
+  "Sherka · mise à jour": [
+    "Sherka · update",
+    "Sherka · actualización",
+    "Sherka · aggiornamento",
+    "Sherka · Update",
+    "Sherka · 更新",
+    "Sherka · 更新"
+  ],
+  "Sherka attend son poste de bord.": [
+    "Sherka is waiting for its control panel.",
+    "Sherka espera su panel de control.",
+    "Sherka attende il pannello di controllo.",
+    "Sherka wartet auf seine Steuerzentrale.",
+    "Sherka 正在等待控制面板。",
+    "Sherka のコントロールパネルを待っています。"
+  ],
+  "Sherka est en train de décharger son modèle avant de quitter.": [
+    "Sherka is unloading its model before quitting.",
+    "Sherka está descargando su modelo antes de salir.",
+    "Sherka sta rilasciando il modello prima di uscire.",
+    "Sherka entlädt sein Modell vor dem Beenden.",
+    "Sherka 正在退出前卸载模型。",
+    "Sherka は終了前にモデルを解放しています。"
+  ],
+  "Sherka n'a pas pu démarrer": [
+    "Sherka could not start",
+    "Sherka no pudo iniciarse",
+    "Impossibile avviare Sherka",
+    "Sherka konnte nicht starten",
+    "Sherka 无法启动",
+    "Sherka を起動できませんでした"
+  ],
+  "Sherka, accueil": [
+    "Sherka, home",
+    "Sherka, inicio",
+    "Sherka, home",
+    "Sherka, Startseite",
+    "Sherka，首页",
+    "Sherka、ホーム"
+  ],
+  "Signature invalide. Aucun remplacement effectué.": [
+    "Invalid signature. No replacement made.",
+    "Firma no válida. No se sustituyó nada.",
+    "Firma non valida. Nessuna sostituzione eseguita.",
+    "Ungültige Signatur. Nichts wurde ersetzt.",
+    "签名无效。未替换任何文件。",
+    "署名が無効です。ファイルは置き換えていません。"
+  ],
+  "Silence avant la réponse (ms)": [
+    "Silence before response (ms)",
+    "Silencio antes de responder (ms)",
+    "Silenzio prima della risposta (ms)",
+    "Stille vor der Antwort (ms)",
+    "回复前静音时间（ms）",
+    "応答前の無音時間（ms）"
+  ],
+  "Son caractère": [
+    "Its character",
+    "Su carácter",
+    "Il suo carattere",
+    "Sein Charakter",
+    "伙伴的性格",
+    "コンパニオンの個性"
+  ],
+  "Son caractère, sa façon de parler, ce qui le rend unique…": [
+    "Its character, way of speaking, what makes it unique…",
+    "Su carácter, su forma de hablar, lo que lo hace único…",
+    "Il suo carattere, il modo di parlare, cosa lo rende unico…",
+    "Sein Charakter, seine Sprechweise, was ihn einzigartig macht…",
+    "它的性格、说话方式，以及独特之处…",
+    "性格、話し方、その子ならではの特徴…"
+  ],
+  "Son histoire reste la sienne.": [
+    "Its story stays its own.",
+    "Su historia sigue siendo suya.",
+    "La sua storia resta la sua.",
+    "Seine Geschichte bleibt seine eigene.",
+    "它的故事仍属于它。",
+    "その子の履歴はそのまま残ります。"
+  ],
+  "Son historique et sa mémoire commencent dans un espace indépendant.": [
+    "Its history and memories start in an independent space.",
+    "Su historial y recuerdos empiezan en un espacio independiente.",
+    "La storia e i ricordi iniziano in uno spazio indipendente.",
+    "Verlauf und Erinnerungen beginnen in einem eigenen Bereich.",
+    "对话历史和记忆从独立空间开始。",
+    "履歴と記憶は独立したスペースで始まります。"
+  ],
+  "Son profil, son image, son historique et ses souvenirs seront supprimés de ce PC. Cette action ne peut pas être annulée.": [
+    "Its profile, image, history and memories will be deleted from this PC. This cannot be undone.",
+    "Su perfil, imagen, historial y recuerdos se eliminarán de este PC. Esta acción no se puede deshacer.",
+    "Profilo, immagine, cronologia e ricordi saranno eliminati da questo PC. L'azione non può essere annullata.",
+    "Profil, Bild, Verlauf und Erinnerungen werden von diesem PC gelöscht. Dies kann nicht rückgängig gemacht werden.",
+    "将从此电脑删除其档案、图片、对话历史和记忆。此操作无法撤销。",
+    "この PC からプロフィール、画像、履歴、記憶を削除します。この操作は元に戻せません。"
+  ],
+  "son propre espace": [
+    "its own space",
+    "su propio espacio",
+    "il suo spazio",
+    "sein eigener Bereich",
+    "专属空间",
+    "専用スペース"
+  ],
+  "Sortie audio débranchée.": [
+    "Audio output disconnected.",
+    "Salida de audio desconectada.",
+    "Uscita audio scollegata.",
+    "Audioausgabe getrennt.",
+    "音频输出已断开。",
+    "音声出力の接続が切れました。"
+  ],
+  "Sortie audio introuvable. Choisis un périphérique dans les réglages.": [
+    "Audio output not found. Choose a device in Settings.",
+    "No se encontró la salida de audio. Elige un dispositivo en Ajustes.",
+    "Uscita audio non trovata. Scegli un dispositivo nelle Impostazioni.",
+    "Audioausgabe nicht gefunden. Wähle ein Gerät in den Einstellungen.",
+    "未找到音频输出。请在设置中选择设备。",
+    "音声出力が見つかりません。設定でデバイスを選んでください。"
+  ],
+  "Sortie sonore": [
+    "Audio output",
+    "Salida de audio",
+    "Uscita audio",
+    "Audioausgabe",
+    "音频输出",
+    "音声出力"
+  ],
+  "Source ·": [
+    "Source ·",
+    "Fuente ·",
+    "Fonte ·",
+    "Quelle ·",
+    "来源 ·",
+    "出典 ·"
+  ],
+  "Souvenir #{0} [{1}] : {2}": [
+    "Memory #{0} [{1}]: {2}",
+    "Recuerdo #{0} [{1}]: {2}",
+    "Ricordo #{0} [{1}]: {2}",
+    "Erinnerung #{0} [{1}]: {2}",
+    "记忆 #{0} [{1}]：{2}",
+    "記憶 #{0} [{1}]：{2}"
+  ],
+  "Souvenir #{0} {1} : {2}": [
+    "Memory #{0} {1}: {2}",
+    "Recuerdo #{0} {1}: {2}",
+    "Ricordo #{0} {1}: {2}",
+    "Erinnerung #{0} {1}: {2}",
+    "记忆 #{0} {1}：{2}",
+    "記憶 #{0} {1}：{2}"
+  ],
+  "Souvenir #{0} oublié. Les anciens échanges sont exclus des prochains contextes.": [
+    "Memory #{0} forgotten. Older conversations are excluded from future contexts.",
+    "Recuerdo #{0} olvidado. Los intercambios anteriores se excluyen de los próximos contextos.",
+    "Ricordo #{0} dimenticato. Gli scambi precedenti sono esclusi dai contesti futuri.",
+    "Erinnerung #{0} vergessen. Frühere Gespräche werden aus künftigen Kontexten ausgeschlossen.",
+    "已忘记记忆 #{0}。旧对话将从后续上下文中排除。",
+    "記憶 #{0} を忘れました。古い会話は今後のコンテキストから除外されます。"
+  ],
+  "Souvenir à modifier non identifié.": [
+    "Memory to edit not identified.",
+    "No se identificó el recuerdo que modificar.",
+    "Ricordo da modificare non identificato.",
+    "Zu bearbeitende Erinnerung nicht identifiziert.",
+    "未找到要修改的记忆。",
+    "修正する記憶を特定できません。"
+  ],
+  "Souvenir écarté des prochaines conversations.": [
+    "Memory excluded from future conversations.",
+    "Recuerdo excluido de próximas conversaciones.",
+    "Ricordo escluso dalle conversazioni future.",
+    "Erinnerung aus künftigen Gesprächen ausgeschlossen.",
+    "此记忆已从后续对话中排除。",
+    "記憶を今後の会話から除外しました。"
+  ],
+  "souvenirs": [
+    "memories",
+    "recuerdos",
+    "ricordi",
+    "Erinnerungen",
+    "记忆",
+    "記憶"
+  ],
+  "Souvenirs et sources exportés.": [
+    "Memories and sources exported.",
+    "Recuerdos y fuentes exportados.",
+    "Ricordi e fonti esportati.",
+    "Erinnerungen und Quellen exportiert.",
+    "已导出记忆及来源。",
+    "記憶と出典をエクスポートしました。"
+  ],
+  "streaming annoncé": [
+    "streaming reported",
+    "streaming anunciado",
+    "streaming dichiarato",
+    "Streaming gemeldet",
+    "支持流式输出",
+    "ストリーミング対応"
+  ],
+  "Supprimer {0} ?": [
+    "Delete {0}?",
+    "¿Eliminar {0}?",
+    "Eliminare {0}?",
+    "{0} löschen?",
+    "删除 {0}？",
+    "{0} を削除しますか？"
+  ],
+  "Supprimer définitivement": [
+    "Delete permanently",
+    "Eliminar definitivamente",
+    "Elimina definitivamente",
+    "Endgültig löschen",
+    "永久删除",
+    "完全に削除"
+  ],
+  "Survole pour les commandes, clique pour les garder, fais glisser pour déplacer": [
+    "Hover for controls, click to keep them, drag to move",
+    "Pasa el cursor para ver los controles, haz clic para fijarlos y arrastra para mover",
+    "Passa sopra per i comandi, clicca per tenerli, trascina per spostare",
+    "Zeigen: Maus darüber; festhalten: klicken; verschieben: ziehen",
+    "悬停显示控件，点击固定，拖动移动",
+    "カーソルを合わせると操作を表示、クリックで固定、ドラッグで移動"
+  ],
+  "Taille du compagnon": [
+    "Companion size",
+    "Tamaño del compañero",
+    "Dimensione del compagno",
+    "Größe des Begleiters",
+    "伙伴大小",
+    "コンパニオンのサイズ"
+  ],
+  "Téléchargement et vérification de la mise à jour…": [
+    "Downloading and verifying update…",
+    "Descargando y verificando actualización…",
+    "Download e verifica dell'aggiornamento…",
+    "Update wird heruntergeladen und geprüft…",
+    "正在下载并验证更新…",
+    "更新をダウンロードして検証中…"
+  ],
+  "Téléchargement incomplet": [
+    "Incomplete download",
+    "Descarga incompleta",
+    "Download incompleto",
+    "Download unvollständig",
+    "下载未完成",
+    "ダウンロード未完了"
+  ],
+  "Tes compagnons": [
+    "Your companions",
+    "Tus compañeros",
+    "I tuoi compagni",
+    "Deine Begleiter",
+    "你的伙伴",
+    "あなたのコンパニオン"
+  ],
+  "Tes préférences pour ses réponses…": [
+    "Your preferences for its responses…",
+    "Tus preferencias para sus respuestas…",
+    "Le tue preferenze per le risposte…",
+    "Deine Wünsche für seine Antworten…",
+    "你对回复的偏好…",
+    "応答に関する希望…"
+  ],
+  "Tester et actualiser": [
+    "Test and refresh",
+    "Probar y actualizar",
+    "Prova e aggiorna",
+    "Testen und aktualisieren",
+    "测试并刷新",
+    "テストして更新"
+  ],
+  "Thème": [
+    "Topic",
+    "Tema",
+    "Argomento",
+    "Thema",
+    "主题",
+    "テーマ"
+  ],
+  "Tiroir · retrouvé par sujet": [
+    "Drawer · retrieved by topic",
+    "Cajón · recuperado por tema",
+    "Cassetto · recuperato per argomento",
+    "Fach · nach Thema abgerufen",
+    "抽屉 · 按主题检索",
+    "引き出し · テーマで検索"
+  ],
+  "Toi": [
+    "You",
+    "Tú",
+    "Tu",
+    "Du",
+    "你",
+    "あなた"
+  ],
+  "Toi · transcription en cours": [
+    "You · transcribing",
+    "Tú · transcripción en curso",
+    "Tu · trascrizione in corso",
+    "Du · Transkription läuft",
+    "你 · 正在转录",
+    "あなた · 音声認識中"
+  ],
+  "tokens": [
+    "tokens",
+    "tokens",
+    "token",
+    "Tokens",
+    "token",
+    "トークン"
+  ],
+  "Tokens réservés à la réponse": [
+    "Tokens reserved for response",
+    "Tokens reservados para la respuesta",
+    "Token riservati alla risposta",
+    "Für Antwort reservierte Tokens",
+    "回复预留 token",
+    "応答に予約するトークン"
+  ],
+  "Ton compagnon": [
+    "Your companion",
+    "Tu compañero",
+    "Il tuo compagno",
+    "Dein Begleiter",
+    "你的伙伴",
+    "あなたのコンパニオン"
+  ],
+  "TON ESPACE": [
+    "YOUR SPACE",
+    "TU ESPACIO",
+    "IL TUO SPAZIO",
+    "DEIN BEREICH",
+    "你的空间",
+    "あなたのスペース"
+  ],
+  "Ton message et les instructions dépassent le budget prudent du modèle ({0} tokens de contexte, {1} réservés à la réponse). Le message n'a pas été tronqué. Réduis-le ou augmente le contexte chargé dans LM Studio.": [
+    "Your message and instructions exceed the model's conservative budget ({0} context tokens, {1} reserved for response). Your message was not truncated. Shorten it or increase the context loaded in LM Studio.",
+    "Tu mensaje e instrucciones superan el presupuesto prudente del modelo ({0} tokens de contexto, {1} reservados para responder). No se recortó tu mensaje. Acórtalo o aumenta el contexto cargado en LM Studio.",
+    "Messaggio e istruzioni superano il budget prudente del modello ({0} token di contesto, {1} riservati alla risposta). Il messaggio non è stato troncato. Accorcialo o aumenta il contesto caricato in LM Studio.",
+    "Nachricht und Anweisungen überschreiten das vorsichtige Modellbudget ({0} Kontext-Tokens, {1} für die Antwort reserviert). Deine Nachricht wurde nicht gekürzt. Kürze sie oder erhöhe den geladenen Kontext in LM Studio.",
+    "消息与指令超出模型保守预算（{0} 个上下文 token，{1} 个用于回复）。消息未被截断。请缩短消息，或增加 LM Studio 加载的上下文。",
+    "メッセージと指示がモデルの安全側の予算を超えています（コンテキスト {0} トークン、応答予約 {1}）。メッセージは切っていません。短くするか、LM Studio の読み込むコンテキストを増やしてください。"
+  ],
+  "Ton nouveau compagnon est prêt.": [
+    "Your new companion is ready.",
+    "Tu nuevo compañero está listo.",
+    "Il tuo nuovo compagno è pronto.",
+    "Dein neuer Begleiter ist bereit.",
+    "新伙伴已准备就绪。",
+    "新しいコンパニオンの準備ができました。"
+  ],
+  "Toujours au premier plan": [
+    "Always on top",
+    "Siempre en primer plano",
+    "Sempre in primo piano",
+    "Immer im Vordergrund",
+    "始终置顶",
+    "常に手前に表示"
+  ],
+  "Traitement du microphone impossible.": [
+    "Cannot process microphone.",
+    "No se puede procesar el micrófono.",
+    "Impossibile elaborare il microfono.",
+    "Mikrofonverarbeitung nicht möglich.",
+    "无法处理麦克风输入。",
+    "マイクの処理ができません。"
+  ],
+  "Transcription : {0}{1}.": [
+    "Transcription: {0}{1}.",
+    "Transcripción: {0}{1}.",
+    "Trascrizione: {0}{1}.",
+    "Transkription: {0}{1}.",
+    "转录：{0}{1}。",
+    "音声認識：{0}{1}。"
+  ],
+  "Très forte": [
+    "Very high",
+    "Muy alta",
+    "Molto alta",
+    "Sehr hoch",
+    "极高",
+    "非常に高い"
+  ],
+  "Trop de modifications de mémoire à la fois.": [
+    "Too many memory changes at once.",
+    "Demasiados cambios de memoria a la vez.",
+    "Troppe modifiche alla memoria contemporaneamente.",
+    "Zu viele Speicheränderungen auf einmal.",
+    "一次修改的记忆过多。",
+    "一度に変更する記憶が多すぎます。"
+  ],
+  "Tu écoutes avec": [
+    "You listen with",
+    "Escuchas con",
+    "Ascolti con",
+    "Du hörst über",
+    "你的收听设备",
+    "音声を聞くデバイス"
+  ],
+  "Tu peux aussi commencer par un message écrit.": [
+    "You can also start with a written message.",
+    "También puedes empezar con un mensaje escrito.",
+    "Puoi anche iniziare con un messaggio scritto.",
+    "Du kannst auch mit einer geschriebenen Nachricht beginnen.",
+    "也可以先发送文字消息。",
+    "文字のメッセージから始めることもできます。"
+  ],
+  "Tu peux aussi tirer le coin inférieur droit du widget.": [
+    "You can also drag the widget's bottom-right corner.",
+    "También puedes arrastrar la esquina inferior derecha del widget.",
+    "Puoi anche trascinare l'angolo inferiore destro del widget.",
+    "Du kannst auch die untere rechte Ecke des Widgets ziehen.",
+    "也可以拖动小组件的右下角。",
+    "ウィジェットの右下の角をドラッグしても変更できます。"
+  ],
+  "Tu peux réessayer, rester dans Sherka, ou quitter en laissant le modèle dans LM Studio.": [
+    "You can retry, stay in Sherka, or quit leaving the model in LM Studio.",
+    "Puedes reintentar, seguir en Sherka o salir dejando el modelo en LM Studio.",
+    "Puoi riprovare, restare in Sherka o uscire lasciando il modello in LM Studio.",
+    "Du kannst es erneut versuchen, in Sherka bleiben oder beenden und das Modell in LM Studio lassen.",
+    "可以重试、继续使用 Sherka，或退出并将模型留在 LM Studio 中。",
+    "再試行、Sherka を続ける、または LM Studio にモデルを残して終了できます。"
+  ],
+  "Tu utilises la dernière version de Sherka.": [
+    "You're using the latest Sherka version.",
+    "Usas la última versión de Sherka.",
+    "Stai usando l'ultima versione di Sherka.",
+    "Du verwendest die neueste Sherka-Version.",
+    "你正在使用最新版本的 Sherka。",
+    "最新バージョンの Sherka を使用しています。"
+  ],
+  "Un autre service répond à cette adresse, ou VoiceStudio n’est pas compatible. Vérifie l’adresse dans les réglages.": [
+    "Another service is responding at this address, or VoiceStudio is incompatible. Check the address in Settings.",
+    "Otro servicio responde en esta dirección o VoiceStudio es incompatible. Comprueba la dirección en Ajustes.",
+    "Un altro servizio risponde a questo indirizzo o VoiceStudio è incompatibile. Controlla l'indirizzo nelle Impostazioni.",
+    "Unter dieser Adresse antwortet ein anderer Dienst oder VoiceStudio ist inkompatibel. Prüfe die Adresse in den Einstellungen.",
+    "此地址返回的是其他服务，或 VoiceStudio 不兼容。请在设置中检查地址。",
+    "このアドレスは別のサービスか、互換性のない VoiceStudio です。設定でアドレスを確認してください。"
+  ],
+  "Un casque": [
+    "Headphones",
+    "Auriculares",
+    "Cuffie",
+    "Kopfhörer",
+    "耳机",
+    "ヘッドホン"
+  ],
+  "UN COMPAGNON UNIQUE": [
+    "A UNIQUE COMPANION",
+    "UN COMPAÑERO ÚNICO",
+    "UN COMPAGNO UNICO",
+    "EIN EINZIGARTIGER BEGLEITER",
+    "独特的伙伴",
+    "特別なコンパニオン"
+  ],
+  "Un dossier et une base par compagnon. Aucun enregistrement audio.": [
+    "One folder and database per companion. No audio recordings.",
+    "Una carpeta y base de datos por compañero. Sin grabaciones de audio.",
+    "Una cartella e un database per compagno. Nessuna registrazione audio.",
+    "Ein Ordner und eine Datenbank pro Begleiter. Keine Audioaufnahmen.",
+    "每个伙伴有独立的文件夹和数据库。不保存录音。",
+    "コンパニオンごとにフォルダーとデータベースを保存。音声は録音しません。"
+  ],
+  "Un espace à toi.": [
+    "A space of your own.",
+    "Un espacio para ti.",
+    "Uno spazio tutto tuo.",
+    "Ein Bereich für dich.",
+    "属于你的空间。",
+    "あなたのためのスペース。"
+  ],
+  "Un événement d'une ancienne conversation a été ignoré.": [
+    "An event from an older conversation was ignored.",
+    "Se ignoró un evento de una conversación anterior.",
+    "Un evento di una conversazione precedente è stato ignorato.",
+    "Ein Ereignis aus einem früheren Gespräch wurde ignoriert.",
+    "已忽略旧对话中的事件。",
+    "古い会話のイベントを無視しました。"
+  ],
+  "Un prénom, un projet, un thème…": [
+    "A name, a project, a topic…",
+    "Un nombre, un proyecto, un tema…",
+    "Un nome, un progetto, un argomento…",
+    "Ein Name, ein Projekt, ein Thema…",
+    "姓名、项目、主题…",
+    "名前、プロジェクト、テーマ…"
+  ],
+  "un profil Sherka": [
+    "a Sherka profile",
+    "un perfil Sherka",
+    "un profilo Sherka",
+    "ein Sherka-Profil",
+    "Sherka 档案",
+    "Sherka プロフィール"
+  ],
+  "Un souvenir doit contenir 1 à 1 800 octets, un thème court et un niveau valide.": [
+    "A memory must contain 1 to 1,800 bytes, a short topic and a valid level.",
+    "Un recuerdo debe tener de 1 a 1 800 bytes, un tema corto y un nivel válido.",
+    "Un ricordo deve contenere da 1 a 1.800 byte, un argomento breve e un livello valido.",
+    "Eine Erinnerung muss 1 bis 1.800 Bytes, ein kurzes Thema und eine gültige Stufe enthalten.",
+    "记忆须为 1 至 1,800 字节，并有简短主题及有效级别。",
+    "記憶は 1〜1,800 バイトで、短いテーマと有効なレベルを指定してください。"
+  ],
+  "UNE CONVERSATION, TOUT SIMPLEMENT": [
+    "JUST A CONVERSATION",
+    "UNA CONVERSACIÓN, SIN MÁS",
+    "UNA CONVERSAZIONE, SEMPLICEMENTE",
+    "EINFACH EIN GESPRÄCH",
+    "轻松交谈",
+    "自然に会話しよう"
+  ],
+  "Une correction ou un oubli exclut les anciens échanges des futurs contextes et résumés, pour empêcher le retour de l’ancienne information. Les autres souvenirs enregistrés sont conservés. L’historique reste consultable ici.": [
+    "Correcting or forgetting excludes older conversations from future contexts and summaries, preventing old information from returning. Other saved memories remain. You can still browse the history here.",
+    "Corregir u olvidar excluye los intercambios anteriores de futuros contextos y resúmenes para evitar que vuelva la información antigua. Los otros recuerdos se conservan. El historial sigue consultable aquí.",
+    "Correggere o dimenticare esclude gli scambi precedenti da contesti e riepiloghi futuri, evitando il ritorno delle vecchie informazioni. Gli altri ricordi restano. La cronologia è ancora consultabile qui.",
+    "Korrigieren oder Vergessen schließt frühere Gespräche aus künftigen Kontexten und Zusammenfassungen aus, damit alte Angaben nicht zurückkehren. Andere Erinnerungen bleiben erhalten. Den Verlauf kannst du hier weiter einsehen.",
+    "更正或忘记会将旧对话排除在后续上下文与摘要之外，防止旧信息再次出现。其他已保存的记忆会保留，仍可在此查看历史。",
+    "修正や削除をすると、古い情報が戻らないように以前の会話を今後のコンテキストと要約から除外します。他の記憶は保持され、履歴はここで閲覧できます。"
+  ],
+  "Une fermeture est déjà en cours.": [
+    "Shutdown already in progress.",
+    "Ya se está cerrando.",
+    "Chiusura già in corso.",
+    "Beenden läuft bereits.",
+    "正在退出。",
+    "終了処理中です。"
+  ],
+  "UNE HISTOIRE QUI LUI APPARTIENT": [
+    "A STORY OF ITS OWN",
+    "UNA HISTORIA PROPIA",
+    "UNA STORIA TUTTA SUA",
+    "EINE EIGENE GESCHICHTE",
+    "专属的故事",
+    "その子だけの物語"
+  ],
+  "Une personnalité. Une voix. Une histoire qui lui appartient.": [
+    "A personality. A voice. A story of its own.",
+    "Una personalidad. Una voz. Una historia propia.",
+    "Una personalità. Una voce. Una storia tutta sua.",
+    "Eine Persönlichkeit. Eine Stimme. Eine eigene Geschichte.",
+    "一种个性，一个声音，一段专属故事。",
+    "性格、声、そしてその子だけの物語。"
+  ],
+  "UNE PRÉSENCE, À TA FAÇON": [
+    "A PRESENCE, YOUR WAY",
+    "UNA PRESENCIA A TU MANERA",
+    "UNA PRESENZA, A MODO TUO",
+    "PRÄSENZ NACH DEINEM WUNSCH",
+    "按你的方式陪伴",
+    "あなたらしい寄り添い方"
+  ],
+  "Une vérification ou une mise à jour est déjà en cours.": [
+    "A check or update is already in progress.",
+    "Ya hay una comprobación o actualización en curso.",
+    "Una verifica o un aggiornamento è già in corso.",
+    "Eine Prüfung oder ein Update läuft bereits.",
+    "已有检查或更新正在进行。",
+    "確認または更新が既に進行中です。"
+  ],
+  "Usage renvoyé par LM Studio : {0} en entrée, {1} en sortie{2}.": [
+    "Usage reported by LM Studio: {0} input, {1} output{2}.",
+    "Uso indicado por LM Studio: {0} de entrada, {1} de salida{2}.",
+    "Uso indicato da LM Studio: {0} in ingresso, {1} in uscita{2}.",
+    "Von LM Studio gemeldet: {0} Eingabe, {1} Ausgabe{2}.",
+    "LM Studio 报告的用量：输入 {0}，输出 {1}{2}。",
+    "LM Studio の使用量：入力 {0}、出力 {1}{2}。"
+  ],
+  "Vérifie d’abord les mises à jour.": [
+    "Check for updates first.",
+    "Comprueba primero las actualizaciones.",
+    "Verifica prima gli aggiornamenti.",
+    "Prüfe zuerst auf Updates.",
+    "请先检查更新。",
+    "先に更新を確認してください。"
+  ],
+  "Vérifie l'adresse et le modèle choisi dans les réglages.": [
+    "Check the address and selected model in Settings.",
+    "Comprueba la dirección y el modelo elegido en Ajustes.",
+    "Controlla indirizzo e modello scelto nelle Impostazioni.",
+    "Prüfe Adresse und gewähltes Modell in den Einstellungen.",
+    "请在设置中检查地址和所选模型。",
+    "設定でアドレスと選択したモデルを確認してください。"
+  ],
+  "Vérifie le modèle, les journaux du logiciel et la mémoire GPU disponible.": [
+    "Check the model, application logs and available GPU memory.",
+    "Comprueba el modelo, los registros y la memoria GPU disponible.",
+    "Controlla modello, log e memoria GPU disponibile.",
+    "Prüfe Modell, Anwendungsprotokolle und verfügbaren GPU-Speicher.",
+    "请检查模型、软件日志及可用 GPU 内存。",
+    "モデル、アプリのログ、利用可能な GPU メモリを確認してください。"
+  ],
+  "Vérifie les nouvelles versions sur GitHub quand tu le souhaites.": [
+    "Check GitHub for new versions whenever you want.",
+    "Comprueba nuevas versiones en GitHub cuando quieras.",
+    "Verifica nuove versioni su GitHub quando vuoi.",
+    "Prüfe auf GitHub nach neuen Versionen, wann du möchtest.",
+    "可随时在 GitHub 检查新版本。",
+    "好きなときに GitHub で新しいバージョンを確認できます。"
+  ],
+  "Vérifie les réglages du modèle et de la voix dans ce logiciel.": [
+    "Check model and voice settings in that application.",
+    "Comprueba los ajustes de modelo y voz en ese programa.",
+    "Controlla le impostazioni di modello e voce in quel programma.",
+    "Prüfe Modell- und Stimmeinstellungen in dieser Anwendung.",
+    "请在该软件中检查模型和声音设置。",
+    "そのアプリでモデルと声の設定を確認してください。"
+  ],
+  "Vérifie que le modèle choisi est installé et actif dans ce logiciel.": [
+    "Check that the selected model is installed and active in that application.",
+    "Comprueba que el modelo elegido esté instalado y activo en ese programa.",
+    "Verifica che il modello scelto sia installato e attivo in quel programma.",
+    "Prüfe, ob das gewählte Modell in dieser Anwendung installiert und aktiv ist.",
+    "请确认所选模型已在该软件中安装并启用。",
+    "選択したモデルがそのアプリにインストールされ、有効か確認してください。"
+  ],
+  "Vérifier les mises à jour": [
+    "Check for updates",
+    "Buscar actualizaciones",
+    "Verifica aggiornamenti",
+    "Nach Updates suchen",
+    "检查更新",
+    "更新を確認"
+  ],
+  "Version {0} · {1}": [
+    "Version {0} · {1}",
+    "Versión {0} · {1}",
+    "Versione {0} · {1}",
+    "Version {0} · {1}",
+    "版本 {0} · {1}",
+    "バージョン {0} · {1}"
+  ],
+  "Vitesse de parole": [
+    "Speech speed",
+    "Velocidad de habla",
+    "Velocità della voce",
+    "Sprechgeschwindigkeit",
+    "语速",
+    "話す速さ"
+  ],
+  "VoiceStudio": [
+    "VoiceStudio",
+    "VoiceStudio",
+    "VoiceStudio",
+    "VoiceStudio",
+    "VoiceStudio",
+    "VoiceStudio"
+  ],
+  "VoiceStudio (voix)": [
+    "VoiceStudio (voice)",
+    "VoiceStudio (voz)",
+    "VoiceStudio (voce)",
+    "VoiceStudio (Stimme)",
+    "VoiceStudio（声音）",
+    "VoiceStudio（音声）"
+  ],
+  "VoiceStudio {0} · {1} voix · {2} moteur(s) TTS prêt(s)": [
+    "VoiceStudio {0} · {1} voices · {2} TTS engines ready",
+    "VoiceStudio {0} · {1} voces · {2} motores TTS listos",
+    "VoiceStudio {0} · {1} voci · {2} motori TTS pronti",
+    "VoiceStudio {0} · {1} Stimmen · {2} TTS-Engines bereit",
+    "VoiceStudio {0} · {1} 个声音 · {2} 个 TTS 引擎就绪",
+    "VoiceStudio {0} · 声 {1} 件 · TTS エンジン {2} 件が準備完了"
+  ],
+  "VoiceStudio a renvoyé un son vide ou invalide.": [
+    "VoiceStudio returned empty or invalid audio.",
+    "VoiceStudio devolvió audio vacío o no válido.",
+    "VoiceStudio ha restituito audio vuoto o non valido.",
+    "VoiceStudio hat leeres oder ungültiges Audio geliefert.",
+    "VoiceStudio 返回了空音频或无效音频。",
+    "VoiceStudio が空または無効な音声を返しました。"
+  ],
+  "VoiceStudio a renvoyé une transcription illisible.": [
+    "VoiceStudio returned an unreadable transcription.",
+    "VoiceStudio devolvió una transcripción ilegible.",
+    "VoiceStudio ha restituito una trascrizione illeggibile.",
+    "VoiceStudio hat eine unlesbare Transkription geliefert.",
+    "VoiceStudio 返回的转录无法读取。",
+    "VoiceStudio が読み取れない音声認識結果を返しました。"
+  ],
+  "VoiceStudio est inaccessible (HTTP {0}). Vérifie son adresse et son accès dans les réglages.": [
+    "VoiceStudio unreachable (HTTP {0}). Check its address and access in Settings.",
+    "VoiceStudio inaccesible (HTTP {0}). Comprueba la dirección y el acceso en Ajustes.",
+    "VoiceStudio non raggiungibile (HTTP {0}). Controlla indirizzo e accesso nelle Impostazioni.",
+    "VoiceStudio nicht erreichbar (HTTP {0}). Prüfe Adresse und Zugriff in den Einstellungen.",
+    "无法访问 VoiceStudio（HTTP {0}）。请在设置中检查地址和访问权限。",
+    "VoiceStudio に接続できません（HTTP {0}）。設定でアドレスとアクセスを確認してください。"
+  ],
+  "VoiceStudio est inaccessible à cette adresse. Le lancement automatique nécessite une adresse HTTP locale, sans chemin intermédiaire.": [
+    "VoiceStudio unreachable at this address. Automatic startup requires a local HTTP address with no intermediate path.",
+    "VoiceStudio inaccesible en esta dirección. El inicio automático necesita una dirección HTTP local sin ruta intermedia.",
+    "VoiceStudio non raggiungibile a questo indirizzo. L'avvio automatico richiede un indirizzo HTTP locale senza percorsi intermedi.",
+    "VoiceStudio ist unter dieser Adresse nicht erreichbar. Der automatische Start benötigt eine lokale HTTP-Adresse ohne Zwischenpfad.",
+    "此地址无法访问 VoiceStudio。自动启动需要无中间路径的本地 HTTP 地址。",
+    "このアドレスで VoiceStudio に接続できません。自動起動には中間パスのないローカル HTTP アドレスが必要です。"
+  ],
+  "VoiceStudio est prêt.": [
+    "VoiceStudio is ready.",
+    "VoiceStudio está listo.",
+    "VoiceStudio è pronto.",
+    "VoiceStudio ist bereit.",
+    "VoiceStudio 已就绪。",
+    "VoiceStudio の準備ができました。"
+  ],
+  "VoiceStudio indisponible · ouvre le poste de bord": [
+    "VoiceStudio unavailable · open control panel",
+    "VoiceStudio no disponible · abre el panel de control",
+    "VoiceStudio non disponibile · apri il pannello di controllo",
+    "VoiceStudio nicht verfügbar · Steuerzentrale öffnen",
+    "VoiceStudio 不可用 · 请打开控制面板",
+    "VoiceStudio 利用不可 · コントロールパネルを開いてください"
+  ],
+  "VoiceStudio n'a pas renvoyé le PCM 24 kHz demandé.": [
+    "VoiceStudio did not return the requested 24 kHz PCM.",
+    "VoiceStudio no devolvió el PCM de 24 kHz solicitado.",
+    "VoiceStudio non ha restituito il PCM a 24 kHz richiesto.",
+    "VoiceStudio hat nicht das angeforderte PCM mit 24 kHz geliefert.",
+    "VoiceStudio 未返回请求的 24 kHz PCM 音频。",
+    "VoiceStudio が指定された 24 kHz PCM を返しませんでした。"
+  ],
+  "VoiceStudio n'arrive plus à suivre la capture. Le micro a été coupé ; vérifie le serveur puis réactive-le.": [
+    "VoiceStudio cannot keep up with capture. The mic was turned off; check the server, then turn it back on.",
+    "VoiceStudio no sigue la captura. Se apagó el micrófono; comprueba el servidor y reactívalo.",
+    "VoiceStudio non tiene il passo della cattura. Il microfono è stato spento; controlla il server e riattivalo.",
+    "VoiceStudio kommt nicht mit der Aufnahme mit. Das Mikrofon wurde ausgeschaltet; prüfe den Server und schalte es wieder ein.",
+    "VoiceStudio 跟不上采集速度。麦克风已关闭；请检查服务器，再重新开启。",
+    "VoiceStudio が録音に追いついていません。マイクを無効にしました。サーバーを確認してから再度有効にしてください。"
+  ],
+  "VoiceStudio n’est pas prêt après 5 minutes. Vérifie sa fenêtre, puis réessaie.": [
+    "VoiceStudio is not ready after 5 minutes. Check its window, then retry.",
+    "VoiceStudio no está listo tras 5 minutos. Revisa su ventana y reinténtalo.",
+    "VoiceStudio non è pronto dopo 5 minuti. Controlla la finestra e riprova.",
+    "VoiceStudio ist nach 5 Minuten nicht bereit. Prüfe das Fenster und versuche es erneut.",
+    "VoiceStudio 在 5 分钟后仍未就绪。请检查窗口后重试。",
+    "5 分経過しても VoiceStudio の準備ができません。ウィンドウを確認して再試行してください。"
+  ],
+  "VoiceStudio ne fournit pas le protocole vocal attendu. Vérifie sa version.": [
+    "VoiceStudio does not provide the expected voice protocol. Check its version.",
+    "VoiceStudio no ofrece el protocolo de voz esperado. Comprueba su versión.",
+    "VoiceStudio non fornisce il protocollo vocale previsto. Controlla la versione.",
+    "VoiceStudio bietet nicht das erwartete Sprachprotokoll. Prüfe die Version.",
+    "VoiceStudio 未提供预期的语音协议。请检查版本。",
+    "VoiceStudio が必要な音声プロトコルに対応していません。バージョンを確認してください。"
+  ],
+  "VoiceStudio se prépare…": [
+    "VoiceStudio is getting ready…",
+    "VoiceStudio se prepara…",
+    "VoiceStudio si prepara…",
+    "VoiceStudio wird vorbereitet…",
+    "VoiceStudio 正在准备…",
+    "VoiceStudio を準備中…"
+  ],
+  "Voix & modèles": [
+    "Voices & models",
+    "Voces y modelos",
+    "Voci e modelli",
+    "Stimmen und Modelle",
+    "声音与模型",
+    "声とモデル"
+  ],
+  "Voix de {0}": [
+    "{0}'s voice",
+    "Voz de {0}",
+    "Voce di {0}",
+    "Stimme von {0}",
+    "{0} 的声音",
+    "{0} の声"
+  ],
+  "Voix de {0} enregistrée.": [
+    "{0}'s voice saved.",
+    "Voz de {0} guardada.",
+    "Voce di {0} salvata.",
+    "Stimme von {0} gespeichert.",
+    "已保存 {0} 的声音。",
+    "{0} の声を保存しました。"
+  ],
+  "Voix du compagnon": [
+    "Companion voice",
+    "Voz del compañero",
+    "Voce del compagno",
+    "Stimme des Begleiters",
+    "伙伴声音",
+    "コンパニオンの声"
+  ],
+  "Voix enregistrée · {0}": [
+    "Saved voice · {0}",
+    "Voz guardada · {0}",
+    "Voce salvata · {0}",
+    "Gespeicherte Stimme · {0}",
+    "已保存的声音 · {0}",
+    "保存済みの声 · {0}"
+  ],
+  "Voix par défaut du moteur": [
+    "Engine's default voice",
+    "Voz predeterminada del motor",
+    "Voce predefinita del motore",
+    "Standardstimme der Engine",
+    "引擎默认声音",
+    "エンジンの既定の声"
+  ],
+  "Volume de Sherka": [
+    "Sherka volume",
+    "Volumen de Sherka",
+    "Volume di Sherka",
+    "Sherka-Lautstärke",
+    "Sherka 音量",
+    "Sherka の音量"
+  ],
+  "Whisper : transcription automatique en fin de phrase. La dictée directe de VoiceStudio utilise un autre modèle.": [
+    "Whisper: automatic transcription after each utterance. VoiceStudio live dictation uses a different model.",
+    "Whisper: transcripción automática al terminar cada frase. El dictado en directo de VoiceStudio usa otro modelo.",
+    "Whisper: trascrizione automatica a fine frase. La dettatura dal vivo di VoiceStudio usa un altro modello.",
+    "Whisper: automatische Transkription nach jeder Äußerung. VoiceStudio nutzt für Live-Diktat ein anderes Modell.",
+    "Whisper：语句结束后自动转录。VoiceStudio 实时听写使用其他模型。",
+    "Whisper：発話の終了後に自動認識します。VoiceStudio のリアルタイム音声認識は別のモデルを使用します。"
+  ],
+  "L’essentiel": [
+    "Essentials",
+    "Lo esencial",
+    "L’essenziale",
+    "Das Wesentliche",
+    "重要记忆",
+    "重要な記憶"
+  ],
+  "Préférences": [
+    "Preferences",
+    "Preferencias",
+    "Preferenze",
+    "Vorlieben",
+    "偏好",
+    "好み"
+  ],
+  "Windows refuse le microphone. Vérifie les autorisations et le périphérique choisi.": [
+    "Windows denied microphone access. Check permissions and the selected device.",
+    "Windows deniega el micrófono. Comprueba los permisos y el dispositivo elegido.",
+    "Windows nega l'accesso al microfono. Controlla autorizzazioni e dispositivo scelto.",
+    "Windows verweigert den Mikrofonzugriff. Prüfe Berechtigungen und gewähltes Gerät.",
+    "Windows 拒绝访问麦克风。请检查权限和所选设备。",
+    "Windows がマイクへのアクセスを拒否しました。権限と選択したデバイスを確認してください。"
+  ],
+  "Afficher Sherka / reprendre les clics": [
+    "Show Sherka / restore clicks",
+    "Mostrar Sherka / recuperar clics",
+    "Mostra Sherka / ripristina i clic",
+    "Sherka anzeigen / Klicks aktivieren",
+    "显示 Sherka / 恢复点击",
+    "Sherka を表示 / クリック操作を戻す"
+  ],
+  "Pause vocale globale": [
+    "Pause all voice activity",
+    "Pausar toda la voz",
+    "Pausa tutte le attività vocali",
+    "Sprachfunktionen pausieren",
+    "暂停所有语音活动",
+    "すべての音声機能を一時停止"
+  ],
+  "Consolidation trop longue.": [
+    "Consolidation too long.",
+    "Consolidación demasiado larga.",
+    "Consolidamento troppo lungo.",
+    "Zusammenführung zu lang.",
+    "记忆整理结果过长。",
+    "記憶の整理結果が長すぎます。"
+  ],
+  "Impossible d'initialiser les connexions.": [
+    "Cannot initialize connections.",
+    "No se pueden inicializar las conexiones.",
+    "Impossibile inizializzare le connessioni.",
+    "Verbindungen können nicht initialisiert werden.",
+    "无法初始化连接。",
+    "接続を初期化できません。"
+  ],
+  "Impossible de lister les sorties audio Windows.": [
+    "Cannot list Windows audio outputs.",
+    "No se pueden listar las salidas de audio de Windows.",
+    "Impossibile elencare le uscite audio Windows.",
+    "Windows-Audioausgaben können nicht aufgelistet werden.",
+    "无法列出 Windows 音频输出。",
+    "Windows の音声出力一覧を取得できません。"
+  ],
+  "L’application d’origine est introuvable.": [
+    "Original application not found.",
+    "No se encuentra la aplicación original.",
+    "Applicazione originale non trovata.",
+    "Ursprüngliche Anwendung nicht gefunden.",
+    "找不到原应用。",
+    "元のアプリが見つかりません。"
+  ],
+  "Phrase audio vide ou trop longue.": [
+    "Audio phrase empty or too long.",
+    "Frase de audio vacía o demasiado larga.",
+    "Frase audio vuota o troppo lunga.",
+    "Audiosatz leer oder zu lang.",
+    "语音片段为空或过长。",
+    "音声の文が空か長すぎます。"
+  ],
+  "Sherka {0} est disponible.": [
+    "Sherka {0} is available.",
+    "Sherka {0} está disponible.",
+    "Sherka {0} è disponibile.",
+    "Sherka {0} ist verfügbar.",
+    "Sherka {0} 已可用。",
+    "Sherka {0} が利用できます。"
+  ],
+  "Transcription trop volumineuse.": [
+    "Transcription too large.",
+    "Transcripción demasiado grande.",
+    "Trascrizione troppo grande.",
+    "Transkription zu groß.",
+    "转录结果过大。",
+    "音声認識結果が大きすぎます。"
+  ],
+  "Connexion…": [
+    "Connecting…",
+    "Conectando…",
+    "Connessione…",
+    "Verbindung wird hergestellt…",
+    "正在连接…",
+    "接続中…"
+  ],
+  "Faible": [
+    "Low",
+    "Baja",
+    "Bassa",
+    "Niedrig",
+    "低",
+    "低い"
+  ],
+  "Moyenne": [
+    "Medium",
+    "Media",
+    "Media",
+    "Mittel",
+    "中",
+    "中程度"
+  ],
+  "Forte": [
+    "High",
+    "Alta",
+    "Alta",
+    "Hoch",
+    "高",
+    "高い"
+  ],
+  "inconnu": [
+    "unknown",
+    "desconocido",
+    "sconosciuto",
+    "unbekannt",
+    "未知",
+    "不明"
+  ],
+  "SHERKA {0}": [
+    "SHERKA {0}",
+    "SHERKA {0}",
+    "SHERKA {0}",
+    "SHERKA {0}",
+    "SHERKA {0}",
+    "SHERKA {0}"
+  ],
+  "Ce choix traduit l’interface et adapte Sherka d’origine à cette langue. Les compagnons personnalisés, les conversations, les souvenirs, les modèles et les voix restent inchangés.": [
+    "This translates the interface and adapts the original Sherka to this language. Custom companions, conversations, memories, models and voices remain unchanged.",
+    "Esta opción traduce la interfaz y adapta la Sherka original a este idioma. Los compañeros personalizados, las conversaciones, los recuerdos, los modelos y las voces no cambian.",
+    "Questa scelta traduce l’interfaccia e adatta la Sherka originale a questa lingua. I compagni personalizzati, le conversazioni, i ricordi, i modelli e le voci restano invariati.",
+    "Diese Auswahl übersetzt die Oberfläche und passt die ursprüngliche Sherka an diese Sprache an. Eigene Begleiter, Gespräche, Erinnerungen, Modelle und Stimmen bleiben unverändert.",
+    "此选项会翻译界面，并让原版 Sherka 使用该语言。自定义伙伴、对话、记忆、模型和声音保持不变。",
+    "この設定は画面を翻訳し、初期設定の Sherka をその言語に合わせます。カスタムの仲間、会話、記憶、モデル、音声は変更されません。"
+  ],
+  "Sherka d’origine suit la langue de l’interface ; les compagnons personnalisés gardent leur langue. Choisis toi-même des modèles et des voix compatibles dans LM Studio et VoiceStudio.": [
+    "The original Sherka follows the interface language; custom companions keep their own language. Choose compatible models and voices in LM Studio and VoiceStudio.",
+    "La Sherka original usa el idioma de la interfaz; los compañeros personalizados conservan el suyo. Elige modelos y voces compatibles en LM Studio y VoiceStudio.",
+    "La Sherka originale segue la lingua dell’interfaccia; i compagni personalizzati mantengono la propria. Scegli modelli e voci compatibili in LM Studio e VoiceStudio.",
+    "Die ursprüngliche Sherka folgt der Sprache der Oberfläche; eigene Begleiter behalten ihre Sprache. Wähle passende Modelle und Stimmen in LM Studio und VoiceStudio.",
+    "原版 Sherka 使用界面语言，自定义伙伴保留各自的语言。请自行在 LM Studio 和 VoiceStudio 中选择兼容的模型和声音。",
+    "初期設定の Sherka は画面の言語に従い、カスタムの仲間は設定済みの言語を維持します。LM Studio と VoiceStudio で対応するモデルと音声を選んでください。"
+  ],
+  "Sherka d’origine suit la langue de l’interface. Si tu modifies son nom ou son caractère, elle devient un compagnon personnalisé avec une langue fixe.": [
+    "The original Sherka follows the interface language. Changing her name or personality makes her a custom companion with a fixed language.",
+    "La Sherka original usa el idioma de la interfaz. Si cambias su nombre o personalidad, se convierte en una compañera personalizada con un idioma fijo.",
+    "La Sherka originale segue la lingua dell’interfaccia. Se cambi il suo nome o carattere, diventa una compagna personalizzata con una lingua fissa.",
+    "Die ursprüngliche Sherka folgt der Sprache der Oberfläche. Wenn du ihren Namen oder Charakter änderst, wird sie zu einer eigenen Begleiterin mit einer festen Sprache.",
+    "原版 Sherka 使用界面语言。如果修改她的名字或性格，她就会成为语言固定的自定义伙伴。",
+    "初期設定の Sherka は画面の言語に従います。名前や性格を変更すると、言語が固定されたカスタムの仲間になります。"
+  ]
+}

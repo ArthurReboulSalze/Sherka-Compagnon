@@ -1,3 +1,4 @@
+import { t, html, feedback } from './i18n';
 import * as api from './api';
 import type { Connections, Profile, VoiceCatalog } from './types';
 
@@ -14,8 +15,8 @@ function catalog(url: string, fresh = false): Promise<VoiceCatalog> {
 
 export async function paintProfileVoice(label: HTMLElement, profile: Profile): Promise<void> {
   const id = profile.connections.tts_voice;
-  if (!id) { label.textContent = 'Aucune voix choisie'; return; }
-  label.textContent = id === 'default' ? 'Voix par défaut du moteur' : `Voix enregistrée · ${id}`;
+  if (!id) { label.textContent = t('Aucune voix choisie'); return; }
+  label.textContent = id === 'default' ? t('Voix par défaut du moteur') : t`Voix enregistrée · ${id}`;
   try {
     const voices = await catalog(profile.connections.voice_studio_url);
     if (!label.isConnected) return;
@@ -28,7 +29,7 @@ export async function editProfileVoice(profile: Profile, save: (connections: Con
   const dialog = document.createElement('dialog');
   dialog.className = 'modal voice-modal';
   dialog.setAttribute('aria-labelledby', 'voice-title');
-  dialog.innerHTML = `<h2 id="voice-title">La voix de ${escape(profile.name)}</h2><p>Cette voix sera reprise à chaque activation de ${escape(profile.name)}.</p><div id="voice-options" aria-live="polite">Lecture des voix VoiceStudio…</div><div class="modal-actions"><button class="button secondary" id="voice-cancel">Fermer</button></div>`;
+  dialog.innerHTML = html`<h2 id="voice-title">La voix de ${escape(profile.name)}</h2><p>Cette voix sera reprise à chaque activation de ${escape(profile.name)}.</p><div id="voice-options" aria-live="polite">Lecture des voix VoiceStudio…</div><div class="modal-actions"><button class="button secondary" id="voice-cancel">Fermer</button></div>`;
   dialog.addEventListener('close', () => dialog.remove());
   dialog.querySelector('#voice-cancel')!.addEventListener('click', () => dialog.close());
   document.body.append(dialog);
@@ -38,15 +39,15 @@ export async function editProfileVoice(profile: Profile, save: (connections: Con
     if (!dialog.isConnected) return;
     const engines = voices.tts_engines.filter(e => e.readiness === 'ready');
     const options = dialog.querySelector('#voice-options')!;
-    options.innerHTML = `<form id="profile-voice-form"><label>Moteur de synthèse vocale<select name="engine" required><option value="">À choisir</option>${engines.map(e => `<option value="${escape(e.id)}" ${profile.connections.tts_engine === e.id ? 'selected' : ''}>${escape(e.label)}</option>`).join('')}</select></label><label>Voix de ${escape(profile.name)}<select name="voice" required></select></label><p class="connection-note" id="voice-note"></p></form>`;
+    options.innerHTML = html`<form id="profile-voice-form"><label>Moteur de synthèse vocale<select name="engine" required><option value="">À choisir</option>${engines.map(e => html`<option value="${escape(e.id)}" ${profile.connections.tts_engine === e.id ? 'selected' : ''}>${escape(e.label)}</option>`).join('')}</select></label><label>Voix de ${escape(profile.name)}<select name="voice" required></select></label><p class="connection-note" id="voice-note"></p></form>`;
     const engine = options.querySelector<HTMLSelectElement>('[name="engine"]')!;
     const voice = options.querySelector<HTMLSelectElement>('[name="voice"]')!;
     const note = options.querySelector('#voice-note')!;
     const fillVoices = (selected: string | null) => {
       const supports = engines.find(e => e.id === engine.value)?.supports_cloning;
       const available = voices.voices.filter(v => v.type !== 'profile' || supports);
-      voice.innerHTML = `<option value="">À choisir</option>${available.map(v => `<option value="${escape(v.voice_id)}" ${selected === v.voice_id ? 'selected' : ''}>${escape(v.name)}${v.language ? ` · ${escape(v.language)}` : ''} · ${escape(v.voice_id)}</option>`).join('')}`;
-      note.textContent = !engine.value ? 'Choisis le moteur vocal de ce compagnon.' : !supports ? 'Ce moteur ne prend pas en charge les profils vocaux personnalisés de VoiceStudio.' : selected && !available.some(v => v.voice_id === selected) ? 'La voix enregistrée est absente du catalogue : choisis-en une disponible.' : 'Le choix est propre à ce compagnon. Les réglages globaux de VoiceStudio restent libres.';
+      voice.innerHTML = html`<option value="">À choisir</option>${available.map(v => html`<option value="${escape(v.voice_id)}" ${selected === v.voice_id ? 'selected' : ''}>${escape(v.name)}${v.language ? ` · ${escape(v.language)}` : ''} · ${escape(v.voice_id)}</option>`).join('')}`;
+      note.textContent = !engine.value ? t('Choisis le moteur vocal de ce compagnon.') : !supports ? t('Ce moteur ne prend pas en charge les profils vocaux personnalisés de VoiceStudio.') : selected && !available.some(v => v.voice_id === selected) ? t('La voix enregistrée est absente du catalogue : choisis-en une disponible.') : t('Le choix est propre à ce compagnon. Les réglages globaux de VoiceStudio restent libres.');
     };
     fillVoices(profile.connections.tts_voice);
     engine.addEventListener('change', () => fillVoices(voice.value));
@@ -54,7 +55,7 @@ export async function editProfileVoice(profile: Profile, save: (connections: Con
     submit.className = 'button primary';
     submit.type = 'submit';
     submit.setAttribute('form', 'profile-voice-form');
-    submit.textContent = 'Associer cette voix';
+    submit.textContent = t('Associer cette voix');
     dialog.querySelector('.modal-actions')!.append(submit);
     let saving = false;
     dialog.querySelector('form')!.addEventListener('submit', async event => {
@@ -66,6 +67,6 @@ export async function editProfileVoice(profile: Profile, save: (connections: Con
       saving = false; submit.disabled = false; engine.disabled = false; voice.disabled = false;
     });
   } catch (error) {
-    if (dialog.isConnected) dialog.querySelector('#voice-options')!.textContent = String(error);
+    if (dialog.isConnected) dialog.querySelector('#voice-options')!.textContent = feedback(String(error));
   }
 }

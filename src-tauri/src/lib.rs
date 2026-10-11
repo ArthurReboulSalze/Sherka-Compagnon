@@ -27,6 +27,9 @@ struct Shared(Arc<Mutex<Companion>>);
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Mutation {
+    InterfaceLanguage {
+        language: sherka_core::i18n::Language,
+    },
     CreateProfile {
         draft: ProfileDraft,
     },
@@ -121,13 +124,34 @@ async fn apply_mutation(
     voice: State<'_, Voice>,
 ) -> Result<Snapshot, String> {
     windows::ensure_running()?;
+    if let Mutation::InterfaceLanguage { language } = &mutation {
+        let language = *language;
+        let snapshot = with_core(shared.inner().clone(), move |core| {
+            if core.interface_language_changes_active_companion(language)? {
+                return Ok(None);
+            }
+            core.set_interface_language(language)?;
+            core.snapshot().map(Some)
+        })
+        .await?;
+        if let Some(snapshot) = snapshot {
+            windows::set_language(&app, language).map_err(|error| error.to_string())?;
+            app.emit("sherka:changed", ())
+                .map_err(|error| error.to_string())?;
+            return Ok(snapshot);
+        }
+    }
     let _gate = voice.gate.lock().await;
     windows::ensure_running()?;
     voice.cancel_pending();
+    let interface_language = match &mutation {
+        Mutation::InterfaceLanguage { language } => Some(*language),
+        _ => None,
+    };
     let preferences_changed = matches!(&mutation, Mutation::Preferences { .. });
     let stop_audio = matches!(
         &mutation,
-        Mutation::PauseVoice | Mutation::AudioSettings { .. }
+        Mutation::PauseVoice | Mutation::AudioSettings { .. } | Mutation::InterfaceLanguage { .. }
     );
     let previous = with_core(shared.inner().clone(), |c| {
         Ok((
@@ -141,6 +165,7 @@ async fn apply_mutation(
     .await?;
     let snapshot = with_core(shared.inner().clone(), move |core| {
         match mutation {
+            Mutation::InterfaceLanguage { language } => core.set_interface_language(language)?,
             Mutation::CreateProfile { draft } => {
                 core.store.create(draft, None)?;
             }
@@ -221,6 +246,9 @@ async fn apply_mutation(
         voice.stop_audio().await;
     }
     conversation::emit(&app, shared.inner());
+    if let Some(language) = interface_language {
+        windows::set_language(&app, language).map_err(|error| error.to_string())?;
+    }
     if preferences_changed {
         windows::apply_preferences(&app, &snapshot.settings).map_err(|e| e.to_string())?;
     }
@@ -350,8 +378,10 @@ async fn export_memories(
         if let Some(file) = app
             .dialog()
             .file()
-            .set_title("Exporter les souvenirs et leurs sources")
-            .add_filter("Mémoire Sherka", &["json"])
+            .set_title(sherka_core::i18n::text(
+                "Exporter les souvenirs et leurs sources",
+            ))
+            .add_filter(sherka_core::i18n::text("Mémoire Sherka"), &["json"])
             .set_file_name("souvenirs.sherka.json")
             .blocking_save_file()
         {
@@ -400,8 +430,10 @@ async fn export_profile(
         let selection = app
             .dialog()
             .file()
-            .set_title("Exporter le compagnon sans souvenirs")
-            .add_filter("Profil Sherka", &["json"])
+            .set_title(sherka_core::i18n::text(
+                "Exporter le compagnon sans souvenirs",
+            ))
+            .add_filter(sherka_core::i18n::text("Profil Sherka"), &["json"])
             .set_file_name("compagnon.sherka.json")
             .blocking_save_file();
         if let Some(file) = selection {
@@ -521,6 +553,7 @@ pub fn run() {
                 .unwrap_or(app.path().app_local_data_dir()?);
             let companion = Companion::open(directory)?;
             let snapshot = companion.snapshot()?;
+            sherka_core::i18n::set_ui_language(snapshot.settings.ui_language);
             let shared = Shared(Arc::new(Mutex::new(companion)));
             app.manage(
                 voice_startup::VoiceStartup::new(app.handle().clone())
@@ -535,6 +568,7 @@ pub fn run() {
                 tauri::WebviewWindowBuilder::from_config(app, config)?.build()?;
             }
             windows::setup_tray(app)?;
+            windows::set_language(app.handle(), snapshot.settings.ui_language)?;
             windows::apply_preferences(app.handle(), &snapshot.settings)?;
             windows::recover_widget(app.handle(), snapshot.settings.widget_bounds)?;
             // Only debug builds accept hidden startup for native WebView2

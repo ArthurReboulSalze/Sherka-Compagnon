@@ -16,6 +16,7 @@ Sherka turns your local AI models into someone you can talk to. A transparent de
 - **Memory you control.** Essential memories and topical drawers, editable in the interface or through conversation.
 - **Context awareness.** Sherka budgets against the model's loaded context and reserves room for its reply. Reasoning controls appear when supported.
 - **Simple updates.** Check GitHub from Settings and install a signed update, keeping your profiles and memories.
+- **Your language.** Seven interface languages and a ready-to-use Sherka in each one. Custom companions keep their own language. [Language settings](docs/LANGUAGES.md).
 
 ## Local voice, local intelligence
 
@@ -27,7 +28,7 @@ Install both applications and their models separately. Once downloaded, conversa
 
 ## Install it, or just run it
 
-Choose the **Windows x64 installer** or the **no-install ZIP** from [Releases](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest). Both require WebView2 and the Visual C++ x64 runtime, and store data in your Windows user folder. The current application interface is in French.
+Choose the **Windows x64 installer** or the **no-install ZIP** from [Releases](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest). Both require WebView2 and the Visual C++ x64 runtime, and store data in your Windows user folder. Choose French, English, Spanish, Italian, German, Simplified Chinese or Japanese in Settings.
 
 Sherka is a working early project. Next come richer avatar customization, speaking and listening animations, expressions and moods. See the [roadmap and current limitations](docs/ROADMAP.md).
 

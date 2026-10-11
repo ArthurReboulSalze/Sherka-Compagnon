@@ -15,13 +15,7 @@ pub struct ProfileDraft {
 
 impl Default for ProfileDraft {
     fn default() -> Self {
-        Self {
-            name: "Sherka".into(),
-            personality: "Tu es Sherka, une présence informatique de bord calme, attentive et chaleureuse, inspirée des aventures spatiales rétrofuturistes. Tu tutoies ton interlocuteur. Tu réponds avec précision, simplicité et une pointe d'humour. Tu respectes ses silences et ses choix.".into(),
-            instructions: "Reste honnête sur tes capacités. Ne prétends pas contrôler le PC ni avoir mémorisé une information sans confirmation du système. Ne transforme pas une supposition en souvenir.".into(),
-            accent: "amber".into(),
-            connections: Default::default(),
-        }
+        crate::presets::sherka(crate::i18n::Language::Fr)
     }
 }
 
@@ -71,6 +65,9 @@ pub struct Profile {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
+    pub ui_language: crate::i18n::Language,
+    pub default_companion: Option<Uuid>,
+    pub default_companion_initialized: bool,
     pub active_profile: Option<Uuid>,
     pub always_on_top: bool,
     pub widget_scale: u16,
@@ -81,6 +78,9 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            ui_language: Default::default(),
+            default_companion: None,
+            default_companion_initialized: false,
             active_profile: None,
             always_on_top: true,
             widget_scale: 100,

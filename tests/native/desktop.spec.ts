@@ -5,6 +5,9 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { basename, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+const currentVersion=JSON.parse(readFileSync('package.json','utf8')).version as string;
+const nextVersion=currentVersion.replace(/(\d+)$/,part=>String(Number(part)+1));
+
 let executable = resolve(process.env.SHERKA_TEST_EXECUTABLE ?? 'target/debug/sherka-compagnon.exe');
 let child: ChildProcess;
 let browser: Browser;
@@ -116,7 +119,7 @@ async function startApplication(hidden = true, autostartVoice = false): Promise<
     page.on('pageerror', (e) => consoleErrors.push(e.message));
     page.on('console', (e) => { if (e.type() === 'error') consoleErrors.push(e.text()); });
   }
-  await expect(panel.getByRole('heading', { name: 'Tes compagnons.' })).toBeVisible();
+  await expect(panel.locator('#new-profile')).toBeVisible();
 }
 
 async function stopApplication(): Promise<void> {
@@ -144,6 +147,178 @@ test.afterEach(async ({}, info) => {
     await widget?.screenshot({ path: info.outputPath('widget-failure.png') }).catch(() => {});
   }
   await stopApplication();
+});
+
+test('languages: seven interfaces, opaque content, fixed profiles and restart', async () => {
+  test.setTimeout(150_000);
+  const catalog=JSON.parse(readFileSync('config/locales/ui.json','utf8')) as Record<string,string[]>;
+  const locales=['fr','en','es','it','de','zh','ja'];
+  const fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
+  fixture['/v1/audio/voices'].voices[1].name='Réglages';
+  const server=createServer((request,response)=>{
+    response.writeHead(fixture[request.url??'']?200:404,{'Content-Type':'application/json'});
+    response.end(JSON.stringify(fixture[request.url??'']??{}));
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
+  const address=server.address();
+  if(!address||typeof address==='string')throw new Error('No fixture port');
+  const url='http://127.0.0.1:'+address.port;
+  try {
+    const original=(await native<any>('get_snapshot')).profiles[0];
+    await native('apply_mutation',{mutation:{kind:'update_profile',id:original.id,revision:original.revision,draft:{
+      name:'Réglages',accent:original.accent,personality:'Réglages 中文 日本語 <script>opaque</script>',
+      instructions:'Réponds en français.',connections:{
+        ...original.connections,lm_studio_url:url,voice_studio_url:url,
+        llm_model:'my-loaded-chat',llm_model_key:'small-chat',tts_engine:'omni',tts_voice:'voice-a',stt_model:'faster-whisper'
+      }
+    }}});
+    const before=(await native<any>('get_snapshot')).profiles[0];
+    const memory=await native<any>('get_memories',{profileId:before.id,query:''});
+    await native('edit_memory',{profileId:before.id,epoch:memory.epoch,edit:{action:'write',id:null,draft:{content:'Réglages 中文 日本語',category:'Réglages',kind:'essential'}}});
+    for(const [index,locale] of locales.entries()) {
+      const tr=(key:string)=>index===0?key:catalog[key][index-1];
+      await panel.locator('[data-nav="settings"]').click();
+      await panel.locator('#interface-language').selectOption(locale);
+      await expect(panel.locator('html')).toHaveAttribute('lang',locale);
+      await expect(widget.locator('html')).toHaveAttribute('lang',locale);
+      await expect(panel.locator('[data-nav="settings"]')).toHaveText(tr('Réglages'));
+      await expect(panel.locator('#interface-language')).toHaveValue(locale);
+      await expect(panel.locator('[name="llm_model"]')).toHaveValue('my-loaded-chat');
+      await expect(panel.locator('[name="tts_voice"]')).toHaveValue('voice-a');
+      await expect(panel.locator('[name="tts_voice"] option[value="voice-a"]')).toContainText('Réglages');
+      await expect(panel.locator('[name="tts_engine"] option[value="omni"]')).toContainText(tr('Prêt'));
+      await panel.locator('[name="llm_model"]').selectOption('large-chat');
+      await expect(panel.locator('[name="reasoning"] option[value="low"]')).toHaveText(tr('Faible'));
+      await expect(panel.locator('[name="reasoning"] option[value="high"]')).toHaveText(tr('Forte'));
+      await panel.locator('[name="llm_model"]').selectOption('my-loaded-chat');
+      await expect(panel.locator('[name="language"]')).toHaveAttribute('readonly','');
+      await expect(panel.locator('[name="language"]')).toHaveValue('Français');
+      await panel.locator('.language-help').click();
+      await expect(panel.locator('.language-help')).not.toContainText('Parakeet');
+      await panel.locator('[data-nav="memory"]').click();
+      await expect(panel.locator('.memory-entry')).toContainText('Réglages 中文 日本語');
+      await expect(panel.locator('.memory-entry')).toContainText(tr('Corriger'));
+      await panel.locator('[data-nav="conversation"]').click();
+      await expect(panel.locator('#chat-text')).toHaveAttribute('placeholder',tr('Qu’est-ce que tu as en tête ?'));
+      await panel.locator('[data-nav="profiles"]').click();
+      await expect(panel.locator('.personality-preview')).toHaveText(before.personality);
+      await expect(panel.locator('.personality-preview script')).toHaveCount(0);
+      await panel.locator('#edit-profile').click();
+      await expect(panel.locator('[name="companion_language"]')).toBeDisabled();
+      await expect(panel.locator('[name="companion_language"]')).toHaveValue('fr');
+      await expect(panel.locator('[name="personality"]')).toHaveValue(before.personality);
+      await panel.locator('[data-close]').first().click();
+      await panel.locator('#choose-profile-voice').click();
+      await expect(panel.locator('#voice-title')).toHaveText(tr('La voix de {0}').replace('{0}',before.name));
+      await expect(panel.locator('#profile-voice-form [name="voice"]')).toHaveValue('voice-a');
+      await expect(panel.locator('#profile-voice-form [name="voice"] option[value="voice-a"]')).toContainText('Réglages');
+      await panel.locator('#voice-cancel').click();
+      await widget.locator('#drag-region').click();
+      await expect(widget.locator('[data-action="show_panel"]')).toHaveAttribute('aria-label',tr('Ouvrir le poste de bord'));
+      expect((await native<any>('get_snapshot')).profiles[0]).toEqual({...before,memory_count:1});
+    }
+    await panel.locator('#new-profile').click();
+    await panel.locator('[name="name"]').fill('星の友');
+    await panel.locator('[name="personality"]').fill('落ち着いた友人。');
+    await panel.locator('[name="companion_language"]').selectOption('ja');
+    await panel.locator('#profile-form [type="submit"]').click();
+    await expect(panel.getByRole('dialog')).toHaveCount(0);
+    const japanese=(await native<any>('get_snapshot')).profiles.find((p:any)=>p.name==='星の友');
+    expect(japanese.connections.language).toBe('ja');
+    const rejected=await native('apply_mutation',{mutation:{kind:'connections',id:japanese.id,revision:japanese.revision,connections:{...japanese.connections,language:'en'}}}).then(()=>({accepted:true,message:''}),error=>({accepted:false,message:String(error)}));
+    expect(rejected.accepted).toBe(false);expect(rejected.message).toContain('La langue du compagnon');
+    await stopApplication();await startApplication();
+    await expect(panel.locator('html')).toHaveAttribute('lang','ja');
+    await expect(widget.locator('html')).toHaveAttribute('lang','ja');
+    const final=await native<any>('get_snapshot');
+    expect(final.settings.active_profile).toBe(before.id);
+    expect(final.profiles.find((p:any)=>p.id===before.id)).toEqual({...before,memory_count:1});
+    expect(final.profiles.find((p:any)=>p.id===japanese.id).connections.language).toBe('ja');
+    await panel.locator('[data-nav="settings"]').click();
+    await expect(panel.locator('#interface-language')).toHaveValue('ja');
+    await panel.screenshot({path:'artifacts/interface-ja.png',fullPage:true});
+    expect(consoleErrors).toEqual([]);
+  } finally {server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+});
+
+
+test('languages: built-in Sherka is ready in seven languages and custom companions stay fixed', async () => {
+  const presets=JSON.parse(readFileSync('config/presets/sherka.json','utf8'));
+  const fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
+  const names:Record<string,string>={fr:'French',en:'English',es:'Spanish',it:'Italian',de:'German',zh:'Simplified Chinese',ja:'Japanese'};
+  const sent:any[]=[];
+  const server=createServer((request,response)=>{
+    if(request.url==='/v1/chat/completions') {
+      let body=''; request.on('data',bytes=>{body+=bytes;});
+      request.on('end',()=>{
+        sent.push(JSON.parse(body));
+        response.writeHead(200,{'Content-Type':'text/event-stream'});
+        response.write('data: '+JSON.stringify({choices:[{delta:{content:'OK.'},finish_reason:'stop'}]})+'\n\n');
+        response.end('data: [DONE]\n\n');
+      });
+      return;
+    }
+    response.writeHead(fixture[request.url??'']?200:404,{'Content-Type':'application/json'});
+    response.end(JSON.stringify(fixture[request.url??'']??{}));
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
+  const address=server.address(); if(!address||typeof address==='string')throw new Error('No fixture port');
+  const url='http://127.0.0.1:'+address.port;
+  try {
+    const original=(await native<any>('get_snapshot')).profiles[0];
+    await native('apply_mutation',{mutation:{kind:'connections',id:original.id,revision:original.revision,connections:{
+      ...original.connections,lm_studio_url:url,voice_studio_url:url,llm_model:'my-loaded-chat',llm_model_key:'small-chat',
+      tts_engine:'omni',tts_voice:'voice-a',stt_model:'faster-whisper'
+    }}});
+    await native('apply_mutation',{mutation:{kind:'create_profile',draft:{name:'Custom companion',personality:'My unchanged character',instructions:'My own instructions',accent:'teal',connections:original.connections}}});
+    const before=await native<any>('get_snapshot');
+    const custom=before.profiles.find((p:any)=>p.name==='Custom companion');
+    const configured=before.profiles.find((p:any)=>p.id===original.id);
+    for(const locale of Object.keys(names)) {
+      await panel.locator('[data-nav="settings"]').click();
+      await panel.locator('#interface-language').selectOption(locale);
+      await expect(panel.locator('html')).toHaveAttribute('lang',locale);
+      await expect(panel.locator('[name="language"]')).toHaveValue(({fr:'Français',en:'English',es:'Español',it:'Italiano',de:'Deutsch',zh:'中文（简体）',ja:'日本語'} as Record<string,string>)[locale]);
+      await expect(panel.locator('[name="tts_voice"]')).toHaveValue('voice-a');
+      const snapshot=await native<any>('get_snapshot');
+      const profile=snapshot.profiles.find((p:any)=>p.id===original.id);
+      expect(snapshot.settings.default_companion).toBe(original.id);
+      expect(profile.personality).toBe(presets[locale].personality);
+      expect(profile.instructions).toBe(presets[locale].instructions);
+      expect(profile.connections).toEqual({...configured.connections,language:locale});
+      expect(snapshot.profiles.find((p:any)=>p.id===custom.id)).toEqual(custom);
+      await panel.locator('[data-nav="profiles"]').click();
+      await expect(panel.locator('.personality-preview')).toHaveText(presets[locale].personality);
+      await native('send_message',{profileId:original.id,text:'Hello '+locale,speak:false});
+      await expect.poll(async()=>(await native<any[]>('get_history',{profileId:original.id})).filter(m=>m.role==='assistant').length).toBe(Object.keys(names).indexOf(locale)+1);
+      const system=sent.at(-1).messages.find((m:any)=>m.role==='system').content;
+      expect(system).toContain(presets[locale].personality);
+      expect(system).toContain(presets[locale].instructions);
+      expect(system).toContain('Respond naturally in '+names[locale]+';');
+    }
+    expect(sent).toHaveLength(7);
+    await panel.locator('[data-nav="settings"]').click();
+    await panel.locator('[name="speed"]').fill('1.15');
+    await panel.locator('#interface-language').selectOption('en');
+    await expect(panel.locator('[name="language"]')).toHaveValue('English');
+    await expect(panel.locator('[name="speed"]')).toHaveValue('1.15');
+    await panel.locator('#save-connections').click();
+    await expect(panel.locator('#save-connections')).toBeDisabled();
+    expect((await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===original.id).connections.speed).toBe(1.15);
+    await stopApplication(); await startApplication();
+    await panel.locator('#edit-profile').click();
+    await expect(panel.locator('[name="personality"]')).toHaveValue(presets.en.personality);
+    await panel.locator('[name="personality"]').fill('My own Sherka');
+    await panel.locator('#profile-form [type="submit"]').click();
+    await expect(panel.getByRole('dialog')).toHaveCount(0);
+    await panel.locator('[data-nav="settings"]').click();
+    await panel.locator('#interface-language').selectOption('de');
+    await expect(panel.locator('[name="language"]')).toHaveValue('English');
+    const final=await native<any>('get_snapshot');
+    expect(final.settings.default_companion).toBeNull();
+    expect(final.profiles.find((p:any)=>p.id===original.id).personality).toBe('My own Sherka');
+    expect(consoleErrors).toEqual([]);
+  } finally {server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
 });
 
 test('profils réels, synchronisation du widget, mémoire isolée et redémarrage', async () => {
@@ -1081,8 +1256,8 @@ test('updates: manual check, retry, widget isolation and invalid signature rejec
       if (mode === 'error') { response.writeHead(503); response.end(); return; }
       const address = server.address() as { port: number };
       response.writeHead(200, { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify({ version: mode === 'current' ? '0.3.3' : '0.3.4', notes: '<script>untrusted notes</script>', platforms: {
-        'windows-x86_64-portable': { url: `http://127.0.0.1:${address.port}/ArthurReboulSalze/Sherka-Compagnon/releases/download/v${mode === 'current' ? '0.3.3' : '0.3.4'}/sherka-compagnon.exe`, signature: 'invalid' }
+      response.end(JSON.stringify({ version: mode === 'current' ? currentVersion : nextVersion, notes: '<script>untrusted notes</script>', platforms: {
+        'windows-x86_64-portable': { url: `http://127.0.0.1:${address.port}/ArthurReboulSalze/Sherka-Compagnon/releases/download/v${mode === 'current' ? currentVersion : nextVersion}/sherka-compagnon.exe`, signature: 'invalid' }
       }}));
     } else { ++downloads; response.writeHead(200); response.end('not a signed executable'); }
   });
@@ -1102,7 +1277,7 @@ test('updates: manual check, retry, widget isolation and invalid signature rejec
     mode = 'error'; await panel.locator('#check-update').click();
     await expect(panel.locator('#update-status')).toContainText('Impossible de vérifier');
     mode = 'available'; await panel.locator('#check-update').click();
-    await expect(panel.locator('#update-status')).toContainText('0.3.4 est disponible');
+    await expect(panel.locator('#update-status')).toContainText(nextVersion+' est disponible');
     expect(await panel.locator('#update-notes script').count()).toBe(0);
     await panel.locator('#install-update').click();
     await expect(panel.locator('#update-status')).toContainText('signature est invalide');
@@ -1121,7 +1296,7 @@ test('updates: signed portable replacement, graceful model unload and preserved 
   mkdirSync(resolve(dataDirectory, 'portable'), {recursive:true}); copyFileSync(original, target);
   const bytes = readFileSync(process.env.SHERKA_TEST_UPDATE_BINARY!);
   const signature = readFileSync(process.env.SHERKA_TEST_UPDATE_SIGNATURE!, 'utf8').trim();
-  const routes = modelRoutes(['update-model']); let unloads = 0; let updateVersion = '0.3.4';
+  const routes = modelRoutes(['update-model']); let unloads = 0; let updateVersion = nextVersion;
   const server = createServer((request,response) => {
     if (request.url === '/latest.json') {
       const address = server.address() as {port:number};
@@ -1145,7 +1320,7 @@ test('updates: signed portable replacement, graceful model unload and preserved 
     await panel.locator('#check-update').click(); await expect(panel.locator('#install-update')).toBeVisible();
     await panel.locator('#install-update').click(); await expect(panel.locator('#update-status')).toContainText('signature est invalide');
     expect(child.exitCode).toBeNull(); expect(unloads).toBe(0);
-    updateVersion = '0.3.3';
+    updateVersion = currentVersion;
     await panel.locator('#check-update').click(); await expect(panel.locator('#install-update')).toBeVisible();
     await panel.locator('#install-update').click();
     await expect.poll(()=>child.exitCode,{timeout:60_000}).toBe(0);
@@ -1185,7 +1360,7 @@ test('public screenshot: clean companion without personal data', async () => {
 test('published update manifest: release binary checks the official GitHub version', async () => {
   test.skip(process.env.SHERKA_RELEASE_UPDATE_CHECK !== '1', 'Check only after publishing the release');
   await panel.getByRole('button',{name:'Réglages',exact:true}).click();
-  await expect(panel.locator('#update-version')).toContainText('0.3.3');
+  await expect(panel.locator('#update-version')).toContainText(currentVersion);
   await panel.locator('#check-update').click();
   await expect(panel.locator('#update-status')).toContainText('dernière version',{timeout:30_000});
   expect((await native<any>('get_update_status')).phase).toBe('current');

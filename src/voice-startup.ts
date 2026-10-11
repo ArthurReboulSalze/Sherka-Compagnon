@@ -1,3 +1,4 @@
+import { t, feedback } from './i18n';
 import { getVoiceService, onVoiceService, retryVoiceService, type VoiceService } from './api';
 
 let status: VoiceService | undefined;
@@ -6,7 +7,7 @@ export function paintVoiceService(): void {
   const waiting = status && ['checking', 'starting', 'error'].includes(status.phase);
   if (document.body.classList.contains('widget-body')) {
     const label = document.querySelector<HTMLElement>('[data-session-status]');
-    if (waiting && label) label.textContent = status!.phase === 'error' ? 'VoiceStudio indisponible · ouvre le poste de bord' : status!.message;
+    if (waiting && label) label.textContent = status!.phase === 'error' ? t('VoiceStudio indisponible · ouvre le poste de bord') : feedback(status!.message);
     return;
   }
   let banner = document.querySelector<HTMLElement>('#voice-service-status');
@@ -19,16 +20,16 @@ export function paintVoiceService(): void {
     banner.setAttribute('role', 'status');
     banner.append(document.createElement('span'));
     const retry = document.createElement('button');
-    retry.className = 'button secondary small'; retry.textContent = 'Réessayer VoiceStudio';
+    retry.className = 'button secondary small'; retry.textContent = t('Réessayer VoiceStudio');
     retry.addEventListener('click', async () => {
       retry.disabled = true;
       try { await retryVoiceService(); }
-      catch (error) { banner!.querySelector('span')!.textContent = String(error); }
+      catch (error) { banner!.querySelector('span')!.textContent = feedback(String(error)); }
       finally { retry.disabled = false; }
     });
     banner.append(retry); header.after(banner);
   }
-  banner.querySelector('span')!.textContent = status!.message;
+  banner.querySelector('span')!.textContent = feedback(status!.message);
   banner.querySelector('button')!.hidden = status!.phase !== 'error';
   banner.classList.toggle('error', status!.phase === 'error');
 }

@@ -26,6 +26,8 @@ Native tests use isolated databases under `artifacts/native`, without normal use
 
 Windows CI checks Rust, TypeScript and native flows without external services or real audio hardware. A network simulation does not validate acoustic interruption: distinguish automated, real-service and headphone/speaker tests.
 
+`npm run check` includes the shared translation catalog audit and text-isolation tests. The native `languages:` scenario exercises all seven interfaces and persistence with mock services and isolated profiles.
+
 CI prepares WebView2 and native inference library search paths before launching the UI tests on Windows Server. Elevated hosted runners also need an EXE-scoped HKLM test policy for the debugging port and isolated browser data: recent WebView2 versions [ignore environment overrides in elevated apps](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/webview-features-flags). The fixture removes its values after each launch; local tests use environment variables only.
 
 ## Contribute

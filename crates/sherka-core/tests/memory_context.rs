@@ -46,7 +46,7 @@ fn budget_uses_loaded_context_and_explicit_response_reserve() {
     assert!(
         small.messages[0]
             .content
-            .contains("sans réciter ton identité")
+            .contains("without reciting your identity")
     );
     assert!(
         small.budget.input_estimate

@@ -19,6 +19,8 @@ export interface Profile extends ProfileDraft {
 export interface Snapshot {
   profiles: Profile[];
   settings: {
+    ui_language: import('./i18n').Language;
+    default_companion: string | null;
     active_profile: string;
     always_on_top: boolean;
     widget_scale: number;
@@ -49,6 +51,7 @@ export interface Message {
 }
 
 export type Mutation =
+  | { kind: 'interface_language'; language: import('./i18n').Language }
   | { kind: 'create_profile'; draft: ProfileDraft }
   | { kind: 'update_profile'; id: string; revision: number; draft: ProfileDraft }
   | { kind: 'switch_profile' | 'duplicate_profile' | 'delete_profile'; id: string }

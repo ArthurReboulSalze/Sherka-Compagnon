@@ -16,6 +16,26 @@ static MICROPHONE_ACTIVE: AtomicBool = AtomicBool::new(false);
 // 0: running, 1: cleanup, 2: allowed to exit, 3: cleanup failed.
 static QUIT_STATE: AtomicU8 = AtomicU8::new(0);
 struct MicrophoneMenu(MenuItem<tauri::Wry>);
+struct LocalizedMenu(Vec<(MenuItem<tauri::Wry>, &'static str)>);
+
+pub fn set_language(app: &AppHandle, language: sherka_core::i18n::Language) -> tauri::Result<()> {
+    sherka_core::i18n::set_ui_language(language);
+    if let Some(items) = app.try_state::<LocalizedMenu>() {
+        for (item, source) in &items.0 {
+            item.set_text(sherka_core::i18n::text(source))?;
+        }
+    }
+    for (label, title) in [
+        ("panel", "Sherka — Poste de bord"),
+        ("widget", "Sherka — Compagnon"),
+    ] {
+        if let Some(window) = app.get_webview_window(label) {
+            window.set_title(&sherka_core::i18n::text(title))?;
+        }
+    }
+    paint_microphone(app, MICROPHONE_ACTIVE.load(Ordering::Relaxed));
+    Ok(())
+}
 
 pub fn ensure_running() -> Result<(), String> {
     if matches!(QUIT_STATE.load(Ordering::SeqCst), 1 | 2) {
@@ -197,6 +217,13 @@ pub fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
     let separator = PredefinedMenuItem::separator(app)?;
     app.manage(MicrophoneMenu(mic.clone()));
     let quit = MenuItem::with_id(app, "quit", "Quitter Sherka", true, None::<&str>)?;
+    app.manage(LocalizedMenu(vec![
+        (restore.clone(), "Afficher Sherka / reprendre les clics"),
+        (panel.clone(), "Ouvrir le poste de bord"),
+        (pause.clone(), "Pause vocale globale"),
+        (stop.clone(), "Arrêter la réponse"),
+        (quit.clone(), "Quitter Sherka"),
+    ]));
     let menu = Menu::with_items(
         app,
         &[&restore, &panel, &pause, &stop, &mic, &separator, &quit],
@@ -258,19 +285,23 @@ pub fn update_microphone(app: &AppHandle, listening: bool) {
     if MICROPHONE_ACTIVE.swap(listening, Ordering::Relaxed) == listening {
         return;
     }
+    paint_microphone(app, listening);
+}
+
+fn paint_microphone(app: &AppHandle, listening: bool) {
     if let Some(tray) = app.tray_by_id("sherka") {
-        let _ = tray.set_tooltip(Some(if listening {
+        let _ = tray.set_tooltip(Some(sherka_core::i18n::text(if listening {
             "Sherka · microphone actif, écoute continue"
         } else {
             "Sherka · microphone coupé"
-        }));
+        })));
     }
     if let Some(item) = app.try_state::<MicrophoneMenu>() {
-        let _ = item.0.set_text(if listening {
+        let _ = item.0.set_text(sherka_core::i18n::text(if listening {
             "Microphone actif · écoute continue"
         } else {
             "Microphone coupé"
-        });
+        }));
     }
 }
 

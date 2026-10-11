@@ -25,7 +25,9 @@ readme = """Sherka Companion — Windows x64, no installation
 Extract the entire ZIP into a writable folder and run sherka-compagnon.exe.
 WebView2, the Visual C++ x64 runtime, VoiceStudio and LM Studio are required.
 Start the LM Studio server; Sherka starts installed VoiceStudio when needed.
-The current interface is in French. Configure your own models and voice.
+Choose one of seven interface languages in Settings. The original Sherka's
+personality and instructions follow that language automatically.
+Configure your own compatible models and voice in LM Studio and VoiceStudio.
 
 Data stays in %LOCALAPPDATA%\\fr.sherka.compagnon, not beside this executable.
 Check updates manually from Settings. No private data is included here.

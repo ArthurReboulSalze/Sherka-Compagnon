@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 — 2026-10-11
+
+- Seven interface languages: French, English, Spanish, Italian, German, Simplified Chinese and Japanese.
+- Saved interface preference, synchronized widget controls and translated tray/window labels.
+- Ready-to-use Sherka personality and instructions in all seven languages, following the interface language until personalized.
+- Companion language chosen once at creation, independent of the interface; model and voice choices remain user-configured.
+- Custom profile contents, histories and memories preserved when switching interface languages.
+- Unicode sentence boundaries for Chinese and Japanese speech text.
+- Shared catalog checks and isolated native coverage for all seven interfaces.
+- Consistent dark form fields, aligned audio selections and styled sliders with live percentage values.
+
 ## 0.3.3 — 2026-10-11
 
 First public release.
