@@ -1679,7 +1679,7 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
   const fixture = JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
   const requests: {path:string;profile:string;body:any;auth:string|undefined}[]=[];
   const sessions=new Set<string>(); let seq=0; let stopped=0; let pending: (()=>void)|undefined;
-  const devices=await native<{outputs:{is_default:boolean}[]}>('get_audio_devices'); const canSpeak=devices.outputs.some(d=>d.is_default);
+  const devices=await native<{outputs:{is_default:boolean}[]}>('get_audio_devices'); const canSpeak=!process.env.SHERKA_TEST_TEXT_ONLY && devices.outputs.some(d=>d.is_default);
   const server=createServer((req,res)=>{
     const path=req.url!; const profile=path.startsWith('/p/maman/')?'maman':'default';const route=path.replace('/p/maman','');
     if (fixture[path]) {res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(fixture[path]));return;}
@@ -1735,8 +1735,11 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
     await native('send_message',{profileId:p.id,text:'confirmer',speak:false});await expect(panel.locator('#hermes-approval')).toBeVisible();await expect(panel.locator('#hermes-approval script')).toHaveCount(0);await panel.getByRole('button',{name:'Autoriser une fois',exact:true}).click();await expect(panel.locator('#hermes-approval')).toBeHidden();
     await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
     await send('attendre');await expect(panel.locator('#live-reply')).toContainText('Réponse en cours.');
-    await expect(widget.locator('#hermes-new')).toHaveCount(1);await widget.locator('#drag-region').hover();await widget.locator('#hermes-new').click({force:true});
-    await expect.poll(()=>stopped).toBe(1);await expect.poll(async()=>(await native<any[]>('get_history',{profileId:p.id})).length).toBe(0);
+    // The fixture starts with a hidden widget. Exercise a real visible control;
+    // a forced click on an occluded WebView can be discarded by Windows CI.
+    await native('widget_action',{action:'show_widget'});
+    await expect(widget.locator('#hermes-new')).toHaveCount(1);await widget.locator('#drag-region').hover();await expect(widget.locator('.widget-toolbar')).toBeVisible();await widget.locator('#hermes-new').click();
+    await expect.poll(async()=>(await native<any[]>('get_history',{profileId:p.id})).length).toBe(0);await expect.poll(()=>stopped).toBe(1);
     await send('nouveau fil');await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)?.body.message).toBe('nouveau fil');await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();await expect(panel.locator('#conversation-history')).toContainText('Bonjour maman, été fluide.');expect(requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path).not.toBe(first.path);
     expect(sessions.size).toBe(2);
     await send('/new');await expect.poll(async()=>(await native<any[]>('get_history',{profileId:p.id})).length).toBe(0);
