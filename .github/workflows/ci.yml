@@ -33,6 +33,8 @@ jobs:
         env:
           RUST_BACKTRACE: '1'
       - run: npm run tauri -- build --debug --no-bundle
+      - name: Ensure WebView2 Runtime
+        run: ./scripts/ensure_webview2.ps1
       - name: Native UI and updater boundaries
         run: |
           npx playwright test --grep 'widget discret|démarrage avec le compagnon seul|imports validés|updates: manual'

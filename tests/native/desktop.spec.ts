@@ -68,6 +68,7 @@ async function startApplication(hidden = true, autostartVoice = false): Promise<
     },
   });
   child.stderr?.on('data', (data) => process.stderr.write(data));
+  child.stdout?.on('data', (data) => process.stdout.write(data));
   await expect.poll(async () => {
     if (child.exitCode !== null) throw new Error(`Sherka s'est arrêtée : ${child.exitCode}`);
     try { return (await fetch(`http://127.0.0.1:${port}/json/version`)).ok; } catch { return false; }
