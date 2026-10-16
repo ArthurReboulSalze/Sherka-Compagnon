@@ -1,6 +1,8 @@
 # Project status
 
-Release version: **0.7.0**, October 11, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+Release version: **0.7.1**, October 16, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+
+The application now has its own logo across Windows icons, the tray, sidebar and favicon. Companion portraits stay independent. Incremental builds rebuild icon resources when branding changes, and the English README features the new identity and a refreshed control-panel screenshot.
 
 Hermes remote-agent mode connects to server profiles with protected keys, persistent conversations, streaming, interruption, explicit tool approvals and a widget **New conversation** action. Hermes owns personality, memory, tools and model budgets; future emotional avatars are explicitly excluded. See [Hermes setup](HERMES.md).
 

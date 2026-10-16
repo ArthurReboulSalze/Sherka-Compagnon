@@ -4,7 +4,7 @@ default-members = ["crates/sherka-core"]
 resolver = "2"
 
 [workspace.package]
-version = "0.7.0"
+version = "0.7.1"
 license = "GPL-3.0-only"
 repository = "https://github.com/ArthurReboulSalze/Sherka-Compagnon"
 edition = "2024"

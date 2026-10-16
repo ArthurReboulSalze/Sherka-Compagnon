@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1 — 2026-10-16
+
+- Give the application its own blue-haired, starry-eyed logo across Windows icons, the tray, sidebar and favicon; companion portraits remain independent.
+- Rebuild Windows icon resources whenever branding assets change, avoiding stale icons in incremental builds.
+- Refresh the English README with the new logo, cyan accents, a feature overview and an updated control-panel screenshot.
+
 ## 0.7.0 — 2026-10-11
 
 - Connect to Hermes as a voice client, with per-server profile selection and protected profile-specific API keys.
