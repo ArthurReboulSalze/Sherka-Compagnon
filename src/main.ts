@@ -113,7 +113,7 @@ async function act(action: WidgetAction): Promise<void> {
 
 function showStartupError(message: string): void {
   app.setAttribute('aria-busy', 'false');
-  app.innerHTML = html`<main class="startup-error"><span class="brand-symbol">${icon('orbit')}</span><h1>Sherka attend son poste de bord.</h1><p>${escape(feedback(message))}</p><button class="button primary" id="retry">Réessayer</button></main>`;
+  app.innerHTML = html`<main class="startup-error"><span class="brand-symbol"><img src="/branding/sherka-logo.png" alt="" /></span><h1>Sherka attend son poste de bord.</h1><p>${escape(feedback(message))}</p><button class="button primary" id="retry">Réessayer</button></main>`;
   document.querySelector('#retry')?.addEventListener('click', () => void refresh());
 }
 
@@ -127,7 +127,7 @@ function render(): void {
   selected = profile.id;
   app.innerHTML = html`<div class="shell">
     <aside class="sidebar">
-      <a class="brand" href="#" aria-label="Sherka, accueil"><span class="brand-symbol">${icon('orbit')}</span><span>SHERKA<small>COMPAGNON DE BUREAU</small></span></a>
+      <a class="brand" href="#" aria-label="Sherka, accueil"><span class="brand-symbol"><img src="/branding/sherka-logo.png" alt="" /></span><span>SHERKA<small>COMPAGNON DE BUREAU</small></span></a>
       <div class="nav-caption">POSTE DE BORD</div>
       <nav aria-label="Navigation principale">
         ${navItem('conversation', 'chat', t('Conversation'))}

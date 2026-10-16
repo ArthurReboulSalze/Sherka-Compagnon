@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="492" height="28" viewBox="0 0 492 28" role="img" aria-labelledby="title">
   <title id="title">Windows x64 · Local voice · 7 languages · GPLv3</title>
   <g font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="600" text-anchor="middle">
-    <rect x="0.5" y="0.5" width="127" height="27" rx="7" fill="#171e27" stroke="#39424e"/>
-    <text x="64" y="18" fill="#edf1f5">Windows x64</text>
-    <rect x="137.5" y="0.5" width="111" height="27" rx="7" fill="#e5bc80" stroke="#e5bc80"/>
-    <text x="193" y="18" fill="#171b22">Local voice</text>
-    <rect x="258.5" y="0.5" width="127" height="27" rx="7" fill="#171e27" stroke="#39424e"/>
-    <text x="322" y="18" fill="#edf1f5">7 languages</text>
-    <rect x="395.5" y="0.5" width="96" height="27" rx="7" fill="#e5bc80" stroke="#e5bc80"/>
-    <text x="444" y="18" fill="#171b22">GPLv3</text>
+    <rect x="0.5" y="0.5" width="127" height="27" rx="7" fill="#101e32" stroke="#358db4"/>
+    <text x="64" y="18" fill="#d9f2ff">Windows x64</text>
+    <rect x="137.5" y="0.5" width="111" height="27" rx="7" fill="#71e5fb" stroke="#71e5fb"/>
+    <text x="193" y="18" fill="#0b2033">Local voice</text>
+    <rect x="258.5" y="0.5" width="127" height="27" rx="7" fill="#101e32" stroke="#358db4"/>
+    <text x="322" y="18" fill="#d9f2ff">7 languages</text>
+    <rect x="395.5" y="0.5" width="96" height="27" rx="7" fill="#71e5fb" stroke="#71e5fb"/>
+    <text x="444" y="18" fill="#0b2033">GPLv3</text>
   </g>
 </svg>

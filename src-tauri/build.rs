@@ -1,4 +1,7 @@
 fn main() {
+    // Rebuild the Windows resources when branding changes, even when the
+    // Tauri configuration and Rust source files have not changed.
+    println!("cargo:rerun-if-changed=icons");
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "get_startup_issue",

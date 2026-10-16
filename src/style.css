@@ -35,8 +35,8 @@ p { color: var(--muted); line-height: 1.65; font-size: 13px; }
 .sidebar { position: sticky; top: 0; height: 100vh; padding: 29px 18px 18px; background: #0c1118; border-right: 1px solid var(--line); display: flex; flex-direction: column; }
 .brand { display: flex; align-items: center; gap: 10px; color: #f3e5d3; text-decoration: none; letter-spacing: 3px; font-size: 19px; font-weight: 650; padding: 0 6px; }
 .brand small { display: block; font-size: 7px; letter-spacing: 1.1px; color: #8d999e; font-weight: 500; margin-top: 6px; white-space: nowrap; }
-.brand-symbol { display: grid; place-items: center; width: 34px; height: 40px; color: #edc38b; }
-.brand-symbol svg { width: 34px; height: 34px; }
+.brand-symbol { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; }
+.brand-symbol img { display: block; width: 40px; height: 40px; object-fit: contain; }
 .nav-caption { font-size: 9px; color: #627080; letter-spacing: 1.7px; margin: 51px 12px 16px; }
 nav { display: grid; gap: 6px; }
 .nav-item { width: 100%; display: flex; align-items: center; gap: 11px; padding: 13px 11px; background: transparent; border: 1px solid transparent; border-radius: 7px; color: #92a1b0; font-size: 12px; text-align: left; }

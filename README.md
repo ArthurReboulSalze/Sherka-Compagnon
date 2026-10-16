@@ -1,38 +1,41 @@
 <p align="center">
-  <img src="src-tauri/icons/128x128@2x.png" alt="Sherka Companion emblem" width="96">
+  <img src="public/branding/sherka-logo.png" alt="Sherka Companion — blue-haired AI with starry eyes and futuristic headphones" width="200">
 </p>
 
 <h1 align="center">Sherka Companion</h1>
-<p align="center"><strong>Your models. Your voices. Your companion.</strong></p>
-<p align="center">Natural voice conversations · Independent characters · Memories you control</p>
-<p align="center"><em>Give your AI a voice and a place on your desktop.</em></p>
+<p align="center"><strong>A voice. A personality. A place on your desktop.</strong></p>
+<p align="center">Meet your AI companions. Talk naturally, interrupt freely, and pick up where you left off.</p>
+<p align="center"><em>Your models. Your voices. Your companion.</em></p>
 
 <p align="center">
   <img src="docs/images/features.svg" alt="Windows x64 · Local voice · 7 languages · GPLv3" width="492">
 </p>
 
 <p align="center">
-  <a href="https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest"><strong>Download for Windows</strong></a> ·
-  <a href="docs/GETTING_STARTED.md">Get started</a> ·
-  <a href="docs/README.md">Documentation</a> ·
-  <a href="docs/ROADMAP.md">Roadmap</a>
+  <a href="https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest"><strong>↓ Download for Windows</strong></a> &nbsp;·&nbsp;
+  <a href="docs/GETTING_STARTED.md">Quick start</a> &nbsp;·&nbsp;
+  <a href="docs/README.md">Documentation</a> &nbsp;·&nbsp;
+  <a href="docs/ROADMAP.md">What's next</a>
 </p>
+
+---
 
 <p align="center">
   <img src="docs/images/sherka.png" alt="Sherka's control panel: character portrait, personality and companion settings" width="1000">
 </p>
-<p align="center"><em>Meet your companions. Shape their personality, choose their voice, and make them your own.</em></p>
+<p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
 ## A conversation that keeps up with you
 
-Talk, interrupt, and pick up again. Sherka brings your AI into a desktop companion with its own voice, personality and memories. Run conversations locally, connect an API, or give your existing Hermes agent a voice.
+Sherka gives your AI a presence beyond a chat window: a transparent companion that lives on your desktop, with a voice and a personality of its own. Run conversations locally, connect your favorite model API, or talk directly to your Hermes agent.
 
-- **Keep the conversation flowing.** Replies stream as they arrive, with upcoming speech prepared while the current passage plays. Speak again to interrupt.
-- **Make each companion your own.** Give every character a personality, image, voice and provider. Their memories stay separate.
-- **Keep a little company on your desktop.** The transparent avatar works independently of the control panel. Move it where you like; its controls appear on hover or click.
-- **Stay in charge of memory.** Review, edit or correct what your companion remembers, through the interface or a conversation.
-- **Look things up when needed.** Optional [web search](docs/WEB_SEARCH.md) brings in DuckDuckGo results and source links, without a search account or key.
-- **Use your language.** French, English, Spanish, Italian, German, Simplified Chinese and Japanese. The default Sherka is ready in each one; custom companions keep their chosen language.
+| 🎙️ Talk naturally | ✨ Make it personal | 🪟 Keep it close |
+| --- | --- | --- |
+| Streamed replies, speech prepared ahead, and voice interruption. Keep the conversation flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click. |
+| **🧠 Memories you control** | **🌐 A little help from the web** | **💬 Seven interface languages** |
+| Review, edit or correct what your companion remembers, in the interface or by asking. | Optional [DuckDuckGo search](docs/WEB_SEARCH.md) with source links. No search account or key required. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
+
+The built-in Sherka is ready in every interface language. Custom companions keep the language you choose for them.
 
 ## Local voice. Your choice of intelligence.
 

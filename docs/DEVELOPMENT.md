@@ -38,6 +38,16 @@ Read [architecture](ARCHITECTURE.md) and [contracts](CONNECTIONS.md), then open 
 
 Distribution instructions: [releasing](RELEASING.md).
 
+## Application branding
+
+The application logo lives in `public/branding/sherka-logo.png`. It supplies the README, sidebar and favicon; Windows executable and tray icons are generated from it:
+
+```powershell
+npm.cmd run tauri -- icon public/branding/sherka-logo.png
+```
+
+Commit the generated PNG sizes and `icon.ico` referenced by `src-tauri/tauri.conf.json`. Companion portraits are separate assets in `public/assets`; changing application branding does not change a companion's appearance.
+
 ### Hermes integration checks
 
 The native `hermes:` scenario uses an isolated HTTP server and temporary vault keys. It checks profile isolation, user-only requests, streamed text/speech, tool approvals, interruption, and the widget `/new` action. Unit tests cover private-address validation, persistent session mappings, export boundaries and the explicit exclusion from future emotional avatars.
