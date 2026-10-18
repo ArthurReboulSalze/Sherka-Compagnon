@@ -1,9 +1,4 @@
 <p align="center">
-  <img src="docs/images/sherka-ecosystem-en.png" alt="Sherka ecosystem: local or hosted language models, VoiceStudio speech, and ComfyUI visuals" width="1200">
-</p>
-<p align="center"><em>Conversation illustrations are available now. ComfyUI avatar-pack generation is planned.</em></p>
-
-<p align="center">
   <img src="docs/images/sherka-logo-gold-v2.png" alt="Sherka Companion — golden orbital star emblem" width="200">
 </p>
 
@@ -24,6 +19,11 @@
 </p>
 
 ---
+
+<p align="center">
+  <img src="docs/images/sherka-ecosystem-en.png" alt="Sherka ecosystem: local or hosted language models, VoiceStudio speech, and ComfyUI visuals" width="1200">
+</p>
+<p align="center"><em>Conversation illustrations are available now. ComfyUI avatar-pack generation is planned.</em></p>
 
 <p align="center">
   <img src="docs/images/sherka-0.11.0.png" alt="Sherka 0.11.0 control panel: golden app logo, five companions and avatar settings" width="1000">
