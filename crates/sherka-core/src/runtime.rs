@@ -37,6 +37,8 @@ pub struct Companion {
     pub session: Session,
     pub live: crate::conversation::LiveConversation,
     pub memory_job: tokio_util::sync::CancellationToken,
+    pub optimization: Option<crate::memory::OptimizationPreview>,
+    pub pending_clear: crate::privacy::PendingClear,
     settings: Settings,
 }
 
@@ -54,7 +56,8 @@ impl Companion {
         let mut profiles = store.list()?;
         for profile in &mut profiles {
             let mut draft = profile.details.clone();
-            if crate::presets::upgrade_candis(&mut draft) {
+            let appearance_changed = crate::illustration::upgrade_appearance(&mut draft);
+            if crate::presets::upgrade_candis(&mut draft) || appearance_changed {
                 *profile = store.update(profile.id, profile.revision, draft)?;
             }
         }
@@ -111,6 +114,8 @@ impl Companion {
             session: Session::new(active),
             live: Default::default(),
             memory_job: tokio_util::sync::CancellationToken::new(),
+            optimization: None,
+            pending_clear: Default::default(),
             settings,
         })
     }
@@ -149,6 +154,8 @@ impl Companion {
         self.store.save_settings(&next)?;
         self.stop_response()?;
         self.session.switch_profile(id);
+        self.optimization = None;
+        self.pending_clear = Default::default();
         self.live = Default::default();
         self.settings = next;
         Ok(())
@@ -330,6 +337,8 @@ impl Companion {
         self.store.clear_hermes_sessions(profile)?;
         if active {
             self.session.switch_profile(profile);
+            self.pending_clear = Default::default();
+            self.optimization = None;
             self.live = Default::default();
         }
         Ok(())

@@ -2,6 +2,7 @@ mod audio_diagnostics;
 mod conversation;
 mod desktop_tools;
 mod illustrations;
+mod memory_ops;
 pub mod portable_update;
 mod service_process;
 mod speech_input;
@@ -887,6 +888,9 @@ pub fn run() {
             get_history,
             clear_conversation,
             get_memories,
+            memory_ops::optimize_memory,
+            memory_ops::get_memory_optimization,
+            memory_ops::finish_memory_optimization,
             edit_memory,
             search_archive,
             export_memories,

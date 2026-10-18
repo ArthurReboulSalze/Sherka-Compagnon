@@ -1,6 +1,6 @@
 export type Emotion = 'neutral' | 'joy' | 'sadness' | 'anger' | 'surprise' | 'reflection' | 'tenderness';
 export type Theme = 'gold' | 'sage' | 'ocean' | 'iris' | 'rose' | 'mono';
-export interface IllustrationConfig { enabled:boolean; server_url:string; checkpoint:string|null; physical_description:string; loras:{name:string;strength:number}[]; turbo:boolean; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
+export interface IllustrationConfig { enabled:boolean; server_url:string; checkpoint:string|null; model_family:'illustrious'|'sdxl'; checkpoint_folder:string; lora_folder:string; negative_prompt:string; physical_description:string; loras:{name:string;strength:number}[]; turbo:boolean; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
 export interface IllustrationCatalog { checkpoints:string[]; loras:string[]; turbo_available:boolean; missing_nodes:string[] }
 export interface IllustrationStatus { profile_id:string|null; phase:'disabled'|'idle'|'planning'|'generating'|'ready'|'error'; image:string|null; images:string[]; message:string|null }
 export interface Attachment {name:string;data:string}
@@ -123,6 +123,7 @@ export interface MemoryDraft { content: string; category: string; kind: 'essenti
 export interface MemorySource { id: string; content: string; created_at: number }
 export interface MemoryEntry extends MemoryDraft { id: number; revision: number; status: string; approved: boolean; origin: string; created_at: number; updated_at: number; sources: MemorySource[] }
 export interface MemoryState { epoch: number; entries: MemoryEntry[]; summary: string; summary_at: number; archive_count: number; excluded_count: number }
+export interface MemoryOptimization {guard:{profile_id:string;profile_revision:number;epoch:number};session_id:string;changes:{ids:number[];before:string[];after:string}[];summary:{before:string[];after:string}|null;before_chars:number;after_chars:number}
 export type MemoryEdit = { action: 'write'; id: number | null; draft: MemoryDraft } | { action: 'forget' | 'delete' | 'approve'; id: number };
 export interface VoiceCatalog {
   service_version: string;

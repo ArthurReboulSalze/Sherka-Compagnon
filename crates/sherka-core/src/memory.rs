@@ -4,6 +4,8 @@ use crate::{Error, Result, storage::Store};
 use rusqlite::{Connection, OptionalExtension, Transaction, params};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+mod optimize;
+pub use optimize::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

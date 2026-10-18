@@ -348,14 +348,18 @@ pub async fn send(
         }
     }
     let command = text.clone();
-    let (connections, clearing) = with_core(shared.clone(), move |core| {
+    let (connections, maintenance) = with_core(shared.clone(), move |core| {
         if core.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
         let profile = core.store.profile(profile_id)?;
-        let clearing = !profile.details.connections.llm_provider.is_agent()
-            && sherka_core::privacy::clear_conversation_intent(&command, &profile.details.name);
-        if !clearing
+        let maintenance = (!profile.details.connections.llm_provider.is_agent())
+            .then(|| sherka_core::privacy::command(&command, &profile.details.name))
+            .flatten();
+        if maintenance.is_none() {
+            core.pending_clear = Default::default();
+        }
+        if maintenance.is_none()
             && !profile.details.connections.llm_provider.is_agent()
             && profile.details.connections.llm_model.is_none()
         {
@@ -363,7 +367,7 @@ pub async fn send(
                 "Choisis un modèle de conversation dans Compagnons.".into(),
             ));
         }
-        if !clearing
+        if maintenance.is_none()
             && speak
             && (profile.details.connections.tts_engine.is_none()
                 || profile.details.connections.tts_voice.is_none())
@@ -373,24 +377,14 @@ pub async fn send(
                     .into(),
             ));
         }
-        Ok((profile.details.connections, clearing))
+        Ok((profile.details.connections, maintenance))
     })
     .await?;
-    if clearing {
+    if let Some(command) = maintenance {
         // A local privacy command also works with an offline or unconfigured
         // provider. Speech is only an optional, non-persisted acknowledgement.
         drop(gate);
-        let session = clear(&app, shared.clone(), &voice, profile_id, false, None).await?;
-        if speak
-            && connections.tts_engine.is_some()
-            && connections.tts_voice.is_some()
-            && let Ok(provider) = Providers::new(connections)
-        {
-            tauri::async_runtime::spawn(async move {
-                speak_clear_receipt(&app, shared, &voice, &provider, profile_id, session).await;
-            });
-        }
-        return Ok(());
+        return maintenance_command(&app, shared, &voice, profile_id, command, speak, None).await;
     }
     let mut provider = Providers::new(connections).map_err(|e| e.to_string())?;
     provider.images = tauri::async_runtime::spawn_blocking(move || {
@@ -723,6 +717,99 @@ fn record_turn_failure(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
+async fn maintenance_command(
+    app: &AppHandle,
+    shared: Shared,
+    voice: &Voice,
+    profile_id: Uuid,
+    command: sherka_core::privacy::Command,
+    speak: bool,
+    expected: Option<OperationTag>,
+) -> std::result::Result<(), String> {
+    use sherka_core::privacy::Command;
+    with_core(shared.clone(), move |c| {
+        if c.session.snapshot().profile_id != profile_id
+            || expected.is_some_and(|tag| !c.session.accepts(tag))
+        {
+            return Err(Error::StaleOperation);
+        }
+        Ok(())
+    })
+    .await?;
+    match command {
+        Command::Optimize => {
+            crate::memory_ops::prepare(app, shared.clone(), voice, profile_id).await?;
+        }
+        Command::ApplyOptimization => {
+            crate::memory_ops::finish(app, shared.clone(), profile_id, true).await?
+        }
+        Command::ConfirmClear => {
+            let confirmed = with_core(shared.clone(), move |c| {
+                let session = c.session.snapshot();
+                if session.profile_id != profile_id
+                    || expected.is_some_and(|tag| !c.session.accepts(tag))
+                {
+                    return Err(Error::StaleOperation);
+                }
+                let confirmed = c.pending_clear.take(profile_id, session.session_id);
+                if !confirmed {
+                    c.stop_response()?;
+                    c.live.notice = Some(
+                        "Aucune suppression à confirmer. Demande d’abord d’effacer la discussion."
+                            .into(),
+                    );
+                }
+                Ok(confirmed)
+            })
+            .await?;
+            if confirmed {
+                clear(app, shared.clone(), voice, profile_id, false, expected).await?;
+            }
+        }
+        Command::RequestClear | Command::Cancel => {
+            let _gate = voice.gate.lock().await;
+            voice.playback.interrupt();
+            with_core(shared.clone(),move|c|{
+                if c.session.snapshot().profile_id!=profile_id || expected.is_some_and(|tag|!c.session.accepts(tag)) {return Err(Error::StaleOperation);}
+                c.stop_response()?;c.optimization=None;
+                if command==Command::RequestClear {
+                    c.pending_clear.request(profile_id,c.session.snapshot().session_id);
+                    c.live.notice=Some("Effacer toute la discussion en conservant les faits mémorisés ? Dis « confirme la suppression » ou écris /confirm-clear. Pour annuler : /cancel.".into());
+                } else {c.pending_clear=Default::default();c.live.notice=Some("Opération annulée. La discussion et les souvenirs sont conservés.".into());}
+                Ok(())
+            }).await?;
+        }
+    }
+    emit(app, &shared);
+    if speak {
+        let (connections, session, message) = with_core(shared.clone(), move |c| {
+            if c.session.snapshot().profile_id != profile_id {
+                return Err(Error::StaleOperation);
+            }
+            Ok((
+                c.store.profile(profile_id)?.details.connections,
+                c.session.snapshot().session_id,
+                c.live.notice.clone().unwrap_or_default(),
+            ))
+        })
+        .await?;
+        if connections.tts_engine.is_some()
+            && connections.tts_voice.is_some()
+            && let Ok(provider) = Providers::new(connections)
+        {
+            let (app, voice) = (app.clone(), voice.clone());
+            tauri::async_runtime::spawn(async move {
+                speak_receipt(
+                    &app, shared, &voice, &provider, profile_id, session, message,
+                )
+                .await;
+            });
+        }
+    }
+    Ok(())
+}
+
 pub async fn clear(
     app: &AppHandle,
     shared: Shared,
@@ -803,13 +890,14 @@ pub async fn clear(
 
 /// A local receipt can be spoken without creating a new history entry or
 /// sending the deletion request back to a language model.
-async fn speak_clear_receipt(
+async fn speak_receipt(
     app: &AppHandle,
     shared: Shared,
     voice: &Voice,
     provider: &Providers,
     profile_id: Uuid,
     session_id: Uuid,
+    message: String,
 ) {
     let gate = voice.gate.lock().await;
     if crate::windows::ensure_running().is_err() {
@@ -820,10 +908,7 @@ async fn speak_clear_receipt(
     }
     let language =
         sherka_core::i18n::Language::from_code(&provider.connections.language).unwrap_or_default();
-    let text = sherka_core::i18n::text_in(
-        language,
-        "Conversation effacée. Les faits sauvegardés sont conservés.",
-    );
+    let text = sherka_core::i18n::text_in(language, &message);
     let Ok((tag, token)) = with_core(shared.clone(), move |c| {
         let current = c.session.snapshot();
         if current.profile_id != profile_id
@@ -1235,28 +1320,40 @@ async fn run_turn(
     speak: bool,
 ) {
     let agent = provider.connections.llm_provider.is_agent();
-    let clear_requested = !agent
-        && shared.0.lock().is_ok_and(|c| {
-            c.store.profile(tag.profile_id).is_ok_and(|p| {
-                sherka_core::privacy::clear_conversation_intent(&user, &p.details.name)
-            })
-        });
-    if clear_requested {
-        match clear(
+    let maintenance = if agent {
+        None
+    } else {
+        shared.0.lock().ok().and_then(|mut c| {
+            let command = c
+                .store
+                .profile(tag.profile_id)
+                .ok()
+                .and_then(|p| sherka_core::privacy::command(&user, &p.details.name));
+            if command.is_none() {
+                c.pending_clear = Default::default();
+            }
+            command
+        })
+    };
+    if let Some(command) = maintenance {
+        if let Err(error) = maintenance_command(
             &app,
             shared.clone(),
             &voice,
             tag.profile_id,
-            false,
+            command,
+            speak,
             Some(tag),
         )
         .await
         {
-            Ok(session) if speak => {
-                speak_clear_receipt(&app, shared, &voice, &provider, tag.profile_id, session).await
+            if let Ok(mut c) = shared.0.lock()
+                && c.session.snapshot().profile_id == tag.profile_id
+                && c.session.snapshot().session_id == tag.session_id
+            {
+                c.live.error = Some(error);
             }
-            Ok(_) => {}
-            Err(error) => fail_turn(&app, &shared, tag, &error).await,
+            emit(&app, &shared);
         }
         return;
     }

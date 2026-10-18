@@ -1,4 +1,9 @@
 <p align="center">
+  <img src="docs/images/sherka-ecosystem-en.png" alt="Sherka ecosystem: local or hosted language models, VoiceStudio speech, and ComfyUI visuals" width="1200">
+</p>
+<p align="center"><em>Conversation illustrations are available now. ComfyUI avatar-pack generation is planned.</em></p>
+
+<p align="center">
   <img src="docs/images/sherka-logo-gold-v2.png" alt="Sherka Companion — golden orbital star emblem" width="200">
 </p>
 
@@ -43,7 +48,7 @@ Choose your company, then give each character its own voice and model. Five bund
 
 **😐 Neutral · 😊 Joy · 😢 Sadness · 😠 Anger · 😮 Surprise · 🤔 Reflection · 🥰 Tenderness**
 
-Expressions follow the tone of a reply and blend with a gentle **half-second crossfade**. Use the bundled images or assign your own in **Avatar & voice**, alongside that character's VoiceStudio voice. Models that omit an expression simply keep the neutral image. [See how it works](docs/USER_GUIDE.md#how-expressions-change).
+Expressions follow the tone of a reply and blend with a gentle **half-second crossfade**. Use the bundled images or assign your own in **Avatar & voice**, alongside that character's VoiceStudio voice. Short examples help small models choose an expression; a conservative fallback reads the visible reply when the marker is missing. [See how it works](docs/USER_GUIDE.md#how-expressions-change).
 
 Hermes keeps a neutral avatar and its own personality, memory and tools. Its new **/stop** button stops the current task while leaving the server running.
 
@@ -55,13 +60,13 @@ Sherka gives your AI a presence beyond a chat window: a transparent companion th
 | --- | --- | --- |
 | Streamed replies, speech prepared ahead, and voice interruption. Keep the conversation flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click. |
 | **🧠 Memories you control** | **🌐 A little help from the web** | **💬 Seven interface languages** |
-| Review, edit or delete saved facts. Clear a conversation while keeping the facts you chose to save. | [Web search with sources](docs/WEB_SEARCH.md): DuckDuckGo without an account, or your Brave, Tavily or SearXNG connection. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
+| Review, edit or delete saved facts. Preview an optimized memory before applying it. Clear a conversation with confirmation while keeping saved facts. | [Web search with sources](docs/WEB_SEARCH.md): DuckDuckGo without an account, or your Brave, Tavily or SearXNG connection. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
 
 The built-in Sherka is ready in every interface language. Custom companions keep the language you choose for them.
 
 ## Turn conversations into scenes
 
-Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its own setup. Images start preparing as soon as the reply text is ready, while the voice continues.
+Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its model family, folders, editable negative prompt and LoRAs. Landscapes can stand alone; the avatar appears when it belongs in the scene. Images start preparing as soon as the reply text is ready, while the voice continues.
 
 The **Image** button reveals a movable, resizable cell that follows your companion. Generate up to eight variations and let them loop with gentle crossfades at your chosen pace. The **Text** button reveals a transparent input just beneath the controls: type, paste or drop text, and attach images when your model supports vision.
 

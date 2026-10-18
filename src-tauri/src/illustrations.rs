@@ -204,7 +204,9 @@ impl Illustrations {
                 let mut provider=Providers::new(profile.details.connections.clone())?;
                 if !provider.connections.llm_provider.is_local() { let model=provider.remote_model().await?;provider.use_api_model(&model); }
                 let appearance=if config.physical_description.is_empty() {sherka_core::illustration::default_description(profile.details.avatar_preset)} else {&config.physical_description};
-                let (messages,schema)=sherka_core::illustration::scene_request(appearance,&history[0].content,&history[1].content);
+                let (messages,schema)=sherka_core::illustration::subject_request(&profile.details.name,&history[0].content,&history[1].content);
+                let subject:sherka_core::illustration::Subject=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured_budgeted(messages,schema,limit,128)=>r?};
+                let (messages,schema)=sherka_core::illustration::configured_scene_request(&config,if subject.include_companion {appearance}else{""},&history[0].content,&history[1].content);
                 let scene:Scene=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured(messages,schema,limit)=>r.map_err(|e|if e.to_string().contains("mémoire"){Error::Validation("La préparation de la scène a échoué. Vérifie le modèle de conversation puis réessaie.".into())}else{e})?};
                 if !valid() {return Err(Error::StaleOperation);}
                 let client=Client::new(&config.server_url)?;

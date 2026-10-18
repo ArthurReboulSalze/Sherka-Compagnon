@@ -26,6 +26,9 @@ export const memories = (profileId: string, query = '') => invoke<MemoryState>('
 export const editMemory = (profileId: string, epoch: number, edit: MemoryEdit) => invoke<MemoryState>('edit_memory', { profileId, epoch, edit });
 export const searchArchive = (profileId: string, query: string) => invoke<MemorySource[]>('search_archive', { profileId, query });
 export const exportMemories = (profileId: string) => invoke<boolean>('export_memories', { profileId });
+export const optimizeMemory = (profileId:string) => invoke<import('./types').MemoryOptimization>('optimize_memory',{profileId});
+export const memoryOptimization = (profileId:string) => invoke<import('./types').MemoryOptimization|null>('get_memory_optimization',{profileId});
+export const finishMemoryOptimization = (profileId:string,apply:boolean) => invoke<void>('finish_memory_optimization',{profileId,apply});
 export const onMemory = (callback: (id: string) => void) => listen<string>('sherka:memory', e => callback(e.payload));
 export const exportProfile = (profileId: string) => invoke<boolean>('export_profile', { profileId });
 export const widgetAction = (action: WidgetAction) => invoke<void>('widget_action', { action });

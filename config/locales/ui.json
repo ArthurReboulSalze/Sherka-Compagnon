@@ -6431,13 +6431,13 @@
     "无法访问 API 密钥库。请检查会话的凭据库。",
     "API キー保管庫にアクセスできません。セッションの資格情報保管庫を確認してください。"
   ],
-  "Le dernier échange est envoyé au modèle de conversation pour préparer la scène, puis les tags à ComfyUI. Les images et modèles de diffusion restent gérés par ton serveur.": [
-    "The latest exchange goes to the conversation model to compose a scene, then its tags go to ComfyUI. Your server manages images and diffusion models.",
-    "El último intercambio se envía al modelo de conversación para preparar la escena y sus etiquetas a ComfyUI. Tu servidor gestiona las imágenes y los modelos de difusión.",
-    "L’ultimo scambio viene inviato al modello di conversazione per creare la scena, poi i tag a ComfyUI. Il server gestisce immagini e modelli di diffusione.",
-    "Der letzte Austausch geht an das Gesprächsmodell für die Szene, anschließend gehen die Tags an ComfyUI. Dein Server verwaltet Bilder und Diffusionsmodelle.",
-    "最新对话会发送给对话模型以构思场景，然后将标签发送至 ComfyUI。图像与扩散模型由你的服务器管理。",
-    "直近のやり取りを会話モデルに送り、シーンを構成してからタグをComfyUIに送ります。画像と拡散モデルはサーバー側で管理されます。"
+  "Le dernier échange est envoyé au modèle de conversation pour préparer la scène, puis le prompt à ComfyUI. Les images et modèles de diffusion restent gérés par ton serveur.": [
+    "The latest exchange goes to the conversation model to compose a scene, then its prompt goes to ComfyUI. Your server manages images and diffusion models.",
+    "El último intercambio se envía al modelo de conversación para preparar la escena y su prompt a ComfyUI. Tu servidor gestiona las imágenes y los modelos de difusión.",
+    "L’ultimo scambio viene inviato al modello di conversazione per creare la scena, poi il prompt a ComfyUI. Il server gestisce immagini e modelli di diffusione.",
+    "Der letzte Austausch geht an das Gesprächsmodell für die Szene, anschließend geht der Prompt an ComfyUI. Dein Server verwaltet Bilder und Diffusionsmodelle.",
+    "最新对话会发送给对话模型以构思场景，然后将提示词发送至 ComfyUI。图像与扩散模型由你的服务器管理。",
+    "直近のやり取りを会話モデルに送り、シーンを構成してからプロンプトをComfyUIに送ります。画像と拡散モデルはサーバー側で管理されます。"
   ],
   "Le LoRA Turbo requis est absent du serveur ComfyUI.": [
     "The required Turbo LoRA is missing from the ComfyUI server.",
@@ -7094,5 +7094,349 @@
     "Tavily API",
     "Tavily API",
     "Tavily API"
+  ],
+  "Annuler l’optimisation": [
+    "Cancel optimization",
+    "Cancelar optimización",
+    "Annulla ottimizzazione",
+    "Optimierung abbrechen",
+    "取消优化",
+    "最適化をキャンセル"
+  ],
+  "Appliquer l’optimisation": [
+    "Apply optimization",
+    "Aplicar optimización",
+    "Applica ottimizzazione",
+    "Optimierung anwenden",
+    "应用优化",
+    "最適化を適用"
+  ],
+  "Après": [
+    "After",
+    "Después",
+    "Dopo",
+    "Nachher",
+    "之后",
+    "変更後"
+  ],
+  "Avant": [
+    "Before",
+    "Antes",
+    "Prima",
+    "Vorher",
+    "之前",
+    "変更前"
+  ],
+  "caractères": [
+    "characters",
+    "caracteres",
+    "caratteri",
+    "Zeichen",
+    "字符",
+    "文字"
+  ],
+  "Aucune optimisation à confirmer.": [
+    "No optimization to confirm.",
+    "No hay ninguna optimización que confirmar.",
+    "Nessuna ottimizzazione da confermare.",
+    "Keine Optimierung zu bestätigen.",
+    "没有待确认的优化。",
+    "確認する最適化はありません。"
+  ],
+  "Aucune suppression à confirmer. Demande d’abord d’effacer la discussion.": [
+    "No deletion to confirm. First ask to clear the conversation.",
+    "No hay ninguna eliminación que confirmar. Primero pide borrar la conversación.",
+    "Nessuna eliminazione da confermare. Prima chiedi di cancellare la conversazione.",
+    "Keine Löschung zu bestätigen. Bitte zuerst um das Löschen des Gesprächs.",
+    "没有待确认的删除操作。请先请求清空对话。",
+    "確認する削除操作はありません。先に会話の削除を依頼してください。"
+  ],
+  "Compagnon activé.": [
+    "Companion activated.",
+    "Compañero activado.",
+    "Compagno attivato.",
+    "Begleiter aktiviert.",
+    "伙伴已激活。",
+    "コンパニオンを切り替えました。"
+  ],
+  "Conserver la mémoire actuelle": [
+    "Keep current memory",
+    "Conservar la memoria actual",
+    "Mantieni la memoria attuale",
+    "Aktuellen Speicher behalten",
+    "保留当前记忆",
+    "現在の記憶を保持"
+  ],
+  "Contexte chargé inconnu.": [
+    "Loaded context size is unknown.",
+    "Se desconoce el tamaño del contexto cargado.",
+    "Dimensione del contesto caricato sconosciuta.",
+    "Größe des geladenen Kontexts unbekannt.",
+    "已加载的上下文大小未知。",
+    "読み込まれたコンテキストのサイズが不明です。"
+  ],
+  "Dis « Efface la discussion » ou écris /clear, puis confirme avec /confirm-clear. Les faits mémorisés sont conservés. Pour résumer la mémoire : /optimize-memory.": [
+    "Say “Clear our conversation” or type /clear, then confirm with /confirm-clear. Saved facts are kept. To condense memory: /optimize-memory.",
+    "Di «Borra nuestra conversación» o escribe /clear y confirma con /confirm-clear. Se conservan los hechos guardados. Para resumir la memoria: /optimize-memory.",
+    "Di «Cancella la nostra conversazione» o scrivi /clear, poi conferma con /confirm-clear. I fatti salvati restano. Per riassumere la memoria: /optimize-memory.",
+    "Sage „Lösche unseren Chatverlauf“ oder schreibe /clear, dann bestätige mit /confirm-clear. Gespeicherte Fakten bleiben erhalten. Speicher verdichten: /optimize-memory.",
+    "说“清空我们的对话”或输入 /clear，然后用 /confirm-clear 确认。已保存的事实会保留。精简记忆：/optimize-memory。",
+    "「会話履歴を削除して」と言うか /clear を入力し、/confirm-clear で確認してください。保存した事実は保持されます。記憶の要約：/optimize-memory。"
+  ],
+  "Effacer toute la discussion en conservant les faits mémorisés ? Dis « confirme la suppression » ou écris /confirm-clear. Pour annuler : /cancel.": [
+    "Clear the whole conversation while keeping saved facts? Say “confirm deletion” or type /confirm-clear. To cancel: /cancel.",
+    "¿Borrar toda la conversación conservando los hechos guardados? Di «confirmar eliminación» o escribe /confirm-clear. Para cancelar: /cancel.",
+    "Cancellare tutta la conversazione mantenendo i fatti salvati? Di «conferma eliminazione» o scrivi /confirm-clear. Per annullare: /cancel.",
+    "Das ganze Gespräch löschen und gespeicherte Fakten behalten? Sage „Löschen bestätigen“ oder schreibe /confirm-clear. Abbrechen: /cancel.",
+    "清空整段对话并保留已保存的事实？说“确认删除”或输入 /confirm-clear。取消：/cancel。",
+    "保存した事実を保持して会話全体を削除しますか？「削除を確認」と言うか /confirm-clear を入力してください。キャンセル：/cancel。"
+  ],
+  "Hermes gère sa mémoire sur le serveur.": [
+    "Hermes manages its memory on the server.",
+    "Hermes gestiona su memoria en el servidor.",
+    "Hermes gestisce la propria memoria sul server.",
+    "Hermes verwaltet seinen Speicher auf dem Server.",
+    "Hermes 在服务器上管理自己的记忆。",
+    "Hermes はサーバーで記憶を管理します。"
+  ],
+  "La mémoire est déjà concise. Aucun changement proposé.": [
+    "Memory is already concise. No changes proposed.",
+    "La memoria ya es concisa. No se proponen cambios.",
+    "La memoria è già concisa. Nessuna modifica proposta.",
+    "Der Speicher ist bereits kompakt. Keine Änderungen vorgeschlagen.",
+    "记忆已经简洁，无修改建议。",
+    "記憶はすでに簡潔です。変更の提案はありません。"
+  ],
+  "La proposition d’optimisation est invalide. Les souvenirs sont conservés.": [
+    "The optimization proposal is invalid. Memories are preserved.",
+    "La propuesta de optimización no es válida. Se conservan los recuerdos.",
+    "La proposta di ottimizzazione non è valida. I ricordi sono conservati.",
+    "Der Optimierungsvorschlag ist ungültig. Erinnerungen bleiben erhalten.",
+    "优化建议无效。记忆已保留。",
+    "最適化の提案が無効です。記憶は保持されます。"
+  ],
+  "Le modèle propose de raccourcir et regrouper les souvenirs redondants. Vérifie les changements avant de les appliquer. La discussion reste conservée.": [
+    "The model proposes shorter, merged memories where information overlaps. Review changes before applying them. The conversation is kept.",
+    "El modelo propone acortar y agrupar recuerdos redundantes. Revisa los cambios antes de aplicarlos. La conversación se conserva.",
+    "Il modello propone di accorciare e raggruppare i ricordi ridondanti. Verifica le modifiche prima di applicarle. La conversazione resta conservata.",
+    "Das Modell schlägt vor, redundante Erinnerungen zu kürzen und zusammenzuführen. Prüfe die Änderungen vor dem Anwenden. Das Gespräch bleibt erhalten.",
+    "模型会建议精简并合并重复记忆。请在应用前检查修改。对话将保留。",
+    "モデルが重複する記憶の短縮と統合を提案します。適用前に変更を確認してください。会話は保持されます。"
+  ],
+  "Les souvenirs sont conservés.": [
+    "Memories are preserved.",
+    "Se conservan los recuerdos.",
+    "I ricordi sono conservati.",
+    "Erinnerungen bleiben erhalten.",
+    "记忆已保留。",
+    "記憶は保持されます。"
+  ],
+  "Mémoire du compagnon": [
+    "Companion memory",
+    "Memoria del compañero",
+    "Memoria del compagno",
+    "Speicher des Begleiters",
+    "伙伴记忆",
+    "コンパニオンの記憶"
+  ],
+  "Mémoire optimisée. L’historique de conversation est conservé.": [
+    "Memory optimized. Conversation history is preserved.",
+    "Memoria optimizada. Se conserva el historial de conversación.",
+    "Memoria ottimizzata. La cronologia della conversazione è conservata.",
+    "Speicher optimiert. Der Gesprächsverlauf bleibt erhalten.",
+    "记忆已优化。对话历史已保留。",
+    "記憶を最適化しました。会話履歴は保持されます。"
+  ],
+  "Opération annulée. La discussion et les souvenirs sont conservés.": [
+    "Operation cancelled. Conversation and memories are preserved.",
+    "Operación cancelada. Se conservan la conversación y los recuerdos.",
+    "Operazione annullata. Conversazione e ricordi sono conservati.",
+    "Vorgang abgebrochen. Gespräch und Erinnerungen bleiben erhalten.",
+    "操作已取消。对话和记忆已保留。",
+    "操作をキャンセルしました。会話と記憶は保持されます。"
+  ],
+  "Optimisation annulée. Les souvenirs sont conservés.": [
+    "Optimization cancelled. Memories are preserved.",
+    "Optimización cancelada. Se conservan los recuerdos.",
+    "Ottimizzazione annullata. I ricordi sono conservati.",
+    "Optimierung abgebrochen. Erinnerungen bleiben erhalten.",
+    "优化已取消。记忆已保留。",
+    "最適化をキャンセルしました。記憶は保持されます。"
+  ],
+  "Optimisation de la mémoire en cours…": [
+    "Optimizing memory…",
+    "Optimizando la memoria…",
+    "Ottimizzazione della memoria…",
+    "Speicher wird optimiert…",
+    "正在优化记忆…",
+    "記憶を最適化中…"
+  ],
+  "Optimisation prête à vérifier dans Mémoire. Dis « confirme l’optimisation » ou écris /apply-memory pour l’appliquer.": [
+    "Optimization is ready to review in Memory. Say “confirm memory optimization” or type /apply-memory to apply it.",
+    "Optimización lista para revisar en Memoria. Di «confirma la optimización» o escribe /apply-memory para aplicarla.",
+    "Ottimizzazione pronta da verificare in Memoria. Di «conferma ottimizzazione» o scrivi /apply-memory per applicarla.",
+    "Optimierung im Bereich Speicher zur Prüfung bereit. Sage „Speicheroptimierung bestätigen“ oder schreibe /apply-memory zum Anwenden.",
+    "优化建议已准备好，可在“记忆”中查看。说“确认记忆优化”或输入 /apply-memory 以应用。",
+    "「記憶」で最適化の提案を確認できます。「記憶の最適化を確認」と言うか /apply-memory を入力すると適用されます。"
+  ],
+  "Optimiser la mémoire": [
+    "Optimize memory",
+    "Optimizar la memoria",
+    "Ottimizza memoria",
+    "Speicher optimieren",
+    "优化记忆",
+    "記憶を最適化"
+  ],
+  "Raccourcir et regrouper les souvenirs redondants, avec une proposition à vérifier.": [
+    "Shorten and merge redundant memories with a proposal to review.",
+    "Acortar y agrupar recuerdos redundantes con una propuesta para revisar.",
+    "Accorcia e raggruppa i ricordi ridondanti con una proposta da verificare.",
+    "Redundante Erinnerungen kürzen und zusammenführen, mit einem Vorschlag zur Prüfung.",
+    "精简并合并重复记忆，先查看建议再应用。",
+    "重複する記憶の短縮と統合の提案を確認できます。"
+  ],
+  "Vérifie la proposition avant de l’appliquer.": [
+    "Review the proposal before applying it.",
+    "Revisa la propuesta antes de aplicarla.",
+    "Verifica la proposta prima di applicarla.",
+    "Prüfe den Vorschlag vor dem Anwenden.",
+    "请在应用前检查建议。",
+    "適用前に提案を確認してください。"
+  ],
+  "Vérifier l’optimisation": [
+    "Review optimization",
+    "Revisar optimización",
+    "Verifica ottimizzazione",
+    "Optimierung prüfen",
+    "检查优化",
+    "最適化を確認"
+  ],
+  "Ce texte est envoyé tel quel à ComfyUI. Tu peux le modifier ou le laisser vide ; le modèle ne le remplacera pas.": [
+    "This text is sent unchanged to ComfyUI. Edit it or leave it empty; the model will not replace it.",
+    "Este texto se envía sin cambios a ComfyUI. Puedes modificarlo o dejarlo vacío; el modelo no lo reemplazará.",
+    "Questo testo viene inviato invariato a ComfyUI. Modificalo o lascialo vuoto; il modello non lo sostituirà.",
+    "Dieser Text wird unverändert an ComfyUI gesendet. Du kannst ihn ändern oder leer lassen; das Modell ersetzt ihn nicht.",
+    "此文本将原样发送到 ComfyUI。你可以修改或留空，模型不会替换它。",
+    "このテキストはそのまま ComfyUI に送信されます。編集または空欄にできます。モデルが置き換えることはありません。"
+  ],
+  "Cette description est utilisée seulement si le compagnon apparaît dans la scène. Les paysages et autres sujets peuvent être illustrés seuls.": [
+    "This description is used only when the companion appears in the scene. Landscapes and other subjects can stand alone.",
+    "Esta descripción solo se usa si el compañero aparece en la escena. Los paisajes y otros temas pueden ilustrarse solos.",
+    "Questa descrizione viene usata solo se il compagno appare nella scena. Paesaggi e altri soggetti possono essere illustrati da soli.",
+    "Diese Beschreibung wird nur verwendet, wenn der Begleiter in der Szene erscheint. Landschaften und andere Motive können allein dargestellt werden.",
+    "仅当伙伴出现在画面中时才使用此描述。风景和其他主题可以独立呈现。",
+    "コンパニオンがシーンに登場する場合のみ、この説明を使用します。風景などの題材は単独で描けます。"
+  ],
+  "Chemins relatifs du catalogue ComfyUI, sans filtre sur le nom du modèle. Pour un dossier externe, configure extra_model_paths.yaml sur le serveur puis actualise cette liste.": [
+    "Relative paths in the ComfyUI catalog, with no model-name filter. For external folders, configure extra_model_paths.yaml on the server, then refresh this list.",
+    "Rutas relativas del catálogo ComfyUI, sin filtrar por nombre. Para carpetas externas, configura extra_model_paths.yaml en el servidor y actualiza esta lista.",
+    "Percorsi relativi del catalogo ComfyUI, senza filtro sul nome. Per cartelle esterne, configura extra_model_paths.yaml sul server e aggiorna la lista.",
+    "Relative Pfade im ComfyUI-Katalog, ohne Namensfilter. Für externe Ordner konfiguriere extra_model_paths.yaml auf dem Server und aktualisiere die Liste.",
+    "使用 ComfyUI 目录中的相对路径，不按模型名称过滤。外部文件夹请先在服务器的 extra_model_paths.yaml 中配置，再刷新此列表。",
+    "ComfyUI カタログ内の相対パスです。モデル名による絞り込みはありません。外部フォルダーはサーバーの extra_model_paths.yaml で設定後、一覧を更新してください。"
+  ],
+  "Choisis la famille réelle du checkpoint : tags pour Illustrious, description visuelle en anglais pour SDXL. Le nom du fichier ne suffit pas à l’identifier.": [
+    "Choose the checkpoint’s actual family: tags for Illustrious, English visual prose for SDXL. The filename alone cannot identify it.",
+    "Elige la familia real del checkpoint: etiquetas para Illustrious, descripción visual en inglés para SDXL. El nombre del archivo no basta para identificarla.",
+    "Scegli la famiglia effettiva del checkpoint: tag per Illustrious, descrizione visiva in inglese per SDXL. Il nome del file non basta a identificarla.",
+    "Wähle die tatsächliche Modellfamilie: Tags für Illustrious, englische Bildbeschreibungen für SDXL. Der Dateiname allein reicht zur Erkennung nicht aus.",
+    "请选择模型的实际系列：Illustrious 使用标签，SDXL 使用英文视觉描述。仅凭文件名无法识别。",
+    "実際のモデル系統を選択してください。Illustrious はタグ、SDXL は英語の視覚的な文章を使用します。ファイル名だけでは判別できません。"
+  ],
+  "ComfyUI connecté · {0} modèles": [
+    "ComfyUI connected · {0} models",
+    "ComfyUI conectado · {0} modelos",
+    "ComfyUI connesso · {0} modelli",
+    "ComfyUI verbunden · {0} Modelle",
+    "ComfyUI 已连接 · {0} 个模型",
+    "ComfyUI 接続済み · {0} モデル"
+  ],
+  "Dossier des LoRA": [
+    "LoRA folder",
+    "Carpeta de LoRA",
+    "Cartella LoRA",
+    "LoRA-Ordner",
+    "LoRA 文件夹",
+    "LoRA フォルダー"
+  ],
+  "Dossier des modèles": [
+    "Model folder",
+    "Carpeta de modelos",
+    "Cartella modelli",
+    "Modellordner",
+    "模型文件夹",
+    "モデルフォルダー"
+  ],
+  "Famille du modèle": [
+    "Model family",
+    "Familia del modelo",
+    "Famiglia del modello",
+    "Modellfamilie",
+    "模型系列",
+    "モデル系統"
+  ],
+  "Illustrious": [
+    "Illustrious",
+    "Illustrious",
+    "Illustrious",
+    "Illustrious",
+    "Illustrious",
+    "Illustrious"
+  ],
+  "SDXL": [
+    "SDXL",
+    "SDXL",
+    "SDXL",
+    "SDXL",
+    "SDXL",
+    "SDXL"
+  ],
+  "Modèle de diffusion": [
+    "Diffusion model",
+    "Modelo de difusión",
+    "Modello di diffusione",
+    "Diffusionsmodell",
+    "扩散模型",
+    "拡散モデル"
+  ],
+  "Prompt négatif": [
+    "Negative prompt",
+    "Prompt negativo",
+    "Prompt negativo",
+    "Negativer Prompt",
+    "负面提示词",
+    "ネガティブプロンプト"
+  ],
+  "Tous les dossiers": [
+    "All folders",
+    "Todas las carpetas",
+    "Tutte le cartelle",
+    "Alle Ordner",
+    "所有文件夹",
+    "すべてのフォルダー"
+  ],
+  "Turbo : LoRA accélérateur automatique. Sans Turbo : 16 steps par sampler et CFG du workflow doublé.": [
+    "Turbo: automatic acceleration LoRA. Without Turbo: 16 steps per sampler and doubled workflow CFG.",
+    "Turbo: LoRA acelerador automático. Sin Turbo: 16 pasos por sampler y CFG del workflow duplicado.",
+    "Turbo: LoRA acceleratore automatico. Senza Turbo: 16 step per sampler e CFG del workflow raddoppiato.",
+    "Turbo: automatischer Beschleunigungs-LoRA. Ohne Turbo: 16 Schritte pro Sampler und doppelter Workflow-CFG.",
+    "Turbo：自动加速 LoRA。关闭 Turbo：每个采样器 16 步，工作流 CFG 加倍。",
+    "Turbo：加速 LoRA を自動適用。無効時：各サンプラー 16 ステップ、ワークフローの CFG を 2 倍。"
+  ],
+  "Une scène carrée inspirée du dernier échange, avec un prompt adapté à Illustrious ou SDXL.": [
+    "A square scene inspired by the latest exchange, with a prompt tailored to Illustrious or SDXL.",
+    "Una escena cuadrada inspirada en el último intercambio, con un prompt adaptado a Illustrious o SDXL.",
+    "Una scena quadrata ispirata all’ultimo scambio, con un prompt adatto a Illustrious o SDXL.",
+    "Eine quadratische Szene zum letzten Austausch, mit einem Prompt für Illustrious oder SDXL.",
+    "根据最新交流生成方形画面，使用适合 Illustrious 或 SDXL 的提示词。",
+    "直近のやり取りをもとに、Illustrious または SDXL 向けのプロンプトで正方形の画像を生成します。"
+  ],
+  "Workflow API JSON pour Illustrious ou SDXL, avec Power LoRA Loader. Le modèle, les LoRA, les textes et les graines sont injectés par Sherka. Les images sont produites dans les fichiers temporaires de ComfyUI.": [
+    "API JSON workflow for Illustrious or SDXL with Power LoRA Loader. Sherka supplies the model, LoRAs, prompts and seeds. Images are produced in ComfyUI temporary files.",
+    "Workflow API JSON para Illustrious o SDXL con Power LoRA Loader. Sherka aporta el modelo, los LoRA, los prompts y las semillas. Las imágenes se generan en los archivos temporales de ComfyUI.",
+    "Workflow API JSON per Illustrious o SDXL con Power LoRA Loader. Sherka fornisce modello, LoRA, prompt e seed. Le immagini sono generate nei file temporanei di ComfyUI.",
+    "API-JSON-Workflow für Illustrious oder SDXL mit Power LoRA Loader. Sherka liefert Modell, LoRAs, Prompts und Seeds. Bilder entstehen in temporären ComfyUI-Dateien.",
+    "用于 Illustrious 或 SDXL 的 API JSON 工作流，使用 Power LoRA Loader。Sherka 提供模型、LoRA、提示词和种子。图像生成在 ComfyUI 临时文件中。",
+    "Power LoRA Loader を使用する Illustrious / SDXL 用 API JSON ワークフローです。Sherka がモデル、LoRA、プロンプト、シードを渡します。画像は ComfyUI の一時ファイルに生成されます。"
   ]
 }

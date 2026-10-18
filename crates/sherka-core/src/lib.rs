@@ -22,6 +22,7 @@ pub mod search_provider;
 pub mod session;
 mod speech_detector;
 pub mod storage;
+mod structured;
 pub mod transcript;
 pub mod voice;
 pub mod web;

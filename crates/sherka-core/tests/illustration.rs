@@ -49,7 +49,7 @@ fn service_scope_graphs_and_configuration_reject_unrelated_or_executable_inputs(
         assert!(illustration::server_url(endpoint).is_ok());
     }
     let mut c = config();
-    c.checkpoint = Some("Flux/flux.safetensors".into());
+    c.checkpoint = Some("../outside.safetensors".into());
     assert!(c.validated().is_err());
     let mut c = config();
     c.loras[0].strength = f32::NAN;
@@ -152,7 +152,51 @@ fn normal_mode_removes_turbo_and_api_import_is_normalized_without_user_asset_pat
         "style/fixture.safetensors"
     );
     assert_eq!(graph["21"]["inputs"]["sampler_name"], "euler_ancestral");
-    assert_eq!(graph["21"]["inputs"]["steps"], 28);
+    assert_eq!(graph["21"]["inputs"]["steps"], 16);
+    assert_eq!(graph["25"]["inputs"]["steps"], 16);
+    assert_eq!(graph["21"]["inputs"]["cfg"], 3.8);
+    assert_eq!(graph["25"]["inputs"]["cfg"], 7.0);
+}
+
+#[test]
+fn sdxl_prose_user_negative_and_arbitrary_catalog_paths_are_supported() {
+    let mut c = config();
+    c.model_family = illustration::ModelFamily::Sdxl;
+    c.checkpoint = Some("My collection/landscape-model.safetensors".into());
+    c.checkpoint_folder = "My collection".into();
+    c.lora_folder = "Styles/Nature".into();
+    c.negative_prompt = "human face, portraits, captions\nwatermark".into();
+    assert!(c.clone().validated().is_ok());
+    let (messages, _) =
+        illustration::configured_scene_request(&c, "", "Imagine a landscape", "A mountain lake.");
+    assert!(messages[0].content.contains("fluent English visual prose"));
+    let data: Value = serde_json::from_str(&messages[1].content).unwrap();
+    assert_eq!(data["negative_prompt"], c.negative_prompt);
+    assert_eq!(data["include_companion"], false);
+    let mut nodes = info();
+    nodes["CheckpointLoaderSimple"]["input"]["required"]["ckpt_name"] =
+        json!([[c.checkpoint.clone().unwrap()]]);
+    let scene = Scene {
+        positive: "A mountain lake under a pink sunset, wide landscape composition".into(),
+        negative: "the model must not override my prompt".into(),
+    };
+    let graph = illustration::workflow(&c, scene.clone(), &nodes, 1).unwrap();
+    assert_eq!(graph["5"]["inputs"]["text"], c.negative_prompt);
+    assert_eq!(graph["21"]["inputs"]["steps"], 5);
+    assert_eq!(graph["25"]["inputs"]["cfg"], 3.5);
+    c.negative_prompt.clear();
+    c.turbo = false;
+    let mut custom = illustration::default_workflow();
+    custom["21"]["inputs"]["cfg"] = json!(2.2);
+    custom["25"]["inputs"]["cfg"] = json!(4.1);
+    c.workflow = Some(custom.clone());
+    for _ in 0..2 {
+        let graph = illustration::workflow(&c, scene.clone(), &nodes, 1).unwrap();
+        assert_eq!(graph["5"]["inputs"]["text"], "");
+        assert_eq!(graph["21"]["inputs"]["cfg"], 4.4);
+        assert_eq!(graph["25"]["inputs"]["cfg"], 8.2);
+    }
+    assert_eq!(c.workflow, Some(custom));
 }
 #[test]
 fn illustrious_scene_composition_is_freeform_bounded_and_uses_both_latest_sides() {
@@ -181,6 +225,39 @@ fn illustrious_scene_composition_is_freeform_bounded_and_uses_both_latest_sides(
     assert!(!s.positive.contains("lora:"));
     let (_, schema2) = illustration::scene_request("", "", &"x".repeat(50_000));
     assert_eq!(schema, schema2);
+}
+
+#[test]
+fn unrelated_scenes_do_not_receive_the_avatar_appearance_and_minerva_migration_is_narrow() {
+    use sherka_core::avatar::AvatarPreset;
+    let (messages, _) =
+        illustration::subject_request("Minerva", "Imagine un paysage", "Une montagne enneigée.");
+    assert!(!messages.iter().any(|m| m.content.contains("armored")));
+    let (messages, _) =
+        illustration::scene_request("", "Imagine un paysage", "Une montagne enneigée.");
+    let value: Value = serde_json::from_str(&messages[1].content).unwrap();
+    assert_eq!(value["include_companion"], false);
+    assert_eq!(value["appearance"], Value::Null);
+    let old = "An adult feminine armored android, silver and dark gray angular armor with red accents, short pale hair, stern irritated expression, strong mechanical silhouette.";
+    let mut draft = ProfileDraft {
+        avatar_preset: Some(AvatarPreset::Minerva),
+        ..Default::default()
+    };
+    draft.illustration.physical_description = old.into();
+    assert!(illustration::upgrade_appearance(&mut draft));
+    assert!(
+        draft
+            .illustration
+            .physical_description
+            .contains("Not Human Face . Robot female Face .")
+    );
+    assert!(!illustration::upgrade_appearance(&mut draft));
+    draft.illustration.physical_description = "My custom robot design".into();
+    assert!(!illustration::upgrade_appearance(&mut draft));
+    assert_eq!(
+        draft.illustration.physical_description,
+        "My custom robot design"
+    );
 }
 #[test]
 fn per_character_config_and_global_theme_survive_import_copy_and_old_profile_migration() {

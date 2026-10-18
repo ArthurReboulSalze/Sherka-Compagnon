@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-optimize-memory"
+description = "Enables the optimize_memory command without any pre-configured scope."
+commands.allow = ["optimize_memory"]
+
+[[permission]]
+identifier = "deny-optimize-memory"
+description = "Denies the optimize_memory command without any pre-configured scope."
+commands.deny = ["optimize_memory"]

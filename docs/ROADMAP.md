@@ -10,7 +10,7 @@ Sherka 0.10.0 adds desktop text, themes, Illustrious conversation illustrations 
 - Refine model-selected expressions, transitions and reactions beyond the seven static image slots. Hermes remote-agent mode remains excluded: neutral avatar, with listening/speaking indicators only.
 - Voice-driven mouth or portrait animation beyond the existing half-second image crossfades.
 - Animated formats and shareable character packs without personal data.
-- Extend the conversation illustration connector beyond Illustrious to other SDXL families and improve appearance consistency without changing the avatar editor.
+- Extend illustration workflows beyond the supported Illustrious and SDXL families, and improve appearance consistency without changing the avatar editor.
 
 ## Refine conversations
 

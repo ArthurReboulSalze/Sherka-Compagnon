@@ -577,7 +577,7 @@ impl Providers {
         let kind = self.connections.llm_provider;
         // Providers without constrained decoding still get the schema; final
         // JSON and semantic memory guards remain mandatory before any write.
-        messages.push(ChatMessage { role: "system", content: format!("Return only one JSON object matching this schema, with no markdown or commentary: {schema}") });
+        crate::structured::request(&mut messages, &schema);
         let max_tokens = max_tokens.min(
             self.api_model
                 .as_ref()
@@ -645,9 +645,7 @@ impl Providers {
                 .ok_or_else(|| failure("La proposition du fournisseur est invalide."))?
                 .to_owned()
         };
-        serde_json::from_str(&content).map_err(|_| {
-            failure("La proposition du fournisseur est invalide ; aucune mémoire n’a été modifiée.")
-        })
+        crate::structured::parse(&content)
     }
 }
 

@@ -68,6 +68,46 @@ fn absent_invalid_and_interrupted_headers_fall_back_without_leaking_metadata() {
 }
 
 #[test]
+fn thinking_is_not_an_expression_and_small_model_aliases_and_fallbacks_work() {
+    for (answer, emotion) in [
+        ("[[Emotion:happy]]Bravo !", Emotion::Joy),
+        ("[[emotion:colère]]Ça suffit.", Emotion::Anger),
+        ("[[emotion:thinking]]Voyons cela.", Emotion::Reflection),
+        (
+            "[[emotion:neutral]]Quelle bonne nouvelle !",
+            Emotion::Neutral,
+        ),
+        ("Quelle bonne nouvelle !", Emotion::Joy),
+        ("Je suis désolée pour toi.", Emotion::Sadness),
+        ("C'est inadmissible !", Emotion::Anger),
+        ("Quelle surprise !", Emotion::Surprise),
+        ("Je me demande comment faire.", Emotion::Reflection),
+        ("Je t'aime.", Emotion::Tenderness),
+        ("The Moon orbits Earth.", Emotion::Neutral),
+    ] {
+        let input = format!(
+            "<think>Je suis désolée. [[emotion:sadness]] private 思考</think><analysis>more</analysis>{answer}"
+        );
+        for cut in input.char_indices().map(|(i, _)| i).chain([input.len()]) {
+            let mut stream = ExpressionStream::default();
+            let visible =
+                stream.push(&input[..cut]) + &stream.push(&input[cut..]) + &stream.finish();
+            assert!(!visible.contains("private"));
+            assert!(!visible.contains("emotion:"));
+            assert_eq!(stream.emotion, emotion, "{answer}");
+        }
+    }
+    let mut incomplete = ExpressionStream::default();
+    assert!(
+        incomplete
+            .push("<think>Unfinished private thought")
+            .is_empty()
+    );
+    assert!(incomplete.finish().is_empty());
+    assert_eq!(incomplete.emotion, Emotion::Neutral);
+}
+
+#[test]
 fn images_are_isolated_validated_revisioned_and_travel_with_the_profile() {
     let dir = tempdir().unwrap();
     let store = Store::open(dir.path()).unwrap();
@@ -315,7 +355,7 @@ fn expression_prompt_respects_context_budget_and_agent_boundary() {
         )
         .unwrap();
         assert!(expressive.avatar_emotions);
-        assert!(expressive.messages[0].content.contains("[[emotion:STATE]]"));
+        assert!(expressive.messages[0].content.contains("[[emotion:joy]]"));
         assert!(expressive.budget.input_estimate > plain.budget.input_estimate);
         assert!(
             expressive.budget.input_estimate

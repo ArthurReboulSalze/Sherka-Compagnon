@@ -13,6 +13,7 @@ export function memoryPanel(profile: Profile): string {
     + html`<p>Dis-lui « retiens que… », « corrige ce souvenir… » ou « oublie… ». Les autres faits repérés après quelques échanges sont proposés ici pour validation.</p>`
     + html`<label>Rechercher dans les souvenirs<input type="search" id="memory-search" placeholder="Un prénom, un projet, un thème…" /></label>`
     + html`<p id="memory-feedback" role="status"></p>`
+    + html`<div class="settings-actions"><button type="button" class="button secondary" id="memory-optimize">Optimiser la mémoire</button><button type="button" class="button quiet" id="memory-optimize-cancel" hidden>Annuler l’optimisation</button></div><p class="connection-note">Le modèle propose de raccourcir et regrouper les souvenirs redondants. Vérifie les changements avant de les appliquer. La discussion reste conservée.</p><div id="memory-optimization" aria-live="polite"></div>`
     + html`<div id="memory-editor"><button type="button" class="button secondary small" id="memory-toggle" aria-expanded="false" aria-controls="memory-form">Ajouter un souvenir</button><form id="memory-form" hidden><label>Contenu<textarea name="content" required maxlength="1800" rows="3"></textarea></label><div class="connection-selects"><label>Thème<input name="category" required maxlength="60" value="${t('Préférences')}" /></label><label>Niveau<select name="kind"><option value="essential">Essentiel · rappel régulier</option><option value="detail">Tiroir · retrouvé par sujet</option></select></label></div><div class="settings-actions"><button type="submit" class="button primary">Enregistrer le souvenir</button><button type="button" class="button quiet" id="memory-reset">Nouveau souvenir</button></div></form></div>`
     + html`<div id="memory-entries"><p class="muted">Chargement des souvenirs…</p></div><p class="connection-note">Une correction ou un oubli exclut les anciens échanges des futurs contextes et résumés, pour empêcher le retour de l’ancienne information. Les autres souvenirs enregistrés sont conservés. L’historique reste consultable ici.</p>`
     + html`<details id="memory-summary"><summary>Repères de conversation</summary><p></p></details>`
@@ -27,6 +28,7 @@ export function mountMemory(profile: Profile, report: (e: unknown) => void): voi
   let request = 0;
   let archiveRequest = 0;
   let saving = false;
+  let optimizing = false;
   const form = root.querySelector<HTMLFormElement>('#memory-form')!;
   const input = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
   const search = root.querySelector<HTMLInputElement>('#memory-search')!;
@@ -65,7 +67,34 @@ export function mountMemory(profile: Profile, report: (e: unknown) => void): voi
     const version = ++request;
     const result = await api.memories(profile.id, search.value);
     if (version === request && !saving) paint(result);
+    const preview=await api.memoryOptimization(profile.id);
+    if(version===request && root!.isConnected) paintOptimization(preview);
   }
+  function paintOptimization(value:import('./types').MemoryOptimization|null):void {
+    const target=root!.querySelector('#memory-optimization')!;
+    if(!value){target.replaceChildren();return;}
+    if(!value.changes.length&&!value.summary){target.innerHTML=html`<p>La mémoire est déjà concise. Aucun changement proposé.</p>`;return;}
+    const changes=[...value.changes,...(value.summary?[value.summary]:[])];
+    target.innerHTML=html`<section class="optimization-preview"><h3>Vérifier l’optimisation</h3><p>${value.before_chars} → ${value.after_chars} ${t('caractères')}</p>`
+      +changes.map(change=>html`<article class="memory-entry"><details><summary>Avant</summary>`+change.before.map(text=>'<p>'+escape(text)+'</p>').join('')+html`</details><strong>Après</strong><p>`+escape(change.after)+'</p></article>').join('')
+      +html`<div class="settings-actions"><button type="button" class="button primary" id="memory-optimize-apply">Appliquer l’optimisation</button><button type="button" class="button quiet" id="memory-optimize-discard">Conserver la mémoire actuelle</button></div></section>`;
+    target.querySelector('#memory-optimize-apply')!.addEventListener('click',()=>void finishOptimization(true));
+    target.querySelector('#memory-optimize-discard')!.addEventListener('click',()=>void finishOptimization(false));
+  }
+  async function finishOptimization(apply:boolean):Promise<void> {
+    const buttons=root!.querySelectorAll<HTMLButtonElement>('#memory-optimization button');buttons.forEach(b=>b.disabled=true);
+    try {await api.finishMemoryOptimization(profile.id,apply);feedback(apply?t('Mémoire optimisée. L’historique de conversation est conservé.'):t('Optimisation annulée. Les souvenirs sont conservés.'));await load();}
+    catch(error){report(error);buttons.forEach(b=>b.disabled=false);}
+  }
+  root.querySelector('#memory-optimize')!.addEventListener('click',()=>void (async()=>{
+    if(optimizing||saving)return;optimizing=true;
+    const button=root.querySelector<HTMLButtonElement>('#memory-optimize')!,cancel=root.querySelector<HTMLButtonElement>('#memory-optimize-cancel')!;
+    button.disabled=true;cancel.hidden=false;feedback(t('Optimisation de la mémoire en cours…'));
+    try {paintOptimization(await api.optimizeMemory(profile.id));feedback(t('Vérifie la proposition avant de l’appliquer.'));}
+    catch(error){report(error);feedback(t('Les souvenirs sont conservés.'));}
+    finally {optimizing=false;button.disabled=false;cancel.hidden=true;}
+  })());
+  root.querySelector('#memory-optimize-cancel')!.addEventListener('click',()=>void finishOptimization(false));
   function reset(): void { editId = null; form.reset(); root!.querySelector('#memory-toggle')!.textContent = t('Ajouter un souvenir'); }
   async function save(edit: MemoryEdit): Promise<void> {
     if (!state || saving) return;

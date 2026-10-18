@@ -200,6 +200,7 @@ function settingsView(): string {
     <section class="settings-card"><div class="section-heading"><h2>Le widget</h2>${icon('orbit')}</div><form id="preferences-form"><label class="setting-row"><span><strong>Toujours au premier plan</strong><small>Garder ton compagnon visible au-dessus des autres fenêtres.</small></span><input class="switch" type="checkbox" name="always_on_top" ${state!.settings.always_on_top ? 'checked' : ''} /></label><label class="setting-row"><span><strong>Taille du compagnon</strong><small>Tu peux aussi tirer le coin inférieur droit du widget.</small></span><span class="scale-control range-control"><input id="widget-scale" name="widget_scale" type="range" min="65" max="160" step="5" value="${state!.settings.widget_scale}" /><output id="scale-value" for="widget-scale" data-percent-scale="0.01">${state!.settings.widget_scale} %</output></span></label><div class="settings-actions"><button class="button primary" type="submit">${icon('check')} Enregistrer</button><button class="button secondary" type="button" data-action="restore_widget">Replacer le widget</button></div></form></section>
     <section class="settings-card"><h2>Passage des clics</h2><p>Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification.</p><div class="settings-actions"><button class="button secondary" data-action="click_through">Laisser passer les clics</button><button class="text-button" data-action="restore_widget">Reprendre les clics</button></div></section>
     ${themesView(state!.settings.theme)}${interfaceLanguageView()}${updatesView()}<div id="audio-settings-root"></div>
+    ${activeProfile()?.connections.llm_provider === 'hermes' ? '' : html`<section class="settings-card"><h2>Mémoire du compagnon</h2><p>Raccourcir et regrouper les souvenirs redondants, avec une proposition à vérifier.</p><button type="button" class="button secondary" id="settings-memory-optimize">Optimiser la mémoire</button></section>`}
     <section class="settings-card"><h2>Quitter Sherka</h2><p>Arrête le micro et la réponse, puis décharge le modèle du compagnon dans LM Studio.</p><button class="button secondary" data-action="quit">Quitter Sherka</button></section>
     <section class="storage-card">${icon('shield')}<div><strong>Données conservées sur ce PC</strong><p class="storage-path">${escape(state!.data_directory)}</p><small>Un dossier et une base par compagnon. Aucun enregistrement audio.</small></div></section>`;
 }
@@ -209,6 +210,7 @@ function openAvatar(profile: Profile): void {
 }
 
 function bindPanel(): void {
+  document.querySelector('#settings-memory-optimize')?.addEventListener('click',()=>{selected=state!.session.profile_id;view='memory';render();document.querySelector<HTMLButtonElement>('#memory-optimize')?.click();});
   document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]').forEach(button=>button.onclick=()=>void change({kind:'theme',theme:button.dataset.themeChoice as Snapshot['settings']['theme']},t('Ambiance enregistrée.')));
   document.querySelector<HTMLSelectElement>('#web-search-mode')?.addEventListener('change', event => {
     void change({kind:'web_search', id:selectedProfile()!.id, revision:selectedProfile()!.revision, mode:(event.target as HTMLSelectElement).value as Snapshot['settings']['web_search']}, t('Réglage de recherche Internet enregistré.'));
@@ -219,7 +221,11 @@ function bindPanel(): void {
   });
   document.querySelector('.brand')?.addEventListener('click', (event) => { event.preventDefault(); view = 'profiles'; render(); });
   document.querySelectorAll<HTMLButtonElement>('[data-nav]').forEach((button) => button.addEventListener('click', () => { view = button.dataset.nav as typeof view; render(); }));
-  document.querySelectorAll<HTMLButtonElement>('button[data-profile]').forEach((button) => button.addEventListener('click', () => { selected = button.dataset.profile; render(); }));
+  document.querySelectorAll<HTMLButtonElement>('button[data-profile]').forEach((button) => button.addEventListener('click', () => {
+    const id = button.dataset.profile!;
+    if (id === state?.session.profile_id) { selected = id; render(); }
+    else void change({kind:'switch_profile',id}, t('Compagnon activé.'));
+  }));
   bindWindowActions();
   const profile = selectedProfile()!;
   document.querySelector('#choose-profile-voice')?.addEventListener('click', () => void editProfileVoice(profile, connections => change({ kind: 'connections', id: profile.id, revision: profile.revision, connections }, t`Voix de ${profile.name} enregistrée.`)));

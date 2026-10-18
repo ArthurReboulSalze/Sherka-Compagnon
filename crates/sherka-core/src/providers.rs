@@ -337,54 +337,114 @@ impl Providers {
         schema: Value,
         limit: u64,
     ) -> Result<T> {
-        const OUTPUT: u32 = 768;
-        if crate::conversation::estimate(&messages) + OUTPUT as usize + 512 > limit as usize {
+        self.structured_budgeted(messages, schema, limit, 2048)
+            .await
+    }
+
+    pub async fn structured_budgeted<T: serde::de::DeserializeOwned>(
+        &self,
+        mut messages: Vec<ChatMessage>,
+        schema: Value,
+        limit: u64,
+        output: u32,
+    ) -> Result<T> {
+        crate::structured::request(&mut messages, &schema);
+        let input = crate::conversation::estimate(&messages) as u64;
+        let available = limit.saturating_sub(input + 512).min(4096) as u32;
+        let output = output.min(available);
+        if output < 128 {
             return Err(failure(
                 "La demande de mémoire dépasse le budget du modèle. Utilise une demande plus courte ou le panneau Mémoire.",
             ));
         }
         if !self.connections.llm_provider.is_local() {
             return self
-                .api_structured(messages, schema, OUTPUT, Duration::from_secs(60), limit)
+                .api_structured(messages, schema, output, Duration::from_secs(90), limit)
                 .await;
         }
-        let mut body = json!({"model":self.connections.llm_model,"messages":messages,"stream":false,"temperature":0,"max_tokens":OUTPUT,"response_format":{"type":"json_schema","json_schema":{"name":"sherka_memory","strict":true,"schema":schema}}});
-        if let Some(effort) = self.connections.reasoning_effort() {
+        // Auxiliary tasks have their own reasoning policy. Never inherit a
+        // lengthy conversation setting into a short JSON/scene operation.
+        let model = if let Some(model) = &self.api_model {
+            Some(model.clone())
+        } else {
+            self.catalog().await.ok().and_then(|catalog| {
+                catalog.models.into_iter().find(|m| {
+                    Some(&m.id) == self.connections.llm_model.as_ref()
+                        || Some(&m.key) == self.connections.llm_model_key.as_ref()
+                })
+            })
+        };
+        let reasoning = model.as_ref().and_then(|m| m.reasoning.as_ref());
+        let effort = reasoning
+            .and_then(|r| {
+                ["off", "minimal", "low", "medium", "high", "on"]
+                    .into_iter()
+                    .find(|v| r.allowed_options.iter().any(|s| s == v))
+            })
+            .map(|s| match s {
+                "off" => "none",
+                "on" => "medium",
+                other => other,
+            });
+        let mut body = json!({"model":self.connections.llm_model,"messages":messages,"stream":false,"temperature":0,"max_tokens":output,"response_format":{"type":"json_schema","json_schema":{"name":"sherka_data","strict":true,"schema":schema}}});
+        if let Some(effort) = effort {
             body["reasoning_effort"] = json!(effort);
         }
-        let mut response = self
-            .http
-            .post(format!(
-                "{}/v1/chat/completions",
-                self.connections.lm_studio_url
-            ))
-            .timeout(Duration::from_secs(60))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| network("LM Studio (mémoire)", &e))?;
-        response = Self::checked(response, "LM Studio (mémoire)").await?;
-        let mut bytes = Vec::new();
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|e| network("LM Studio (mémoire)", &e))?
-        {
-            if bytes.len() + chunk.len() > 64_000 {
-                return Err(failure("La proposition de mémoire est trop longue."));
+        let mut last_error = failure(
+            "La proposition du fournisseur est invalide ; aucune mémoire n’a été modifiée.",
+        );
+        for attempt in 0..2 {
+            if attempt == 1 {
+                // Some thinking templates cannot combine a JSON grammar with their
+                // reasoning prefix. Retry once as plain final JSON, still validated.
+                body.as_object_mut().unwrap().remove("response_format");
+                body["max_tokens"] = json!(output.saturating_mul(2).min(available));
             }
-            bytes.extend_from_slice(&chunk);
+            let mut response = self
+                .http
+                .post(format!(
+                    "{}/v1/chat/completions",
+                    self.connections.lm_studio_url
+                ))
+                .timeout(Duration::from_secs(90))
+                .json(&body)
+                .send()
+                .await
+                .map_err(|e| network("LM Studio (mémoire)", &e))?;
+            if attempt == 0 && matches!(response.status().as_u16(), 400 | 422) {
+                continue;
+            }
+            response = Self::checked(response, "LM Studio (mémoire)").await?;
+            let mut bytes = Vec::new();
+            while let Some(chunk) = response
+                .chunk()
+                .await
+                .map_err(|e| network("LM Studio (mémoire)", &e))?
+            {
+                if bytes.len() + chunk.len() > 64_000 {
+                    return Err(failure("La proposition de mémoire est trop longue."));
+                }
+                bytes.extend_from_slice(&chunk);
+            }
+            let value: Value = serde_json::from_slice(&bytes)?;
+            if value["choices"][0]["finish_reason"] != "stop" {
+                last_error = failure(
+                    "La proposition de mémoire est incomplète ; aucune modification n'a été faite.",
+                );
+                if value["choices"][0]["finish_reason"] == "length" {
+                    continue;
+                }
+                return Err(last_error);
+            }
+            let content = value["choices"][0]["message"]["content"]
+                .as_str()
+                .ok_or_else(|| failure("Proposition de mémoire illisible."))?;
+            match crate::structured::parse(content) {
+                Ok(result) => return Ok(result),
+                Err(error) => last_error = error,
+            }
         }
-        let value: Value = serde_json::from_slice(&bytes)?;
-        if value["choices"][0]["finish_reason"] != "stop" {
-            return Err(failure(
-                "La proposition de mémoire est incomplète ; aucune modification n'a été faite.",
-            ));
-        }
-        let content = value["choices"][0]["message"]["content"]
-            .as_str()
-            .ok_or_else(|| failure("Proposition de mémoire illisible."))?;
-        serde_json::from_str(content).map_err(|_|failure("La proposition de mémoire n'a pas le format attendu ; aucune modification n'a été faite."))
+        Err(last_error)
     }
 
     /// A short local decision; private memories/history are not provided.

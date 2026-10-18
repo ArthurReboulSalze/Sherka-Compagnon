@@ -91,3 +91,18 @@ The opt-in `illustrations live:` native scenario connects the full conversation-
 ASR contract tests exercise multiple segment finals followed by either a cumulative or last-segment summary. Cleanup tests reject the targeted subtitle-credit noise while preserving ordinary short replies. The desktop PCM-retention test verifies resumed capture and run/turn isolation; no physical cough or microphone is recorded. Search API tests verify fixed endpoint contracts and normalized results with loopback fixtures.
 
 Linux CI starts an isolated D-Bus Secret Service with an empty GNOME keyring for provider lifecycle tests. No real keys are used. Windows CI explicitly selects text-only service fixtures because hosted runners have no default audio output; local speech checks remain separate.
+
+
+## Model compatibility, memory optimization and SDXL
+
+The `memory_optimization` tests verify preview-before-apply, union of source links, preservation of unique facts and history, approval boundaries and stale-epoch rejection. Native `memory optimization:` covers the Settings shortcut, before/after UI, explicit apply, stale proposals and board-to-widget activation. Command tests keep `/clear` separate from `/confirm-clear` and constrain confirmation to a profile/session and a three-minute window.
+
+Auxiliary structured requests consolidate system instructions at the beginning for strict chat templates such as NeoHorse. They select disabled/minimal advertised reasoning independently of conversation reasoning, allow a bounded retry without constrained decoding, and validate final JSON only. `remote_providers` tests this request contract, context budget, grammar fallback and reasoning wrappers. `avatar_emotions` covers thinking split across arbitrary stream boundaries, aliases, explicit-neutral precedence and conservative visible-tone fallback.
+
+Illustration tests cover family-specific prompts, exclusion of irrelevant appearance data, editable authoritative negative prompts, custom catalog paths and non-Turbo sampling (16 steps on both samplers, each original CFG doubled). To run a real **synthetic-data-only** SDXL check, supply an installed model and a JSON file with `positive` and `negative` strings:
+
+```powershell
+cargo run -p sherka-core --example check_illustration -- http://127.0.0.1:8188 "SDXL/your-checkpoint.safetensors" artifacts/sdxl.png --sdxl --normal --scene artifacts/scene.json
+```
+
+These checks do not establish universal expression accuracy or lossless LLM summarization. Memory proposals remain reviewable, and illustration quality depends on the selected model and workflow.

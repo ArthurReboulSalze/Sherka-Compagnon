@@ -123,6 +123,62 @@ fn message(role: &'static str, content: &str) -> ChatMessage {
         content: content.into(),
     }
 }
+
+#[tokio::test]
+async fn local_structured_tasks_disable_optional_thinking_retry_grammar_and_keep_context_bounds() {
+    let seen = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let captured = seen.clone();
+    let fixture = Fixture::new(move |path, _, body| {
+        if path == "/api/v1/models" {
+            return (200,"application/json",json!({"models":[{"type":"llm","key":"test-model","display_name":"Fixture","capabilities":{"reasoning":{"allowed_options":["off","on"],"default":"on"}},"max_context_length":8192,"loaded_instances":[{"id":"test-model","config":{"context_length":8192}}]}]}).to_string());
+        }
+        assert_eq!(path, "/v1/chat/completions");
+        let mut captured = captured.lock().unwrap();
+        captured.push(body.clone());
+        assert_eq!(body["reasoning_effort"], "none");
+        assert_eq!(body["stream"], false);
+        assert_eq!(body["messages"][0]["role"], "system");
+        assert!(
+            body["messages"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .skip(1)
+                .all(|m| m["role"] != "system")
+        );
+        let input: usize = body["messages"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|m| m["content"].as_str().unwrap().len() + 32)
+            .sum();
+        assert!(input + body["max_tokens"].as_u64().unwrap() as usize + 512 <= 8192);
+        if captured.len() == 1 {
+            assert!(body.get("response_format").is_some());
+            return (400, "application/json", "{}".into());
+        }
+        assert!(body.get("response_format").is_none());
+        (200,"application/json",json!({"choices":[{"finish_reason":"stop","message":{"reasoning_content":"private, never parse as the result","content":"<think>private</think>```json\n{\"include_companion\":false}\n```"}}]}).to_string())
+    });
+    let provider = Providers::new(Connections {
+        lm_studio_url: fixture.url.clone(),
+        llm_model: Some("test-model".into()),
+        reasoning: Some("on".into()),
+        ..Default::default()
+    })
+    .unwrap();
+    let (messages, schema) = sherka_core::illustration::subject_request(
+        "Kit",
+        "Imagine a mountain landscape",
+        "Snowy peaks.",
+    );
+    let result: sherka_core::illustration::Subject = provider
+        .structured_budgeted(messages, schema, 8192, 128)
+        .await
+        .unwrap();
+    assert!(!result.include_companion);
+    assert_eq!(seen.lock().unwrap().len(), 2);
+}
 fn sse(value: Value) -> String {
     format!("data: {value}\r\n\r\n")
 }
