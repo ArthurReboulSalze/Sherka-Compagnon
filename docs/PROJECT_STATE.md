@@ -1,6 +1,6 @@
 # Project status
 
-Release version: **0.11.0**, October 18, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **0.11.0**, October 19, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
 ## 0.11.0 — scene planning and memory controls
 
@@ -12,7 +12,11 @@ Memory optimization is available in Settings, Memory and explicit conversation c
 
 Validation: 118 Rust tests and three localization tests passed; TypeScript, formatting and Clippy passed, with all 868 authored UI messages covered in seven languages. Across native runs, all 32 default scenarios passed; 12 opt-in scenarios were skipped. Eight focused scenarios also passed on the optimized Windows executable. Three older UI fixtures were updated for visible-widget startup, card activation and read-only catalog discovery. Two native workers exited before their scenarios began; both scenarios passed on rerun.
 
-Synthetic real-service checks passed with local Gemma 4 A4B, Dolphin 8B and NeoHorse: subject selection, both image-prompt families and joy expressions, including optional thinking on/off where supported. NeoHorse also produced a compact memory proposal preserving the synthetic tea preference and the unrelated cat/birth-date fact. A real SDXL Base generation through the production ComfyUI client produced a square mountain/lake landscape without a foreground character, using a custom negative prompt and the non-Turbo schedule. These tests used no personal conversation data or paid API calls; each temporary language-model instance was unloaded. Physical microphone/listening remains outside these automated checks. Release package and CI validation are recorded below.
+Synthetic real-service checks passed with local Gemma 4 A4B, Dolphin 8B and NeoHorse: subject selection, both image-prompt families and joy expressions, including optional thinking on/off where supported. NeoHorse also produced a compact memory proposal preserving the synthetic tea preference and the unrelated cat/birth-date fact. A real SDXL Base generation through the production ComfyUI client produced a square mountain/lake landscape without a foreground character, using a custom negative prompt and the non-Turbo schedule. These tests used no personal conversation data or paid API calls; each temporary language-model instance was unloaded. Physical microphone/listening remains outside these automated checks. The release process also checks the signed Windows update paths and extracted Debian package startup before publication.
+
+GitHub CI passed 118 Rust tests on Windows and 117 on Linux, plus 17 Windows native interface scenarios. Static/localization checks passed on both systems; the opt-in live public-search test was skipped.
+
+The Ubuntu-built 0.11.0 Debian x64 release package passed metadata/content inspection, shared-library resolution and an extracted-package startup on Debian 13.6 under Xvfb. Its widget became visible with isolated data. No VoiceStudio, LM Studio or external models were installed; physical desktop/audio behavior remains unvalidated.
 
 ## 0.10.0 — inline cells, scenes and Linux
 

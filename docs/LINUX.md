@@ -25,6 +25,10 @@ For headless compilation/smoke checks use Xvfb and an isolated data directory, w
 
 References: [Tauri Linux prerequisites](https://v2.tauri.app/start/prerequisites/#linux).
 
+## Validation of 0.11.0
+
+The Debian x64 release package built on Ubuntu 24.04 passed version/architecture and package-content inspection, shared-library resolution and an extracted-package startup on Debian 13.6. The widget became visible under Xvfb with isolated user data. Linux CI also passed static/localization checks, the Rust tests and a native debug build. No VoiceStudio, LM Studio or external models were installed on the Debian machine. Physical audio and compositor behavior remain unvalidated.
+
 ## Validation of 0.10.0-alpha.2
 
 On Debian 13 x86-64 with Rust 1.92 and Node.js 20.19, formatting, Clippy, TypeScript and localization checks passed, followed by **109 Rust tests** (one opt-in live public-search test skipped). A native debug Debian package was built, extracted without installing it, checked for missing shared libraries and started with an isolated data directory under Xvfb. Its companion window remained visible and the process stayed alive. No LM Studio, VoiceStudio or conversation/diffusion models were installed on this machine.

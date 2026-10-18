@@ -26,7 +26,7 @@
 ---
 
 <p align="center">
-  <img src="docs/images/sherka-0.10.0.png" alt="Sherka 0.10.0 control panel: golden app logo, five companions and avatar settings" width="1000">
+  <img src="docs/images/sherka-0.11.0.png" alt="Sherka 0.11.0 control panel: golden app logo, five companions and avatar settings" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
