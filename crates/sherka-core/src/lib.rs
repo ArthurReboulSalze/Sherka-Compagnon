@@ -1,5 +1,6 @@
 pub mod acoustics;
 pub mod audio;
+pub mod avatar;
 pub mod catalogs;
 pub mod connections;
 pub mod conversation;

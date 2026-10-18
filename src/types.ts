@@ -1,5 +1,9 @@
+export type Emotion = 'neutral' | 'joy' | 'sadness' | 'anger' | 'surprise' | 'reflection' | 'tenderness';
+
 export interface ProfileDraft {
   name: string;
+  avatar_preset?: 'sherka' | 'botsy' | 'candis' | 'kit' | 'minerva' | null;
+  web_search?: SearchMode | null;
   personality: string;
   instructions: string;
   accent: 'amber' | 'teal' | 'violet' | 'coral';
@@ -12,6 +16,7 @@ export interface Profile extends ProfileDraft {
   created_at: number;
   updated_at: number;
   avatar: string | null;
+  emotion_avatars: Partial<Record<Emotion, string>>;
   message_count: number;
   memory_count: number;
 }
@@ -54,25 +59,25 @@ export interface Message {
 }
 
 export type Mutation =
-  | { kind: 'web_search'; mode: SearchMode }
+  | { kind: 'web_search'; mode: SearchMode; id?: string; revision?: number }
   | { kind: 'interface_language'; language: import('./i18n').Language }
   | { kind: 'create_profile'; draft: ProfileDraft }
   | { kind: 'update_profile'; id: string; revision: number; draft: ProfileDraft }
   | { kind: 'switch_profile' | 'duplicate_profile' | 'delete_profile'; id: string }
-  | { kind: 'set_avatar'; id: string; revision: number; base64: string | null }
+  | { kind: 'set_avatar'; id: string; revision: number; emotion?: Emotion; base64: string | null }
   | { kind: 'import_profile'; json: string }
   | { kind: 'preferences'; preferences: { always_on_top: boolean; widget_scale: number } }
   | { kind: 'connections'; id: string; revision: number; connections: Connections }
   | { kind: 'audio_settings'; audio: AudioSettings }
   | { kind: 'pause_voice' | 'stop_response' };
 
-export type WidgetAction = 'show_panel' | 'show_widget' | 'hide_widget' | 'toggle_widget' | 'click_through' | 'restore_widget' | 'stop_response' | 'pause_voice' | 'toggle_microphone' | 'quit' | 'quit_without_unloading';
+export type WidgetAction = 'stop_hermes' | 'show_panel' | 'show_widget' | 'hide_widget' | 'toggle_widget' | 'click_through' | 'restore_widget' | 'stop_response' | 'pause_voice' | 'toggle_microphone' | 'quit' | 'quit_without_unloading';
 
 export interface AudioSettings { input_device: string | null; output_device: string | null; speakers: boolean; silence_ms: number; onset_ms: number; interruption_ms: number }
 export interface ContextBudget { model: string; max_context: number | null; loaded_context: number; limit: number; input_estimate: number; response_tokens: number; safety_tokens: number; history_kept: number; history_omitted: number; memories_used: number[]; memories_omitted: number }
 export type SearchMode = 'off' | 'on_request' | 'auto';
 export interface WebReport { query: string; searching: boolean; error: string | null; sources: {title:string;url:string;snippet:string}[] }
-export interface LiveConversation { hermes_approval?: {run_id:string;request_id:string|null;description:string;allow_once:boolean}|null; web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
+export interface LiveConversation { emotion: Emotion; hermes_approval?: {run_id:string;request_id:string|null;description:string;allow_once:boolean}|null; web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
 export interface LiveState { session: Snapshot['session']; live: LiveConversation }
 export interface AudioDevices { inputs: { id: string; name: string; is_default: boolean }[]; outputs: { id: string; name: string; is_default: boolean }[] }
 

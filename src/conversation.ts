@@ -20,13 +20,13 @@ export function status(session: Snapshot['session']): string {
 
 export function conversationView(profile: Profile, mode: Snapshot['settings']['web_search']): string {
   return html`<div class="page-heading"><div><p class="eyebrow">UNE CONVERSATION, TOUT SIMPLEMENT</p><h1>Avec ${escape(profile.name)}<span>.</span></h1><p>Active le micro, parle naturellement. Tu peux l’interrompre à tout moment.</p></div></div>
-    <section class="conversation-controls"><button class="button primary" data-action="toggle_microphone" data-mic-toggle>${icon('mic')} <span>Activer le micro</span></button><button class="button secondary" data-action="stop_response">${icon('stop')} Arrêter la réponse</button><div class="voice-indicator"><span data-session-status></span><meter data-meter min="0" max="1" value="0" aria-label="Niveau du microphone"></meter><small data-speech-indicator>Microphone coupé</small></div></section>
+    <section class="conversation-controls"><button class="button primary" data-action="toggle_microphone" data-mic-toggle>${icon('mic')} <span>Activer le micro</span></button><button class="button secondary" data-action="${profile.connections.llm_provider === 'hermes' ? 'stop_hermes' : 'stop_response'}">${icon('stop')} ${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}</button><div class="voice-indicator"><span data-session-status></span><meter data-meter min="0" max="1" value="0" aria-label="Niveau du microphone"></meter><small data-speech-indicator>Microphone coupé</small></div></section>
     <p class="conversation-error" id="conversation-error" role="alert" hidden></p><p class="muted" id="conversation-notice" hidden></p>
     <section class="settings-card" id="hermes-approval" hidden></section>
     <p class="memory-receipt" id="memory-receipt" role="status" hidden></p>
     <details class="context-info" id="context-info" hidden><summary>Contexte & mémoire</summary><p id="context-budget"></p></details>
     <section class="conversation-log" id="conversation-log" aria-label="Conversation avec ${escape(profile.name)}"><div id="conversation-history" data-profile="${profile.id}"></div><article class="message user live-message" id="live-transcript" hidden><strong>Toi · transcription en cours</strong><p></p></article><article class="message assistant live-message" id="live-reply" hidden><strong>${escape(profile.name)}</strong><p></p></article><div id="web-report"></div></section>
-    <form id="message-form" class="message-form"><label for="chat-text">Ou écris-lui ici</label><textarea id="chat-text" name="text" rows="2" maxlength="128000" placeholder="Qu’est-ce que tu as en tête ?">${escape(drafts.get(profile.id) ?? '')}</textarea><div class="message-actions"><label class="inline-check"><input id="speak-reply" type="checkbox" ${spoken ? 'checked' : ''} /> Lire la réponse à voix haute</label><label class="inline-check"><input id="search-message" type="checkbox" ${mode==='off'||profile.connections.llm_provider==='hermes'?'disabled':''} /> Chercher sur Internet pour ce message</label><button type="submit" class="button primary">Envoyer ${icon('arrow')}</button></div></form>`;
+    <form id="message-form" class="message-form"><label for="chat-text">Ou écris-lui ici</label><textarea id="chat-text" name="text" rows="2" maxlength="128000" placeholder="Qu’est-ce que tu as en tête ?">${escape(drafts.get(profile.id) ?? '')}</textarea><div class="message-actions"><label class="inline-check"><input id="speak-reply" type="checkbox" ${spoken ? 'checked' : ''} /> Lire la réponse à voix haute</label><label class="inline-check" ${profile.connections.llm_provider === 'hermes' ? 'hidden' : ''}><input id="search-message" type="checkbox" ${mode==='off'||profile.connections.llm_provider==='hermes'?'disabled':''} /> Chercher sur Internet pour ce message</label><button type="submit" class="button primary">Envoyer ${icon('arrow')}</button></div></form>`;
 }
 
 export function mountConversation(profile: Profile, report: (e: unknown) => void): void {
@@ -83,6 +83,8 @@ function scrollConversation(follow = false): void {
 export function paintLive(value: LiveState): void {
   const follow = nearConversationBottom();
   const on = value.session.microphone === 'listening';
+  const remoteStop = document.querySelector<HTMLButtonElement>('.hermes-stop-button');
+  if (remoteStop) remoteStop.hidden = !value.live.tag && !value.live.error;
   document.querySelectorAll('[data-session-status]').forEach((el) => { el.textContent = value.live.web?.searching ? t('Recherche sur Internet…') : status(value.session); });
   document.querySelectorAll<HTMLElement>('[data-mic-toggle]').forEach((el) => {
     const label = on ? t('Couper le micro') : t('Activer le micro');

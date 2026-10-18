@@ -10,7 +10,10 @@ use reqwest::{Method, RequestBuilder, header::HeaderValue};
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::{
-    sync::{Arc, Mutex},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
     time::Duration,
 };
 use tokio::sync::mpsc;
@@ -78,6 +81,8 @@ pub enum AgentEvent {
 pub struct HermesRun {
     provider: Providers,
     id: Arc<Mutex<Option<String>>>,
+    submitted: Arc<AtomicBool>,
+    completed: Arc<AtomicBool>,
 }
 
 impl HermesRun {
@@ -85,11 +90,16 @@ impl HermesRun {
         Self {
             provider,
             id: Arc::new(Mutex::new(None)),
+            submitted: Arc::new(AtomicBool::new(false)),
+            completed: Arc::new(AtomicBool::new(false)),
         }
     }
 
     /// Audio cancellation is immediate; remote interruption is cooperative.
     pub async fn stop(&self) -> Result<()> {
+        if self.completed.load(Ordering::Acquire) {
+            return Ok(());
+        }
         let id = self.id.lock().map_err(|_| Error::StaleOperation)?.clone();
         if let Some(id) = id {
             let response = self
@@ -100,9 +110,37 @@ impl HermesRun {
                 .send()
                 .await
                 .map_err(|e| network("Hermes", &e))?;
-            if response.status().as_u16() != 404 {
-                Providers::checked(response, "Hermes").await?;
+            let mut status = Providers::api_json(response, "Hermes", 256_000).await?;
+            for attempt in 0..=16 {
+                if matches!(
+                    status["status"].as_str(),
+                    Some("completed" | "cancelled" | "interrupted" | "failed")
+                ) {
+                    self.completed.store(true, Ordering::Release);
+                    return Ok(());
+                }
+                if attempt == 16 {
+                    break;
+                }
+                if attempt > 0 {
+                    tokio::time::sleep(Duration::from_millis(350)).await;
+                }
+                let response = self
+                    .provider
+                    .hermes_request(Method::GET, &format!("/v1/runs/{id}"))?
+                    .timeout(Duration::from_secs(3))
+                    .send()
+                    .await
+                    .map_err(|e| network("Hermes", &e))?;
+                status = Providers::api_json(response, "Hermes", 256_000).await?;
             }
+            return Err(failure(
+                "L’arrêt Hermes n’est pas confirmé. Réessaie /stop avant de poursuivre.",
+            ));
+        } else if self.submitted.load(Ordering::Acquire) {
+            return Err(failure(
+                "Hermes n’a pas fourni l’identifiant de la tâche. Son arrêt ne peut pas être confirmé.",
+            ));
         }
         Ok(())
     }
@@ -116,6 +154,7 @@ impl HermesRun {
         mut event: impl FnMut(AgentEvent) -> Result<()>,
     ) -> Result<ChatOutcome> {
         self.provider.ensure_hermes_session(session).await?;
+        self.submitted.store(true, Ordering::Release);
         let response = self
             .provider
             .hermes_request(
@@ -127,7 +166,17 @@ impl HermesRun {
             .timeout(Duration::from_secs(3600))
             .send()
             .await
-            .map_err(|e| network("Hermes", &e))?;
+            .map_err(|e| {
+                // A failed connection cannot have submitted a remote task.
+                // Timeouts after sending remain uncertain and require /stop.
+                if e.is_connect() {
+                    self.submitted.store(false, Ordering::Release);
+                }
+                network("Hermes", &e)
+            })?;
+        if response.status().is_client_error() {
+            self.submitted.store(false, Ordering::Release);
+        }
         let response = Providers::checked(response, "Hermes").await?;
         let mut stream = response.bytes_stream();
         let mut sse = AgentSse::default();
@@ -220,6 +269,7 @@ impl HermesRun {
                         event(AgentEvent::Approval(None))?
                     }
                     "run.completed" => {
+                        self.completed.store(true, Ordering::Release);
                         completed = true;
                         outcome.prompt_tokens = value["usage"]["input_tokens"]
                             .as_u64()
@@ -231,9 +281,13 @@ impl HermesRun {
                         break;
                     }
                     "run.cancelled" | "run.interrupted" => {
+                        self.completed.store(true, Ordering::Release);
                         return Err(failure("Hermes a interrompu la réponse."));
                     }
                     "error" | "run.failed" => {
+                        if name == "run.failed" {
+                            self.completed.store(true, Ordering::Release);
+                        }
                         return Err(failure(
                             "Hermes n’a pas pu terminer la réponse. Consulte ses journaux.",
                         ));
@@ -275,7 +329,7 @@ impl Providers {
         let key = self
             .api_key
             .as_ref()
-            .ok_or_else(|| failure("Enregistre la clé API du profil Hermes dans Réglages."))?;
+            .ok_or_else(|| failure("Enregistre la clé API du profil Hermes dans Compagnons."))?;
         let mut auth = HeaderValue::from_str(&format!("Bearer {key}"))
             .map_err(|_| failure("La clé API est vide ou invalide."))?;
         auth.set_sensitive(true);

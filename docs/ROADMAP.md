@@ -4,10 +4,11 @@ Sherka 0.7.0 adds Hermes agent conversations alongside local and API models, web
 
 ## Bring companions to life
 
-- Easier avatar customization and a character gallery.
+- Generate consistent seven-expression avatar packs through ComfyUI, using the same image slots. Not integrated yet.
+- A community character gallery and easier sharing, building on the five bundled companions.
 - Idle, listening, thinking and speaking animations.
-- Expressions, moods and reactions matching each personality. Hermes remote-agent mode is excluded: it keeps a neutral avatar and listening/speaking indicators, with no emotion prompts or analysis.
-- Voice-driven mouth or portrait animation and natural transitions.
+- Refine model-selected expressions, transitions and reactions beyond the seven static image slots. Hermes remote-agent mode remains excluded: neutral avatar, with listening/speaking indicators only.
+- Voice-driven mouth or portrait animation beyond the existing half-second image crossfades.
 - Animated formats and shareable character packs without personal data.
 
 ## Refine conversations

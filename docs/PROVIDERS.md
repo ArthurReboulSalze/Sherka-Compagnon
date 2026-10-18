@@ -2,7 +2,7 @@
 
 Each companion saves its own provider, model, context ceiling and thinking preference. Its VoiceStudio voice and local memories remain separate from those choices.
 
-In **Settings → Voices & models**, choose the companion and provider, save a key if required, then **Test and refresh**. Pick a catalog model or enter its exact ID, set a context ceiling when the API does not report one, and save the companion’s choices.
+In **Companions**, select a character, then use **Voices & models** to choose its provider, save a key if required, and **Test and refresh**. Pick a catalog model or enter its exact ID, set a context ceiling when the API does not report one, and save the companion’s choices. Voice selection is in the character's **Avatar & voice** editor.
 
 | Provider | Default API base | Format |
 | --- | --- | --- |

@@ -30,6 +30,8 @@ struct Shared(Arc<Mutex<Companion>>);
 enum Mutation {
     WebSearch {
         mode: sherka_core::web::SearchMode,
+        id: Option<Uuid>,
+        revision: Option<i64>,
     },
     InterfaceLanguage {
         language: sherka_core::i18n::Language,
@@ -54,6 +56,8 @@ enum Mutation {
     SetAvatar {
         id: Uuid,
         revision: i64,
+        #[serde(default)]
+        emotion: sherka_core::avatar::Emotion,
         base64: Option<String>,
     },
     ImportProfile {
@@ -169,8 +173,12 @@ async fn apply_mutation(
     .await?;
     let snapshot = with_core(shared.inner().clone(), move |core| {
         match mutation {
-            Mutation::WebSearch { mode } => {
-                core.set_web_search_mode(mode)?;
+            Mutation::WebSearch { mode, id, revision } => {
+                if let (Some(id), Some(revision)) = (id, revision) {
+                    core.set_profile_web_search(id, revision, mode)?;
+                } else {
+                    core.set_web_search_mode(mode)?;
+                }
             }
             Mutation::InterfaceLanguage { language } => core.set_interface_language(language)?,
             Mutation::CreateProfile { draft } => {
@@ -189,6 +197,7 @@ async fn apply_mutation(
             Mutation::SetAvatar {
                 id,
                 revision,
+                emotion,
                 base64,
             } => {
                 if base64.as_ref().is_some_and(|s| s.len() > 14 * 1024 * 1024) {
@@ -203,7 +212,8 @@ async fn apply_mutation(
                             .map_err(|_| Error::Validation("L'image est invalide.".into()))
                     })
                     .transpose()?;
-                core.store.set_avatar(id, revision, bytes.as_deref())?;
+                core.store
+                    .set_emotion_avatar(id, revision, emotion, bytes.as_deref())?;
             }
             Mutation::ImportProfile { json } => {
                 core.store.import_profile(&json)?;
@@ -653,6 +663,7 @@ async fn export_profile(
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
 enum WidgetAction {
+    StopHermes,
     ShowPanel,
     ShowWidget,
     HideWidget,
@@ -674,6 +685,10 @@ async fn widget_action(
     voice: State<'_, Voice>,
 ) -> Result<(), String> {
     match action {
+        WidgetAction::StopHermes => {
+            let _gate = voice.gate.lock().await;
+            conversation::stop_hermes(&app, shared.inner().clone(), voice.inner()).await?;
+        }
         WidgetAction::ShowPanel => windows::show_panel(&app).map_err(|e| e.to_string())?,
         WidgetAction::ShowWidget | WidgetAction::RestoreWidget => {
             windows::restore_widget(&app).map_err(|e| e.to_string())?

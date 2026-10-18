@@ -10,6 +10,10 @@ pub struct ProfileDraft {
     pub instructions: String,
     pub accent: String,
     #[serde(default)]
+    pub avatar_preset: Option<crate::avatar::AvatarPreset>,
+    #[serde(default)]
+    pub web_search: Option<crate::web::SearchMode>,
+    #[serde(default)]
     pub connections: crate::connections::Connections,
 }
 
@@ -58,6 +62,9 @@ pub struct Profile {
     pub details: ProfileDraft,
     /// Only normalized PNG bytes from the profile's own database are exposed.
     pub avatar: Option<String>,
+    /// Neutral remains in `avatar` for existing profiles. Other slots fall back
+    /// to it when absent. Paths from the user's computer are never persisted.
+    pub emotion_avatars: std::collections::BTreeMap<crate::avatar::Emotion, String>,
     pub message_count: i64,
     pub memory_count: i64,
 }
@@ -65,6 +72,7 @@ pub struct Profile {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
+    pub companion_pack_initialized: bool,
     pub web_search: crate::web::SearchMode,
     pub ui_language: crate::i18n::Language,
     pub default_companion: Option<Uuid>,
@@ -79,6 +87,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            companion_pack_initialized: false,
             web_search: Default::default(),
             ui_language: Default::default(),
             default_companion: None,
@@ -117,4 +126,7 @@ pub struct ProfileExport {
     pub version: u32,
     pub profile: ProfileDraft,
     pub avatar_png_base64: Option<String>,
+    #[serde(default)]
+    pub emotion_avatars_png_base64:
+        std::collections::BTreeMap<crate::avatar::Emotion, Option<String>>,
 }

@@ -192,6 +192,7 @@ fn duplicates_and_exports_copy_configuration_but_not_history_or_identity() {
 fn stale_edits_and_invalid_imports_cannot_overwrite_a_profile() {
     let dir = tempdir().unwrap();
     let app = Companion::open(dir.path()).unwrap();
+    let initial_count = app.store.list().unwrap().len();
     let profile = app.store.list().unwrap().remove(0);
     let renamed = ProfileDraft {
         name: "Sherka II".into(),
@@ -221,7 +222,7 @@ fn stale_edits_and_invalid_imports_cannot_overwrite_a_profile() {
             )
             .is_err()
     );
-    assert_eq!(app.store.list().unwrap().len(), 1);
+    assert_eq!(app.store.list().unwrap().len(), initial_count);
 }
 
 #[test]
@@ -229,6 +230,11 @@ fn deletion_is_restricted_and_missing_switch_leaves_current_session_intact() {
     let dir = tempdir().unwrap();
     let mut app = Companion::open(dir.path()).unwrap();
     let active = app.session.snapshot().profile_id;
+    for profile in app.store.list().unwrap() {
+        if profile.id != active {
+            app.store.delete(profile.id).unwrap();
+        }
+    }
     assert!(matches!(app.store.delete(active), Err(Error::LastProfile)));
     let b = app.store.duplicate(active).unwrap();
     assert!(app.store.delete(active).is_err());

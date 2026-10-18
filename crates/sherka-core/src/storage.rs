@@ -8,6 +8,7 @@ use image::{ImageFormat, ImageReader, Limits};
 use rusqlite::{Connection, OpenFlags, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::BTreeMap,
     fs,
     io::Cursor,
     path::{Path, PathBuf},
@@ -15,9 +16,9 @@ use std::{
 };
 use uuid::Uuid;
 
-const SCHEMA_VERSION: i64 = 5;
+const SCHEMA_VERSION: i64 = 6;
 const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
-const MAX_EXPORT_BYTES: usize = 15 * 1024 * 1024;
+const MAX_EXPORT_BYTES: usize = 48 * 1024 * 1024;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -339,6 +340,23 @@ impl Store {
             tx.execute_batch("PRAGMA user_version = 5;")?;
             tx.commit()?;
         }
+        if version < 6 {
+            let tx = db.transaction()?;
+            tx.execute_batch(include_str!("avatar_schema.sql"))?;
+            let (json, has_avatar): (String, bool) = tx.query_row(
+                "SELECT details,avatar IS NOT NULL FROM profile WHERE singleton=1",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )?;
+            let mut draft: ProfileDraft = serde_json::from_str(&json)?;
+            // Adopt the supplied pack only for an untouched Sherka portrait.
+            // Custom portraits and every other character keep their own images.
+            if draft.name == "Sherka" && !has_avatar && draft.avatar_preset.is_none() {
+                draft.avatar_preset = Some(crate::avatar::AvatarPreset::Sherka);
+                tx.execute("UPDATE profile SET details=?1,revision=revision+1,updated_at=?2 WHERE singleton=1", params![serde_json::to_string(&draft)?, now()])?;
+            }
+            tx.commit()?;
+        }
         Ok(db)
     }
 
@@ -382,13 +400,36 @@ impl Store {
                 ))
             },
         )?;
+        let details = serde_json::from_str::<ProfileDraft>(&json)?.validated()?;
+        let mut emotion_avatars: BTreeMap<_, _> = details
+            .avatar_preset
+            .map(|preset| {
+                preset
+                    .images()
+                    .into_iter()
+                    .map(|(emotion, path)| (emotion, path.to_owned()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        for (emotion, bytes) in self.emotion_avatar_bytes(id)? {
+            if let Some(bytes) = bytes {
+                emotion_avatars.insert(
+                    emotion,
+                    format!("data:image/png;base64,{}", STANDARD.encode(bytes)),
+                );
+            } else {
+                // An explicit reset suppresses a built-in slot as well.
+                emotion_avatars.remove(&emotion);
+            }
+        }
         Ok(Profile {
             id,
             revision,
             created_at,
             updated_at,
-            details: serde_json::from_str::<ProfileDraft>(&json)?.validated()?,
+            details,
             avatar: avatar.map(|bytes| format!("data:image/png;base64,{}", STANDARD.encode(bytes))),
+            emotion_avatars,
             message_count: db.query_row("SELECT count(*) FROM messages", [], |r| r.get(0))?,
             memory_count: db.query_row(
                 "SELECT count(*) FROM memories WHERE status='active' AND approved=1",
@@ -399,8 +440,26 @@ impl Store {
     }
 
     pub fn create(&self, draft: ProfileDraft, avatar: Option<&[u8]>) -> Result<Profile> {
+        self.create_with_avatars(draft, avatar, BTreeMap::new())
+    }
+
+    fn create_with_avatars(
+        &self,
+        draft: ProfileDraft,
+        avatar: Option<&[u8]>,
+        images: BTreeMap<crate::avatar::Emotion, Option<Vec<u8>>>,
+    ) -> Result<Profile> {
         let draft = draft.validated()?;
         let avatar = avatar.map(normalize_image).transpose()?;
+        let images = images
+            .into_iter()
+            .map(|(emotion, bytes)| {
+                if emotion == crate::avatar::Emotion::Neutral {
+                    return Err(Error::Validation("L'image du profil est invalide.".into()));
+                }
+                Ok((emotion, bytes.as_deref().map(normalize_image).transpose()?))
+            })
+            .collect::<Result<BTreeMap<_, _>>>()?;
         let id = Uuid::new_v4();
         // Unfinished creations never enter the profile list. The rename occurs
         // only after the transaction has committed and all handles are closed.
@@ -416,6 +475,13 @@ impl Store {
             )?;
             tx.execute("INSERT INTO profile(singleton,id,revision,created_at,updated_at,details,avatar) VALUES(1,?1,1,?2,?2,?3,?4)",
                 params![id.to_string(), now(), serde_json::to_string(&draft)?, avatar])?;
+            tx.execute_batch(include_str!("avatar_schema.sql"))?;
+            for (emotion, bytes) in images {
+                tx.execute(
+                    "INSERT INTO avatar_emotions(emotion,image) VALUES(?1,?2)",
+                    params![emotion.as_str(), bytes],
+                )?;
+            }
             tx.commit()?;
             db.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")?;
             Ok(())
@@ -468,11 +534,31 @@ impl Store {
     }
 
     pub fn set_avatar(&self, id: Uuid, revision: i64, bytes: Option<&[u8]>) -> Result<Profile> {
+        self.set_emotion_avatar(id, revision, crate::avatar::Emotion::Neutral, bytes)
+    }
+
+    pub fn set_emotion_avatar(
+        &self,
+        id: Uuid,
+        revision: i64,
+        emotion: crate::avatar::Emotion,
+        bytes: Option<&[u8]>,
+    ) -> Result<Profile> {
         let png = bytes.map(normalize_image).transpose()?;
-        let db = self.db(id)?;
-        if db.execute("UPDATE profile SET avatar=?1,revision=revision+1,updated_at=?2 WHERE singleton=1 AND revision=?3", params![png, now(), revision])? != 1 {
+        let mut db = self.db(id)?;
+        let tx = db.transaction()?;
+        if tx.execute("UPDATE profile SET revision=revision+1,updated_at=?1 WHERE singleton=1 AND revision=?2", params![now(), revision])? != 1 {
             return Err(Error::Conflict);
         }
+        if emotion == crate::avatar::Emotion::Neutral {
+            tx.execute(
+                "UPDATE profile SET avatar=?1 WHERE singleton=1",
+                params![png],
+            )?;
+        } else {
+            tx.execute("INSERT INTO avatar_emotions(emotion,image) VALUES(?1,?2) ON CONFLICT(emotion) DO UPDATE SET image=excluded.image", params![emotion.as_str(), png])?;
+        }
+        tx.commit()?;
         drop(db);
         self.profile(id)
     }
@@ -485,7 +571,7 @@ impl Store {
             details.name.chars().take(50).collect::<String>()
         );
         let avatar = self.avatar_bytes(id)?;
-        self.create(details, avatar.as_deref())
+        self.create_with_avatars(details, avatar.as_deref(), self.emotion_avatar_bytes(id)?)
     }
 
     pub fn delete(&self, id: Uuid) -> Result<()> {
@@ -514,13 +600,37 @@ impl Store {
             })?)
     }
 
+    fn emotion_avatar_bytes(
+        &self,
+        id: Uuid,
+    ) -> Result<BTreeMap<crate::avatar::Emotion, Option<Vec<u8>>>> {
+        let db = self.db(id)?;
+        let mut query = db.prepare("SELECT emotion,image FROM avatar_emotions")?;
+        let rows = query.query_map([], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, Option<Vec<u8>>>(1)?))
+        })?;
+        rows.map(|row| {
+            let (emotion, bytes) = row?;
+            Ok((
+                serde_json::from_value(serde_json::Value::String(emotion))?,
+                bytes,
+            ))
+        })
+        .collect()
+    }
+
     pub fn export_profile(&self, id: Uuid) -> Result<String> {
         let profile = self.profile(id)?;
         let export = ProfileExport {
             format: "sherka-profile".into(),
-            version: 1,
+            version: 2,
             profile: profile.details,
             avatar_png_base64: self.avatar_bytes(id)?.map(|bytes| STANDARD.encode(bytes)),
+            emotion_avatars_png_base64: self
+                .emotion_avatar_bytes(id)?
+                .into_iter()
+                .map(|(emotion, bytes)| (emotion, bytes.map(|b| STANDARD.encode(b))))
+                .collect(),
         };
         Ok(serde_json::to_string_pretty(&export)?)
     }
@@ -528,11 +638,14 @@ impl Store {
     pub fn import_profile(&self, json: &str) -> Result<Profile> {
         if json.len() > MAX_EXPORT_BYTES {
             return Err(Error::Validation(
-                "Ce fichier dépasse la limite de 15 Mio.".into(),
+                "Ce fichier dépasse la limite de 48 Mio.".into(),
             ));
         }
         let export: ProfileExport = serde_json::from_str(json)?;
-        if export.format != "sherka-profile" || export.version != 1 {
+        if export.format != "sherka-profile"
+            || ![1, 2].contains(&export.version)
+            || (export.version == 1 && !export.emotion_avatars_png_base64.is_empty())
+        {
             return Err(Error::Validation(
                 "Le format ou la version de ce profil n'est pas pris en charge.".into(),
             ));
@@ -547,7 +660,21 @@ impl Store {
             .transpose()?;
         // A fresh identity and empty database are always allocated. This format
         // contains no API key, external asset path, history or memory.
-        self.create(export.profile, avatar.as_deref())
+        let images = export
+            .emotion_avatars_png_base64
+            .into_iter()
+            .map(|(emotion, encoded)| {
+                encoded
+                    .map(|s| {
+                        STANDARD.decode(s).map_err(|_| {
+                            Error::Validation("L'image du profil est invalide.".into())
+                        })
+                    })
+                    .transpose()
+                    .map(|bytes| (emotion, bytes))
+            })
+            .collect::<Result<BTreeMap<_, _>>>()?;
+        self.create_with_avatars(export.profile, avatar.as_deref(), images)
     }
 
     pub fn append_message(

@@ -2,7 +2,7 @@
 
 Sherka can be the voice and desktop avatar for an existing **Hermes Agent** server. VoiceStudio transcribes your speech locally; Hermes handles the conversation with its own personality, memory, model and tools; VoiceStudio reads the reply.
 
-In this mode, Sherka does not send its character prompt or memories, run its own web search, consolidate memories, or choose Hermes's model/token budget. Your server configuration remains in charge. Future emotional portraits and mood analysis are excluded from Hermes mode. Listening and speaking indicators remain available.
+In this mode, Sherka does not send its character prompt or memories, run its own web search, consolidate memories, or choose Hermes's model/token budget. Your server configuration remains in charge. Emotional portraits and mood analysis are excluded from Hermes mode; the avatar stays neutral. Listening and speaking indicators remain available.
 
 ## 1. Enable the Hermes conversation API
 
@@ -49,13 +49,13 @@ The shared gateway serves eligible profiles; Hermes profiles configured as stand
 
 ## 3. Connect from Sherka
 
-1. Open **Settings → Voice & models** and select the companion to configure.
+1. Open **Companions → Voice & models** and select the companion to configure.
 2. Choose **Hermes · remote agent**.
 3. Enter the server address, such as `http://192.168.1.50:8642`.
 4. Choose a saved **Hermes profile**, or type its exact name. Use `default` for the main profile.
 5. Paste that profile's key and click **Save key**.
 6. Click **Test and refresh**, then **Save these choices**.
-7. Choose your VoiceStudio transcription model, speech engine and voice as usual.
+7. Choose your VoiceStudio transcription model in Companions, then choose the speech engine and voice in the companion’s **Avatar & voice** editor.
 
 Sherka remembers successfully connected server/profile pairs. The conversation API does not advertise a global profile directory, so a new profile must first be entered by name. Switching the server or profile switches the key scope; keys are protected by Windows Credential Manager and excluded from exports.
 
@@ -65,7 +65,7 @@ Each Sherka companion/server/profile combination gets a separate, persistent Her
 
 While using Hermes, reveal the widget controls and click **+ — New Hermes conversation**, or type **`/new`** in the conversation box. This interrupts the current reply and starts a fresh thread on your next message. Previous conversations remain on Hermes, and its long-term memory is preserved. Sherka's conversation view then shows the new thread. The button is absent for ordinary model providers.
 
-Stopping or interrupting a reply clears local speech immediately and asks Hermes to stop the active run. Remote tool interruption is cooperative: a tool may need time to stop, and actions already completed are not undone. A lost stream is reported as an interrupted connection, not a completed answer.
+Click **Stop Hermes (/stop)** in the conversation or widget, or type **`/stop`**. The command clears local speech and targets only the active remote run. It does not stop the gateway, reboot the server or create a new conversation. For the HTTP API, Sherka maps the command to `POST /v1/runs/{run_id}/stop`, then checks `GET /v1/runs/{run_id}` for a terminal status. Sending the literal text as an ordinary chat message would not guarantee command handling. Failed or unconfirmed stops stay retryable and prevent overlapping remote work. Automatic voice interruptions use the same run-scoped stop. Remote tool interruption is cooperative: a tool may need time to stop, and actions already completed are not undone. A lost stream is reported as an interrupted connection, not a completed answer.
 
 When Hermes requests tool approval, Sherka shows the request in its conversation panel with **Allow once** and **Deny**. It never approves tools automatically. Reasoning and technical tool events are excluded from speech; assistant text is streamed into VoiceStudio's existing speech queue.
 
@@ -76,5 +76,6 @@ When Hermes requests tool approval, Sherka shows the request in its conversation
 - **HTTP 404 on a named profile:** check its exact name and shared-gateway routing. For a separately hosted profile, use its own listener and `default`.
 - **Missing API features:** update Hermes. Sherka checks `/v1/capabilities` for native session streaming and run interruption.
 - **Text works but speech does not:** check VoiceStudio and the companion's voice settings; Hermes is not responsible for local speech synthesis.
+- **Unexpected tool actions after speaking:** inspect the transcribed message in the conversation. Hermes receives that text as your instruction. Local search, memories and emotion prompts remain bypassed. Stop the task, then type the corrected instruction if recognition is uncertain; microphone recordings are not retained for retrospective diagnosis.
 
 Protocol references: [Hermes API Server](https://hermes-agent.nousresearch.com/docs/user-guide/features/api-server) and [programmatic integration](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/developer-guide/programmatic-integration.md).

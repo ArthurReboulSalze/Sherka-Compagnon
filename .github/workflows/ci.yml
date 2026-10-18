@@ -37,4 +37,4 @@ jobs:
         run: ./scripts/prepare_native_ci.ps1
       - name: Native UI and updater boundaries
         run: |
-          npx playwright test --grep 'startup recovery:|widget discret|démarrage avec le compagnon seul|imports validés|updates: manual|languages:|web search:|providers: API|hermes:'
+          npx playwright test --grep 'startup recovery:|widget discret|démarrage avec le compagnon seul|imports validés|updates: manual|languages:|web search:|providers: API|hermes:|avatars:|companion settings:|hermes stop:'

@@ -9,6 +9,7 @@ type Service = 'lm' | 'voice';
 interface Draft {
   revision: number;
   values: Connections;
+  persisted: Connections;
   dirty: boolean;
   saving: boolean;
   lm?: LanguageCatalog;
@@ -61,15 +62,19 @@ function options(items: { id: string; label: string; disabled?: boolean }[], val
   return html`<option value="">À choisir</option>${unknown ? html`<option value="${escape(value)}" selected>${escape(value)} · choix enregistré, non vérifié</option>` : ''}${items.map((i) => html`<option value="${escape(i.id)}" ${value === i.id ? 'selected' : ''} ${i.disabled ? 'disabled' : ''}>${escape(i.label)}</option>`).join('')}`;
 }
 
-export function mountConnections(root: HTMLElement, profile: Profile, profiles: Profile[], select: (id: string) => void, save: (revision: number, value: Connections) => Promise<boolean>): void {
+export function mountConnections(root: HTMLElement, profile: Profile, select: (id: string) => void, save: (revision: number, value: Connections) => Promise<boolean>, openAvatar: () => void): void {
   let draft = drafts.get(profile.id);
   if (!draft) {
-    draft = { revision: profile.revision, values: { ...profile.connections }, dirty: false, saving: false, errors: {}, requests: { lm: 0, voice: 0 }, loading: { lm: false, voice: false } };
+    draft = { revision: profile.revision, values: { ...profile.connections }, persisted: { ...profile.connections }, dirty: false, saving: false, errors: {}, requests: { lm: 0, voice: 0 }, loading: { lm: false, voice: false } };
     drafts.set(profile.id, draft);
   } else if (!draft.dirty && draft.revision !== profile.revision) {
     if (draft.values.lm_studio_url !== profile.connections.lm_studio_url || draft.values.llm_provider !== profile.connections.llm_provider || draft.values.llm_api_url !== profile.connections.llm_api_url || draft.values.hermes_profile !== profile.connections.hermes_profile) { draft.lm = undefined; draft.keyStored = undefined; draft.keyRequest = (draft.keyRequest ?? 0) + 1; delete draft.errors.lm; ++draft.requests.lm; draft.loading.lm = false; }
     if (draft.values.voice_studio_url !== profile.connections.voice_studio_url) { draft.voice = undefined; delete draft.errors.voice; ++draft.requests.voice; draft.loading.voice = false; }
     draft.values = { ...profile.connections };
+    draft.persisted = { ...profile.connections };
+    draft.revision = profile.revision;
+  } else if (draft.dirty && draft.revision !== profile.revision && JSON.stringify(draft.persisted) === JSON.stringify(profile.connections)) {
+    // An avatar or web-mode save does not conflict with unsaved model choices.
     draft.revision = profile.revision;
   }
   // Only the built-in preset can change language. Keep unsaved model/voice
@@ -93,7 +98,6 @@ export function mountConnections(root: HTMLElement, profile: Profile, profiles: 
     const enteredKey = previousKey?.dataset.scope === keyScope ? previousKey.value : '';
     const restoreKeyFocus = previousKey === document.activeElement && previousKey?.dataset.scope === keyScope;
     const readiness = { ready: t('Prêt'), missing_engine: t('Moteur indisponible'), missing_model: t('Modèle à installer dans VoiceStudio'), unknown: t('Installation du modèle non confirmée') };
-    const engine = d.voice?.tts_engines.find((e) => e.id === d.values.tts_engine);
     const model = d.lm?.models.find(m => m.id === d.values.llm_model || m.key === d.values.llm_model);
     const provider = d.values.llm_provider ?? 'lm_studio';
     const local = provider === 'lm_studio';
@@ -101,10 +105,8 @@ export function mountConnections(root: HTMLElement, profile: Profile, profiles: 
     const providerInfo = providers.find(([id]) => id === provider)!;
     const number = (n: number) => n.toLocaleString(formatLocale());
     const lmChoices = d.lm?.models.map((m) => ({ id: m.id, label: `${m.label}${m.quantization ? ` · ${m.quantization}` : ''} · ${m.loaded === true ? t('chargé') : m.loaded === false ? t('non chargé') : t('état inconnu')}` })) ?? [];
-    const voices = d.voice?.voices.map((v) => ({ id: v.voice_id, label: `${v.name}${v.language ? ` · ${v.language}` : ''} · ${v.voice_id}`, disabled: v.type === 'profile' && engine !== undefined && !engine.supports_cloning })) ?? [];
     root.innerHTML = html`<section class="settings-card connections-card"><div class="section-heading"><h2>Voix & modèles</h2><span class="tag">FOURNISSEURS</span></div>
-      <p>Choisis les modèles et la voix de chaque compagnon. Ces choix sont utilisés dès le prochain échange.</p><details class="language-help"><summary>Langues, modèles et voix</summary><p>Sherka d’origine suit la langue de l’interface ; les compagnons personnalisés gardent leur langue. Choisis toi-même des modèles et des voix compatibles chez ton fournisseur et dans VoiceStudio.</p><p>Vérifie que le modèle de conversation, la reconnaissance vocale et la voix choisis prennent en charge la langue du compagnon. Leurs réglages se font chez le fournisseur et dans VoiceStudio.</p></details>
-      <label class="profile-picker">Compagnon à configurer<select id="connection-profile">${profiles.map((p) => html`<option value="${p.id}" ${p.id === profile.id ? 'selected' : ''}>${escape(p.name)}</option>`).join('')}</select></label>
+      <p>Choisis les modèles de chaque compagnon. La voix se choisit dans « Avatar et voix ».</p><details class="language-help"><summary>Langues, modèles et voix</summary><p>Sherka d’origine suit la langue de l’interface ; les compagnons personnalisés gardent leur langue. Choisis toi-même des modèles et des voix compatibles chez ton fournisseur et dans VoiceStudio.</p><p>Vérifie que le modèle de conversation, la reconnaissance vocale et la voix choisis prennent en charge la langue du compagnon. Leurs réglages se font chez le fournisseur et dans VoiceStudio.</p></details>
       <form id="connections-form">
         <fieldset class="provider"><legend>Conversation</legend><label>Fournisseur<select name="llm_provider">${providers.map(([id,label]) => html`<option value="${id}" ${provider === id ? 'selected' : ''}>${escape(id.startsWith('custom_') || id === 'hermes' ? t(label) : label)}</option>`).join('')}</select></label>
         ${local ? html`<div class="connection-address"><label>Adresse de LM Studio<input type="url" name="lm_studio_url" required maxlength="2048" value="${escape(d.values.lm_studio_url)}" /></label>${refreshButton('lm')}</div>` : html`${agent ? html`<p class="connection-note">Hermes gère la conversation, sa mémoire et ses outils. Sherka transmet tes messages et lit ses réponses avec VoiceStudio.</p>` : html`<p class="connection-note provider-privacy">Le fournisseur reçoit le prompt du compagnon, les échanges retenus et les souvenirs utilisés. La voix et les fichiers restent sur ton PC. Des frais d’API peuvent s’appliquer.</p>`}<div class="connection-address"><label>Adresse de base de l’API<input type="url" name="llm_api_url" list="hermes-servers" required maxlength="2048" value="${escape(d.values.llm_api_url ?? providerInfo[2])}" placeholder="https://example.com/v1" /></label>${refreshButton('lm')}</div><div class="provider-key"><label>Clé API<input id="provider-api-key" type="password" autocomplete="off" spellcheck="false" maxlength="2560" placeholder="Coller une nouvelle clé" /></label><div class="settings-actions"><button type="button" class="button secondary small" id="save-provider-key">Enregistrer la clé</button><button type="button" class="button secondary small" id="remove-provider-key" ${d.keyStored ? '' : 'disabled'}>Retirer la clé</button><span id="provider-key-status" class="connection-note">${d.keyStored === undefined ? t('Vérification du coffre…') : d.keyStored ? t('Clé protégée enregistrée pour cette adresse') : t('Aucune clé enregistrée pour cette adresse')}</span></div><p class="connection-note">La clé est protégée par Windows, partagée pour cette adresse et exclue des profils exportés.</p></div>`}
@@ -118,10 +120,7 @@ export function mountConnections(root: HTMLElement, profile: Profile, profiles: 
         <details><summary>Budget de conversation</summary><div class="connection-selects"><label>Plafond de contexte (vide = automatique)<input name="context_limit" type="number" min="2048" max="2000000" step="1" value="${d.values.context_limit ?? ''}" placeholder="${local ? t('Contexte chargé dans LM Studio') : t('64 000 tokens par défaut')}" /></label><label>Tokens réservés à la réponse<input name="response_tokens" type="number" min="128" max="8192" step="1" value="${d.values.response_tokens}" /></label></div><p class="connection-note">${local ? t('Le plafond Sherka ne modifie pas le chargement dans LM Studio.') : t('Le plafond Sherka ne peut pas augmenter le contexte annoncé par le fournisseur.')} Le budget utilise une estimation prudente et une marge de sécurité ; les anciens échanges sont écartés si nécessaire, sans couper ton nouveau message.</p></details>`}</fieldset>
         <fieldset class="provider"><legend>VoiceStudio</legend><div class="connection-address"><label>Adresse de VoiceStudio<input type="url" name="voice_studio_url" required maxlength="2048" value="${escape(d.values.voice_studio_url)}" /></label>${refreshButton('voice')}</div>${status('voice')}
         ${d.voice ? html`<p class="connection-status">VoiceStudio ${escape(d.voice.service_version)} · ${d.voice.voices.length} voix · ${d.voice.tts_engines.filter((e) => e.readiness === 'ready').length} moteur(s) TTS prêt(s)</p><p class="connection-note">Transcription : ${d.voice.streaming_transcription ? t('streaming annoncé') : t('pas de streaming annoncé')}${d.voice.batch_transcription ? t(' · HTTP disponible') : ''}.</p>` : ''}
-        <label>Moteur de synthèse vocale<select name="tts_engine">${options(d.voice?.tts_engines.map((e) => ({ id: e.id, label: `${e.label} · ${readiness[e.readiness]}${e.active ? t(' · actif dans VoiceStudio') : ''}`, disabled: e.readiness !== 'ready' })) ?? [], d.values.tts_engine)}</select></label>
-        <label>Voix du compagnon<select name="tts_voice">${options(d.voice ? [{ id: 'default', label: t('Voix par défaut du moteur') }, ...voices] : [], d.values.tts_voice)}</select></label>
-        ${engine && !engine.supports_cloning ? html`<p class="connection-note">Ce moteur ne prend pas en charge tes profils vocaux personnalisés.</p>` : ''}
-        ${d.voice?.voice_alias_count ? html`<p class="connection-note">Les alias comme « alloy » ou « nova » désignent la voix par défaut du moteur ; ils ne constituent pas des voix supplémentaires.</p>` : ''}
+        <div class="avatar-settings-link"><p>La voix est associée à l’avatar de ce compagnon.</p><button class="button secondary" type="button" id="settings-avatar" ${d.dirty || d.saving ? 'disabled' : ''}>Avatar et voix</button><small>${d.dirty ? t('Enregistre ces choix avant de modifier l’avatar.') : ''}</small></div>
         <label>Modèle de transcription<select name="stt_model">${options([...(d.voice?.stt_models.map((id) => ({ id, label: t`${id} · transcription HTTP` })) ?? []), ...(d.voice?.dictation_models.map((m) => ({ id: m.id, label: t`${m.label} · dictée directe · ${m.languages}${m.installed ? '' : t(' · à installer dans VoiceStudio')}`, disabled: !m.installed || !d.voice?.dictation_engine_available })) ?? [])], d.values.stt_model)}</select></label>
         ${d.voice ? html`<details class="model-inventory"><summary>Modèles TTS présents et moteurs disponibles</summary><ul>${d.voice.tts_models.filter((m) => m.installed || m.incomplete).map((m) => html`<li><strong>${escape(m.label)}</strong><span>${escape(m.repo_id)}</span><small>${!m.supported ? t('Non pris en charge sur ce PC') : m.incomplete ? t('Téléchargement incomplet') : t('Fichiers présents')} · ${m.engines.map((id) => { const e = d.voice!.tts_engines.find((entry) => entry.id === id); return `${escape(id)} : ${e ? readiness[e.readiness] : t('état inconnu')}`; }).join(' / ')}</small></li>`).join('') || html`<li>Aucun modèle TTS installé annoncé par VoiceStudio.</li>`}</ul></details>` : ''}
         </fieldset>
@@ -130,8 +129,6 @@ export function mountConnections(root: HTMLElement, profile: Profile, profiles: 
     bindRangeControls(root);
     const keyInput = root.querySelector<HTMLInputElement>('#provider-api-key');
     if (keyInput) { keyInput.dataset.scope = keyScope; keyInput.value = enteredKey; if (restoreKeyFocus) keyInput.focus(); }
-    root.querySelector<HTMLSelectElement>('#connection-profile')!.addEventListener('change', (event) => select((event.target as HTMLSelectElement).value));
-    root.querySelector<HTMLSelectElement>('#connection-profile')!.disabled = d.saving;
     root.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[name]').forEach((input) => { input.disabled = d.saving; });
     root.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[name]:not([name="reasoning"])').forEach((input) => input.addEventListener('input', () => {
       const key = input.name as keyof Connections;
@@ -180,6 +177,8 @@ export function mountConnections(root: HTMLElement, profile: Profile, profiles: 
         }
       }
       d.dirty = true;
+      root.querySelector<HTMLButtonElement>('#settings-avatar')!.disabled = true;
+      root.querySelector('.avatar-settings-link small')!.textContent = t('Enregistre ces choix avant de modifier l’avatar.');
       root.querySelector<HTMLButtonElement>('#save-connections')!.disabled = false;
       root.querySelector('#connection-dirty')!.textContent = t('Modifications non enregistrées');
       if (key === 'tts_engine' || key === 'llm_model' && local || key === 'llm_provider') { paint(); if (key === 'llm_provider') { void checkKey(); void loadHermesServers(); void loadHermesProfiles(); } }
@@ -202,6 +201,7 @@ export function mountConnections(root: HTMLElement, profile: Profile, profiles: 
         finally { if (token === d.keyRequest) d.repaint?.(); }
       });
     }
+    root.querySelector('#settings-avatar')!.addEventListener('click', openAvatar);
     bindReasoning();
     root.querySelectorAll<HTMLButtonElement>('[data-refresh]').forEach((button) => button.addEventListener('click', () => void probe(button.dataset.refresh as Service)));
     root.querySelector<HTMLFormElement>('#connections-form')!.addEventListener('submit', async (event) => {
@@ -210,7 +210,7 @@ export function mountConnections(root: HTMLElement, profile: Profile, profiles: 
       d.saving = true; paint();
       const ok = await save(d.revision, { ...d.values });
       d.saving = false;
-      if (ok) { d.dirty = false; d.revision += 1; }
+      if (ok) { d.dirty = false; d.revision += 1; d.persisted = { ...d.values }; }
       else { drafts.delete(profile.id); select(profile.id); return; }
       d.repaint?.();
     });
@@ -219,7 +219,7 @@ export function mountConnections(root: HTMLElement, profile: Profile, profiles: 
     const select = root.querySelector<HTMLSelectElement>('[name="reasoning"]');
     if (!select) return;
     select.disabled = d.saving;
-    select.oninput = () => { d.values.reasoning = select.value || null; d.dirty = true; root.querySelector<HTMLButtonElement>('#save-connections')!.disabled = false; root.querySelector('#connection-dirty')!.textContent = t('Modifications non enregistrées'); };
+    select.oninput = () => { d.values.reasoning = select.value || null; d.dirty = true; root.querySelector<HTMLButtonElement>('#settings-avatar')!.disabled = true; root.querySelector('.avatar-settings-link small')!.textContent = t('Enregistre ces choix avant de modifier l’avatar.'); root.querySelector<HTMLButtonElement>('#save-connections')!.disabled = false; root.querySelector('#connection-dirty')!.textContent = t('Modifications non enregistrées'); };
   }
 
   async function probe(service: Service): Promise<void> {

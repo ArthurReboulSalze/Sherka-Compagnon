@@ -22,6 +22,8 @@ pub struct Voice {
     pub models: Arc<sherka_core::models::ModelManager>,
     run_id: Arc<Mutex<Option<Uuid>>>,
     pending: Arc<Mutex<CancellationToken>>,
+    hermes_gate: Arc<AsyncMutex<()>>,
+    hermes_run: Arc<Mutex<Option<(OperationTag, sherka_core::hermes::HermesRun)>>>,
 }
 
 #[derive(Clone, Serialize)]
@@ -78,6 +80,8 @@ impl Voice {
             gate: Arc::new(AsyncMutex::new(())),
             run_id: Arc::new(Mutex::new(None)),
             pending: Arc::new(Mutex::new(CancellationToken::new())),
+            hermes_gate: Arc::new(AsyncMutex::new(())),
+            hermes_run: Arc::new(Mutex::new(None)),
         };
         tauri::async_runtime::spawn(audio_events(app, shared, voice.clone(), rx));
         voice
@@ -126,6 +130,68 @@ impl Voice {
             .map_err(|_| "Moteur audio indisponible.".to_string())? = Some(run_id);
         Ok(())
     }
+}
+
+/// `/stop` controls only the active companion's remote run, never a service.
+pub async fn stop_hermes(
+    app: &AppHandle,
+    shared: Shared,
+    voice: &Voice,
+) -> std::result::Result<(), String> {
+    let profile_id = with_core(shared.clone(), |c| {
+        let id = c.session.snapshot().profile_id;
+        if !c
+            .store
+            .profile(id)?
+            .details
+            .connections
+            .llm_provider
+            .is_agent()
+        {
+            return Err(Error::StaleOperation);
+        }
+        Ok(id)
+    })
+    .await?;
+    pause(app, shared.clone(), voice, false).await?;
+    with_core(shared.clone(), |c| {
+        c.live.notice = Some("Arrêt Hermes demandé…".into());
+        Ok(())
+    })
+    .await?;
+    emit(app, &shared);
+    let _gate = voice.hermes_gate.lock().await;
+    let pending = voice
+        .hermes_run
+        .lock()
+        .map_err(|_| "Moteur indisponible.")?
+        .clone();
+    if let Some((tag, run)) = pending
+        && tag.profile_id == profile_id
+    {
+        if let Err(e) = run.stop().await {
+            let message = format!(
+                "{} L’arrêt Hermes n’est pas confirmé. Réessaie /stop avant de poursuivre.",
+                e
+            );
+            set_error(app, &shared, &message);
+            return Err(message);
+        }
+        *voice
+            .hermes_run
+            .lock()
+            .map_err(|_| "Moteur indisponible.")? = None;
+    }
+    with_core(shared.clone(), move |c| {
+        if c.session.snapshot().profile_id == profile_id {
+            c.live.error = None;
+            c.live.notice = Some("Arrêt Hermes confirmé.".into());
+        }
+        Ok(())
+    })
+    .await?;
+    emit(app, &shared);
+    Ok(())
 }
 
 pub async fn pause(
@@ -235,6 +301,21 @@ pub async fn send(
     if text.trim().is_empty() || text.len() > 128_000 {
         return Err("Écris un message de 1 à 128 000 octets.".into());
     }
+    if text.trim().eq_ignore_ascii_case("/stop") {
+        let agent = with_core(shared.clone(), move |c| {
+            Ok(c.session.snapshot().profile_id == profile_id
+                && c.store
+                    .profile(profile_id)?
+                    .details
+                    .connections
+                    .llm_provider
+                    .is_agent())
+        })
+        .await?;
+        if agent {
+            return stop_hermes(&app, shared, &voice).await;
+        }
+    }
     let provider = with_core(shared.clone(), move |core| {
         if core.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
@@ -244,7 +325,7 @@ pub async fn send(
             && profile.details.connections.llm_model.is_none()
         {
             return Err(Error::Validation(
-                "Choisis un modèle de conversation dans Réglages.".into(),
+                "Choisis un modèle de conversation dans Compagnons.".into(),
             ));
         }
         if speak
@@ -504,7 +585,7 @@ async fn prepare_turn(
     .await
     .map_err(|_| "Le chargement du modèle a échoué.".to_owned())?
     .map_err(|e| e.to_string())?
-    .ok_or("Choisis un modèle de conversation dans Réglages.")?;
+    .ok_or("Choisis un modèle de conversation dans Compagnons.")?;
     provider.connections.llm_model = Some(model.id.clone());
     provider.use_api_model(&model);
     provider
@@ -538,7 +619,7 @@ async fn prepare_turn(
     .await?;
     let budget =
         sherka_core::conversation::budget(&profile.details, &model).map_err(|e| e.to_string())?;
-    let mode = with_core(shared.clone(), |c| Ok(c.web_search_mode())).await?;
+    let mode = with_core(shared.clone(), |c| c.web_search_mode()).await?;
     let mut web = None;
     if let Some(explicit) = sherka_core::web::explicit_query(user) {
         if mode == sherka_core::web::SearchMode::Off {
@@ -638,7 +719,7 @@ async fn prepare_turn(
             .filter(|m| m.id != source.id)
             .collect::<Vec<_>>();
         let recall = c.store.recall(tag.profile_id, &text)?;
-        let prepared = sherka_core::conversation::prepare_context_with_web(
+        let prepared = sherka_core::conversation::prepare_context_with_avatar(
             &profile.details,
             &history,
             &text,
@@ -646,6 +727,7 @@ async fn prepare_turn(
             budget,
             receipt.as_deref(),
             web,
+            !profile.emotion_avatars.is_empty(),
         )?;
         c.live.budget = Some(prepared.budget.clone());
         c.live.web = prepared.web.clone();
@@ -832,6 +914,26 @@ async fn run_turn(
     speak: bool,
 ) {
     let agent = provider.connections.llm_provider.is_agent();
+    // A new utterance may arrive while the old run acknowledges cancellation.
+    // Serialize remote runs and keep failed stops retryable instead of silently
+    // starting overlapping agent work on the same server conversation.
+    let _remote_gate = if agent {
+        Some(
+            tokio::select! { biased; _=token.cancelled()=>return, guard=voice.hermes_gate.lock()=>guard },
+        )
+    } else {
+        None
+    };
+    if agent && voice.hermes_run.lock().is_ok_and(|run| run.is_some()) {
+        fail_turn(
+            &app,
+            &shared,
+            tag,
+            "L’arrêt Hermes n’est pas confirmé. Réessaie /stop avant de poursuivre.",
+        )
+        .await;
+        return;
+    }
     let hermes = sherka_core::hermes::HermesRun::new(provider.clone());
     let mut remote_session = None;
     let preparation = async {
@@ -875,6 +977,9 @@ async fn run_turn(
     if voice.playback.arm(token.clone()).is_err() {
         return;
     }
+    if agent && let Ok(mut active) = voice.hermes_run.lock() {
+        *active = Some((tag, hermes.clone()));
+    }
     let (tokens_tx, mut tokens_rx) = mpsc::channel::<String>(64);
     let web_reply = prepared
         .as_ref()
@@ -887,6 +992,8 @@ async fn run_turn(
         .and_then(|p| p.web.as_ref())
         .and_then(|report| report.unavailable_reply(&provider.connections.language));
     let unavailable = fixed_reply.is_some();
+    let expressions =
+        !agent && !unavailable && prepared.as_ref().is_some_and(|p| p.avatar_emotions);
     let generate = async {
         if let Some(text) = fixed_reply {
             tokens_tx
@@ -932,8 +1039,10 @@ async fn run_turn(
     };
     let consume = async {
         let mut web_speech = sherka_core::web::SpeechFilter::default();
-        while let Some(text) = tokens_rx.recv().await {
+        let mut expression = sherka_core::avatar::ExpressionStream::default();
+        let mut append = |text: String, emotion| -> sherka_core::Result<()> {
             update(&app, &shared, tag, |c| {
+                c.live.emotion = emotion;
                 c.live.reply.push_str(&text);
                 Ok(())
             })?;
@@ -947,9 +1056,31 @@ async fn run_turn(
                     speech_text.push(&text)?;
                 }
             }
+            Ok(())
+        };
+        while let Some(text) = tokens_rx.recv().await {
+            let text = if expressions {
+                expression.push(&text)
+            } else {
+                text
+            };
+            append(text, expression.emotion)?;
+        }
+        if expressions {
+            append(expression.finish(), expression.emotion)?;
         }
         if speak && web_reply {
             speech_text.push(&web_speech.finish())?;
+        }
+        if expressions {
+            update(&app, &shared, tag, |c| {
+                if c.live.reply.trim().is_empty() {
+                    return Err(Error::Validation(
+                        "Le fournisseur a renvoyé une réponse vide.".into(),
+                    ));
+                }
+                Ok(())
+            })?;
         }
         Ok::<_, Error>(())
     };
@@ -1005,7 +1136,7 @@ async fn run_turn(
     match result {
         None => {
             if agent {
-                let _ = hermes.stop().await;
+                finish_hermes_run(&app, &shared, &voice, tag, &hermes, true).await;
             }
             // The local audio worker can cancel before the desktop processes
             // Start. Persist only while this exact turn is still the live one.
@@ -1018,6 +1149,9 @@ async fn run_turn(
             .await;
         }
         Some((Ok(outcome), Ok(()), spoken)) => {
+            if agent {
+                finish_hermes_run(&app, &shared, &voice, tag, &hermes, false).await;
+            }
             let delivery = if !speak || provider.connections.volume <= 0.0 {
                 Delivery::TextOnly
             } else if spoken.is_ok() {
@@ -1042,7 +1176,7 @@ async fn run_turn(
         }
         Some((llm, consumed, _)) => {
             if agent {
-                let _ = hermes.stop().await;
+                finish_hermes_run(&app, &shared, &voice, tag, &hermes, true).await;
             }
             let error = llm
                 .err()
@@ -1053,6 +1187,34 @@ async fn run_turn(
     }
     emit(&app, &shared);
     let _ = app.emit("sherka:history", tag.profile_id);
+}
+
+async fn finish_hermes_run(
+    app: &AppHandle,
+    shared: &Shared,
+    voice: &Voice,
+    tag: OperationTag,
+    run: &sherka_core::hermes::HermesRun,
+    stop: bool,
+) {
+    if stop && let Err(e) = run.stop().await {
+        let message = format!(
+            "{} L’arrêt Hermes n’est pas confirmé. Réessaie /stop avant de poursuivre.",
+            e
+        );
+        if let Ok(mut c) = shared.0.lock()
+            && c.session.snapshot().profile_id == tag.profile_id
+        {
+            c.live.error = Some(message);
+        }
+        emit(app, shared);
+        return;
+    }
+    if let Ok(mut active) = voice.hermes_run.lock()
+        && active.as_ref().is_some_and(|(current, _)| *current == tag)
+    {
+        *active = None;
+    }
 }
 
 async fn play_prepared(

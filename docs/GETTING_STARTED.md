@@ -20,11 +20,11 @@ The [Microsoft Visual C++ v14 x64 runtime](https://learn.microsoft.com/en-us/cpp
 
 ## Your first conversation
 
-The companion appears alone, with its microphone off. Hover over it, open the control panel, then **Settings → Voices & models** (**Réglages → Voix & modèles** in French). Choose your [interface language](LANGUAGES.md) in Settings.
+The companion appears alone, with its microphone off. Hover over it, open the control panel, then **Companions → Voices & models** (**Compagnons → Voix & modèles** in French). Choose your [interface language](LANGUAGES.md) in Settings.
 
 The original Sherka comes with a personality and instructions in all seven languages and follows your interface choice automatically. You do not need to rewrite her character. Custom companions keep their own language.
 
-Sherka starts installed VoiceStudio when its local service is stopped. Typical addresses are `http://127.0.0.1:1234` for LM Studio and `http://127.0.0.1:3900` for VoiceStudio. Choose the conversation provider for this companion, refresh its catalog, choose a model, then choose the VoiceStudio TTS engine, voice and transcription model. Save the choices. For a remote provider, save a protected API key. If the catalog has no context limit, Sherka uses 64,000 tokens by default; adjust the ceiling to your model if needed. Replies default to an 8,192-token reserve within the model's limits. Provider charges and privacy policies apply.
+Sherka starts installed VoiceStudio when its local service is stopped. Typical addresses are `http://127.0.0.1:1234` for LM Studio and `http://127.0.0.1:3900` for VoiceStudio. Choose the conversation provider for this companion, refresh its catalog, choose a model, then choose the VoiceStudio transcription model and save. Open the companion’s **Avatar & voice** editor to choose its TTS engine and voice. For a remote provider, save a protected API key. If the catalog has no context limit, Sherka uses 64,000 tokens by default; adjust the ceiling to your model if needed. Replies default to an 8,192-token reserve within the model's limits. Provider charges and privacy policies apply.
 
 Under **Microphone & listening**, select input and output. Start with headphones, enable the microphone and speak normally. Confirmed speech can interrupt the current response. You can also type, with or without spoken replies.
 

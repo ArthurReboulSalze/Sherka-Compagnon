@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="public/branding/sherka-logo.png" alt="Sherka Companion — blue-haired AI with starry eyes and futuristic headphones" width="200">
+  <img src="public/branding/sherka-logo.png" alt="Sherka Companion — orbital star emblem" width="200">
 </p>
 
 <h1 align="center">Sherka Companion</h1>
 <p align="center"><strong>A voice. A personality. A place on your desktop.</strong></p>
-<p align="center">Meet your AI companions. Talk naturally, interrupt freely, and pick up where you left off.</p>
+<p align="center">Five personalities. Seven expressions. Natural voice conversations on your desktop.</p>
 <p align="center"><em>Your models. Your voices. Your companion.</em></p>
 
 <p align="center">
@@ -24,6 +24,26 @@
   <img src="docs/images/sherka.png" alt="Sherka's control panel: character portrait, personality and companion settings" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
+
+## Meet your companions
+
+Choose your company, then give each character its own voice and model. **New in 0.8.0:** five bundled companions, expressive avatars and all character settings together in **Companions**.
+
+<table>
+  <tr>
+    <td align="center"><img src="public/assets/sherka.png" alt="Sherka" width="120"><br><strong>Sherka</strong><br>Calm, warm, attentive.</td>
+    <td align="center"><img src="public/assets/botsy/neutral.png" alt="Botsy" width="120"><br><strong>Botsy</strong><br>Your curious little tinkerer.</td>
+    <td align="center"><img src="public/assets/candis/neutral.png" alt="Candis" width="120"><br><strong>Candis</strong><br>Playful, lively, adventurous.</td>
+    <td align="center"><img src="public/assets/kit/neutral.png" alt="Kit" width="120"><br><strong>Kit</strong><br>Precision and deadpan wit.</td>
+    <td align="center"><img src="public/assets/minerva/neutral.png" alt="Minerva" width="120"><br><strong>Minerva</strong><br>Fiery, impatient, sharp-tongued.</td>
+  </tr>
+</table>
+
+**😐 Neutral · 😊 Joy · 😢 Sadness · 😠 Anger · 😮 Surprise · 🤔 Reflection · 🥰 Tenderness**
+
+Expressions follow the tone of a reply and blend with a gentle **half-second crossfade**. Use the bundled images or assign your own in **Avatar & voice**, alongside that character's VoiceStudio voice. Models that omit an expression simply keep the neutral image. [See how it works](docs/USER_GUIDE.md#how-expressions-change).
+
+Hermes keeps a neutral avatar and its own personality, memory and tools. Its new **/stop** button stops the current task while leaving the server running.
 
 ## A conversation that keeps up with you
 
@@ -54,7 +74,7 @@ Sherka manages context budgets and offers reasoning controls where supported. Sw
 ## From download to your first conversation
 
 1. **Pick your download:** the [Windows x64 installer or no-install ZIP](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest).
-2. **Connect voice and intelligence:** set up VoiceStudio, then choose LM Studio, an API provider or Hermes in Settings.
+2. **Connect voice and intelligence:** set up VoiceStudio, then choose LM Studio, an API provider or Hermes in Companions.
 3. **Choose your companion and voice, turn on the microphone, and talk.** The avatar appears at startup; the control panel is there whenever you need it.
 
 Follow the [getting-started guide](docs/GETTING_STARTED.md) for setup. WebView2 and the Visual C++ x64 runtime are required. Models and voices are separate downloads. Headphones are recommended for voice interruption; the microphone is off at startup.
@@ -63,7 +83,7 @@ Check for signed updates directly from **Settings**. Both editions keep profiles
 
 ## What's next
 
-More ways to make companions feel alive: avatar customization, speaking and listening animations, expressions and moods. Hermes keeps a neutral avatar and stays outside the future emotion system.
+Next come speaking/listening animations, easier character sharing and avatar generation through **ComfyUI**. Image generation is not integrated yet; today's avatar editor uses local images. Hermes remains outside the emotion system.
 
 Sherka is an early project. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
 

@@ -45,7 +45,7 @@ export async function editProfileVoice(profile: Profile, save: (connections: Con
     const note = options.querySelector('#voice-note')!;
     const fillVoices = (selected: string | null) => {
       const supports = engines.find(e => e.id === engine.value)?.supports_cloning;
-      const available = voices.voices.filter(v => v.type !== 'profile' || supports);
+      const available = [{voice_id:'default',name:t('Voix par défaut du moteur'),language:null}, ...voices.voices.filter(v => v.voice_id !== 'default' && (v.type !== 'profile' || supports))];
       voice.innerHTML = html`<option value="">À choisir</option>${available.map(v => html`<option value="${escape(v.voice_id)}" ${selected === v.voice_id ? 'selected' : ''}>${escape(v.name)}${v.language ? ` · ${escape(v.language)}` : ''} · ${escape(v.voice_id)}</option>`).join('')}`;
       note.textContent = !engine.value ? t('Choisis le moteur vocal de ce compagnon.') : !supports ? t('Ce moteur ne prend pas en charge les profils vocaux personnalisés de VoiceStudio.') : selected && !available.some(v => v.voice_id === selected) ? t('La voix enregistrée est absente du catalogue : choisis-en une disponible.') : t('Le choix est propre à ce compagnon. Les réglages globaux de VoiceStudio restent libres.');
     };

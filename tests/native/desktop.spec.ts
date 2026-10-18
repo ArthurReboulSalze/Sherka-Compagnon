@@ -236,10 +236,11 @@ test('languages: seven interfaces, opaque content, fixed profiles and restart', 
       await expect(widget.locator('html')).toHaveAttribute('lang',locale);
       await expect(panel.locator('[data-nav="settings"]')).toHaveText(tr('Réglages'));
       await expect(panel.locator('#interface-language')).toHaveValue(locale);
+      await panel.locator('[data-nav="profiles"]').click();
       await expect(panel.locator('[name="llm_model"]')).toHaveValue('my-loaded-chat');
-      await expect(panel.locator('[name="tts_voice"]')).toHaveValue('voice-a');
-      await expect(panel.locator('[name="tts_voice"] option[value="voice-a"]')).toContainText('Réglages');
-      await expect(panel.locator('[name="tts_engine"] option[value="omni"]')).toContainText(tr('Prêt'));
+      expect((await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===original.id).connections.tts_voice).toBe('voice-a');
+      await expect(panel.locator('[name="tts_voice"]')).toHaveCount(0);
+      await expect(panel.locator('#settings-avatar')).toHaveText(tr('Avatar et voix'));
       await panel.locator('[name="llm_model"]').selectOption('large-chat');
       await expect(panel.locator('[name="reasoning"] option[value="low"]')).toHaveText(tr('Faible'));
       await expect(panel.locator('[name="reasoning"] option[value="high"]')).toHaveText(tr('Forte'));
@@ -261,11 +262,16 @@ test('languages: seven interfaces, opaque content, fixed profiles and restart', 
       await expect(panel.locator('[name="companion_language"]')).toHaveValue('fr');
       await expect(panel.locator('[name="personality"]')).toHaveValue(before.personality);
       await panel.locator('[data-close]').first().click();
-      await panel.locator('#choose-profile-voice').click();
+      await panel.locator('#change-avatar').click();
+      await expect(panel.locator('#avatar-title')).toHaveText(tr('Avatar et voix'));
+      await expect(panel.locator('.emotion-slot')).toHaveCount(7);
+      await expect(panel.locator('[data-emotion="tenderness"]')).toContainText(tr('Tendresse'));
+      await panel.locator('#avatar-voice-edit').click();
       await expect(panel.locator('#voice-title')).toHaveText(tr('La voix de {0}').replace('{0}',before.name));
       await expect(panel.locator('#profile-voice-form [name="voice"]')).toHaveValue('voice-a');
       await expect(panel.locator('#profile-voice-form [name="voice"] option[value="voice-a"]')).toContainText('Réglages');
       await panel.locator('#voice-cancel').click();
+      await panel.locator('.avatar-modal [data-close]').first().click();
       await widget.locator('#drag-region').click();
       await expect(widget.locator('[data-action="show_panel"]')).toHaveAttribute('aria-label',tr('Ouvrir le poste de bord'));
       expect((await native<any>('get_snapshot')).profiles[0]).toEqual({...before,memory_count:1});
@@ -331,8 +337,10 @@ test('languages: built-in Sherka is ready in seven languages and custom companio
       await panel.locator('[data-nav="settings"]').click();
       await panel.locator('#interface-language').selectOption(locale);
       await expect(panel.locator('html')).toHaveAttribute('lang',locale);
+      await expect(panel.locator('body')).not.toHaveClass(/working/);
+      await panel.locator('[data-nav="profiles"]').click();
       await expect(panel.locator('[name="language"]')).toHaveValue(({fr:'Français',en:'English',es:'Español',it:'Italiano',de:'Deutsch',zh:'中文（简体）',ja:'日本語'} as Record<string,string>)[locale]);
-      await expect(panel.locator('[name="tts_voice"]')).toHaveValue('voice-a');
+      expect((await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===original.id).connections.tts_voice).toBe('voice-a');
       const snapshot=await native<any>('get_snapshot');
       const profile=snapshot.profiles.find((p:any)=>p.id===original.id);
       expect(snapshot.settings.default_companion).toBe(original.id);
@@ -342,22 +350,27 @@ test('languages: built-in Sherka is ready in seven languages and custom companio
       expect(snapshot.profiles.find((p:any)=>p.id===custom.id)).toEqual(custom);
       await panel.locator('[data-nav="profiles"]').click();
       await expect(panel.locator('.personality-preview')).toHaveText(presets[locale].personality);
+      await expect(panel.locator('body')).not.toHaveClass(/\bworking\b/);
+      await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
       await native('send_message',{profileId:original.id,text:'Hello '+locale,speak:false});
-      await expect.poll(async()=>(await native<any[]>('get_history',{profileId:original.id})).filter(m=>m.role==='assistant').length).toBe(Object.keys(names).indexOf(locale)+1);
+      await expect.poll(async()=>{ const live = await native<any>('get_conversation'); if(live.live.error)throw new Error(live.live.error); return (await native<any[]>('get_history',{profileId:original.id})).filter(m=>m.role==='assistant').length; }).toBe(Object.keys(names).indexOf(locale)+1);
       const system=sent.at(-1).messages.find((m:any)=>m.role==='system').content;
       expect(system).toContain(presets[locale].personality);
       expect(system).toContain(presets[locale].instructions);
       expect(system).toContain('Respond naturally in '+names[locale]+';');
     }
     expect(sent).toHaveLength(7);
-    await panel.locator('[data-nav="settings"]').click();
     await panel.locator('[name="speed"]').fill('1.15');
+    await panel.locator('[data-nav="settings"]').click();
     await panel.locator('#interface-language').selectOption('en');
+    await expect(panel.locator('body')).not.toHaveClass(/working/);
+    await panel.locator('[data-nav="profiles"]').click();
     await expect(panel.locator('[name="language"]')).toHaveValue('English');
     await expect(panel.locator('[name="speed"]')).toHaveValue('1.15');
+    await expect(panel.locator('body')).not.toHaveClass(/\bworking\b/);
     await panel.locator('#save-connections').click();
     await expect(panel.locator('#save-connections')).toBeDisabled();
-    expect((await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===original.id).connections.speed).toBe(1.15);
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===original.id).connections.speed).toBe(1.15);
     await stopApplication(); await startApplication();
     await panel.locator('#edit-profile').click();
     await expect(panel.locator('[name="personality"]')).toHaveValue(presets.en.personality);
@@ -366,6 +379,8 @@ test('languages: built-in Sherka is ready in seven languages and custom companio
     await expect(panel.getByRole('dialog')).toHaveCount(0);
     await panel.locator('[data-nav="settings"]').click();
     await panel.locator('#interface-language').selectOption('de');
+    await expect(panel.locator('body')).not.toHaveClass(/working/);
+    await panel.locator('[data-nav="profiles"]').click();
     await expect(panel.locator('[name="language"]')).toHaveValue('English');
     const final=await native<any>('get_snapshot');
     expect(final.settings.default_companion).toBeNull();
@@ -375,6 +390,8 @@ test('languages: built-in Sherka is ready in seven languages and custom companio
 });
 
 test('profils réels, synchronisation du widget, mémoire isolée et redémarrage', async () => {
+  await native('widget_action',{action:'show_panel'});
+  await native('widget_action',{action:'show_widget'});
   await widget.mouse.move(-20, -20);
   await expect(widget.getByText('Microphone coupé')).toBeHidden();
   await expect(panel.getByRole('button', { name: 'Supprimer', exact: true })).toBeDisabled();
@@ -403,7 +420,7 @@ test('profils réels, synchronisation du widget, mémoire isolée et redémarrag
   await panel.getByLabel('Écris son nom pour confirmer').fill('Vega II · copie');
   await panel.getByRole('button', { name: 'Supprimer définitivement' }).click();
   await expect(panel.getByRole('dialog')).toHaveCount(0);
-  await expect(panel.locator('.profile-card')).toHaveCount(2);
+  await expect(panel.locator('.profile-card')).toHaveCount(6);
 
   await panel.getByRole('button', { name: 'Mémoire & histoire', exact: true }).click();
   await expect(panel.getByText('La première page reste à écrire.')).toBeVisible();
@@ -418,7 +435,7 @@ test('profils réels, synchronisation du widget, mémoire isolée et redémarrag
   await stopApplication();
   await startApplication();
   await expect(widget.locator('.widget-name')).toHaveText('Vega II');
-  await expect(panel.locator('.profile-card')).toHaveCount(2);
+  await expect(panel.locator('.profile-card')).toHaveCount(6);
   await panel.getByRole('button', { name: 'Réglages', exact: true }).click();
   await expect(panel.getByRole('checkbox', { name: 'Toujours au premier plan' })).not.toBeChecked();
   expect(consoleErrors).toEqual([]);
@@ -487,29 +504,35 @@ test('catalogues HTTP, choix par profil, indisponibilité et conservation après
     await panel.getByRole('button', { name: 'Importer un profil Sherka' }).click();
     await (await chooser).setFiles(path);
     await expect(panel.getByRole('heading', { name: 'Vega connectée', exact: true })).toBeVisible();
-    await panel.getByRole('button', { name: 'Réglages', exact: true }).click();
+    await panel.getByRole('button', { name: 'Compagnons', exact: true }).click();
     await expect(panel.getByLabel('Modèle de conversation').locator('option')).toHaveCount(3);
-    await expect(panel.getByLabel('Voix du compagnon').locator('option')).toHaveCount(4);
-    await expect(panel.getByLabel('Moteur de synthèse vocale').locator('option[value="kitten"]')).toHaveJSProperty('disabled', true);
-    await expect(panel.getByLabel('Moteur de synthèse vocale').locator('option[value="cosy"]')).toHaveJSProperty('disabled', true);
+    await panel.locator('#choose-profile-voice').click();
+    await expect(panel.locator('#profile-voice-form [name="voice"] option')).toHaveCount(2);
+    await expect(panel.getByLabel('Moteur de synthèse vocale').locator('option[value="kitten"]')).toHaveCount(0);
+    await expect(panel.getByLabel('Moteur de synthèse vocale').locator('option[value="cosy"]')).toHaveCount(0);
     await expect(panel.getByLabel('Modèle de conversation').locator('option[value="vectors"]')).toHaveCount(0);
-    await panel.getByLabel('Modèle de conversation').selectOption('my-loaded-chat');
     await panel.getByLabel('Moteur de synthèse vocale').selectOption('omni');
-    await panel.getByLabel('Voix du compagnon').selectOption('voice-b');
+    await expect(panel.locator('#profile-voice-form [name="voice"] option')).toHaveCount(4);
+    await panel.locator('#profile-voice-form [name="voice"]').selectOption('voice-b');
+    await panel.getByRole('button',{name:'Associer cette voix',exact:true}).click();
+    await expect(panel.locator('.voice-modal')).toHaveCount(0);
+    await panel.getByLabel('Modèle de conversation').selectOption('my-loaded-chat');
     await panel.getByLabel('Modèle de transcription').selectOption('faster-whisper');
     await panel.getByRole('button', { name: 'Enregistrer ces choix' }).click();
     await expect(panel.getByRole('button', { name: 'Enregistrer ces choix' })).toBeDisabled();
-    await panel.getByLabel('Compagnon à configurer').selectOption({ label: 'Sherka' });
+    await panel.locator('.profile-card').filter({hasText:'Sherka'}).click();
     await expect(panel.getByLabel('Modèle de conversation')).toHaveValue('');
-    await panel.getByLabel('Compagnon à configurer').selectOption({ label: 'Vega connectée' });
-    await expect(panel.getByLabel('Voix du compagnon')).toHaveValue('voice-b');
+    await panel.locator('.profile-card').filter({hasText:'Vega connectée'}).click();
+    await expect(panel.locator('#profile-voice-label')).toHaveText('Sherka');
+    expect((await native<any>('get_snapshot')).profiles.find((p:any)=>p.name==='Vega connectée').connections.tts_voice).toBe('voice-b');
 
     await stopApplication();
     await startApplication();
-    await panel.getByRole('button', { name: 'Réglages', exact: true }).click();
-    await panel.getByLabel('Compagnon à configurer').selectOption({ label: 'Vega connectée' });
+    await panel.getByRole('button', { name: 'Compagnons', exact: true }).click();
+    await panel.locator('.profile-card').filter({hasText:'Vega connectée'}).click();
     await expect(panel.getByLabel('Modèle de conversation')).toHaveValue('my-loaded-chat');
-    await expect(panel.getByLabel('Voix du compagnon')).toHaveValue('voice-b');
+    await expect(panel.locator('#profile-voice-label')).toHaveText('Sherka');
+    expect((await native<any>('get_snapshot')).profiles.find((p:any)=>p.name==='Vega connectée').connections.tts_voice).toBe('voice-b');
     await expect(panel.locator('[data-refresh="lm"]')).toBeEnabled();
     delay = true;
     await panel.locator('[data-refresh="lm"]').click();
@@ -533,10 +556,10 @@ test('démarrage avec le compagnon seul et ouverture du panneau à la demande', 
 
 test('connexion aux logiciels locaux installés', async () => {
   test.skip(process.env.SHERKA_LIVE_SERVICES !== '1', 'Essai explicite des logiciels locaux');
-  await panel.getByRole('button', { name: 'Réglages', exact: true }).click();
+  await panel.getByRole('button', { name: 'Compagnons', exact: true }).click();
   await expect(panel.locator('.connection-error')).toHaveCount(0);
   await expect(panel.getByLabel('Modèle de conversation').locator('option')).not.toHaveCount(1);
-  await expect(panel.getByLabel('Voix du compagnon').locator('option')).not.toHaveCount(1);
+  await expect(panel.locator('.connection-status').filter({hasText:'voix'})).toBeVisible();
   await expect(panel.locator('.connection-status').filter({ hasText: 'VoiceStudio' })).toBeVisible();
   await panel.screenshot({ path: 'artifacts/connexions-live.png', fullPage: true });
   expect(consoleErrors).toEqual([]);
@@ -561,7 +584,7 @@ test('imports validés, texte non exécutable et permissions distinctes des fen�
     try { await internals.invoke('discover_language_models', { baseUrl: 'http://127.0.0.1:1234' }); return false; } catch { return true; }
   });
   expect(deniedDiscovery).toBe(true);
-  await expect(panel.locator('.profile-card')).toHaveCount(2);
+  await expect(panel.locator('.profile-card')).toHaveCount(6);
   const deniedRemote = await panel.evaluate(async () => {
     try { await fetch('https://example.com/'); return false; } catch { return true; }
   });
@@ -603,7 +626,7 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
   await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));const address=server.address() as {port:number}; const url='http://127.0.0.1:'+address.port;
   let configured:any;
   try {
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();
     await panel.locator('[name="llm_provider"]').selectOption('zai');await expect(panel.getByLabel('Adresse de base de l’API',{exact:true})).toHaveValue('https://api.z.ai/api/paas/v4');
     await panel.locator('[name="llm_provider"]').selectOption('zai_coding');await expect(panel.getByLabel('Adresse de base de l’API',{exact:true})).toHaveValue('https://api.z.ai/api/coding/paas/v4');
     await panel.locator('[name="llm_provider"]').selectOption('custom_anthropic');
@@ -615,6 +638,8 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
     await panel.locator('[data-refresh="lm"]').click();await expect(panel.locator('#provider-models option')).toHaveCount(1);
     await panel.locator('[name="reasoning"]').selectOption('low');
     await panel.getByRole('button',{name:'Enregistrer ces choix',exact:true}).click();
+    await expect(panel.getByRole('button',{name:'Enregistrer ces choix',exact:true})).toBeDisabled();
+    await expect(panel.locator('body')).not.toHaveClass(/working/);
     let state=await native<any>('get_snapshot');let p=state.profiles[0];configured=p.connections;
     expect(p.connections.llm_provider).toBe('custom_anthropic');expect(JSON.stringify(state)).not.toContain('fixture-token');
     expect(p.connections.response_tokens).toBe(8192);
@@ -633,11 +658,11 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
     // Complete the first send, then change settings through the UI so its
     // asynchronous snapshot refresh cannot race the next message submission.
     await expect(panel.locator('#chat-text')).toHaveValue('');
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();
     await panel.locator('#web-search-mode').selectOption('auto');
     await expect(panel.locator('.toast')).toContainText('Réglage de recherche Internet enregistré.');
     await expect(panel.locator('body')).not.toHaveClass(/working/);
-    await expect.poll(async()=>(await native<any>('get_snapshot')).settings.web_search).toBe('auto');
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles[0].web_search).toBe('auto');
     await panel.getByRole('button',{name:'Conversation',exact:true}).click();
     await panel.getByLabel('Ou écris-lui ici').fill('Aujourd’hui je te raconte ma journée.');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();await expect.poll(()=>number).toBe(2);await expect(panel.locator('#live-reply')).toContainText('Bonjour depuis le cloud.');
     const fallback=await native<any>('get_conversation');expect(fallback.live.web).toBeNull();expect(fallback.live.budget.limit).toBe(64000);expect(fallback.live.budget.response_tokens).toBe(8192);
@@ -645,11 +670,11 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
     await panel.getByRole('button',{name:'Arrêter la réponse',exact:true}).click();interrupted?.();
     await expect.poll(async()=> (await native<any[]>('get_history',{profileId:p.id})).at(-1)?.delivery).toBe('interrupted');
     expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('FIN ANCIENNE');
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();await panel.screenshot({path:'artifacts/providers-options.png',fullPage:true});
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();await panel.screenshot({path:'artifacts/providers-options.png',fullPage:true});
     await stopApplication();await startApplication();
     state=await native<any>('get_snapshot');p=state.profiles[0];expect(p.connections.llm_provider).toBe('custom_anthropic');expect(await native('get_provider_key_status',{connections:p.connections})).toBe(true);
     const db=readFileSync(resolve(dataDirectory,'profiles',p.id,'profile.sqlite3'));expect(db.includes(Buffer.from('fixture-token'))).toBe(false);
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();await panel.getByRole('button',{name:'Retirer la clé',exact:true}).click();await expect(panel.locator('#provider-key-status')).toHaveText('Aucune clé enregistrée pour cette adresse');
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();await panel.getByRole('button',{name:'Retirer la clé',exact:true}).click();await expect(panel.locator('#provider-key-status')).toHaveText('Aucune clé enregistrée pour cette adresse');
     expect(consoleErrors).toEqual([]);
   } finally {
     if (configured && child.exitCode===null) await native('set_provider_key',{connections:configured,key:null}).catch(()=>{});
@@ -895,7 +920,7 @@ test('LM Studio réel : mémoire autonome et aller-retour Dolphin / Gemma sans d
   expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toHaveLength(0);
   const changed=await native<any>('apply_mutation',{mutation:{kind:'create_profile',draft:{name:'Orion essai réel',personality:'Curieux et concis, avec un humour discret. Tu tutoies.',instructions:'Réponds en français.',accent:'teal',connections:{...config,llm_model:gemma,llm_model_key:gemma,reasoning:'off'}}}});
   const b=changed.profiles.find((x:any)=>x.name==='Orion essai réel');
-  const bytes=readFileSync(resolve('public/assets/orion.png'));
+  const bytes=readFileSync(resolve('public/assets/botsy/neutral.png'));
   await native('apply_mutation',{mutation:{kind:'set_avatar',id:b.id,revision:b.revision,base64:bytes.toString('base64')}});
   await native('apply_mutation',{mutation:{kind:'switch_profile',id:b.id}});
   await expect.poll(()=>count(gemma),{timeout:120_000,intervals:[1000,2000]}).toBe(1);
@@ -1050,7 +1075,7 @@ test('pensée : capacités, intensité, sauvegarde par profil et flux final sans
   try {
     const p=(await native<any>('get_snapshot')).profiles[0];
     await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...p.connections,lm_studio_url:'http://127.0.0.1:'+address.port,llm_model:'binary'}}});
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();
     await expect(panel.getByLabel('Pensée')).toBeVisible();
     const choice=panel.getByLabel('Pensée');
     expect(await choice.locator('option').allTextContents()).toEqual(['Réglage de LM Studio · Activée','Désactivée','Activée']);
@@ -1065,7 +1090,7 @@ test('pensée : capacités, intensité, sauvegarde par profil et flux final sans
     await say();expect(requests.at(-1).reasoning_effort).toBe('high');
     await stopApplication();await startApplication();
     expect((await native<any>('get_snapshot')).profiles[0].connections.reasoning).toBe('high');
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();
     await expect(panel.getByLabel('Pensée')).toHaveValue('high');
     await panel.screenshot({path:'artifacts/pensee.png',fullPage:true});
     await panel.getByLabel('Modèle de conversation').selectOption('plain');await save();
@@ -1117,6 +1142,131 @@ test('widget : afficher / masquer synchronisé, brouillon conservé et choix dir
   await widget.mouse.move(-20,-20);
   await expect(widget.locator('.widget-toolbar')).toBeHidden();
   expect(consoleErrors).toEqual([]);
+});
+
+test('avatars: seven images, avatar voice, streamed emotions, neutral fallback and persistence', async () => {
+  const devices = await native<{outputs:{is_default:boolean}[]}>('get_audio_devices');
+  const canSpeak = process.env.SHERKA_TEST_TEXT_ONLY !== '1' && devices.outputs.some(device=>device.is_default);
+  const fixture = JSON.parse(readFileSync('tests/fixtures/services.json', 'utf8'));
+  const models = modelRoutes(['expressive-chat'], 64000);
+  const spoken: string[] = [];
+  const sent: any[] = [];
+  let finish: (() => void) | undefined;
+  const server = createServer((request, response) => {
+    if (models(request, response)) return;
+    if (request.method === 'GET') {
+      const data = fixture[request.url ?? ''];
+      response.writeHead(data ? 200 : 404, {'Content-Type':'application/json'});
+      response.end(JSON.stringify(data ?? {})); return;
+    }
+    let body = ''; request.on('data', bytes => { body += bytes; });
+    request.on('end', () => {
+      const value = JSON.parse(body);
+      if (request.url === '/v1/audio/speech') {
+        spoken.push(value.input);
+        response.writeHead(200, {'Content-Type':'audio/pcm'});
+        response.end(Buffer.alloc(4800)); return;
+      }
+      sent.push(value);
+      response.writeHead(200, {'Content-Type':'text/event-stream'});
+      const emotion = value.messages.at(-1).content;
+      for (const content of ['[[emo', 'tion:', emotion, ']]', 'Bonjour, quelle belle journée !']) {
+        response.write('data: ' + JSON.stringify({choices:[{delta:{content}}]}) + '\n\n');
+      }
+      finish = () => response.end('data: [DONE]\n\n');
+    });
+  });
+  await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
+  const address = server.address(); if (!address || typeof address === 'string') throw new Error('No port');
+  const base = `http://127.0.0.1:${address.port}`;
+  try {
+    let profile = (await native<any>('get_snapshot')).profiles[0];
+    expect(Object.keys(profile.emotion_avatars)).toHaveLength(6);
+    await native('apply_mutation', {mutation:{kind:'connections',id:profile.id,revision:profile.revision,connections:{...profile.connections,lm_studio_url:base,voice_studio_url:base,llm_model:'expressive-chat',tts_engine:'omni',tts_voice:'voice-a',volume:0}}});
+    await native('widget_action', {action:'show_widget'});
+    await panel.locator('#change-avatar').click();
+    await expect(panel.locator('.emotion-slot')).toHaveCount(7);
+    for (const emotion of ['neutral','joy','sadness','anger','surprise','reflection','tenderness']) {
+      await panel.locator(`.emotion-slot[data-emotion="${emotion}"]`).click();
+      const expected = emotion === 'neutral' ? '/assets/sherka.png' : `/assets/sherka/${emotion}.png`;
+      await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src', expected);
+      await expect.poll(()=>panel.locator('.avatar-preview img').evaluate((img:HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+    }
+    await panel.screenshot({path:'artifacts/avatar-editor.png', fullPage:true});
+    await panel.locator('.emotion-slot[data-emotion="joy"]').click();
+    await panel.locator('#avatar-file').setInputFiles({name:'joy.png',mimeType:'image/png',buffer:readFileSync('public/assets/botsy/neutral.png')});
+    await expect(panel.locator('#avatar-save-status')).toHaveText('Nouvelle apparence enregistrée.');
+    const customJoy = await panel.locator('.avatar-preview img').getAttribute('src');
+    expect(customJoy).toMatch(/^data:image\/png;base64,/);
+    await panel.locator('#avatar-voice-edit').click();
+    await panel.locator('#profile-voice-form [name="voice"]').selectOption('voice-b');
+    await panel.getByRole('button', {name:'Associer cette voix',exact:true}).click();
+    await expect(panel.locator('.voice-modal')).toHaveCount(0);
+    await expect(panel.locator('.avatar-modal')).toBeVisible();
+    await panel.locator('.avatar-modal [data-close]').first().click();
+    profile = (await native<any>('get_snapshot')).profiles[0];
+    expect(profile.connections.tts_voice).toBe('voice-b');
+    await panel.locator('[data-nav="profiles"]').click();
+    await expect(panel.locator('[name="tts_voice"]')).toHaveCount(0);
+    await panel.locator('#settings-avatar').click();
+    await expect(panel.locator('.avatar-modal')).toBeVisible();
+    await panel.locator('.avatar-modal [data-close]').first().click();
+    await widget.emulateMedia({reducedMotion:'no-preference'});
+    await widget.evaluate(() => {
+      // Freeze the real opacity animations at their midpoint for stable checks.
+      const observer = new MutationObserver(() => {
+        const old = document.querySelector<HTMLImageElement>('.avatar-outgoing');
+        const current = document.querySelector<HTMLImageElement>('.widget-portrait > img:not(.avatar-outgoing)');
+        if (!old || !current) return;
+        const animations = [old,current].flatMap(image => image.getAnimations().filter(a => a.effect?.getTiming().duration === 500));
+        if (animations.length !== 2) return;
+        observer.disconnect();
+        for (const animation of animations) { animation.pause(); animation.currentTime = 250; }
+        (window as any).__avatarFade = {
+          durations: animations.map(a=>a.effect!.getTiming().duration),
+          opacities: [old,current].map(image=>Number(getComputedStyle(image).opacity)),
+          loaded: [old,current].every(image=>image.complete && image.naturalWidth>0),
+        };
+        (window as any).__resumeAvatarFade = () => animations.forEach(a=>a.play());
+      });
+      observer.observe(document.body,{childList:true,subtree:true});
+    });
+    await native('send_message',{profileId:profile.id,text:'joy',speak:canSpeak});
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('data-emotion','joy');
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('src',customJoy!);
+    await expect.poll(()=>widget.evaluate(()=>(window as any).__avatarFade)).toEqual({durations:[500,500],opacities:[0.5,0.5],loaded:true});
+    await widget.screenshot({path:'artifacts/avatar-crossfade.png',omitBackground:true});
+    await widget.evaluate(()=>(window as any).__resumeAvatarFade());
+    await expect(widget.locator('.avatar-outgoing')).toHaveCount(0);
+    finish!();
+    if (canSpeak) {
+      await expect.poll(()=>spoken.length).toBeGreaterThan(0);
+      expect(spoken.join('')).toBe('Bonjour, quelle belle journée !');
+    } else expect(spoken).toHaveLength(0);
+    expect(sent[0].messages[0].content).toContain('[[emotion:STATE]]');
+    expect((await native<any>('get_conversation')).live.reply).toBe('Bonjour, quelle belle journée !');
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('data-emotion','neutral');
+    expect((await native<any[]>('get_history',{profileId:profile.id})).at(-1).content).not.toContain('[[emotion:');
+    await native('send_message',{profileId:profile.id,text:'anger',speak:false});
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('src','/assets/sherka/anger.png');
+    await native('apply_mutation',{mutation:{kind:'stop_response'}});
+    finish!();
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('data-emotion','neutral');
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('src','/assets/sherka.png');
+    await expect(widget.locator('.avatar-outgoing')).toHaveCount(0);
+    await native('send_message',{profileId:profile.id,text:'unknown',speak:false});
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.reply).toBe('Bonjour, quelle belle journée !');
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('data-emotion','neutral');
+    finish!();
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    await stopApplication(); await startApplication();
+    profile = (await native<any>('get_snapshot')).profiles[0];
+    expect(profile.emotion_avatars.joy).toBe(customJoy);
+    expect(profile.connections.tts_voice).toBe('voice-b');
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('data-emotion','neutral');
+    expect(consoleErrors).toEqual([]);
+  } finally { finish?.(); server.closeAllConnections(); await new Promise<void>(done=>server.close(()=>done())); }
 });
 
 test('voix propres aux compagnons : sélection, requêtes TTS, bascule et redémarrage', async () => {
@@ -1583,7 +1733,7 @@ test('web search: modes, sources, context, restart, failures and cancellation', 
   try {
     await stopApplication();await startApplication();
     let snapshot=await native<any>('get_snapshot');const profile=snapshot.profiles[0];
-    expect(snapshot.settings.web_search).toBe('off');
+    expect(snapshot.profiles[0].web_search ?? snapshot.settings.web_search).toBe('off');
     await native('apply_mutation',{mutation:{kind:'connections',id:profile.id,revision:profile.revision,connections:{...profile.connections,lm_studio_url:url,llm_model:'web-fixture'}}});
     const send=async(text:string)=>{
       await native('send_message',{profileId:profile.id,text,speak:false});
@@ -1593,12 +1743,14 @@ test('web search: modes, sources, context, restart, failures and cancellation', 
     expect((await native<any>('get_conversation')).live.web.error).toContain('désactivée');
     expect((await native<any>('get_conversation')).live.reply).toContain('désactivée');
     expect(prompts).toHaveLength(0);
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();
     await panel.locator('#web-search-mode').selectOption('on_request');
-    await expect.poll(async()=>(await native<any>('get_snapshot')).settings.web_search).toBe('on_request');
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles[0].web_search).toBe('on_request');
+    await expect(panel.locator('body')).not.toHaveClass(/working/);
     await panel.getByRole('button',{name:'Conversation',exact:true}).click();
     await panel.locator('#speak-reply').uncheck();await panel.locator('#search-message').check();
     await panel.locator('#chat-text').fill('Moon distance');await panel.locator('#message-form button[type=submit]').click();
+    await expect.poll(()=>queries).toEqual(['Moon distance']);
     await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
     expect(queries).toEqual(['Moon distance']);
     const last=prompts.at(-1);
@@ -1616,7 +1768,7 @@ test('web search: modes, sources, context, restart, failures and cancellation', 
     const denied=await widget.evaluate(async()=>{try{await (window as any).__TAURI_INTERNALS__.invoke('open_web_source',{profileId:'00000000-0000-0000-0000-000000000000',index:0});return false;}catch{return true;}});
     expect(denied).toBe(true);
     await stopApplication();await startApplication();
-    snapshot=await native<any>('get_snapshot');expect(snapshot.settings.web_search).toBe('on_request');
+    snapshot=await native<any>('get_snapshot');expect(snapshot.profiles[0].web_search).toBe('on_request');
     const history=await native<any[]>('get_history',{profileId:profile.id});expect(history.at(-1).web.sources).toHaveLength(2);
     await native('apply_mutation',{mutation:{kind:'web_search',mode:'auto'}});
     await send('Bonjour');expect(queries).toHaveLength(1);expect(plans).toHaveLength(1);
@@ -1695,6 +1847,7 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
     if(req.headers.authorization!==`Bearer hermes-fixture-${profile}`){res.writeHead(401);res.end('{}');return;}
     const json=(v:any,status=200)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(v));};
     if(route==='/v1/capabilities'){json({platform:'hermes-agent',features:{run_stop:true},endpoints:{session_chat_stream:{path:'/api/sessions/{session_id}/chat/stream'}}});return;}
+    if(req.method==='GET'&&route.startsWith('/v1/runs/')) {json({status:'cancelled'});return;}
     if(req.method==='GET'&&route.startsWith('/api/sessions/')) {json({},sessions.has(profile+route.slice('/api/sessions/'.length))?200:404);return;}
     let raw='';req.on('data',v=>raw+=v);req.on('end',()=>{
       const body=JSON.parse(raw||'{}');requests.push({path,profile,body,auth:req.headers.authorization});
@@ -1717,7 +1870,7 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
   const initial=await native<any>('get_snapshot');const p=initial.profiles[0];let config={...p.connections,llm_provider:'hermes',llm_api_url:base,hermes_profile:'default',llm_model:null};
   try {
     await expect(widget.locator('#hermes-new')).toHaveCount(0);
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();await panel.locator('[name="llm_provider"]').selectOption('hermes');
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();await panel.locator('[name="llm_provider"]').selectOption('hermes');
     await panel.locator('[name="llm_api_url"]').fill(base);await panel.locator('[name="hermes_profile"]').click();
     await expect(panel.locator('[name="llm_model"]')).toHaveCount(0);await expect(panel.locator('[name="response_tokens"]')).toHaveCount(0);
     await panel.locator('#provider-api-key').fill('hermes-fixture-default');await panel.locator('#save-provider-key').click();
@@ -1730,16 +1883,23 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
     await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:current.revision,connections:config}});
     await native('apply_mutation',{mutation:{kind:'web_search',mode:'auto'}});
     await panel.screenshot({path:'artifacts/hermes-settings.png',fullPage:true});
+    await panel.locator('[data-nav="profiles"]').click();
+    await panel.locator('#change-avatar').click();
+    await expect(panel.locator('#avatar-hermes')).toBeVisible();
+    await expect(panel.locator('.emotion-slot:disabled')).toHaveCount(6);
+    await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src','/assets/sherka.png');
+    await expect(panel.locator('#avatar-voice-edit')).toBeEnabled();
+    await panel.locator('.avatar-modal [data-close]').first().click();
     await panel.getByRole('button',{name:'Conversation',exact:true}).click();if(!canSpeak) await panel.locator('#speak-reply').uncheck();
     const send=async(text:string)=>{await panel.locator('#chat-text').fill(text);await panel.getByRole('button',{name:'Envoyer',exact:true}).click();};
     await send('Retiens que je raconte ma journée.');await expect(panel.locator('#conversation-history')).toContainText('Bonjour maman, été fluide.');
     const first=requests.find(r=>r.path.endsWith('/chat/stream'))!;expect(first.body).toEqual({message:'Retiens que je raconte ma journée.'});
-    const live=await native<any>('get_conversation');expect(live.live.budget).toBeNull();expect(live.live.web).toBeNull();
+    const live=await native<any>('get_conversation');expect(live.live.budget).toBeNull();expect(live.live.web).toBeNull();expect(live.live.emotion).toBe('neutral');
     expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('SECRET');
     if(canSpeak){await expect.poll(()=>requests.filter(r=>r.path==='/v1/audio/speech').length).toBeGreaterThan(0);for(const r of requests.filter(r=>r.path==='/v1/audio/speech')){expect(r.auth).toBeUndefined();expect(r.body.input).not.toContain('SECRET');}}
     await send('suite');await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).length).toBe(2);await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
     expect(requests.filter(r=>r.path.endsWith('/chat/stream'))[1].path).toBe(first.path);
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();
     await native('send_message',{profileId:p.id,text:'confirmer',speak:false});await expect(panel.locator('#hermes-approval')).toBeVisible();await expect(panel.locator('#hermes-approval script')).toHaveCount(0);await panel.getByRole('button',{name:'Autoriser une fois',exact:true}).click();await expect(panel.locator('#hermes-approval')).toBeHidden();
     await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
     await send('attendre');await expect(panel.locator('#live-reply')).toContainText('Réponse en cours.');
@@ -1752,7 +1912,7 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
     expect(sessions.size).toBe(2);
     await send('/new');await expect.poll(async()=>(await native<any[]>('get_history',{profileId:p.id})).length).toBe(0);
     await expect(panel.locator('#chat-text')).toHaveValue('');
-    await panel.getByRole('button',{name:'Réglages',exact:true}).click();
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();
     await panel.locator('[name="hermes_profile"]').fill('default');await panel.locator('[name="hermes_profile"]').press('Tab');
     await expect(panel.locator('#provider-key-status')).toContainText('Clé protégée');
     await panel.locator('#save-connections').click();await expect(panel.locator('#connection-dirty')).toHaveText('Réglages propres à ce compagnon');
@@ -1763,6 +1923,118 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
     expect(requests.filter(r=>r.path.endsWith('/chat/stream')).every(r=>Object.keys(r.body).join()==='message')).toBe(true);
   } finally {
     for(const profile of ['default','maman']) await native('set_provider_key',{connections:{...config,hermes_profile:profile},key:null}).catch(()=>{});
+    server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));
+  }
+});
+
+test('companion settings: starter pack, provider placement, independent web choices and saved images', async () => {
+  const original = await native<any>('get_snapshot');
+  expect(original.profiles.map((p:any)=>p.name)).toEqual(['Sherka','Botsy','Candis','Kit','Minerva']);
+  await panel.locator('[data-nav="profiles"]').click();
+  for (const name of ['Botsy','Candis','Kit','Minerva']) {
+    const profile = original.profiles.find((p:any)=>p.name===name);
+    await panel.locator(`[data-profile="${profile.id}"]`).click();
+    await expect(panel.locator('.hero-portrait')).toHaveAttribute('src',`/assets/${name.toLowerCase()}/neutral.png`);
+    await expect(panel.locator('[name="llm_provider"]')).toBeVisible();
+    await expect(panel.locator('[name="stt_model"]')).toBeVisible();
+    await panel.locator('#change-avatar').click();
+    await expect(panel.locator('.emotion-slot')).toHaveCount(7);
+    await panel.locator('.emotion-slot[data-emotion="anger"]').click();
+    await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src',`/assets/${name.toLowerCase()}/anger.png`);
+    await expect.poll(()=>panel.locator('.avatar-preview img').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+    await panel.locator('.avatar-modal [data-close]').first().click();
+  }
+  await expect(panel.locator('.personality-preview')).toContainText('colérique');
+  await panel.locator('[name="speed"]').fill('1.15');
+  await panel.locator('#web-search-mode').selectOption('auto');
+  await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((p:any)=>p.name==='Minerva').web_search).toBe('auto');
+  await expect(panel.locator('body')).not.toHaveClass(/working/);
+  await expect(panel.locator('[name="speed"]')).toHaveValue('1.15');
+  await panel.locator('#save-connections').click();
+  await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((p:any)=>p.name==='Minerva').connections.speed).toBe(1.15);
+  await expect(panel.locator('body')).not.toHaveClass(/working/);
+  const kit=original.profiles.find((p:any)=>p.name==='Kit');
+  await panel.locator(`[data-profile="${kit.id}"]`).click();
+  await expect(panel.locator('.personality-preview')).toContainText('pince-sans-rire');
+  await panel.locator('#web-search-mode').selectOption('off');
+  await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((p:any)=>p.name==='Kit').web_search).toBe('off');
+  await expect(panel.locator('body')).not.toHaveClass(/working/);
+  await panel.screenshot({path:'artifacts/companion-settings.png',fullPage:true});
+  await panel.locator('[data-nav="settings"]').click();
+  await expect(panel.locator('[name="llm_provider"], [name="stt_model"], #web-search-mode')).toHaveCount(0);
+  await expect(panel.locator('#interface-language')).toBeVisible();
+  await stopApplication(); await startApplication();
+  const saved=await native<any>('get_snapshot');
+  expect(saved.profiles).toHaveLength(5);
+  expect(saved.profiles.find((p:any)=>p.name==='Kit').web_search).toBe('off');
+  expect(saved.profiles.find((p:any)=>p.name==='Minerva').web_search).toBe('auto');
+  expect(consoleErrors).toEqual([]);
+});
+
+test('hermes stop: scoped command, server confirmation, retry and no overlapping work', async () => {
+  let next=0, stopCalls=0, polls=0, reject=false, rejectChat=true;
+  const requests:string[]=[];
+  const runs = new Map<string,{status:string;response:ServerResponse;polls:number}>();
+  const server=createServer((req,res)=>{
+    const route=req.url!;
+    const json=(body:any,status=200)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
+    if(route==='/v1/capabilities') {json({platform:'hermes-agent',features:{run_stop:true},endpoints:{session_chat_stream:{path:'/api/sessions/{session_id}/chat/stream'}}});return;}
+    if(req.method==='GET'&&route.startsWith('/api/sessions/')) {json({});return;}
+    const match=route.match(/^\/v1\/runs\/(run_\d+)(\/stop)?$/);
+    if(match) {
+      const run=runs.get(match[1])!;
+      if(match[2]) {stopCalls++;if(reject){json({},503);return;}run.status='stopping';json({status:'stopping'});return;}
+      polls++;run.polls++;
+      if(run.status==='stopping'&&run.polls>=2){run.status='cancelled';run.response.end();}
+      json({run_id:match[1],status:run.status});return;
+    }
+    let raw='';req.on('data',v=>raw+=v);req.on('end',()=>{
+      if(route.endsWith('/chat/stream')) {
+        if(rejectChat) {json({error:'Unauthorized'},401);return;}
+        const body=JSON.parse(raw);requests.push(body.message);
+        const id='run_'+(++next);runs.set(id,{status:'running',response:res,polls:0});
+        res.writeHead(200,{'Content-Type':'text/event-stream'});
+        res.write(`event: run.started\ndata: ${JSON.stringify({run_id:id})}\n\nevent: assistant.delta\ndata: ${JSON.stringify({run_id:id,delta:'Je travaille.'})}\n\n`);
+        return;
+      }
+      json({},404);
+    });
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
+  const p=(await native<any>('get_snapshot')).profiles[0];
+  const config={...p.connections,llm_provider:'hermes',llm_api_url:`http://127.0.0.1:${(server.address() as {port:number}).port}`,hermes_profile:'default',llm_model:null};
+  try {
+    await native('set_provider_key',{connections:config,key:'hermes-stop-fixture'});
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:config}});
+    await native('apply_mutation',{mutation:{kind:'web_search',mode:'auto'}});
+    await native('send_message',{profileId:p.id,text:'demande refusée',speak:false});
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.error).toContain('401');
+    rejectChat=false;
+    await native('send_message',{profileId:p.id,text:'première tâche',speak:false});
+    await expect.poll(()=>next).toBe(1);
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.reply).toBe('Je travaille.');
+    await native('widget_action',{action:'show_widget'});
+    await expect(widget.locator('.hermes-stop-button')).toBeVisible();
+    await widget.locator('.hermes-stop-button').click();
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.notice).toBe('Arrêt Hermes confirmé.');
+    expect(stopCalls).toBe(1);expect(polls).toBeGreaterThanOrEqual(2);
+    await native('send_message',{profileId:p.id,text:'deuxième tâche',speak:false});
+    await expect.poll(()=>next).toBe(2);
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.reply).toBe('Je travaille.');
+    reject=true;
+    const error=await native('send_message',{profileId:p.id,text:'/stop',speak:false}).catch(String);
+    expect(error).toContain('n’est pas confirmé');
+    await native('send_message',{profileId:p.id,text:'ne doit pas démarrer',speak:false});
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    expect(next).toBe(2);
+    reject=false;
+    await native('send_message',{profileId:p.id,text:'/stop',speak:false});
+    expect(runs.get('run_2')?.status).toBe('cancelled');
+    expect(requests).toEqual(['première tâche','deuxième tâche']);
+    expect((await native<any>('get_conversation')).live.web).toBeNull();
+    expect(consoleErrors).toEqual([]);
+  } finally {
+    await native('set_provider_key',{connections:config,key:null}).catch(()=>{});
     server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));
   }
 });

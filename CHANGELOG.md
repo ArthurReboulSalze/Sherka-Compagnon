@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0 — 2026-10-18
+
+- Add Botsy, Candis, Kit and Minerva alongside Sherka, with localized personalities and seven supplied expressions each; retire the Orion starter example.
+- Group provider, model, reasoning, context, transcription and per-companion Internet search controls under Companions.
+- Associate each character's VoiceStudio voice and images in the Avatar & voice editor.
+- Select neutral, joy, sadness, anger, surprise, reflection or tenderness through the existing reply stream, without an extra model request. Remove expression metadata before display, speech and history.
+- Crossfade images over half a second after loading, including the return to neutral. Coalesce rapid changes and respect reduced-motion preferences.
+- Preserve per-character image overrides through restart, duplication and profile import/export (schema 6, export format 2; legacy imports remain supported).
+- Replace application branding with the orbital-star logo, independently of companion portraits, and refresh the English README and screenshot.
+- Add a visible Hermes /stop control and typed shortcut, confirm remote task termination and keep failed stops retryable without overlapping work. The server remains running.
+- Keep local search, memory, personality and expressions bypassed for Hermes. Its avatar remains neutral.
+
 ## 0.7.1 — 2026-10-16
 
 - Give the application its own blue-haired, starry-eyed logo across Windows icons, the tray, sidebar and favicon; companion portraits remain independent.

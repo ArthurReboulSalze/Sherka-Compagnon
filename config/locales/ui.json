@@ -5726,5 +5726,357 @@
     "python -c \"import secrets; print(secrets.token_urlsafe(32))\"",
     "python -c \"import secrets; print(secrets.token_urlsafe(32))\"",
     "python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+  ],
+  "{0} Avatar et voix": [
+    "{0} Avatar & voice",
+    "{0} Avatar y voz",
+    "{0} Avatar e voce",
+    "{0} Avatar und Stimme",
+    "{0} 形象与声音",
+    "{0} アバターと声"
+  ],
+  "{0} Choisir une image": [
+    "{0} Choose an image",
+    "{0} Elegir una imagen",
+    "{0} Scegli un’immagine",
+    "{0} Bild auswählen",
+    "{0} 选择图片",
+    "{0} 画像を選ぶ"
+  ],
+  "À personnaliser": [
+    "Not set",
+    "Sin configurar",
+    "Da impostare",
+    "Nicht festgelegt",
+    "待设置",
+    "未設定"
+  ],
+  "Agacement, indignation, frustration.": [
+    "Annoyance, indignation, frustration.",
+    "Molestia, indignación, frustración.",
+    "Fastidio, indignazione, frustrazione.",
+    "Ärger, Empörung, Frustration.",
+    "恼怒、愤慨、挫败。",
+    "苛立ち、憤り、もどかしさ。"
+  ],
+  "Ajoute tes images dans « Avatar et voix ». L’expression suit le ton de la réponse.": [
+    "Add your images in Avatar & voice. The expression follows the tone of the reply.",
+    "Añade tus imágenes en Avatar y voz. La expresión sigue el tono de la respuesta.",
+    "Aggiungi le tue immagini in Avatar e voce. L’espressione segue il tono della risposta.",
+    "Füge deine Bilder unter Avatar und Stimme hinzu. Der Ausdruck folgt dem Ton der Antwort.",
+    "在“形象与声音”中添加图片。表情会随回复的语气变化。",
+    "「アバターと声」で画像を追加できます。返答の調子に合わせて表情が変わります。"
+  ],
+  "Amour, affection.": [
+    "Love, affection.",
+    "Amor, cariño.",
+    "Amore, affetto.",
+    "Liebe, Zuneigung.",
+    "爱与温情。",
+    "愛情、親愛。"
+  ],
+  "Aperçu de l’avatar": [
+    "Avatar preview",
+    "Vista previa del avatar",
+    "Anteprima dell’avatar",
+    "Avatar-Vorschau",
+    "形象预览",
+    "アバターのプレビュー"
+  ],
+  "Avatar et voix": [
+    "Avatar & voice",
+    "Avatar y voz",
+    "Avatar e voce",
+    "Avatar und Stimme",
+    "形象与声音",
+    "アバターと声"
+  ],
+  "Bonheur, enthousiasme, amusement, satisfaction.": [
+    "Happiness, enthusiasm, amusement, satisfaction.",
+    "Felicidad, entusiasmo, diversión, satisfacción.",
+    "Felicità, entusiasmo, divertimento, soddisfazione.",
+    "Glück, Begeisterung, Vergnügen, Zufriedenheit.",
+    "快乐、热情、愉悦、满足。",
+    "幸福、熱意、楽しさ、満足。"
+  ],
+  "Ce fichier dépasse la limite de 48 Mio.": [
+    "This file exceeds the 48 MiB limit.",
+    "Este archivo supera el límite de 48 MiB.",
+    "Questo file supera il limite di 48 MiB.",
+    "Diese Datei überschreitet die Grenze von 48 MiB.",
+    "此文件超过 48 MiB 限制。",
+    "このファイルは上限の 48 MiB を超えています。"
+  ],
+  "Choisis les modèles de chaque compagnon. La voix se choisit dans « Avatar et voix ».": [
+    "Choose each companion’s models. Choose its voice in Avatar & voice.",
+    "Elige los modelos de cada compañero. La voz se elige en Avatar y voz.",
+    "Scegli i modelli di ogni compagno. La voce si sceglie in Avatar e voce.",
+    "Wähle die Modelle jedes Begleiters. Die Stimme wählst du unter Avatar und Stimme.",
+    "为每位伙伴选择模型。声音请在“形象与声音”中选择。",
+    "各コンパニオンのモデルを選びます。声は「アバターと声」で選べます。"
+  ],
+  "Colère": [
+    "Anger",
+    "Enfado",
+    "Rabbia",
+    "Wut",
+    "愤怒",
+    "怒り"
+  ],
+  "Doute, curiosité, hésitation, perplexité.": [
+    "Doubt, curiosity, hesitation, puzzlement.",
+    "Duda, curiosidad, vacilación, perplejidad.",
+    "Dubbio, curiosità, esitazione, perplessità.",
+    "Zweifel, Neugier, Zögern, Ratlosigkeit.",
+    "疑问、好奇、犹豫、困惑。",
+    "疑い、好奇心、ためらい、戸惑い。"
+  ],
+  "Émotions de l’avatar": [
+    "Avatar emotions",
+    "Emociones del avatar",
+    "Emozioni dell’avatar",
+    "Avatar-Emotionen",
+    "形象情绪",
+    "アバターの感情"
+  ],
+  "Enregistre ces choix avant de modifier l’avatar.": [
+    "Save these choices before editing the avatar.",
+    "Guarda estas opciones antes de editar el avatar.",
+    "Salva queste scelte prima di modificare l’avatar.",
+    "Speichere diese Auswahl, bevor du den Avatar bearbeitest.",
+    "编辑形象前请保存这些选择。",
+    "アバターを編集する前に設定を保存してください。"
+  ],
+  "Étonnement, découverte inattendue.": [
+    "Amazement, unexpected discovery.",
+    "Asombro, descubrimiento inesperado.",
+    "Stupore, scoperta inattesa.",
+    "Staunen, unerwartete Entdeckung.",
+    "惊讶、意外发现。",
+    "驚き、予期しない発見。"
+  ],
+  "Hermes utilise uniquement l’image neutre. Les autres images restent enregistrées.": [
+    "Hermes only uses the neutral image. Your other images stay saved.",
+    "Hermes solo usa la imagen neutra. Las demás imágenes quedan guardadas.",
+    "Hermes usa solo l’immagine neutra. Le altre immagini restano salvate.",
+    "Hermes verwendet nur das neutrale Bild. Die anderen Bilder bleiben gespeichert.",
+    "Hermes 仅使用中性图片。其他图片仍会保留。",
+    "Hermes は通常の画像のみを使います。他の画像も保存されたままです。"
+  ],
+  "Image ajoutée": [
+    "Image added",
+    "Imagen añadida",
+    "Immagine aggiunta",
+    "Bild hinzugefügt",
+    "已添加图片",
+    "画像あり"
+  ],
+  "Image de base": [
+    "Base image",
+    "Imagen base",
+    "Immagine di base",
+    "Grundbild",
+    "基础图片",
+    "基本の画像"
+  ],
+  "Image de départ": [
+    "Original image",
+    "Imagen original",
+    "Immagine originale",
+    "Ursprüngliches Bild",
+    "原始图片",
+    "元の画像"
+  ],
+  "Image neutre utilisée": [
+    "Using neutral image",
+    "Usando imagen neutra",
+    "Immagine neutra in uso",
+    "Neutrales Bild wird verwendet",
+    "使用中性图片",
+    "通常の画像を使用中"
+  ],
+  "Image personnalisée": [
+    "Custom image",
+    "Imagen personalizada",
+    "Immagine personalizzata",
+    "Eigenes Bild",
+    "自定义图片",
+    "カスタム画像"
+  ],
+  "Joie": [
+    "Joy",
+    "Alegría",
+    "Gioia",
+    "Freude",
+    "喜悦",
+    "喜び"
+  ],
+  "La voix est associée à l’avatar de ce compagnon.": [
+    "The voice belongs to this companion’s avatar.",
+    "La voz está asociada al avatar de este compañero.",
+    "La voce è associata all’avatar di questo compagno.",
+    "Die Stimme gehört zum Avatar dieses Begleiters.",
+    "声音与此伙伴的形象关联。",
+    "声はこのコンパニオンのアバターに紐付いています。"
+  ],
+  "Neutre": [
+    "Neutral",
+    "Neutro",
+    "Neutro",
+    "Neutral",
+    "中性",
+    "通常"
+  ],
+  "Peine, mélancolie, empathie.": [
+    "Sorrow, melancholy, empathy.",
+    "Pena, melancolía, empatía.",
+    "Dolore, malinconia, empatia.",
+    "Kummer, Melancholie, Mitgefühl.",
+    "悲伤、忧郁、共情。",
+    "悲しみ、憂い、共感。"
+  ],
+  "PNG ou WebP, 10 Mio maximum. Sans image dédiée, l’avatar utilise son image neutre.": [
+    "PNG or WebP, up to 10 MiB. Without a dedicated image, the avatar uses its neutral image.",
+    "PNG o WebP, hasta 10 MiB. Sin imagen específica, el avatar usa su imagen neutra.",
+    "PNG o WebP, massimo 10 MiB. Senza un’immagine dedicata, l’avatar usa quella neutra.",
+    "PNG oder WebP, bis zu 10 MiB. Ohne eigenes Bild verwendet der Avatar sein neutrales Bild.",
+    "PNG 或 WebP，最大 10 MiB。未设置专用图片时，形象将使用中性图片。",
+    "PNG または WebP、上限 10 MiB。専用画像がない場合は通常の画像を使います。"
+  ],
+  "Réflexion": [
+    "Reflection",
+    "Reflexión",
+    "Riflessione",
+    "Nachdenken",
+    "思考",
+    "思案"
+  ],
+  "Réponse normale, information, discussion courante.": [
+    "Normal replies, information, everyday conversation.",
+    "Respuestas normales, información, conversación cotidiana.",
+    "Risposte normali, informazioni, conversazione quotidiana.",
+    "Normale Antworten, Informationen, alltägliche Gespräche.",
+    "常规回复、信息、日常交谈。",
+    "通常の返答、情報、日常会話。"
+  ],
+  "Sept émotions, ton avatar.": [
+    "Seven emotions, your avatar.",
+    "Siete emociones, tu avatar.",
+    "Sette emozioni, il tuo avatar.",
+    "Sieben Emotionen, dein Avatar.",
+    "七种情绪，你的形象。",
+    "7 つの感情、あなたのアバター。"
+  ],
+  "Surprise": [
+    "Surprise",
+    "Sorpresa",
+    "Sorpresa",
+    "Überraschung",
+    "惊讶",
+    "驚き"
+  ],
+  "Tendresse": [
+    "Tenderness",
+    "Ternura",
+    "Tenerezza",
+    "Zärtlichkeit",
+    "温柔",
+    "愛おしさ"
+  ],
+  "Tristesse": [
+    "Sadness",
+    "Tristeza",
+    "Tristezza",
+    "Traurigkeit",
+    "悲伤",
+    "悲しみ"
+  ],
+  "Une image par émotion, une voix pour cet avatar.": [
+    "One image per emotion, one voice for this avatar.",
+    "Una imagen por emoción, una voz para este avatar.",
+    "Un’immagine per emozione, una voce per questo avatar.",
+    "Ein Bild pro Emotion, eine Stimme für diesen Avatar.",
+    "每种情绪一张图片，此形象一个声音。",
+    "感情ごとに 1 枚の画像、このアバターに 1 つの声。"
+  ],
+  "Voix VoiceStudio": [
+    "VoiceStudio voice",
+    "Voz de VoiceStudio",
+    "Voce VoiceStudio",
+    "VoiceStudio-Stimme",
+    "VoiceStudio 声音",
+    "VoiceStudio の声"
+  ],
+  "Arrêter Hermes (/stop)": [
+    "Stop Hermes (/stop)",
+    "Detener Hermes (/stop)",
+    "Ferma Hermes (/stop)",
+    "Hermes stoppen (/stop)",
+    "停止 Hermes (/stop)",
+    "Hermes を停止 (/stop)"
+  ],
+  "Arrêt Hermes confirmé.": [
+    "Hermes stop confirmed.",
+    "Parada de Hermes confirmada.",
+    "Arresto di Hermes confermato.",
+    "Hermes-Stopp bestätigt.",
+    "已确认 Hermes 停止。",
+    "Hermes の停止を確認しました。"
+  ],
+  "L’arrêt Hermes n’est pas confirmé. Réessaie /stop avant de poursuivre.": [
+    "Hermes has not confirmed stopping. Retry /stop before continuing.",
+    "Hermes no ha confirmado la parada. Reintenta /stop antes de continuar.",
+    "Hermes non ha confermato l’arresto. Riprova /stop prima di continuare.",
+    "Hermes hat den Stopp nicht bestätigt. Versuche /stop erneut, bevor du fortfährst.",
+    "Hermes 尚未确认停止。请重试 /stop 后再继续。",
+    "Hermes の停止を確認できません。続ける前に /stop を再試行してください。"
+  ],
+  "Hermes n’a pas fourni l’identifiant de la tâche. Son arrêt ne peut pas être confirmé.": [
+    "Hermes did not provide a task ID. Its stop cannot be confirmed.",
+    "Hermes no proporcionó el identificador de la tarea. No se puede confirmar su parada.",
+    "Hermes non ha fornito l’identificativo della richiesta. Non è possibile confermarne l’arresto.",
+    "Hermes hat keine Aufgaben-ID geliefert. Der Stopp kann nicht bestätigt werden.",
+    "Hermes 未提供任务标识，无法确认任务已停止。",
+    "Hermes からタスク ID が届いていないため、停止を確認できません。"
+  ],
+  "{0} Arrêter Hermes (/stop)": [
+    "{0} Stop Hermes (/stop)",
+    "{0} Detener Hermes (/stop)",
+    "{0} Ferma Hermes (/stop)",
+    "{0} Hermes stoppen (/stop)",
+    "{0} 停止 Hermes (/stop)",
+    "{0} Hermes を停止 (/stop)"
+  ],
+  "{0} L’arrêt Hermes n’est pas confirmé. Réessaie /stop avant de poursuivre.": [
+    "{0} Hermes has not confirmed stopping. Retry /stop before continuing.",
+    "{0} Hermes no ha confirmado la parada. Reintenta /stop antes de continuar.",
+    "{0} Hermes non ha confermato l’arresto. Riprova /stop prima di continuare.",
+    "{0} Hermes hat den Stopp nicht bestätigt. Versuche /stop erneut, bevor du fortfährst.",
+    "{0} Hermes 尚未确认停止。请重试 /stop 后再继续。",
+    "{0} Hermes の停止を確認できません。続ける前に /stop を再試行してください。"
+  ],
+  "Arrêt Hermes demandé…": [
+    "Hermes stop requested…",
+    "Parada de Hermes solicitada…",
+    "Arresto di Hermes richiesto…",
+    "Hermes-Stopp angefordert…",
+    "已请求停止 Hermes…",
+    "Hermes に停止を要求しました…"
+  ],
+  "Enregistre la clé API du profil Hermes dans Compagnons.": [
+    "Save the Hermes profile’s API key in Companions.",
+    "Guarda la clave API del perfil de Hermes en Compañeros.",
+    "Salva la chiave API del profilo Hermes nelle Compagni.",
+    "Speichere den API-Schlüssel des Hermes-Profils in den Begleiter.",
+    "请在伙伴中保存该 Hermes 配置档的 API 密钥。",
+    "コンパニオンで Hermes プロファイルの API キーを保存してください。"
+  ],
+  "Choisis un modèle de conversation dans Compagnons.": [
+    "Choose a conversation model in Companions.",
+    "Elige un modelo de conversación en Compañeros.",
+    "Scegli un modello di conversazione nelle impostazioni.",
+    "Wähle ein Gesprächsmodell in den Begleiter.",
+    "请在伙伴中选择对话模型。",
+    "コンパニオンで会話モデルを選択してください。"
   ]
 }

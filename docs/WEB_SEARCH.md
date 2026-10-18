@@ -4,7 +4,7 @@ Sherka offers optional DuckDuckGo search, with no account or API key. Search pla
 
 ## Choose when to search
 
-Open **Settings → Web search → Internet access**:
+Open **Companions**, select a character, then **Web search → Internet access**. Each companion keeps its own choice. Profiles without an individual choice inherit the previous application setting until edited. Hermes hides these controls and always bypasses local search; its server owns web tools.
 
 - **Disabled** is the default. Sherka does not send search requests.
 - **On request** searches when you check **Search the web for this message** in Conversation, type `/web your question`, or explicitly ask to search the web. Voice requests work too; in French, say “cherche sur Internet…”.

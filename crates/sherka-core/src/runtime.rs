@@ -25,7 +25,7 @@ pub struct Snapshot {
 pub struct CompanionCapabilities {
     pub local_personality: bool,
     pub local_memory: bool,
-    /// Contract for future emotional avatars; listening/speaking indicators
+    /// Emotional avatars are local companions only; listening/speaking indicators
     /// remain available for remote agents.
     pub local_emotions: bool,
 }
@@ -67,6 +67,25 @@ impl Companion {
                     .is_none())
         {
             settings.default_companion = None;
+        }
+        if !settings.companion_pack_initialized {
+            use crate::avatar::AvatarPreset;
+            for preset in [
+                AvatarPreset::Botsy,
+                AvatarPreset::Candis,
+                AvatarPreset::Kit,
+                AvatarPreset::Minerva,
+            ] {
+                if !profiles.iter().any(|p| {
+                    p.details.avatar_preset == Some(preset) || p.details.name == preset.name()
+                }) {
+                    profiles.push(store.create(
+                        crate::presets::companion(preset, settings.ui_language),
+                        None,
+                    )?);
+                }
+            }
+            settings.companion_pack_initialized = true;
         }
         let active = settings
             .active_profile
@@ -207,17 +226,35 @@ impl Companion {
         self.settings.audio.clone()
     }
 
-    pub fn web_search_mode(&self) -> crate::web::SearchMode {
-        self.settings.web_search
+    pub fn web_search_mode(&self) -> Result<crate::web::SearchMode> {
+        let profile = self.store.profile(self.session.snapshot().profile_id)?;
+        Ok(if profile.details.connections.llm_provider.is_agent() {
+            crate::web::SearchMode::Off
+        } else {
+            profile
+                .details
+                .web_search
+                .unwrap_or(self.settings.web_search)
+        })
     }
 
     pub fn set_web_search_mode(&mut self, mode: crate::web::SearchMode) -> Result<()> {
-        self.stop_response()?;
-        let mut settings = self.settings.clone();
-        settings.web_search = mode;
-        self.store.save_settings(&settings)?;
-        self.settings = settings;
-        Ok(())
+        let profile = self.store.profile(self.session.snapshot().profile_id)?;
+        self.set_profile_web_search(profile.id, profile.revision, mode)
+    }
+
+    pub fn set_profile_web_search(
+        &mut self,
+        id: Uuid,
+        revision: i64,
+        mode: crate::web::SearchMode,
+    ) -> Result<()> {
+        let mut draft = self.store.profile(id)?.details;
+        draft.web_search = Some(mode);
+        if self.session.snapshot().profile_id == id {
+            self.stop_response()?;
+        }
+        self.update_profile(id, revision, draft)
     }
 
     pub fn set_audio_settings(&mut self, audio: crate::voice::AudioSettings) -> Result<()> {
@@ -230,6 +267,7 @@ impl Companion {
     }
 
     pub fn stop_response(&mut self) -> Result<()> {
+        self.live.emotion = Default::default();
         self.live.hermes_approval = None;
         self.memory_job.cancel();
         // Invalidate first, even if disk persistence fails. Late workers cannot
@@ -286,6 +324,7 @@ impl Companion {
             self.store.save_web_sources(tag, report)?;
         }
         self.session.complete(tag)?;
+        self.live.emotion = Default::default();
         self.live.hermes_approval = None;
         self.live.tag = None;
         self.live.transcript.clear();

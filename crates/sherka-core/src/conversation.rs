@@ -10,6 +10,7 @@ use tokio::sync::Notify;
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct LiveConversation {
+    pub emotion: crate::avatar::Emotion,
     pub hermes_approval: Option<crate::hermes::Approval>,
     pub web: Option<crate::web::Report>,
     pub tag: Option<OperationTag>,
@@ -45,6 +46,7 @@ pub struct ContextBudget {
 }
 #[derive(Debug, Clone)]
 pub struct PreparedChat {
+    pub avatar_emotions: bool,
     pub messages: Vec<ChatMessage>,
     pub budget: ContextBudget,
     pub web: Option<crate::web::Report>,
@@ -144,10 +146,25 @@ pub fn prepare_context_with_web(
     history: &[Message],
     user: &str,
     recall: &crate::memory::Recall,
+    budget: ContextBudget,
+    receipt: Option<&str>,
+    web: Option<crate::web::Report>,
+) -> Result<PreparedChat> {
+    prepare_context_with_avatar(profile, history, user, recall, budget, receipt, web, false)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn prepare_context_with_avatar(
+    profile: &ProfileDraft,
+    history: &[Message],
+    user: &str,
+    recall: &crate::memory::Recall,
     mut budget: ContextBudget,
     receipt: Option<&str>,
     mut web: Option<crate::web::Report>,
+    avatar_emotions: bool,
 ) -> Result<PreparedChat> {
+    let mut avatar_emotions = avatar_emotions && !profile.connections.llm_provider.is_agent();
     if user.trim().is_empty() || user.len() > 128_000 {
         return Err(Error::Validation(
             "Écris un message de 1 à 128 000 octets.".into(),
@@ -176,6 +193,12 @@ pub fn prepare_context_with_web(
         } else { "\nWeb receipt: search completed. Only evidence actually included below may be used; these are not full page readings." });
     }
     let max_input = budget.limit as usize - budget.response_tokens as usize - budget.safety_tokens;
+    // Expression metadata is optional. It must never displace the user's
+    // message or make a previously valid small-context conversation fail.
+    avatar_emotions &= system.len() + crate::avatar::PROMPT.len() + user.len() + 80 <= max_input;
+    if avatar_emotions {
+        system.push_str(crate::avatar::PROMPT);
+    }
     let mandatory = system.len() + user.len() + 80;
     if mandatory > max_input {
         return Err(Error::Validation(format!(
@@ -269,6 +292,7 @@ pub fn prepare_context_with_web(
     budget.input_estimate = estimate(&result);
     debug_assert!(budget.input_estimate <= max_input);
     Ok(PreparedChat {
+        avatar_emotions,
         messages: result,
         budget,
         web,

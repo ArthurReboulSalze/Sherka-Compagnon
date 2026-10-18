@@ -24,8 +24,11 @@ readme = """Sherka Companion — Windows x64, no installation
 
 Extract the entire ZIP into a writable folder and run sherka-compagnon.exe.
 WebView2, the Visual C++ x64 runtime and VoiceStudio are required for voice.
-Use LM Studio locally, or connect your own remote API provider in Settings.
+Use LM Studio locally, or connect your own remote API provider in Companions.
+Sherka, Botsy, Candis, Kit and Minerva include seven expressions with smooth fades.
+Set each character's images and VoiceStudio voice in Avatar & voice.
 Hermes mode connects to your agent's own profiles, memory and tools.
+The /stop shortcut stops its current task, not the Hermes server.
 Setup guide: https://github.com/ArthurReboulSalze/Sherka-Compagnon/blob/main/docs/HERMES.md
 Start your local model server; Sherka starts installed VoiceStudio when needed.
 Choose one of seven interface languages in Settings. The original Sherka's
