@@ -24,6 +24,7 @@ pub struct Voice {
     pending: Arc<Mutex<CancellationToken>>,
     hermes_gate: Arc<AsyncMutex<()>>,
     hermes_run: Arc<Mutex<Option<(OperationTag, sherka_core::hermes::HermesRun)>>>,
+    diagnostics: Arc<crate::audio_diagnostics::AudioDiagnostics>,
 }
 
 #[derive(Clone, Serialize)]
@@ -70,7 +71,7 @@ where
 }
 
 impl Voice {
-    pub fn setup(app: AppHandle, shared: Shared) -> Self {
+    pub fn setup(app: AppHandle, shared: Shared, directory: &std::path::Path) -> Self {
         let (tx, rx) = mpsc::channel(256);
         let controller = AudioController::new(tx);
         let voice = Self {
@@ -82,9 +83,18 @@ impl Voice {
             pending: Arc::new(Mutex::new(CancellationToken::new())),
             hermes_gate: Arc::new(AsyncMutex::new(())),
             hermes_run: Arc::new(Mutex::new(None)),
+            diagnostics: Arc::new(crate::audio_diagnostics::AudioDiagnostics::new(directory)),
         };
         tauri::async_runtime::spawn(audio_events(app, shared, voice.clone(), rx));
         voice
+    }
+    fn diagnose(&self, shared: &Shared, event: &'static str, audio_error: Option<&str>) {
+        let (reply, heard) = shared
+            .0
+            .lock()
+            .map(|c| (c.live.reply.chars().count(), c.live.heard.chars().count()))
+            .unwrap_or_default();
+        self.diagnostics.record(event, reply, heard, audio_error);
     }
     fn begin_pending(&self) -> CancellationToken {
         let mut token = self.pending.lock().unwrap_or_else(|e| e.into_inner());
@@ -200,6 +210,15 @@ pub async fn pause(
     voice: &Voice,
     microphone: bool,
 ) -> std::result::Result<(), String> {
+    voice.diagnose(
+        &shared,
+        if microphone {
+            "microphone_paused"
+        } else {
+            "response_stopped"
+        },
+        None,
+    );
     voice.cancel_pending();
     voice.playback.interrupt();
     let result = with_core(shared.clone(), move |c| {
@@ -276,6 +295,7 @@ pub async fn toggle(
         );
     }
     voice.ensure_audio(&shared, true).await?;
+    voice.diagnose(&shared, "microphone_started", None);
     with_core(shared.clone(), |c| {
         c.live.error = None;
         c.live.notice = None;
@@ -316,19 +336,24 @@ pub async fn send(
             return stop_hermes(&app, shared, &voice).await;
         }
     }
-    let provider = with_core(shared.clone(), move |core| {
+    let command = text.clone();
+    let (connections, clearing) = with_core(shared.clone(), move |core| {
         if core.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
         let profile = core.store.profile(profile_id)?;
-        if !profile.details.connections.llm_provider.is_agent()
+        let clearing = !profile.details.connections.llm_provider.is_agent()
+            && sherka_core::privacy::clear_conversation_intent(&command, &profile.details.name);
+        if !clearing
+            && !profile.details.connections.llm_provider.is_agent()
             && profile.details.connections.llm_model.is_none()
         {
             return Err(Error::Validation(
                 "Choisis un modèle de conversation dans Compagnons.".into(),
             ));
         }
-        if speak
+        if !clearing
+            && speak
             && (profile.details.connections.tts_engine.is_none()
                 || profile.details.connections.tts_voice.is_none())
         {
@@ -337,9 +362,26 @@ pub async fn send(
                     .into(),
             ));
         }
-        Providers::new(profile.details.connections)
+        Ok((profile.details.connections, clearing))
     })
     .await?;
+    if clearing {
+        // A local privacy command also works with an offline or unconfigured
+        // provider. Speech is only an optional, non-persisted acknowledgement.
+        drop(gate);
+        let session = clear(&app, shared.clone(), &voice, profile_id, false, None).await?;
+        if speak
+            && connections.tts_engine.is_some()
+            && connections.tts_voice.is_some()
+            && let Ok(provider) = Providers::new(connections)
+        {
+            tauri::async_runtime::spawn(async move {
+                speak_clear_receipt(&app, shared, &voice, &provider, profile_id, session).await;
+            });
+        }
+        return Ok(());
+    }
+    let provider = Providers::new(connections).map_err(|e| e.to_string())?;
     let pending = voice.begin_pending();
     let _gate = if speak {
         drop(gate);
@@ -402,6 +444,7 @@ async fn audio_events(
             | AudioEvent::Frame(id, _)
             | AudioEvent::End(id)
             | AudioEvent::Meter(id, _, _)
+            | AudioEvent::InputGap(id)
             | AudioEvent::Failed(id, _) => *id,
         };
         // A stopped/replaced device session can never feed the new profile.
@@ -414,8 +457,13 @@ async fn audio_events(
         }
         match event {
             AudioEvent::Start(id, pcm) => {
+                voice.diagnose(&shared, "speech_detected", None);
                 capture = None;
-                let prepared = with_core(shared.clone(), |c| {
+                let current_run = voice.run_id.clone();
+                let prepared = with_core(shared.clone(), move |c| {
+                    if !current_run.lock().is_ok_and(|run| *run == Some(id)) {
+                        return Err(Error::StaleOperation);
+                    }
                     c.stop_response()?;
                     let tag = c.session.begin_utterance()?;
                     c.reset_live(tag);
@@ -450,14 +498,26 @@ async fn audio_events(
                         capture = None;
                         continue;
                     }
-                    if tx.try_send(pcm).is_err() {
-                        capture = None;
-                        let _ = pause(&app, shared.clone(), &voice, true).await;
-                        set_error(
-                            &app,
+                    if let Err(error) = tx.try_send(pcm) {
+                        let tag = *tag;
+                        let abandoned = capture.take();
+                        let full = matches!(error, mpsc::error::TrySendError::Full(_));
+                        voice.diagnose(
                             &shared,
-                            "VoiceStudio n'arrive plus à suivre la capture. Le micro a été coupé ; vérifie le serveur puis réactive-le.",
+                            if full {
+                                "transcription_backpressure"
+                            } else {
+                                "transcription_closed"
+                            },
+                            None,
                         );
+                        // A failed/slow transcription is local to this utterance.
+                        // Never revoke microphone consent or close WASAPI.
+                        fail_turn(&app, &shared, tag,
+                            "La transcription a été interrompue. Le micro reste actif ; fais une pause puis répète ta phrase.").await;
+                        // Cancel before EOF: otherwise dropping the sender
+                        // could finalize and send a damaged partial command.
+                        drop(abandoned);
                     }
                 }
             }
@@ -477,7 +537,16 @@ async fn audio_events(
                     );
                 }
             }
+            AudioEvent::InputGap(_) => {
+                voice.diagnose(&shared, "capture_gap_recovered", None);
+                if let Some((_, tag, input)) = capture.take() {
+                    fail_turn(&app, &shared, tag,
+                        "La transcription a été interrompue. Le micro reste actif ; fais une pause puis répète ta phrase.").await;
+                    drop(input);
+                }
+            }
             AudioEvent::Failed(_, message) => {
+                voice.diagnose(&shared, "audio_failed", Some(&message));
                 capture = None;
                 voice.playback.interrupt();
                 let _ = with_core(shared.clone(), move |c| {
@@ -543,23 +612,172 @@ async fn recognize(
                 Err(e) => fail_turn(&app, &shared, tag, &e).await,
             }
         }
-        Err(error) => fail_turn(&app, &shared, tag, &error.to_string()).await,
+        Err(error) => {
+            voice.diagnose(&shared, "transcription_failed", None);
+            fail_turn(&app, &shared, tag, &error.to_string()).await;
+        }
     }
 }
 
 async fn fail_turn(app: &AppHandle, shared: &Shared, tag: OperationTag, message: &str) {
     let text = message.to_owned();
-    let _ = with_core(shared.clone(), move |c| {
-        if c.live.tag != Some(tag) {
-            return Err(Error::StaleOperation);
-        }
-        c.stop_response()?;
-        c.live.error = Some(text);
-        Ok(())
-    })
-    .await;
+    let _ = with_core(shared.clone(), move |c| record_turn_failure(c, tag, text)).await;
     emit(app, shared);
     let _ = app.emit("sherka:history", tag.profile_id);
+}
+
+fn record_turn_failure(
+    c: &mut sherka_core::Companion,
+    tag: OperationTag,
+    message: String,
+) -> Result<()> {
+    if c.live.tag != Some(tag) {
+        return Err(Error::StaleOperation);
+    }
+    c.stop_response()?;
+    c.live.error = Some(message);
+    Ok(())
+}
+
+pub async fn clear(
+    app: &AppHandle,
+    shared: Shared,
+    voice: &Voice,
+    profile_id: Uuid,
+    erase_saved_facts: bool,
+    expected: Option<OperationTag>,
+) -> std::result::Result<Uuid, String> {
+    crate::windows::ensure_running()?;
+    let _gate = voice.gate.lock().await;
+    crate::windows::ensure_running()?;
+    let (agent, listening) = with_core(shared.clone(), move |c| {
+        if c.session.snapshot().profile_id != profile_id
+            || expected.is_some_and(|tag| !c.session.accepts(tag))
+        {
+            return Err(Error::StaleOperation);
+        }
+        Ok((
+            c.store
+                .profile(profile_id)?
+                .details
+                .connections
+                .llm_provider
+                .is_agent(),
+            c.session.snapshot().microphone == MicrophoneState::Listening,
+        ))
+    })
+    .await?;
+    voice.cancel_pending();
+    if agent {
+        stop_hermes(app, shared.clone(), voice).await?;
+    }
+    // Retire input too: queued pre-deletion audio must not recreate messages.
+    with_core(shared.clone(), |c| c.pause_voice()).await?;
+    voice.stop_audio().await;
+    let session = with_core(shared.clone(), move |c| {
+        if c.session.snapshot().profile_id != profile_id {
+            return Err(Error::StaleOperation);
+        }
+        c.clear_conversation(profile_id, erase_saved_facts)?;
+        c.live.notice = Some(if agent {
+            "Historique local effacé. Les conversations et souvenirs du serveur Hermes restent gérés par Hermes."
+        } else if erase_saved_facts {
+            "Conversation et faits sauvegardés effacés."
+        } else {
+            "Conversation effacée. Les faits sauvegardés sont conservés."
+        }.into());
+        Ok(c.session.snapshot().session_id)
+    }).await?;
+    if listening && crate::windows::ensure_running().is_ok() {
+        match voice.ensure_audio(&shared, true).await {
+            Ok(()) => {
+                with_core(shared.clone(), |c| {
+                    c.session.capture_started();
+                    Ok(())
+                })
+                .await?;
+            }
+            Err(error) => {
+                with_core(shared.clone(), move |c| {
+                    c.session.capture_failed();
+                    c.live.error = Some(error);
+                    Ok(())
+                })
+                .await?;
+            }
+        }
+    }
+    emit(app, &shared);
+    let _ = app.emit("sherka:history", profile_id);
+    let _ = app.emit("sherka:memory", profile_id);
+    let _ = app.emit("sherka:cleared", profile_id);
+    Ok(session)
+}
+
+/// A local receipt can be spoken without creating a new history entry or
+/// sending the deletion request back to a language model.
+async fn speak_clear_receipt(
+    app: &AppHandle,
+    shared: Shared,
+    voice: &Voice,
+    provider: &Providers,
+    profile_id: Uuid,
+    session_id: Uuid,
+) {
+    let gate = voice.gate.lock().await;
+    if crate::windows::ensure_running().is_err() {
+        return;
+    }
+    if voice.ensure_audio(&shared, false).await.is_err() {
+        return;
+    }
+    let language =
+        sherka_core::i18n::Language::from_code(&provider.connections.language).unwrap_or_default();
+    let text = sherka_core::i18n::text_in(
+        language,
+        "Conversation effacée. Les faits sauvegardés sont conservés.",
+    );
+    let Ok((tag, token)) = with_core(shared.clone(), move |c| {
+        let current = c.session.snapshot();
+        if current.profile_id != profile_id
+            || current.session_id != session_id
+            || current.transcription != sherka_core::session::TranscriptionState::Idle
+            || current.response != sherka_core::session::ResponseState::Idle
+        {
+            return Err(Error::StaleOperation);
+        }
+        // Keep live.tag/reply empty: interruptions must never archive this
+        // acknowledgement as another conversation after the deletion.
+        let tag = c.session.begin_text_turn();
+        Ok((tag, c.session.cancellation()))
+    })
+    .await
+    else {
+        return;
+    };
+    drop(gate);
+    let say = async {
+        voice.playback.arm(token.clone())?;
+        let pcm = provider.speech(&text).await?;
+        let receipt = voice
+            .playback
+            .enqueue(pcm, provider.connections.volume, token.clone())?;
+        receipt.started.await.map_err(|_| Error::StaleOperation)?;
+        update(app, &shared, tag, |c| c.session.playback_started(tag))?;
+        receipt.done.await.map_err(|_| Error::StaleOperation)?;
+        Ok::<_, Error>(())
+    };
+    let result = tokio::select! { biased; _=token.cancelled()=>return, value=say=>value };
+    let _ = update(app, &shared, tag, |c| {
+        c.session.complete(tag)?;
+        if result.is_err() {
+            c.live.error = Some(
+                "La confirmation vocale n’a pas pu être lue. La conversation a bien été effacée."
+                    .into(),
+            );
+        }
+        Ok(())
+    });
 }
 
 async fn prepare_turn(
@@ -914,6 +1132,31 @@ async fn run_turn(
     speak: bool,
 ) {
     let agent = provider.connections.llm_provider.is_agent();
+    let clear_requested = !agent
+        && shared.0.lock().is_ok_and(|c| {
+            c.store.profile(tag.profile_id).is_ok_and(|p| {
+                sherka_core::privacy::clear_conversation_intent(&user, &p.details.name)
+            })
+        });
+    if clear_requested {
+        match clear(
+            &app,
+            shared.clone(),
+            &voice,
+            tag.profile_id,
+            false,
+            Some(tag),
+        )
+        .await
+        {
+            Ok(session) if speak => {
+                speak_clear_receipt(&app, shared, &voice, &provider, tag.profile_id, session).await
+            }
+            Ok(_) => {}
+            Err(error) => fail_turn(&app, &shared, tag, &error).await,
+        }
+        return;
+    }
     // A new utterance may arrive while the old run acknowledges cancellation.
     // Serialize remote runs and keep failed stops retryable instead of silently
     // starting overlapping agent work on the same server conversation.
@@ -1120,6 +1363,7 @@ async fn run_turn(
         let (prepared, played) = tokio::join!(prepare, play);
         let result = prepared.and(played);
         if let Err(error) = &result {
+            voice.diagnose(&shared, "speech_output_failed", None);
             let message = error.to_string();
             let _ = update(&app, &shared, tag, |c| {
                 c.live.error = Some(format!("{message} La réponse écrite reste disponible."));
@@ -1135,6 +1379,7 @@ async fn run_turn(
     };
     match result {
         None => {
+            voice.diagnose(&shared, "response_cancelled", None);
             if agent {
                 finish_hermes_run(&app, &shared, &voice, tag, &hermes, true).await;
             }
@@ -1149,6 +1394,15 @@ async fn run_turn(
             .await;
         }
         Some((Ok(outcome), Ok(()), spoken)) => {
+            voice.diagnose(
+                &shared,
+                if spoken.is_ok() {
+                    "response_completed"
+                } else {
+                    "response_text_only_after_audio_error"
+                },
+                None,
+            );
             if agent {
                 finish_hermes_run(&app, &shared, &voice, tag, &hermes, false).await;
             }
@@ -1175,6 +1429,7 @@ async fn run_turn(
             }
         }
         Some((llm, consumed, _)) => {
+            voice.diagnose(&shared, "response_generation_failed", None);
             if agent {
                 finish_hermes_run(&app, &shared, &voice, tag, &hermes, true).await;
             }
@@ -1258,4 +1513,51 @@ async fn play_prepared(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn failed_transcription_keeps_microphone_consent_and_rejects_late_results() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = sherka_core::Companion::open(dir.path()).unwrap();
+        core.session.capture_started();
+        let interrupted = core.session.begin_utterance().unwrap();
+        core.reset_live(interrupted);
+        let cancellation = core.session.cancellation();
+        record_turn_failure(&mut core, interrupted, "fixture failure".into()).unwrap();
+        assert!(cancellation.is_cancelled());
+        assert_eq!(
+            core.session.snapshot().microphone,
+            MicrophoneState::Listening
+        );
+        assert!(!core.session.snapshot().voice_paused);
+        assert!(
+            core.session
+                .accept_stt_final(interrupted, "discarded partial command")
+                .is_err()
+        );
+        let next = core.session.begin_utterance().unwrap();
+        core.reset_live(next);
+        assert!(record_turn_failure(&mut core, interrupted, "late error".into()).is_err());
+        assert!(core.session.accepts(next));
+        assert_eq!(
+            core.session
+                .accept_stt_final(next, "fresh full command")
+                .unwrap()
+                .as_deref(),
+            Some("fresh full command")
+        );
+        core.finish_response(next, Delivery::Completed).unwrap();
+        assert_eq!(
+            core.session.snapshot().microphone,
+            MicrophoneState::Listening
+        );
+        core.pause_voice().unwrap();
+        assert_eq!(core.session.snapshot().microphone, MicrophoneState::Off);
+        assert!(record_turn_failure(&mut core, interrupted, "late error".into()).is_err());
+        assert_eq!(core.session.snapshot().microphone, MicrophoneState::Off);
+    }
 }

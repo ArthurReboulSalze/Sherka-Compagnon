@@ -26,7 +26,7 @@ for(const file of readdirSync('src').filter(name=>name.endsWith('.ts')&&!['i18n.
 // Native feedback uses the same authored sources, with opaque format slots.
 const prose = text => /[àâäéèêëîïôöùûüçÀÉÈÊ]|(?:comp[a-z]+|[Mm]icrophone|[Ss]ouvenir|[Vv]oix|[Cc]ontexte|[Ii]mage|[Pp]rofil)|\b(?:est|les|pas|trop|vocale|reprendre)\b|^(?:La |Le |Les |L'|Ce |Cette |Un |Une |Aucun |Aucune |Choisis |Chemin )/.test(text) && /\s/.test(text) && !/^(?:SELECT |INSERT |UPDATE |DELETE |PRAGMA |CREATE |DROP |ALTER |Web receipt:|vérifie sur internet|ne cherche|ne recherches|sans chercher|sans recherche|pas sur internet|n'utilise pas internet|n’utilise pas internet|Tu es Sherka|Reste honnête|souviens |efface de ta|supprime de ta|peux.tu oublier)/.test(text);
 for(const dir of ['crates/sherka-core/src','src-tauri/src']) {
-  for(const name of readdirSync(dir).filter(name=>name.endsWith('.rs')&&!name.includes('test')&&!['i18n.rs'].includes(name))) {
+  for(const name of readdirSync(dir).filter(name=>name.endsWith('.rs')&&!name.includes('test')&&!['i18n.rs','privacy.rs'].includes(name))) {
     const source=readFileSync(dir+'/'+name,'utf8').split('#[cfg(test)]')[0];
     for(const match of source.matchAll(/"(?:[^"\\]|\\.)*"/g)) {
       let value;try{value=JSON.parse(match[0]);}catch{continue;}

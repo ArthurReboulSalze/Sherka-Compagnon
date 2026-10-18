@@ -230,6 +230,57 @@ fn retire(tx: &Transaction<'_>, id: i64, status: &str) -> Result<()> {
     Ok(())
 }
 impl Store {
+    /// Remove all local dialogue, source quotations and automatic memory for
+    /// one companion. Facts explicitly saved/approved by the user survive by
+    /// default. The epoch invalidates in-flight extraction and edits.
+    pub fn clear_conversation(&self, profile: Uuid, erase_saved_facts: bool) -> Result<()> {
+        let mut db = self.db(profile)?;
+        db.execute_batch("PRAGMA secure_delete=ON;")?;
+        let tx = db.transaction()?;
+        tx.execute("DELETE FROM memory_sources", [])?;
+        tx.execute("DELETE FROM summary_sources", [])?;
+        tx.execute("DELETE FROM summaries", [])?;
+        tx.execute("DELETE FROM extraction_exclusions", [])?;
+        tx.execute("UPDATE memories SET source_message_id=NULL", [])?;
+        if erase_saved_facts {
+            tx.execute("DELETE FROM memories", [])?;
+        } else {
+            tx.execute(
+                "DELETE FROM memories WHERE status!='active' OR approved=0",
+                [],
+            )?;
+        }
+        tx.execute("DELETE FROM messages", [])?;
+        tx.execute("UPDATE memory_meta SET cursor=0", [])?;
+        changed(&tx)?;
+        // Rebuild FTS too: deleted terms must not remain in its segment tables.
+        tx.execute_batch("INSERT INTO messages_fts(messages_fts) VALUES('rebuild'); INSERT INTO memories_fts(memories_fts) VALUES('rebuild');")?;
+        tx.commit()?;
+        db.execute_batch("VACUUM; PRAGMA wal_checkpoint(TRUNCATE);")?;
+        Ok(())
+    }
+
+    /// Unlike archival forgetting, explicit deletion removes the fact itself
+    /// from exports as well. Historical exchanges are excluded from recall.
+    pub fn delete_memory(&self, expected: &MemoryGuard, id: i64) -> Result<()> {
+        let mut db = self.db(expected.profile_id)?;
+        db.execute_batch("PRAGMA secure_delete=ON;")?;
+        let tx = db.transaction()?;
+        guard(&tx, expected)?;
+        let memory = read_memory(&tx, id)?;
+        if memory.status != "active" {
+            return Err(Error::Conflict);
+        }
+        exclude_past(&tx)?;
+        tx.execute("DELETE FROM memory_sources WHERE memory_id=?1", [id])?;
+        tx.execute("DELETE FROM memories WHERE id=?1", [id])?;
+        changed(&tx)?;
+        tx.execute_batch("INSERT INTO memories_fts(memories_fts) VALUES('rebuild');")?;
+        tx.commit()?;
+        db.execute_batch("VACUUM; PRAGMA wal_checkpoint(TRUNCATE);")?;
+        Ok(())
+    }
+
     pub fn memory_guard(&self, profile: Uuid) -> Result<MemoryGuard> {
         let db = self.db(profile)?;
         let (revision, epoch) = db.query_row(

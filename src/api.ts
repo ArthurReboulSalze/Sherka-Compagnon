@@ -9,6 +9,8 @@ export const closeStartupRecovery = () => invoke<void>('close_startup_recovery')
 export const getSnapshot = () => invoke<Snapshot>('get_snapshot');
 export const mutate = (mutation: Mutation) => invoke<Snapshot>('apply_mutation', { mutation });
 export const history = (profileId: string) => invoke<Message[]>('get_history', { profileId });
+export const clearConversation = (profileId: string, eraseSavedFacts = false) => invoke<void>('clear_conversation', { profileId, eraseSavedFacts });
+export const onCleared = (callback: (id: string) => void) => listen<string>('sherka:cleared', e => callback(e.payload));
 export const memories = (profileId: string, query = '') => invoke<MemoryState>('get_memories', { profileId, query });
 export const editMemory = (profileId: string, epoch: number, edit: MemoryEdit) => invoke<MemoryState>('edit_memory', { profileId, epoch, edit });
 export const searchArchive = (profileId: string, query: string) => invoke<MemorySource[]>('search_archive', { profileId, query });

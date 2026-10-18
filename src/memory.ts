@@ -34,7 +34,7 @@ export function mountMemory(profile: Profile, report: (e: unknown) => void): voi
   function card(m: MemoryEntry): string {
     const button = (action: string, label: string) => '<button class="button quiet small" data-memory-action="' + action + '" data-id="' + m.id + '">' + label + '</button>';
     return '<article class="memory-entry" data-memory-id="' + m.id + html`"><div class="section-heading"><strong>` + escape(m.category) + html`</strong><small>` + date(m.updated_at) + html`</small></div><p>` + escape(m.content) + html`</p><div class="memory-actions">`
-      + (!m.approved ? button('approve',t('Retenir ce souvenir')) : '') + button('edit',t('Corriger')) + button('forget',m.approved ? t('Oublier') : t('Écarter'))
+      + (!m.approved ? button('approve',t('Retenir ce souvenir')) : '') + button('edit',t('Corriger')) + button('delete',t('Supprimer ce fait'))
       + html`</div><details><summary>Source · ` + (m.origin === 'manual' ? t('saisie dans le panneau') : m.origin === 'explicit' ? t('demande explicite') : t('proposition automatique')) + '</summary>'
       + (m.sources.map(s => html`<blockquote><small>` + date(s.created_at) + html`</small><p>` + escape(s.content) + '</p></blockquote>').join('') || html`<p>Saisi ou corrigé directement dans ce panneau.</p>`) + '</details></article>';
   }
@@ -58,7 +58,7 @@ export function mountMemory(profile: Profile, report: (e: unknown) => void): voi
         form.hidden = false; root!.querySelector('#memory-toggle')!.setAttribute('aria-expanded', 'true');
         root!.querySelector('#memory-toggle')!.textContent = t('Corriger ce souvenir');
         input('content').focus();
-      } else void save({action: button.dataset.memoryAction as 'forget' | 'approve', id});
+      } else void save({action: button.dataset.memoryAction as 'delete' | 'approve', id});
     }));
   }
   async function load(): Promise<void> {
@@ -74,7 +74,7 @@ export function mountMemory(profile: Profile, report: (e: unknown) => void): voi
     try {
       const value = await api.editMemory(profile.id, state.epoch, edit);
       search.value = ''; paint(value); reset();
-      feedback(edit.action === 'forget' ? t('Souvenir écarté des prochaines conversations.') : t('Mémoire enregistrée.'));
+      feedback(edit.action === 'delete' ? t('Fait supprimé de la mémoire. Les anciens échanges restent exclus du rappel.') : edit.action === 'forget' ? t('Souvenir écarté des prochaines conversations.') : t('Mémoire enregistrée.'));
     } catch (e) { report(e); }
     finally { saving = false; root!.querySelectorAll<HTMLButtonElement>('button').forEach(b => { b.disabled = false; }); await load().catch(report); }
   }

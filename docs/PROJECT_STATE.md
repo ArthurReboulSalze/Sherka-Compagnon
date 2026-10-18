@@ -1,6 +1,6 @@
 # Project status
 
-Release version: **0.8.1**, October 18, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+Release version: **0.9.0**, October 18, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
 
 The application now has its own logo across Windows icons, the tray, sidebar and favicon. Companion portraits stay independent. Incremental builds rebuild icon resources when branding changes, and the English README features the new identity and a refreshed control-panel screenshot.
 
@@ -17,6 +17,18 @@ Startup recovery keeps signed updates available when settings or databases are i
 Optional DuckDuckGo search offers disabled, on-request and automatic modes, bounded snippets and persistent source links. Widget controls now dismiss on pointer exit, focus loss and opening the panel. See [web search](WEB_SEARCH.md).
 
 The public release adds localized widget/tray controls, polished settings fields and a built-in Sherka personality in each language. The original Sherka follows the interface language; custom companions keep the language chosen at creation. Models and voices remain user-configured. See [languages](LANGUAGES.md).
+
+## 0.9.0 — conversation privacy and audio recovery
+
+Conversation clearing is available in the panel and through explicit requests in seven languages or `/clear`. Saved or approved facts survive by default; a separate checkbox includes them in deletion, and individual facts can be removed from Memory. Clearing removes local history, archive search, source quotations, summaries and pending suggestions, invalidates generation/extraction work and retires queued input. Typed privacy commands work without a configured provider. Spoken acknowledgements are not archived. Hermes retains its server-side memory and conversations; its panel action clears only local records and rotates the client session reference.
+
+Temporary audio callback/event congestion now discards incomplete input and waits for a fresh pause without shutting down playback or microphone consent. Failed/closed transcription queues no longer disable the microphone. Headphone and output-only sessions avoid unused echo-reference work. Real device failures still report an error. Bounded technical logs support future diagnosis without recording conversation content or audio.
+
+The reported interruption had a complete written reply and only partially confirmed playback. No historical runtime error established its exact trigger. The changes address independently identified failure paths; they do not establish the cause of that past incident or guarantee immunity to device/provider failures.
+
+Validation: 99 Rust tests passed, with one opt-in public DuckDuckGo request skipped. TypeScript, formatting, Clippy and three localization tests passed; all 729 authored messages have seven languages.
+
+The final optimized executable passed nine native scenarios: seven-language interfaces and presets, memory editing and restart, long spoken replies and audio-error recovery, device consent, a clean English screenshot, Hermes sessions/local clearing, confirmed `/stop`, and conversation/fact deletion including ephemeral speech receipts and offline commands. These use isolated data and simulated services; no physical microphone or real-model quality test was performed. Installer and portable update signatures verified and rejected altered data; package and binary audits passed. The installer was extracted for inspection without installing on the developer account.
 
 ## 0.8.1 — refreshed artwork
 

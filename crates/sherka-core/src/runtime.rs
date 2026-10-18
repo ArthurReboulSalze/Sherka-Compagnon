@@ -307,6 +307,27 @@ impl Companion {
         self.stop_response()
     }
 
+    pub fn clear_conversation(
+        &mut self,
+        profile: uuid::Uuid,
+        erase_saved_facts: bool,
+    ) -> Result<()> {
+        self.store.profile(profile)?;
+        let active = self.session.snapshot().profile_id == profile;
+        if active {
+            // Cancel before deleting so a late reply or extraction cannot
+            // restore the conversation. Microphone consent remains unchanged.
+            self.stop_response()?;
+        }
+        self.store.clear_conversation(profile, erase_saved_facts)?;
+        self.store.clear_hermes_sessions(profile)?;
+        if active {
+            self.session.switch_profile(profile);
+            self.live = Default::default();
+        }
+        Ok(())
+    }
+
     pub fn reset_live(&mut self, tag: crate::session::OperationTag) {
         self.memory_job.cancel();
         self.memory_job = tokio_util::sync::CancellationToken::new();

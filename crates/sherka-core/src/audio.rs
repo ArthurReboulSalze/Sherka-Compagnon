@@ -83,7 +83,89 @@ pub enum AudioEvent {
     Frame(Uuid, Vec<i16>),
     End(Uuid),
     Meter(Uuid, f32, bool),
+    /// Input lost continuity. Discard only the current utterance, keep listening
+    /// and keep an already playing answer. No audio or transcript is retained.
+    InputGap(Uuid),
     Failed(Uuid, String),
+}
+
+/// Coordinates input recovery without tying microphone congestion to playback.
+/// After a gap, wait for a full pause before accepting another utterance: a
+/// truncated command must never be sent to a model (including Hermes).
+struct CaptureDispatch {
+    id: Uuid,
+    endpoint: Endpoint,
+    preroll: VecDeque<Vec<i16>>,
+    reset_pending: bool,
+    quiet_ms: u16,
+    silence_ms: u16,
+}
+
+impl CaptureDispatch {
+    fn new(id: Uuid, options: AudioSettings) -> Self {
+        Self {
+            id,
+            silence_ms: options.silence_ms,
+            endpoint: Endpoint::new(options),
+            preroll: VecDeque::with_capacity(PRE_ROLL_MS / 10),
+            reset_pending: false,
+            quiet_ms: 0,
+        }
+    }
+
+    fn input_gap(&mut self) {
+        self.endpoint.reset();
+        self.preroll.clear();
+        self.reset_pending = true;
+        self.quiet_ms = self.silence_ms;
+    }
+
+    fn feed(
+        &mut self,
+        pcm: Vec<i16>,
+        speech: bool,
+        playback: &Playback,
+        events: &mpsc::Sender<AudioEvent>,
+    ) {
+        if self.reset_pending {
+            // Reserve the terminal failure slot, even during recovery.
+            if events.capacity() <= 1 || events.try_send(AudioEvent::InputGap(self.id)).is_err() {
+                return;
+            }
+            self.reset_pending = false;
+        }
+        if self.quiet_ms > 0 {
+            self.quiet_ms = if speech {
+                self.silence_ms
+            } else {
+                self.quiet_ms.saturating_sub(10)
+            };
+            return;
+        }
+        let event = match self.endpoint.feed(speech, playback.responding()) {
+            Edge::Start => {
+                // Barge-in is still immediate and independent of the UI/STT.
+                playback.interrupt();
+                let mut start: Vec<i16> = self.preroll.drain(..).flatten().collect();
+                start.extend(pcm);
+                Some(AudioEvent::Start(self.id, start))
+            }
+            Edge::End => Some(AudioEvent::End(self.id)),
+            Edge::None if self.endpoint.active() => Some(AudioEvent::Frame(self.id, pcm)),
+            _ => {
+                if self.preroll.len() == PRE_ROLL_MS / 10 {
+                    self.preroll.pop_front();
+                }
+                self.preroll.push_back(pcm);
+                None
+            }
+        };
+        if let Some(event) = event
+            && (events.capacity() <= 1 || events.try_send(event).is_err())
+        {
+            self.input_gap();
+        }
+    }
 }
 
 struct Packet {
@@ -342,27 +424,34 @@ struct Frame {
     at: Instant,
 }
 struct FrameSink {
+    enabled: bool,
     samples: Vec<f32>,
     size: usize,
     capture: bool,
     tx: sync::SyncSender<Frame>,
     failed: Arc<AtomicBool>,
+    overrun: Arc<AtomicBool>,
 }
 impl FrameSink {
     fn push(&mut self, sample: f32) {
+        if !self.enabled {
+            return;
+        }
         self.samples.push(sample);
         if self.samples.len() == self.size {
             let samples = std::mem::replace(&mut self.samples, Vec::with_capacity(self.size));
-            if self
-                .tx
-                .try_send(Frame {
-                    samples,
-                    capture: self.capture,
-                    at: Instant::now(),
-                })
-                .is_err()
-            {
-                self.failed.store(true, Ordering::Release);
+            match self.tx.try_send(Frame {
+                samples,
+                capture: self.capture,
+                at: Instant::now(),
+            }) {
+                Ok(()) => {}
+                Err(sync::TrySendError::Full(_)) => {
+                    self.overrun.store(true, Ordering::Release);
+                }
+                Err(sync::TrySendError::Disconnected(_)) => {
+                    self.failed.store(true, Ordering::Release);
+                }
             }
         }
     }
@@ -475,6 +564,7 @@ fn run_audio(
     let host = cpal::default_host();
     let (frames_tx, frames_rx) = sync::sync_channel(100);
     let failed = Arc::new(AtomicBool::new(false));
+    let overrun = Arc::new(AtomicBool::new(false));
     let in_delay = Arc::new(AtomicU64::new(0));
     let out_delay = Arc::new(AtomicU64::new(0));
     let prepare = || -> Result<_> {
@@ -488,11 +578,15 @@ fn run_audio(
             .map_err(|_| audio_error("Format de sortie audio indisponible."))?;
         let output_rate = cfg.sample_rate();
         let sink = FrameSink {
+            // A render reference is only useful for speaker echo cancellation.
+            // Headphones and playback-only turns should not fill this queue.
+            enabled: capture && options.speakers,
             samples: Vec::with_capacity(output_rate as usize / 100),
             size: output_rate as usize / 100,
             capture: false,
             tx: frames_tx.clone(),
             failed: failed.clone(),
+            overrun: overrun.clone(),
         };
         let stream = match cfg.sample_format() {
             SampleFormat::F32 => output_stream::<f32>(
@@ -539,11 +633,13 @@ fn run_audio(
                 .map_err(|_| audio_error("Format du microphone indisponible."))?;
             input_rate = cfg.sample_rate();
             let sink = FrameSink {
+                enabled: true,
                 samples: Vec::with_capacity(input_rate as usize / 100),
                 size: input_rate as usize / 100,
                 capture: true,
                 tx: frames_tx.clone(),
                 failed: failed.clone(),
+                overrun: overrun.clone(),
             };
             input_stream_value = Some(match cfg.sample_format() {
                 SampleFormat::F32 => {
@@ -578,23 +674,31 @@ fn run_audio(
                 .play()
                 .map_err(|_| audio_error("Impossible de démarrer le microphone."))?;
         }
-        Ok((stream, input_stream_value, acoustics, input_id, output_id))
+        Ok((
+            stream,
+            input_stream_value,
+            acoustics,
+            input_id,
+            output_id,
+            input_rate,
+            output_rate,
+        ))
     };
-    let (_output, _input, mut acoustics, input_id, output_id) = match prepare() {
-        Ok(value) => {
-            let _ = ready.send(Ok(()));
-            value
-        }
-        Err(error) => {
-            let _ = ready.send(Err(error.to_string()));
-            return Ok(());
-        }
-    };
+    let (_output, _input, mut acoustics, input_id, output_id, input_rate, output_rate) =
+        match prepare() {
+            Ok(value) => {
+                let _ = ready.send(Ok(()));
+                value
+            }
+            Err(error) => {
+                let _ = ready.send(Err(error.to_string()));
+                return Ok(());
+            }
+        };
     // Preserve initial syllables during neural voice/echo confirmation. This
     // history is continuously rolling; it introduces no additional wait.
-    let pre_roll_frames = PRE_ROLL_MS / 10;
-    let mut endpoint = Endpoint::new(options.clone());
-    let mut preroll: VecDeque<Vec<i16>> = VecDeque::with_capacity(pre_roll_frames);
+    let mut dispatch = CaptureDispatch::new(id, options.clone());
+    let mut discard_before = Instant::now();
     let mut meter_count = 0;
     let mut last_device_check = Instant::now();
     while !cancel.is_cancelled() {
@@ -603,6 +707,21 @@ fn run_audio(
             return Err(audio_error(
                 "Flux audio interrompu ou saturé. Vérifie les périphériques puis réactive le micro.",
             ));
+        }
+        if overrun.swap(false, Ordering::AcqRel) {
+            // A transient CPU stall must not cancel a long spoken answer or
+            // close the microphone. Discard stale input and rebuild echo/VAD
+            // state; playback has its own queue and continues unchanged.
+            discard_before = Instant::now();
+            // Free space before rebuilding; never spin indefinitely if the
+            // callbacks are still producing new frames.
+            for _ in 0..100 {
+                if frames_rx.try_recv().is_err() {
+                    break;
+                }
+            }
+            acoustics = Acoustics::new(input_rate, output_rate, options.speakers)?;
+            dispatch.input_gap();
         }
         if last_device_check.elapsed() > Duration::from_secs(1) {
             last_device_check = Instant::now();
@@ -628,6 +747,9 @@ fn run_audio(
             Err(sync::RecvTimeoutError::Timeout) => continue,
             Err(_) => break,
         };
+        if frame.at < discard_before {
+            continue;
+        }
         if !frame.capture {
             if capture {
                 acoustics.render(&frame.samples)?;
@@ -640,7 +762,6 @@ fn run_audio(
         let processed = acoustics.capture(&frame.samples, delay.min(500) as u32)?;
         let pcm = processed.pcm;
         let speech = processed.speech;
-        let edge = endpoint.feed(speech, playback.responding());
         meter_count += 1;
         if meter_count == 10 {
             meter_count = 0;
@@ -652,33 +773,7 @@ fn run_audio(
                 ));
             }
         }
-        let event = match edge {
-            Edge::Start => {
-                // Local silence now: do not wait for STT, HTTP, the event loop,
-                // SQLite, or even the next desktop coordinator tick.
-                playback.interrupt();
-                let mut start: Vec<i16> = preroll.drain(..).flatten().collect();
-                start.extend(pcm);
-                Some(AudioEvent::Start(id, start))
-            }
-            Edge::End => Some(AudioEvent::End(id)),
-            Edge::None if endpoint.active() => Some(AudioEvent::Frame(id, pcm)),
-            _ => {
-                if preroll.len() == pre_roll_frames {
-                    preroll.pop_front();
-                }
-                preroll.push_back(pcm);
-                None
-            }
-        };
-        if let Some(event) = event
-            && (events.capacity() <= 1 || events.try_send(event).is_err())
-        {
-            playback.interrupt();
-            return Err(audio_error(
-                "Le traitement vocal n'arrive plus à suivre le microphone. Réactive-le pour reprendre.",
-            ));
-        }
+        dispatch.feed(pcm, speech, &playback, events);
     }
     Ok(())
 }
@@ -686,6 +781,136 @@ fn run_audio(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn callback_congestion_is_recoverable_but_a_disconnected_worker_is_fatal() {
+        let (tx, rx) = sync::sync_channel(1);
+        let failed = Arc::new(AtomicBool::new(false));
+        let overrun = Arc::new(AtomicBool::new(false));
+        let mut sink = FrameSink {
+            enabled: true,
+            samples: Vec::new(),
+            size: 160,
+            capture: true,
+            tx,
+            failed: failed.clone(),
+            overrun: overrun.clone(),
+        };
+        for _ in 0..480 {
+            sink.push(0.0);
+        }
+        assert!(overrun.swap(false, Ordering::AcqRel));
+        assert!(
+            !failed.load(Ordering::Acquire),
+            "a busy worker is not a broken device"
+        );
+        rx.try_recv().unwrap();
+        for _ in 0..160 {
+            sink.push(0.0);
+        }
+        assert!(!overrun.load(Ordering::Acquire));
+        assert_eq!(rx.try_recv().unwrap().samples.len(), 160);
+        drop(rx);
+        for _ in 0..160 {
+            sink.push(0.0);
+        }
+        assert!(failed.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn input_gaps_during_a_long_answer_preserve_playback_and_reject_partial_commands() {
+        let id = Uuid::new_v4();
+        let (events, mut rx) = mpsc::channel(8);
+        let playback = Playback::default();
+        let token = CancellationToken::new();
+        playback.arm(token.clone()).unwrap();
+        let mut receipt = playback
+            .enqueue(vec![8192; 24_000 * 40], 1.0, token.clone())
+            .unwrap();
+        let mut dispatch = CaptureDispatch::new(id, AudioSettings::default());
+        // Three minutes of simulated capture, including repeated CPU stalls,
+        // while speech remains queued. No hardware or microphone is opened.
+        for n in 0..18_000 {
+            if n % 1200 == 0 {
+                dispatch.input_gap();
+            }
+            dispatch.feed(vec![0; 160], false, &playback, &events);
+            while let Ok(event) = rx.try_recv() {
+                assert!(matches!(event, AudioEvent::InputGap(v) if v == id));
+            }
+            assert!(!token.is_cancelled());
+        }
+        assert!(playback.speaking());
+        assert!(receipt.done.try_recv().is_err());
+        let now = Instant::now();
+        {
+            let mut queue = playback.0.lock().unwrap();
+            for _ in 0..24_000 * 40 {
+                assert_eq!(queue.sample(24_000, now, Duration::ZERO), 0.25);
+            }
+            queue.acknowledge(now + Duration::from_millis(1));
+        }
+        assert!(
+            receipt.done.try_recv().is_ok(),
+            "all queued audio can still finish"
+        );
+        dispatch.input_gap();
+        // Speech straddling the gap is discarded, not forwarded as a command.
+        for _ in 0..200 {
+            dispatch.feed(vec![1; 160], true, &playback, &events);
+        }
+        assert!(matches!(rx.try_recv().unwrap(), AudioEvent::InputGap(_)));
+        assert!(rx.try_recv().is_err());
+        assert!(!token.is_cancelled());
+        for _ in 0..70 {
+            dispatch.feed(vec![0; 160], false, &playback, &events);
+        }
+        for _ in 0..10 {
+            dispatch.feed(vec![1; 160], true, &playback, &events);
+        }
+        assert!(matches!(rx.try_recv().unwrap(), AudioEvent::Start(_, _)));
+        assert!(
+            token.is_cancelled(),
+            "a fresh intentional interruption still works"
+        );
+    }
+
+    #[test]
+    fn slow_desktop_recovers_after_an_utterance_without_closing_capture() {
+        let id = Uuid::new_v4();
+        let (events, mut rx) = mpsc::channel(3);
+        let playback = Playback::default();
+        let mut dispatch = CaptureDispatch::new(id, AudioSettings::default());
+        for _ in 0..15 {
+            dispatch.feed(vec![1; 160], true, &playback, &events);
+        }
+        assert!(dispatch.reset_pending);
+        assert!(
+            events.capacity() >= 1,
+            "keep room for a real terminal device error"
+        );
+        while rx.try_recv().is_ok() {}
+        dispatch.feed(vec![1; 160], true, &playback, &events);
+        assert!(matches!(rx.try_recv().unwrap(), AudioEvent::InputGap(_)));
+        for _ in 0..70 {
+            dispatch.feed(vec![0; 160], false, &playback, &events);
+        }
+        for _ in 0..10 {
+            dispatch.feed(vec![1; 160], true, &playback, &events);
+        }
+        assert!(matches!(rx.try_recv().unwrap(), AudioEvent::Start(_, _)));
+        for _ in 0..70 {
+            dispatch.feed(vec![0; 160], false, &playback, &events);
+            if let Ok(event) = rx.try_recv() {
+                assert!(matches!(
+                    event,
+                    AudioEvent::Frame(_, _) | AudioEvent::End(_)
+                ));
+            }
+        }
+        assert!(!dispatch.reset_pending);
+        assert!(!dispatch.endpoint.active());
+    }
+
     #[test]
     fn prepared_packets_are_contiguous_but_heard_receipts_wait_for_hardware() {
         let playback = Playback::default();

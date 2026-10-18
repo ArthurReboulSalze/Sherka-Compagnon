@@ -7,7 +7,7 @@ import { icon } from './icons';
 import type { Profile, ProfileDraft, Snapshot, Mutation, WidgetAction } from './types';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { mountConnections, freshConnections } from './connections';
-import { conversationView, mountConversation, loadConversationHistory, paintLive, paintMeter } from './conversation';
+import { conversationView, mountConversation, loadConversationHistory, clearConversationDraft, paintLive, paintMeter } from './conversation';
 import { mountAudioSettings } from './audio-settings';
 import { memoryPanel, mountMemory } from './memory';
 import { paintProfileVoice, editProfileVoice } from './profile-voice';
@@ -478,6 +478,10 @@ async function start(): Promise<void> {
       if (newError && (widget || view !== 'conversation')) report(value.live.error);
     });
     await api.onHistory((id) => { void loadConversationHistory(id).catch(report); if (view === 'memory' && selected === id) void loadHistory(id); });
+    await api.onCleared(id => {
+      clearConversationDraft(id);
+      if (view === 'memory' && selected === id && !widget) render();
+    });
     await api.onMeter((value) => { if (state?.session.microphone === 'listening') paintMeter(value); });
   } catch (error) { report(error); }
   await refresh();

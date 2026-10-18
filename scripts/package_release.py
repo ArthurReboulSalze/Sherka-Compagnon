@@ -38,6 +38,9 @@ Remote providers receive conversation context and may charge API fees.
 
 Data stays in %LOCALAPPDATA%\\fr.sherka.compagnon, not beside this executable.
 Check updates manually from Settings. No private data is included here.
+Clear a companion's conversation from Conversation, or say "Clear our conversation".
+Saved facts remain by default; individual facts can be deleted from Memory.
+For Hermes, clearing in Sherka affects local history only.
 
 Documentation: https://github.com/ArthurReboulSalze/Sherka-Compagnon
 License: GPL-3.0-only. Dependency notices accompany this distribution.

@@ -14,6 +14,7 @@
     "allow-get-widget-visibility",
     "allow-apply-mutation",
     "allow-get-history",
+    "allow-clear-conversation",
     "allow-get-memories",
     "allow-edit-memory",
     "allow-search-archive",

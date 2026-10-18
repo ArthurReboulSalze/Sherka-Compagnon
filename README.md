@@ -21,13 +21,15 @@
 ---
 
 <p align="center">
-  <img src="docs/images/sherka-0.8.1.png" alt="Sherka 0.8.1 control panel: golden app logo, five companions and avatar settings" width="1000">
+  <img src="docs/images/sherka-0.9.0.png" alt="Sherka 0.9.0 control panel: golden app logo, five companions and avatar settings" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
+**New in 0.9.0:** clear a conversation from the panel or by saying “Clear our conversation.” Saved facts stay unless you choose otherwise. Audio recovery also keeps temporary capture congestion from shutting down a spoken reply.
+
 ## Meet your companions
 
-Choose your company, then give each character its own voice and model. **Updated in 0.8.1:** five bundled companions, expressive avatars and all character settings together in **Companions**.
+Choose your company, then give each character its own voice and model. Five bundled companions, expressive avatars and all character settings together in **Companions**.
 
 <table>
   <tr>
@@ -53,7 +55,7 @@ Sherka gives your AI a presence beyond a chat window: a transparent companion th
 | --- | --- | --- |
 | Streamed replies, speech prepared ahead, and voice interruption. Keep the conversation flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click. |
 | **🧠 Memories you control** | **🌐 A little help from the web** | **💬 Seven interface languages** |
-| Review, edit or correct what your companion remembers, in the interface or by asking. | Optional [DuckDuckGo search](docs/WEB_SEARCH.md) with source links. No search account or key required. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
+| Review, edit or delete saved facts. Clear a conversation while keeping the facts you chose to save. | Optional [DuckDuckGo search](docs/WEB_SEARCH.md) with source links. No search account or key required. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
 
 The built-in Sherka is ready in every interface language. Custom companions keep the language you choose for them.
 

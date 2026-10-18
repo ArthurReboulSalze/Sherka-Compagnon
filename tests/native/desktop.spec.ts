@@ -953,6 +953,7 @@ test('texte indépendant du TTS, synthèse anticipée et annulation de toute la 
   const poem = 'Les chatons endormis rêvent dans le jardin, la lune les éclaire et veille sur leurs jeux.\n'.repeat(20);
   const timers: ReturnType<typeof setTimeout>[] = [];
   let failVoice = false;
+  let completeLongReply = false;
   const server = createServer((request, response) => {
     if (models(request,response)) return;
     let body = '';
@@ -962,7 +963,7 @@ test('texte indépendant du TTS, synthèse anticipée et annulation de toute la 
         spoken.push({ text: JSON.parse(body).input, at: Date.now() });
         timers.push(setTimeout(() => {
           response.writeHead(failVoice ? 503 : 200, { 'Content-Type': 'audio/pcm' });
-          response.end(failVoice ? '{}' : Buffer.alloc(24_000 * 2 * 4));
+          response.end(failVoice ? '{}' : Buffer.alloc(24_000 * 2 * (completeLongReply ? 0.1 : 4)));
         }, 80));
       } else {
         response.writeHead(200, { 'Content-Type': 'text/event-stream' });
@@ -996,6 +997,25 @@ test('texte indépendant du TTS, synthèse anticipée et annulation de toute la 
     await expect(panel.locator('#conversation-error')).toContainText('HTTP 503');
     await expect.poll(async () => (await native<any[]>('get_history', { profileId: p.id })).filter((m) => m.role === 'assistant').length).toBe(2);
     expect((await native<any[]>('get_history', { profileId: p.id })).at(-1).content.trim()).toBe(poem.trim());
+    // A long answer must drain every prepared phrase, including its final
+    // paragraph, and a synthesis failure must not break the following turn.
+    // PCM is digital silence: real WASAPI callbacks, no sound or microphone.
+    failVoice = false;
+    completeLongReply = true;
+    const current = (await native<any>('get_snapshot')).profiles.find((profile:any) => profile.id === p.id);
+    await native('apply_mutation', {mutation:{kind:'connections',id:p.id,revision:current.revision,connections:{...current.connections,volume:1}}});
+    await native('send_message', {profileId:p.id,text:'Read the complete long reply',speak:true});
+    await expect.poll(async () => (await native<any[]>('get_history', {profileId:p.id})).filter(m => m.role === 'assistant').length, {timeout:30_000}).toBe(3);
+    const completed = (await native<any[]>('get_history', {profileId:p.id})).at(-1);
+    expect(completed.delivery).toBe('completed');
+    expect(completed.content.trim()).toBe(poem.trim());
+    expect(completed.heard_content.replace(/\s/g,'')).toBe(poem.replace(/\s/g,''));
+    expect((await native<any>('get_conversation')).live.error).toBeNull();
+    const diagnostics = readFileSync(resolve(dataDirectory, 'audio-events.log'),'utf8');
+    expect(diagnostics).toContain('speech_output_failed');
+    expect(diagnostics).toContain('response_completed');
+    expect(diagnostics).not.toContain('Les petits chatons');
+    expect(diagnostics).not.toContain('Read the complete long reply');
     expect(consoleErrors).toEqual([]);
   } finally {
     timers.forEach(clearTimeout); server.closeAllConnections();
@@ -1925,6 +1945,22 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
     await send('bonjour principal');await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)?.body.message).toBe('bonjour principal');await expect(panel.locator('#conversation-history')).toContainText('Bonjour default, été fluide.');expect(requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path).not.toContain('/p/maman/');
     expect(JSON.stringify(await native('get_snapshot'))).not.toContain('hermes-fixture');
     expect(requests.filter(r=>r.path.endsWith('/chat/stream')).every(r=>Object.keys(r.body).join()==='message')).toBe(true);
+    await send('Efface notre conversation');
+    await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)?.body.message).toBe('Efface notre conversation');
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    const previousSession=requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path;
+    const beforeClear=requests.filter(r=>r.path.endsWith('/chat/stream')).length;
+    await panel.locator('#clear-conversation').click();
+    await expect(panel.locator('.modal-hint')).toContainText('uniquement l’historique local');
+    await expect(panel.locator('#erase-saved-facts')).toHaveCount(0);
+    await panel.locator('#clear-confirm').click();
+    await expect(panel.locator('#clear-title')).toHaveCount(0);
+    expect(await native('get_history',{profileId:p.id})).toEqual([]);
+    expect(await native('search_archive',{profileId:p.id,query:'Bonjour'})).toEqual([]);
+    expect(requests.filter(r=>r.path.endsWith('/chat/stream')).length).toBe(beforeClear);
+    await send('fresh client conversation');
+    await expect.poll(()=>requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)?.body.message).toBe('fresh client conversation');
+    expect(requests.filter(r=>r.path.endsWith('/chat/stream')).at(-1)!.path).not.toBe(previousSession);
   } finally {
     for(const profile of ['default','maman']) await native('set_provider_key',{connections:{...config,hermes_profile:profile},key:null}).catch(()=>{});
     server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));
@@ -2072,4 +2108,68 @@ test('hermes live: two server profiles and persistent conversation', async () =>
     report.push({profile:name,passed:true,usage:v.live.usage});
   }
   writeFileSync('artifacts/hermes-live-validation.json',JSON.stringify({profiles:report,physical_audio_test:false},null,2));
+});
+
+test('privacy: clear dialogue, preserve saved facts, delete individual facts and handle spoken receipts', async () => {
+  const fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
+  const models=modelRoutes(['privacy-chat']); let chats=0; const speech:string[]=[];
+  const server=createServer((req,res)=>{
+    if(models(req,res)) return;
+    if(req.method==='GET' && fixture[req.url??'']) {res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(fixture[req.url!]));return;}
+    let body='';req.on('data',part=>body+=part);req.on('end',()=>{
+      if(req.url==='/v1/audio/speech'){speech.push(JSON.parse(body).input);res.writeHead(200,{'Content-Type':'audio/pcm'});res.end(Buffer.alloc(4800));return;}
+      chats++;res.writeHead(200,{'Content-Type':'text/event-stream'});res.end('data: '+JSON.stringify({choices:[{delta:{content:'A private fixture reply.'}}]})+'\n\ndata: [DONE]\n\n');
+    });
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
+  const url='http://127.0.0.1:'+(server.address() as {port:number}).port;
+  try {
+    const initial=await native<any>('get_snapshot');const p=initial.profiles[0];
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...p.connections,lm_studio_url:url,voice_studio_url:url,llm_model:'privacy-chat',tts_engine:'omni',tts_voice:'fixture',volume:0}}});
+    const remember=async(content:string)=>{const m=await native<any>('get_memories',{profileId:p.id,query:''});return native<any>('edit_memory',{profileId:p.id,epoch:m.epoch,edit:{action:'write',id:null,draft:{content,category:'Preferences',kind:'essential'}}});};
+    await remember('Keep this explicit fact.');await remember('Delete this individual fact.');
+    await native('send_message',{profileId:p.id,text:'Private fixture conversation',speak:false});
+    await expect.poll(async()=> (await native<any[]>('get_history',{profileId:p.id})).length).toBe(2);
+    await panel.getByRole('button',{name:'Conversation',exact:true}).click();
+    await panel.locator('#clear-conversation').click();
+    await expect(panel.locator('#erase-saved-facts')).not.toBeChecked();
+    await panel.screenshot({path:'artifacts/conversation-privacy-dialog.png'});
+    await panel.locator('#clear-cancel').click();
+    expect((await native<any[]>('get_history',{profileId:p.id})).length).toBe(2);
+    await panel.locator('#clear-conversation').click();await panel.locator('#clear-confirm').click();
+    await expect(panel.locator('#clear-title')).toHaveCount(0);
+    expect(await native('get_history',{profileId:p.id})).toEqual([]);
+    expect(await native('search_archive',{profileId:p.id,query:'Private fixture'})).toEqual([]);
+    expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries.length).toBe(2);
+    await panel.getByRole('button',{name:'Mémoire & histoire',exact:true}).click();
+    const card=panel.locator('.memory-entry').filter({hasText:'Delete this individual fact.'});
+    await card.getByRole('button',{name:'Supprimer ce fait',exact:true}).click();
+    await expect(card).toHaveCount(0);
+    expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries[0].content).toBe('Keep this explicit fact.');
+    await panel.getByRole('button',{name:'Conversation',exact:true}).click();
+    await native('send_message',{profileId:p.id,text:"N'efface pas notre conversation",speak:false});
+    await expect.poll(async()=> (await native<any[]>('get_history',{profileId:p.id})).length).toBe(2);
+    const before=chats;
+    const devices=await native<{outputs:{is_default:boolean}[]}>('get_audio_devices');
+    const canSpeak=!process.env.SHERKA_TEST_TEXT_ONLY && devices.outputs.some(d=>d.is_default);
+    await native('send_message',{profileId:p.id,text:'Efface notre conversation',speak:canSpeak});
+    await expect.poll(async()=> (await native<any>('get_conversation')).live.notice).toContain('Conversation effacée');
+    if(canSpeak) await expect.poll(()=>speech.length).toBe(1);
+    await expect.poll(async()=> (await native<any>('get_snapshot')).session.response).toBe('idle');
+    expect(chats).toBe(before);expect(await native('get_history',{profileId:p.id})).toEqual([]);
+    expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries.length).toBe(1);
+    await native('send_message',{profileId:p.id,text:'/clear',speak:false});
+    await expect.poll(async()=> (await native<any[]>('get_history',{profileId:p.id})).length).toBe(0);
+    await panel.locator('#clear-conversation').click();await panel.locator('#erase-saved-facts').check();await panel.locator('#clear-confirm').click();
+    await expect(panel.locator('#clear-title')).toHaveCount(0);
+    expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toEqual([]);
+    const current=(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id);
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:current.revision,connections:{...current.connections,llm_model:null,tts_engine:null,tts_voice:null}}});
+    await native('send_message',{profileId:p.id,text:'/clear',speak:true});
+    expect(await native('get_history',{profileId:p.id})).toEqual([]);
+    await stopApplication();await startApplication();
+    expect(await native('get_history',{profileId:p.id})).toEqual([]);
+    expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toEqual([]);
+    expect(consoleErrors).toEqual([]);
+  } finally {server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
 });

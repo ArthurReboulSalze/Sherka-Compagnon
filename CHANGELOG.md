@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0 — 2026-10-18
+
+- Clear a companion’s local conversation, archives, sources and summaries while keeping explicitly saved or approved facts by default; optionally clear saved facts too.
+- Accept explicit conversation-reset requests in seven languages and `/clear`, with a spoken local acknowledgement and no extra language-model request.
+- Delete individual facts from the Memory page and exported memory data.
+- Cancel stale generation/extraction jobs and reset capture/session references so deleted history cannot be reintroduced. Hermes server data remains under Hermes control.
+- Keep spoken replies and microphone consent active through temporary capture-buffer congestion; discard damaged utterances and resume after a pause.
+- Keep transcription failures local to the affected turn instead of disabling the microphone.
+- Avoid unused echo-reference work in headphone and playback-only modes.
+- Preserve bounded local audio diagnostics across restarts, without recordings, conversation content or credentials.
+
 ## 0.8.1 — 2026-10-18
 
 - Regenerate the Windows, installer, tray and in-app icons from the tightly cropped golden logo.

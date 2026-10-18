@@ -1,5 +1,15 @@
 # User guide
 
+## Clear conversations and manage saved facts
+
+In **Conversation**, choose **Clear conversation**. The confirmation keeps saved facts by default: facts entered manually, requested explicitly, or approved with **Remember this** survive. Messages, source quotations, automatic suggestions, summaries and searchable archives are removed for that companion. Select **Also delete saved facts** only when you want those removed too. The companion's personality, images, voice and model settings stay intact.
+
+You can also say **“Clear our conversation”** or type **`/clear`**. This preserves saved facts and runs locally without asking the language model to decide what to delete. The spoken acknowledgement does not create a new history entry. Requests must be explicit; quoted instructions and negated examples do not trigger deletion. Supported examples include “Efface notre conversation”, “Borra nuestra conversación”, “Cancella la nostra conversazione”, “Lösche unseren Chatverlauf”, “清空我们的对话” and “会話履歴を削除して”.
+
+In **Memory**, **Delete this fact** removes an individual saved fact, including from future memory exports. Earlier exchanges are excluded from recall so the fact is not immediately reconstructed. Clear the conversation as well if you also want its historical messages removed. Existing exports or backups are not modified.
+
+For **Hermes**, the panel action clears only Sherka's local history and resets its client conversation reference. Hermes owns its server conversations, memory and tools; requests spoken to Hermes continue to go to Hermes. For hosted model providers, local deletion does not remove data already received by the provider.
+
 ## On your desktop
 
 Hover to reveal controls. Click to keep them visible; click again or press Escape to release them. Drag the portrait to move it and use its corner to resize. The panel and widget can be hidden independently.

@@ -1,3 +1,4 @@
+mod audio_diagnostics;
 mod conversation;
 pub mod portable_update;
 mod service_process;
@@ -356,6 +357,26 @@ async fn get_history(shared: State<'_, Shared>, profile_id: Uuid) -> Result<Vec<
 }
 
 #[tauri::command]
+async fn clear_conversation(
+    app: AppHandle,
+    shared: State<'_, Shared>,
+    voice: State<'_, Voice>,
+    profile_id: Uuid,
+    erase_saved_facts: bool,
+) -> Result<(), String> {
+    conversation::clear(
+        &app,
+        shared.inner().clone(),
+        voice.inner(),
+        profile_id,
+        erase_saved_facts,
+        None,
+    )
+    .await
+    .map(|_| ())
+}
+
+#[tauri::command]
 async fn get_memories(
     shared: State<'_, Shared>,
     profile_id: Uuid,
@@ -387,6 +408,9 @@ enum MemoryEdit {
     Forget {
         id: i64,
     },
+    Delete {
+        id: i64,
+    },
     Approve {
         id: i64,
     },
@@ -412,6 +436,7 @@ async fn edit_memory(
                 c.store.write_memory(&guard, id, &draft)?;
             }
             MemoryEdit::Forget { id } => c.store.forget_memory(&guard, id)?,
+            MemoryEdit::Delete { id } => c.store.delete_memory(&guard, id)?,
             MemoryEdit::Approve { id } => c.store.approve_memory(&guard, id)?,
         }
         c.store.memories(profile_id, "")
@@ -751,6 +776,7 @@ pub fn run() {
             switch_companion,
             apply_mutation,
             get_history,
+            clear_conversation,
             get_memories,
             edit_memory,
             search_archive,
@@ -799,7 +825,7 @@ pub fn run() {
                     .map_err(std::io::Error::other)?,
             );
             app.manage(shared.clone());
-            app.manage(Voice::setup(app.handle().clone(), shared));
+            app.manage(Voice::setup(app.handle().clone(), shared, &directory));
             // Build webviews only after registering the engine. Config-created
             // webviews can execute JS before setup and race the first IPC call.
             for config in &app.config().app.windows.clone() {

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-clear-conversation"
+description = "Enables the clear_conversation command without any pre-configured scope."
+commands.allow = ["clear_conversation"]
+
+[[permission]]
+identifier = "deny-clear-conversation"
+description = "Denies the clear_conversation command without any pre-configured scope."
+commands.deny = ["clear_conversation"]

@@ -9,6 +9,42 @@ const drafts = new Map<string, string>();
 let spoken = true;
 let historyRequest = 0;
 
+export function clearConversationDraft(profileId: string): void {
+  drafts.delete(profileId);
+  ++historyRequest;
+  if (document.querySelector<HTMLElement>('#conversation-history')?.dataset.profile === profileId) {
+    const input = document.querySelector<HTMLTextAreaElement>('#chat-text');
+    if (input) input.value = '';
+    void loadConversationHistory(profileId).catch(() => {});
+  }
+}
+
+function confirmClear(profile: Profile, report: (e: unknown) => void): void {
+  const remote = profile.connections.llm_provider === 'hermes';
+  const dialog = document.createElement('dialog');
+  dialog.className = 'modal';
+  dialog.setAttribute('aria-labelledby', 'clear-title');
+  dialog.innerHTML = html`<div class="modal-header"><h2 id="clear-title">Effacer la conversation avec ${escape(profile.name)} ?</h2></div><p>Les messages, leurs sources et les résumés seront supprimés de ce PC. Les faits que tu as enregistrés ou validés seront conservés.</p>${remote ? html`<p class="modal-hint">Hermes conserve ses conversations et sa mémoire sur son serveur. Cette action efface uniquement l’historique local et démarre une nouvelle conversation côté Sherka.</p>` : html`<label class="inline-check"><input type="checkbox" id="erase-saved-facts" /> Effacer aussi les faits sauvegardés</label>`}<p class="muted">Cette action ne peut pas être annulée.</p><p id="clear-error" role="alert"></p><div class="modal-actions"><button type="button" class="button quiet" id="clear-cancel">Annuler</button><button type="button" class="button destructive" id="clear-confirm">Effacer la conversation</button></div>`;
+  dialog.addEventListener('close', () => dialog.remove());
+  dialog.querySelector('#clear-cancel')!.addEventListener('click', () => dialog.close());
+  dialog.querySelector<HTMLButtonElement>('#clear-confirm')!.addEventListener('click', async () => {
+    const button = dialog.querySelector<HTMLButtonElement>('#clear-confirm')!;
+    button.disabled = true;
+    try {
+      await api.clearConversation(profile.id, dialog.querySelector<HTMLInputElement>('#erase-saved-facts')?.checked ?? false);
+      clearConversationDraft(profile.id);
+      dialog.close();
+    } catch (e) {
+      dialog.querySelector('#clear-error')!.textContent = feedback(String(e));
+      button.disabled = false;
+      report(e);
+    }
+  });
+  document.body.append(dialog);
+  dialog.showModal();
+  dialog.querySelector<HTMLButtonElement>('#clear-cancel')!.focus();
+}
+
 export function status(session: Snapshot['session']): string {
   if (session.transcription === 'capturing') return t('Je t’écoute…');
   if (session.transcription === 'transcribing') return t('Je transcris ta phrase…');
@@ -21,6 +57,7 @@ export function status(session: Snapshot['session']): string {
 export function conversationView(profile: Profile, mode: Snapshot['settings']['web_search']): string {
   return html`<div class="page-heading"><div><p class="eyebrow">UNE CONVERSATION, TOUT SIMPLEMENT</p><h1>Avec ${escape(profile.name)}<span>.</span></h1><p>Active le micro, parle naturellement. Tu peux l’interrompre à tout moment.</p></div></div>
     <section class="conversation-controls"><button class="button primary" data-action="toggle_microphone" data-mic-toggle>${icon('mic')} <span>Activer le micro</span></button><button class="button secondary" data-action="${profile.connections.llm_provider === 'hermes' ? 'stop_hermes' : 'stop_response'}">${icon('stop')} ${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}</button><div class="voice-indicator"><span data-session-status></span><meter data-meter min="0" max="1" value="0" aria-label="Niveau du microphone"></meter><small data-speech-indicator>Microphone coupé</small></div></section>
+    <div class="conversation-privacy"><button type="button" class="button quiet small" id="clear-conversation">${icon('trash')} ${profile.connections.llm_provider === 'hermes' ? t('Effacer l’historique local') : t('Effacer la conversation')}</button>${profile.connections.llm_provider === 'hermes' ? '' : html`<small>Tu peux aussi dire « Efface notre conversation » ou écrire /clear. Tes faits sauvegardés restent en mémoire.</small>`}</div>
     <p class="conversation-error" id="conversation-error" role="alert" hidden></p><p class="muted" id="conversation-notice" hidden></p>
     <section class="settings-card" id="hermes-approval" hidden></section>
     <p class="memory-receipt" id="memory-receipt" role="status" hidden></p>
@@ -32,6 +69,7 @@ export function conversationView(profile: Profile, mode: Snapshot['settings']['w
 export function mountConversation(profile: Profile, report: (e: unknown) => void): void {
   const form = document.querySelector<HTMLFormElement>('#message-form');
   if (!form) return;
+  document.querySelector('#clear-conversation')?.addEventListener('click', () => confirmClear(profile, report));
   const input = form.querySelector<HTMLTextAreaElement>('#chat-text')!;
   input.addEventListener('input', () => drafts.set(profile.id, input.value));
   form.querySelector<HTMLInputElement>('#speak-reply')!.addEventListener('change', (e) => { spoken = (e.target as HTMLInputElement).checked; });

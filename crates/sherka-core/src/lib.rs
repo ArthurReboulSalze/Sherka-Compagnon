@@ -13,6 +13,7 @@ pub mod memory;
 pub mod model;
 pub mod models;
 pub mod presets;
+pub mod privacy;
 pub mod providers;
 pub mod runtime;
 pub mod session;

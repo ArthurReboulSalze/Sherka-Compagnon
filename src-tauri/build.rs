@@ -13,6 +13,7 @@ fn main() {
             "switch_companion",
             "apply_mutation",
             "get_history",
+            "clear_conversation",
             "get_memories",
             "edit_memory",
             "search_archive",

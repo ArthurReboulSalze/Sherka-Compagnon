@@ -28,6 +28,8 @@ Remote contract tests use loopback servers and temporary Windows vault entries. 
 
 Windows CI checks Rust, TypeScript and native flows without external services or real audio hardware. A network simulation does not validate acoustic interruption: distinguish automated, real-service and headphone/speaker tests.
 
+The audio unit tests inject callback/event-queue congestion during synthetic capture, check that playback remains valid, reject partial commands after a gap, and verify that fresh barge-in still works. Desktop coordinator tests verify microphone consent and stale-result rejection after transcription failure. The native `texte indépendant du TTS` scenario exercises long-answer completion, queued-speech cancellation, a VoiceStudio failure and the next successful turn using silent PCM. Technical events are written only to its isolated data directory; these tests do not open a physical microphone.
+
 `npm run check` includes the shared translation catalog audit and text-isolation tests. The native `languages:` scenario exercises all seven interfaces and persistence with mock services and isolated profiles.
 
 CI prepares WebView2 and native inference library search paths before launching the UI tests on Windows Server. Elevated hosted runners also need an EXE-scoped HKLM test policy for the debugging port and isolated browser data: recent WebView2 versions [ignore environment overrides in elevated apps](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/webview-features-flags). The fixture removes its values after each launch; local tests use environment variables only.
@@ -37,6 +39,10 @@ CI prepares WebView2 and native inference library search paths before launching 
 Read [architecture](ARCHITECTURE.md) and [contracts](CONNECTIONS.md), then open an issue or pull request with appropriate validation. Preserve isolation, cancellation and separate widget/panel permissions. Never attach databases, personal exports, recordings, secrets or `.env`. Contributions are GPL-3.0-only.
 
 Distribution instructions: [releasing](RELEASING.md).
+
+### Conversation privacy checks
+
+The core `privacy` suite checks saved-fact preservation, optional complete clearing, individual fact deletion, empty archive/FTS results, removed source quotations and summaries, SQLite integrity, profile isolation, persistence after reopen and rejection of stale generation/extraction results. Command-parser tests cover all seven languages and negative/quoted requests. The native `privacy:` scenario exercises the confirmation dialog, cancellation, the unchecked saved-facts option, individual deletion, local speech acknowledgement, `/clear` without configured providers and restart persistence. Services and data are synthetic; it never deletes the developer's conversations or contacts a real model.
 
 ## Application branding
 

@@ -155,6 +155,18 @@ impl Store {
         Ok(())
     }
 
+    pub fn clear_hermes_sessions(&self, companion: Uuid) -> Result<()> {
+        let mut db = connect(&self.root.join("settings.sqlite3"), false)?;
+        let tx = db.transaction()?;
+        tx.execute("DELETE FROM hermes_session_tips WHERE session IN (SELECT session FROM hermes_sessions WHERE companion=?1)", [companion.to_string()])?;
+        tx.execute(
+            "DELETE FROM hermes_sessions WHERE companion=?1",
+            [companion.to_string()],
+        )?;
+        tx.commit()?;
+        Ok(())
+    }
+
     fn transcript_session(&self, id: Uuid) -> Result<Option<String>> {
         let config = self.profile(id)?.details.connections;
         if config.llm_provider.is_agent() {

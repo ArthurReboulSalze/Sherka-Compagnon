@@ -302,6 +302,10 @@ html:has(.widget-body) { background: transparent; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 /* Conversation updates touch these nodes without rebuilding the composer. */
 .conversation-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 22px; }
+.conversation-privacy { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.conversation-privacy small { color: var(--muted); max-width: 560px; line-height: 1.6; }
+.modal .inline-check { display: flex; align-items: center; gap: 10px; margin: 20px 0; }
+.modal .inline-check input { width: auto; accent-color: var(--accent); }
 .voice-indicator { display: grid; gap: 5px; margin-left: auto; min-width: 180px; color: var(--muted); font-size: 12px; }
 .voice-indicator meter { width: 100%; height: 7px; accent-color: #9cc7ac; }
 .conversation-log { min-height: 245px; max-height: 48vh; overflow-y: auto; padding: 6px 14px 6px 0; scroll-behavior: smooth; }

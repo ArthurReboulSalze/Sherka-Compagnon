@@ -5,7 +5,7 @@ The current companion image packs and golden orbital-star application logo were 
 - `public/branding/sherka-logo-v2.png`: golden orbital-star application emblem. `docs/images/sherka-logo-gold-v2.png` is an identical copy for the README with a distinct cache-safe filename.
 - `public/assets/sherka.png` and `public/assets/sherka/`: the updated neutral portrait and six expressions for the retrofuturistic shipboard companion. The project is unaffiliated with Ulysses 31.
 - `public/assets/botsy/`, `alba/`, `kit/` and `minerva-v2/`: author-supplied neutral and emotion images for the four starter companions.
-- `docs/images/sherka-0.8.1.png`: screenshot of the actual 0.8.1 application using fresh isolated demo profiles, without personal conversations or memories.
+- `docs/images/sherka-0.9.0.png`: screenshot of the actual 0.9.0 application using fresh isolated demo profiles, without personal conversations or memories.
 - `docs/images/features-gold.svg`: repository-authored feature badges matching the golden application identity.
 
 The original October 10 Sherka and Orion illustrations were generated with the integrated image tool. Orion is no longer distributed as a starter companion. Voice profiles, private conversations and downloaded models are not distributed.

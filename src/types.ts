@@ -109,7 +109,7 @@ export interface MemoryDraft { content: string; category: string; kind: 'essenti
 export interface MemorySource { id: string; content: string; created_at: number }
 export interface MemoryEntry extends MemoryDraft { id: number; revision: number; status: string; approved: boolean; origin: string; created_at: number; updated_at: number; sources: MemorySource[] }
 export interface MemoryState { epoch: number; entries: MemoryEntry[]; summary: string; summary_at: number; archive_count: number; excluded_count: number }
-export type MemoryEdit = { action: 'write'; id: number | null; draft: MemoryDraft } | { action: 'forget' | 'approve'; id: number };
+export type MemoryEdit = { action: 'write'; id: number | null; draft: MemoryDraft } | { action: 'forget' | 'delete' | 'approve'; id: number };
 export interface VoiceCatalog {
   service_version: string;
   streaming_transcription: boolean;
