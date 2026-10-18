@@ -1,6 +1,6 @@
 # Roadmap
 
-Sherka 0.9.0 is the current published release. The 0.10 development build adds desktop text, themes, Illustrious conversation illustrations and a first Linux port. These remaining directions are not delivery promises.
+Sherka 0.10.0 adds desktop text, themes, Illustrious conversation illustrations and a first Linux port. These remaining directions are not delivery promises.
 
 ## Bring companions to life
 

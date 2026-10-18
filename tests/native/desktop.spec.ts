@@ -2181,6 +2181,33 @@ test('privacy: clear dialogue, preserve saved facts, delete individual facts and
 });
 
 
+test('widget text resize: canvas follows text height without moving the image and preserves it on repaint',async()=>{
+  const state=await native<any>('get_snapshot'),p=state.profiles.find((item:any)=>item.name==='Kit');
+  await native('apply_mutation',{mutation:{kind:'switch_profile',id:p.id}});
+  await native('apply_mutation',{mutation:{kind:'preferences',preferences:{always_on_top:true,widget_scale:65}}});
+  await native('widget_action',{action:'show_widget'});
+  await expect.poll(()=>widget.locator('.widget').evaluate(element=>element.getBoundingClientRect().height)).toBeLessThan(230);
+  await widget.locator('#drag-region').hover();await widget.locator('#widget-text').click();
+  await expect(widget.locator('#cell-text')).toBeVisible();
+  await expect.poll(()=>widget.evaluate(()=>document.querySelector('#widget-text-cell')!.getBoundingClientRect().bottom<=innerHeight+1)).toBe(true);
+  const original=await widget.evaluate(()=>innerHeight);
+  // Native CSS textarea resizing changes its height without dispatching input.
+  await widget.locator('#cell-text').evaluate((element:HTMLTextAreaElement)=>element.style.height='100px');
+  await expect.poll(()=>widget.evaluate(()=>document.querySelector('#widget-text-cell')!.getBoundingClientRect().bottom<=innerHeight+1)).toBe(true);
+  expect(await widget.evaluate(()=>innerHeight)).toBeGreaterThan(original+30);
+  await native('apply_mutation',{mutation:{kind:'theme',theme:'sage'}});
+  await expect(widget.locator('html')).toHaveAttribute('data-theme','sage');
+  await expect.poll(()=>widget.locator('#cell-text').evaluate(element=>element.getBoundingClientRect().height)).toBe(100);
+  await widget.locator('#drag-region').hover();await widget.locator('#widget-text').click();
+  await expect(widget.locator('#widget-text-cell')).toBeHidden();
+  await widget.locator('#drag-region').hover();await widget.locator('#widget-text').click();
+  await expect.poll(()=>widget.locator('#cell-text').evaluate(element=>element.getBoundingClientRect().height)).toBe(100);
+  await widget.locator('#cell-text').evaluate((element:HTMLTextAreaElement)=>element.style.height='36px');
+  await expect.poll(()=>widget.evaluate(()=>innerHeight)).toBeLessThan(original+10);
+  await widget.screenshot({path:'artifacts/widget-text-resize.png'});
+  expect(consoleErrors).toEqual([]);
+});
+
 test('desktop scenes: tight widget chrome, profile halo, themes, quick text and Illustrious images', async () => {
   test.setTimeout(150_000);
   const canSpeak=process.env.SHERKA_TEST_TEXT_ONLY!=='1';

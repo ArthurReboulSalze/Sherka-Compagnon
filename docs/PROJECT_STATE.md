@@ -1,10 +1,10 @@
 # Project status
 
-Release version: **0.9.0**, October 18, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+Release version: **0.10.0**, October 18, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
-## 0.10 development — inline cells, scenes and Linux
+## 0.10.0 — inline cells, scenes and Linux
 
-The working version is **0.10.0-alpha.2**. Widget controls follow visible image bounds, including Kit's wide silhouette, and the active halo follows the character's accent. Six global themes color the interface. Text and image cells share the avatar's transparent window: text stays below the buttons, while the image can move and resize relative to the companion. Both follow the widget and toggle from the same buttons. Text supports typing/pasting, drops, optional spoken replies and IME composition. Widget errors are brief and cannot intercept the controls.
+Version **0.10.0** adds automatic text-cell surface resizing and preserves the chosen height through repainting. Widget controls follow visible image bounds, including Kit's wide silhouette, and the active halo follows the character's accent. Six global themes color the interface. Text and image cells share the avatar's transparent window: text stays below the buttons, while the image can move and resize relative to the companion. Both follow the widget and toggle from the same buttons. Text supports typing/pasting, drops, optional spoken replies and IME composition. Widget errors are brief and cannot intercept the controls.
 
 Classic companions can use a per-profile ComfyUI connection with an Illustrious checkpoint, physical description, optional LoRAs/strength sliders and automatic hidden Turbo LoRA selection. The supplied graph repairs prompt/CLIP wiring and generates square temporary previews. Planning starts as soon as text generation completes, while voice continues. One freely composed Illustrious scene prompt drives 1–8 sequential variants, shown in a looping slideshow with configurable timing and 500 ms crossfades. Only the latest user/reply pair and appearance are used; dialogue, memory and avatar emotions remain separate. Hermes is excluded. New input, profile/configuration changes or clearing invalidate older jobs. See [ComfyUI setup](COMFYUI.md).
 
@@ -16,7 +16,7 @@ Earlier alpha.1 service validation passed a real synthetic exchange through GLM 
 
 Linux has Secret Service credentials, native source-link opening, Debian packaging and CI configuration. External voice services start separately and updates are manual. Debian 13 x86-64 passed 109 Rust tests, all static/localization checks, native Debian packaging and an extracted-package startup under Xvfb. No LM Studio or VoiceStudio was installed. Physical desktop/audio checks remain unvalidated; see [Linux development](LINUX.md).
 
-Profile/settings schema is **8** and profile exports are **version 4**, accepting legacy versions 1–3. Development checks use isolated data and singleton identifiers. The published stable release remains **0.9.0**.
+Profile/settings schema is **8** and profile exports are **version 4**, accepting legacy versions 1–3. Development checks use isolated data and singleton identifiers. Windows updates use the signed installer/executable manifest; Linux packages update manually.
 
 ## Published release history
 

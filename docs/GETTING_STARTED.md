@@ -12,6 +12,7 @@ These applications, voices and models are separate downloads with their own lice
 From [official Releases](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest):
 
 - **Installer:** run `Sherka-Compagnon_<version>_x64-setup.exe`, then launch from the Start menu. Installation is per user and offers WebView2 if needed.
+- **Debian x64:** download the `.deb` and follow the [Linux setup guide](LINUX.md). External services start separately and updates are manual.
 - **No installation:** extract the entire `Sherka-Compagnon_<version>_windows-x64-portable.zip` into a writable folder and run `sherka-compagnon.exe`. Do not run inside the ZIP. WebView2 must already be present; get it from [Microsoft](https://developer.microsoft.com/en-us/microsoft-edge/webview2/).
 
 Windows 11 x64 is the tested platform. Windows 10 with WebView2 may work but has not received equivalent validation. Executables do not carry an Authenticode certificate, so SmartScreen may ask for confirmation. Sherka update signatures are a separate mechanism.

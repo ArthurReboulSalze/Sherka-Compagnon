@@ -16,7 +16,7 @@ Hover to reveal controls. Click to keep them visible; click again or press Escap
 
 The widget menu switches companions. The notification icon restores the widget and clicks, opens the panel, pauses voice or exits.
 
-In the 0.10 development build, **Text** toggles a transparent input cell below the avatar's controls. Type or paste, press Enter to send and Shift+Enter for a new line. Its checkbox chooses whether to read the reply aloud. Drop text or a text file onto the companion to prepare a message; nothing is submitted until you send it. You can also attach up to four PNG, JPEG or WebP images when the selected model supports vision. Unknown model capabilities require explicit confirmation in the advanced connection settings; a model advertised as text-only cannot accept images. Attachments are sent for that turn only, without storing their pixels in conversation history or memory.
+In version 0.10, **Text** toggles a transparent input cell below the avatar's controls. Type or paste, press Enter to send and Shift+Enter for a new line. Its checkbox chooses whether to read the reply aloud. Drop text or a text file onto the companion to prepare a message; nothing is submitted until you send it. You can also attach up to four PNG, JPEG or WebP images when the selected model supports vision. Unknown model capabilities require explicit confirmation in the advanced connection settings; a model advertised as text-only cannot accept images. Attachments are sent for that turn only, without storing their pixels in conversation history or memory.
 
 **Image** toggles the optional conversation illustration cell; configure it under Companions first. Drag it to change its position relative to the avatar and resize it from its corner. Choose the image count and slideshow duration in the illustration settings. Images start preparing after text generation, while speech continues. Pressing Image again hides the cell and disables subsequent generations. Both cells follow the widget without opening additional windows. Controls follow the visible avatar bounds, and the character's chosen color supplies its active halo. Application themes are selected in Settings.
 
@@ -36,7 +36,7 @@ The expression lasts through the reply and speech playback. Images crossfade ove
 
 Choose local PNG/WebP files up to 10 MiB each, with dimensions up to 4096 × 4096. Sherka validates them, preserves transparency and stores normalized copies up to 1024 × 1024 in the character’s database. You can move the original files afterwards. Resetting an expression removes that slot and uses the neutral portrait; resetting the neutral portrait restores the bundled base image. Images never go to the conversation provider. Built-in images are bundled with the app and can be replaced individually.
 
-The 0.10 development build can generate separate [conversation illustrations through ComfyUI](COMFYUI.md). Avatar expression packs still use the local images selected here; automatic avatar generation is a later step.
+Sherka 0.10 can generate separate [conversation illustrations through ComfyUI](COMFYUI.md). Avatar expression packs still use the local images selected here; automatic avatar generation is a later step.
 
 ## Voice and memory
 
@@ -54,7 +54,7 @@ Both distributions use `%LOCALAPPDATA%\fr.sherka.compagnon`: a settings database
 
 Transient audio stays in memory; Sherka does not save microphone recordings. Interrupted turns distinguish generated text from completed spoken passages. External applications have their own privacy settings.
 
-For a full backup, exit normally and copy the data folder. Profile JSON exports (version 4 in development, up to 48 MiB) contain custom expression images, the bundled preset reference, personality, connection references, illustration and search preferences, **without history, memories or keys**. Legacy versions 1, 2 and 3 can still be imported. Duplicating a character also keeps its images, voice, illustration and search settings. Memory exports are separate and may contain personal information.
+For a full backup, exit normally and copy the data folder. Profile JSON exports (version 4, up to 48 MiB) contain custom expression images, the bundled preset reference, personality, connection references, illustration and search preferences, **without history, memories or keys**. Legacy versions 1, 2 and 3 can still be imported. Duplicating a character also keeps its images, voice, illustration and search settings. Memory exports are separate and may contain personal information.
 
 ## Updating
 

@@ -4,15 +4,15 @@
 
 <h1 align="center">Sherka Companion</h1>
 <p align="center"><strong>A voice. A personality. A place on your desktop.</strong></p>
-<p align="center">Five personalities. Seven expressions. Natural voice conversations on your desktop.</p>
+<p align="center">Five personalities. Seven expressions. Voice and imagination on your desktop.</p>
 <p align="center"><em>Your models. Your voices. Your companion.</em></p>
 
 <p align="center">
-  <img src="docs/images/features-gold.svg" alt="Windows x64 · Local voice · 7 languages · GPLv3" width="492">
+  <img src="docs/images/features-gold.svg" alt="Windows &amp; Linux · Local voice · 7 languages · GPLv3" width="492">
 </p>
 
 <p align="center">
-  <a href="https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest"><strong>↓ Download for Windows</strong></a> &nbsp;·&nbsp;
+  <a href="https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest"><strong>↓ Download for Windows &amp; Linux</strong></a> &nbsp;·&nbsp;
   <a href="docs/GETTING_STARTED.md">Quick start</a> &nbsp;·&nbsp;
   <a href="docs/README.md">Documentation</a> &nbsp;·&nbsp;
   <a href="docs/ROADMAP.md">What's next</a>
@@ -21,13 +21,11 @@
 ---
 
 <p align="center">
-  <img src="docs/images/sherka-0.9.0.png" alt="Sherka 0.9.0 control panel: golden app logo, five companions and avatar settings" width="1000">
+  <img src="docs/images/sherka-0.10.0.png" alt="Sherka 0.10.0 control panel: golden app logo, five companions and avatar settings" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**New in 0.9.0:** clear a conversation from the panel or by saying “Clear our conversation.” Saved facts stay unless you choose otherwise. Audio recovery also keeps temporary capture congestion from shutting down a spoken reply.
-
-**In development — 0.10:** type, paste or drop content into a transparent cell beneath your companion, choose a color theme, and bring conversations to life with [ComfyUI and Illustrious](docs/COMFYUI.md). Images begin preparing while the voice is still speaking, with optional looping slideshows. Each character keeps its own models, LoRAs and [search engine](docs/WEB_SEARCH.md). A [Linux port](docs/LINUX.md) is also being validated; the latest published downloads above remain 0.9.0.
+**New in 0.10.0:** your conversations can become pictures with **ComfyUI + Illustrious**. Type beneath the avatar, loop illustrated scenes with soft fades, and make the interface your own with six color themes. Now available for **Windows and Debian x64**.
 
 ## Meet your companions
 
@@ -57,9 +55,17 @@ Sherka gives your AI a presence beyond a chat window: a transparent companion th
 | --- | --- | --- |
 | Streamed replies, speech prepared ahead, and voice interruption. Keep the conversation flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click. |
 | **🧠 Memories you control** | **🌐 A little help from the web** | **💬 Seven interface languages** |
-| Review, edit or delete saved facts. Clear a conversation while keeping the facts you chose to save. | Optional [DuckDuckGo search](docs/WEB_SEARCH.md) with source links. No search account or key required. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
+| Review, edit or delete saved facts. Clear a conversation while keeping the facts you chose to save. | [Web search with sources](docs/WEB_SEARCH.md): DuckDuckGo without an account, or your Brave, Tavily or SearXNG connection. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
 
 The built-in Sherka is ready in every interface language. Custom companions keep the language you choose for them.
+
+## Turn conversations into scenes
+
+Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its own setup. Images start preparing as soon as the reply text is ready, while the voice continues.
+
+The **Image** button reveals a movable, resizable cell that follows your companion. Generate up to eight variations and let them loop with gentle crossfades at your chosen pace. The **Text** button reveals a transparent input just beneath the controls: type, paste or drop text, and attach images when your model supports vision.
+
+These scenes illustrate the conversation; the avatar's seven expressions remain separate. Hermes uses its own tools and stays outside local scene generation.
 
 ## Local voice. Your choice of intelligence.
 
@@ -71,23 +77,23 @@ The built-in Sherka is ready in every interface language. Custom companions keep
 | **Choose a hosted model** | OpenRouter, Z.ai API or Coding Plan, OpenAI, Anthropic, or a compatible API. [Provider setup](docs/PROVIDERS.md). |
 | **Talk to your Hermes agent** | Your Hermes server and profile. Hermes keeps its personality, memory and tools; Sherka handles the avatar and voice. [Hermes setup](docs/HERMES.md). |
 
-Voice processing stays local. Hosted model APIs receive conversation context and may charge for usage; Hermes follows your server's configuration. API keys are protected by Windows and excluded from exported profiles.
+Voice processing stays local. Hosted model APIs receive conversation context and may charge for usage; Hermes follows your server's configuration. API keys use Windows Credential Manager or Linux Secret Service and are excluded from exported profiles.
 
 Sherka manages context budgets and offers reasoning controls where supported. Switching companions also handles local model loading and unloading.
 
 ## From download to your first conversation
 
-1. **Pick your download:** the [Windows x64 installer or no-install ZIP](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest).
+1. **Pick your download:** the [Windows x64 installer, no-install ZIP or Debian x64 package](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest).
 2. **Connect voice and intelligence:** set up VoiceStudio, then choose LM Studio, an API provider or Hermes in Companions.
 3. **Choose your companion and voice, turn on the microphone, and talk.** The avatar appears at startup; the control panel is there whenever you need it.
 
-Follow the [getting-started guide](docs/GETTING_STARTED.md) for setup. WebView2 and the Visual C++ x64 runtime are required. Models and voices are separate downloads. Headphones are recommended for voice interruption; the microphone is off at startup.
+Follow the [getting-started guide](docs/GETTING_STARTED.md) for Windows or the [Linux guide](docs/LINUX.md) for Debian. Windows requires WebView2 and the Visual C++ x64 runtime. Models and voices are separate downloads. Headphones are recommended for voice interruption; the microphone is off at startup.
 
-Check for signed updates directly from **Settings**. Both editions keep profiles and memories in your Windows user folder.
+Check for signed Windows updates directly from **Settings**. Installed and no-install copies share your Windows user data. Linux uses its own user data folder and manual package updates; start external voice/model services separately. This first Linux port has compilation and headless startup validation; physical audio and desktop behavior need broader testing.
 
 ## What's next
 
-Next come speaking/listening animations, easier character sharing and consistent avatar packs through **ComfyUI**. The development connector illustrates conversations; generating the avatar's seven expressions is a separate future step. Hermes remains outside the emotion and illustration systems.
+Next come speaking/listening animations, easier character sharing and consistent avatar packs through **ComfyUI**. Conversation illustrations are available now; generating the avatar's seven expressions is a separate future step. Hermes remains outside the emotion and illustration systems.
 
 Sherka is an early project. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
 

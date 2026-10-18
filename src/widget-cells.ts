@@ -3,11 +3,12 @@ import {html,t} from './i18n';
 import {icon} from './icons';
 import type {Snapshot,IllustrationStatus,WidgetSurface,Attachment} from './types';
 const esc=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-type Cell={text:boolean;draft:string;speak:boolean;attachments:Attachment[];image?:{x:number;y:number;size:number;moved?:boolean}};
+type Cell={text:boolean;draft:string;speak:boolean;attachments:Attachment[];textHeight?:number;image?:{x:number;y:number;size:number;moved?:boolean}};
 const cells=new Map<string,Cell>();
 let current:Snapshot|undefined,root:HTMLElement|null=null,base:WidgetSurface|undefined,status:IllustrationStatus|undefined;
 let report:(e:unknown)=>void=()=>{},started=false,focus=false,frame=0,inflight=false,pending:WidgetSurface|undefined,lastSurface='';
 let slides:string[]=[],slide=0,first='',timer:ReturnType<typeof setInterval>|undefined,decode=0;
+let textSize:ResizeObserver|undefined;
 const profile=()=>current!.profiles.find(p=>p.id===current!.session.profile_id)!;
 function cell():Cell {const id=profile().id;if(!cells.has(id))cells.set(id,{text:false,draft:'',speak:true,attachments:[]});return cells.get(id)!;}
 export function captureCellFocus():void {focus=document.activeElement?.id==='cell-text';}
@@ -55,9 +56,13 @@ function paintImages():void{
 }
 function paint():void{
  if(!root||!current)return;const c=cell();
+ textSize?.disconnect();
  root.innerHTML=html`<section id="widget-text-cell" class="widget-text-cell" hidden><div id="cell-attachments">${c.attachments.map((a,i)=>html`<span class="cell-attachment"><img src="${a.data}" alt="" /><span>${esc(a.name)}</span><button type="button" data-remove-attachment="${i}" aria-label="Retirer l’image">×</button></span>`).join('')}</div><form id="cell-text-form"><textarea id="cell-text" rows="2" maxlength="128000" aria-label="Message au compagnon" placeholder="Écris ou colle ton texte ici.">${esc(c.draft)}</textarea><div class="cell-text-actions"><label title="Lire à voix haute"><input id="cell-speak" type="checkbox" ${c.speak?'checked':''}/>${icon('mic')}</label><button type="submit" class="icon-button" aria-label="Envoyer" title="Envoyer">${icon('arrow')}</button></div></form></section><section id="widget-image-cell" class="widget-image-cell" hidden><div id="cell-image-layers" class="cell-image-layers"></div><div id="cell-image-placeholder">${icon('image')}</div><div class="cell-image-bar" id="cell-image-drag"><span id="cell-image-status"></span><small id="cell-image-count"></small><button id="cell-image-refresh" class="icon-button" title="Régénérer l’image" aria-label="Régénérer l’image">${icon('spark')}</button></div><button id="cell-image-resize" class="cell-image-resize" title="Redimensionner l’image" aria-label="Redimensionner l’image">${icon('resize')}</button></section>`;
  root.querySelectorAll<HTMLButtonElement>('[data-remove-attachment]').forEach(b=>b.onclick=()=>{c.attachments.splice(Number(b.dataset.removeAttachment),1);paint();});
  const input=root.querySelector<HTMLTextAreaElement>('#cell-text')!,form=root.querySelector<HTMLFormElement>('form')!;
+ if(c.textHeight)input.style.height=c.textHeight+'px';
+ textSize=new ResizeObserver(()=>{if(!input.isConnected||!c.text||!input.offsetHeight)return;c.textHeight=input.getBoundingClientRect().height;schedule();});
+ textSize.observe(root.querySelector('#widget-text-cell')!);
  input.oninput=()=>{c.draft=input.value;};root.querySelector<HTMLInputElement>('#cell-speak')!.onchange=e=>{c.speak=(e.target as HTMLInputElement).checked;};
  form.onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text&&!c.attachments.length)return;const id=profile().id,button=form.querySelector<HTMLButtonElement>('button[type="submit"]')!;if(button.disabled)return;button.disabled=true;void (text==='/new'&&profile().connections.llm_provider==='hermes'&&!c.attachments.length?api.newHermesConversation(id):api.sendMessage(id,text||t('Décris cette image.'),c.speak,[...c.attachments])).then(()=>{c.draft='';c.attachments=[];if(current?.session.profile_id===id){focus=true;paint();}}).catch(report).finally(()=>button.disabled=false);};
  input.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();form.requestSubmit();}};

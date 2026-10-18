@@ -38,6 +38,6 @@ Run NSIS installation tests in a VM or isolated Windows account. A custom `/D=..
 4. Check uploaded asset hashes and manifests before publishing the draft as latest.
 5. Verify the public repository, topics, tag, downloads and actual application update check.
 
-The `Release` workflow can build and create a draft from a version already committed to the selected branch. It never silently publishes a draft. It requires the signing secret. Source for a release is the corresponding tag and GitHub's source archives; locked dependency sources remain available from their recorded upstream repositories/crates.
+The `Release` workflow builds Windows and Linux packages in parallel, assembles eight explicit assets with shared checksums, and can create a draft from a version already committed to the selected branch. It never silently publishes a draft. It requires the signing secret for Windows. The Linux package is built on Ubuntu 24.04 and must pass an extracted-package startup check on the target Debian system before publication. Source for a release is the corresponding tag and GitHub's source archives; locked dependency sources remain available from their recorded upstream repositories/crates.
 
 References: [Tauri updater](https://v2.tauri.app/plugin/updater/), [GitHub releases](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository).

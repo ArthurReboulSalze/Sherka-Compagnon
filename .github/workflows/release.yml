@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 jobs:
-  package:
+  windows:
     runs-on: windows-latest
     timeout-minutes: 45
     env:
@@ -43,8 +43,59 @@ jobs:
       - run: cargo test --workspace --locked
       - run: npm run build:windows
       - run: python scripts/package_release.py
-      - name: Create draft release
-        shell: pwsh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-release
+          path: releases/${{ inputs.version }}/*
+          if-no-files-found: error
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_BUILD_JOBS: '2'
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249
+        with:
+          toolchain: '1.92.0'
+      - name: Validate release input
+        run: node -e 'const v=require("./package.json").version;if(v!==process.env.RELEASE_VERSION||!/^\d+\.\d+\.\d+$/.test(v))process.exit(1)'
+      - run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libssl-dev libasound2-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libsecret-tools
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c
+        with:
+          shared-key: linux-release
+      - run: npm ci
+      - run: npm run build:linux
+      - name: Stage Debian package
         run: |
-          $files = @(Get-ChildItem -LiteralPath "releases/$env:RELEASE_VERSION" -File | Select-Object -ExpandProperty FullName)
-          gh release create "v$env:RELEASE_VERSION" @files --target $env:GITHUB_SHA --draft --title "Sherka $env:RELEASE_VERSION" --notes-file "docs/releases/$env:RELEASE_VERSION.md"
+          mkdir -p "releases/$RELEASE_VERSION"
+          package="target/release/bundle/deb/Sherka Compagnon_${RELEASE_VERSION}_amd64.deb"
+          test "$(dpkg-deb -f "$package" Version)" = "$RELEASE_VERSION"
+          test "$(dpkg-deb -f "$package" Architecture)" = amd64
+          cp "$package" "releases/$RELEASE_VERSION/Sherka-Compagnon_${RELEASE_VERSION}_linux-amd64.deb"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: linux-release
+          path: releases/${{ inputs.version }}/*.deb
+          if-no-files-found: error
+  draft:
+    needs: [windows, linux]
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: '*-release'
+          path: releases/${{ inputs.version }}
+          merge-multiple: true
+      - run: python3 scripts/finalize_release.py
+      - name: Create draft release
+        run: gh release create "v$RELEASE_VERSION" releases/"$RELEASE_VERSION"/* --target "$GITHUB_SHA" --draft --title "Sherka $RELEASE_VERSION" --notes-file "docs/releases/$RELEASE_VERSION.md"
