@@ -40,13 +40,13 @@ Distribution instructions: [releasing](RELEASING.md).
 
 ## Application branding
 
-The application logo lives in `public/branding/sherka-logo.png`. It supplies the README, sidebar and favicon; Windows executable and tray icons are generated from it:
+The application logo lives in `public/branding/sherka-logo.png`. It supplies the sidebar and favicon; Windows executable and tray icons are generated from it:
 
 ```powershell
 npm.cmd run tauri -- icon public/branding/sherka-logo.png
 ```
 
-Commit the generated PNG sizes and `icon.ico` referenced by `src-tauri/tauri.conf.json`. Companion portraits are separate assets in `public/assets`; changing application branding does not change a companion's appearance.
+Commit the generated PNG sizes and `icon.ico` referenced by `src-tauri/tauri.conf.json`. Companion portraits are separate assets in `public/assets`; changing application branding does not change a companion's appearance. The README uses an identical copy at `docs/images/sherka-logo-gold.png` and a versioned control-panel screenshot so GitHub does not keep displaying older branding from its image cache. Refresh those references when the visual identity changes.
 
 ### Hermes integration checks
 

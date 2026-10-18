@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/branding/sherka-logo.png" alt="Sherka Companion — orbital star emblem" width="200">
+  <img src="docs/images/sherka-logo-gold.png" alt="Sherka Companion — golden orbital star emblem" width="200">
 </p>
 
 <h1 align="center">Sherka Companion</h1>
@@ -8,7 +8,7 @@
 <p align="center"><em>Your models. Your voices. Your companion.</em></p>
 
 <p align="center">
-  <img src="docs/images/features.svg" alt="Windows x64 · Local voice · 7 languages · GPLv3" width="492">
+  <img src="docs/images/features-gold.svg" alt="Windows x64 · Local voice · 7 languages · GPLv3" width="492">
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 ---
 
 <p align="center">
-  <img src="docs/images/sherka.png" alt="Sherka's control panel: character portrait, personality and companion settings" width="1000">
+  <img src="docs/images/sherka-0.8.0.png" alt="Sherka 0.8.0 control panel: golden app logo, five companions and avatar settings" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 

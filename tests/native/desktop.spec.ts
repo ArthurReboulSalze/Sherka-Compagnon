@@ -1677,7 +1677,7 @@ test('public screenshot: clean companion without personal data', async () => {
   await expect(panel.locator('#new-profile')).toContainText('New companion');
   await native('widget_action',{action:'show_panel'});
   mkdirSync('docs/images',{recursive:true});
-  await panel.screenshot({path:'docs/images/sherka.png'});
+  await panel.screenshot({path:`docs/images/sherka-${currentVersion}.png`});
   const history = await native<any[]>('get_history',{profileId:(await native<any>('get_snapshot')).profiles[0].id});
   expect(history).toHaveLength(0);
   expect(consoleErrors).toEqual([]);
