@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 pub enum AvatarPreset {
     Sherka,
     Botsy,
-    Candis,
+    // Keep the 0.8.0 preset identifier readable by existing profiles/exports.
+    #[serde(rename = "candis", alias = "alba")]
+    Alba,
     Kit,
     Minerva,
 }
@@ -15,7 +17,7 @@ impl AvatarPreset {
         match self {
             Self::Sherka => "Sherka",
             Self::Botsy => "Botsy",
-            Self::Candis => "Candis",
+            Self::Alba => "Alba",
             Self::Kit => "Kit",
             Self::Minerva => "Minerva",
         }
@@ -24,9 +26,9 @@ impl AvatarPreset {
         match self {
             Self::Sherka => "/assets/sherka.png",
             Self::Botsy => "/assets/botsy/neutral.png",
-            Self::Candis => "/assets/candis/neutral.png",
+            Self::Alba => "/assets/alba/neutral.png",
             Self::Kit => "/assets/kit/neutral.png",
-            Self::Minerva => "/assets/minerva/neutral.png",
+            Self::Minerva => "/assets/minerva-v2/neutral.png",
         }
     }
     pub fn images(self) -> [(Emotion, String); 6] {
@@ -43,7 +45,11 @@ impl AvatarPreset {
                 emotion,
                 format!(
                     "/assets/{}/{}.png",
-                    self.name().to_ascii_lowercase(),
+                    if self == Self::Minerva {
+                        "minerva-v2".into()
+                    } else {
+                        self.name().to_ascii_lowercase()
+                    },
                     emotion.as_str()
                 ),
             )

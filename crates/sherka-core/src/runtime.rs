@@ -45,6 +45,12 @@ impl Companion {
         let store = Store::open(root)?;
         let mut settings = store.settings()?;
         let mut profiles = store.list()?;
+        for profile in &mut profiles {
+            let mut draft = profile.details.clone();
+            if crate::presets::upgrade_candis(&mut draft) {
+                *profile = store.update(profile.id, profile.revision, draft)?;
+            }
+        }
         if profiles.is_empty() {
             let profile = store.create(crate::presets::sherka(settings.ui_language), None)?;
             settings.default_companion = Some(profile.id);
@@ -72,7 +78,7 @@ impl Companion {
             use crate::avatar::AvatarPreset;
             for preset in [
                 AvatarPreset::Botsy,
-                AvatarPreset::Candis,
+                AvatarPreset::Alba,
                 AvatarPreset::Kit,
                 AvatarPreset::Minerva,
             ] {

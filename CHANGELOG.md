@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.1 — 2026-10-18
+
+- Regenerate the Windows, installer, tray and in-app icons from the tightly cropped golden logo.
+- Replace Candis with Alba's seven supplied images and display name, keeping the same personality traits in all seven languages.
+- Update Minerva's neutral portrait and six expressions with the new armored design, preserving her irritable personality.
+- Upgrade the original Candis identity to Alba while retaining profile IDs, models, voices, history and custom images. Keep edited names and personality text intact.
+- Refresh the README portraits, descriptions and control-panel screenshot with new image URLs to avoid stale branding caches.
+
 ## 0.8.0 — 2026-10-18
 
 - Add Botsy, Candis, Kit and Minerva alongside Sherka, with localized personalities and seven supplied expressions each; retire the Orion starter example.

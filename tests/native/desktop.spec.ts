@@ -1677,6 +1677,10 @@ test('public screenshot: clean companion without personal data', async () => {
   await expect(panel.locator('#new-profile')).toContainText('New companion');
   await native('widget_action',{action:'show_panel'});
   mkdirSync('docs/images',{recursive:true});
+  await expect.poll(()=>panel.locator('.brand-symbol img, [data-profile] img, .hero-portrait').evaluateAll(images=>images.every(image=>{
+    const portrait = image as HTMLImageElement;
+    return portrait.complete && portrait.naturalWidth > 0;
+  }))).toBe(true);
   await panel.screenshot({path:`docs/images/sherka-${currentVersion}.png`});
   const history = await native<any[]>('get_history',{profileId:(await native<any>('get_snapshot')).profiles[0].id});
   expect(history).toHaveLength(0);
@@ -1929,19 +1933,22 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
 
 test('companion settings: starter pack, provider placement, independent web choices and saved images', async () => {
   const original = await native<any>('get_snapshot');
-  expect(original.profiles.map((p:any)=>p.name)).toEqual(['Sherka','Botsy','Candis','Kit','Minerva']);
+  expect(original.profiles.map((p:any)=>p.name)).toEqual(['Sherka','Botsy','Alba','Kit','Minerva']);
   await panel.locator('[data-nav="profiles"]').click();
-  for (const name of ['Botsy','Candis','Kit','Minerva']) {
+  for (const name of ['Botsy','Alba','Kit','Minerva']) {
     const profile = original.profiles.find((p:any)=>p.name===name);
+    const imageFolder = name === 'Minerva' ? 'minerva-v2' : name.toLowerCase();
     await panel.locator(`[data-profile="${profile.id}"]`).click();
-    await expect(panel.locator('.hero-portrait')).toHaveAttribute('src',`/assets/${name.toLowerCase()}/neutral.png`);
+    await expect(panel.locator('.hero-portrait')).toHaveAttribute('src',`/assets/${imageFolder}/neutral.png`);
     await expect(panel.locator('[name="llm_provider"]')).toBeVisible();
     await expect(panel.locator('[name="stt_model"]')).toBeVisible();
     await panel.locator('#change-avatar').click();
     await expect(panel.locator('.emotion-slot')).toHaveCount(7);
-    await panel.locator('.emotion-slot[data-emotion="anger"]').click();
-    await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src',`/assets/${name.toLowerCase()}/anger.png`);
-    await expect.poll(()=>panel.locator('.avatar-preview img').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+    for (const emotion of ['neutral','joy','sadness','anger','surprise','reflection','tenderness']) {
+      await panel.locator(`.emotion-slot[data-emotion="${emotion}"]`).click();
+      await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src',`/assets/${imageFolder}/${emotion}.png`);
+      await expect.poll(()=>panel.locator('.avatar-preview img').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+    }
     await panel.locator('.avatar-modal [data-close]').first().click();
   }
   await expect(panel.locator('.personality-preview')).toContainText('colérique');

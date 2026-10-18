@@ -16,7 +16,8 @@ const states = (): {id: Emotion; emoji: string; name: string; description: strin
 
 export function portrait(profile: Profile, emotion: Emotion = 'neutral'): string {
   if (profile.connections.llm_provider !== 'hermes' && emotion !== 'neutral' && profile.emotion_avatars?.[emotion]) return profile.emotion_avatars[emotion]!;
-  return profile.avatar ?? (profile.avatar_preset && profile.avatar_preset !== 'sherka' ? `/assets/${profile.avatar_preset}/neutral.png` : '/assets/sherka.png');
+  const folder = profile.avatar_preset === 'candis' ? 'alba' : profile.avatar_preset === 'minerva' ? 'minerva-v2' : profile.avatar_preset;
+  return profile.avatar ?? (folder && folder !== 'sherka' ? `/assets/${folder}/neutral.png` : '/assets/sherka.png');
 }
 
 const fades = new WeakMap<HTMLImageElement, { requested: string; running: boolean }>();

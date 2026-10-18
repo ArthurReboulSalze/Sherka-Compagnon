@@ -1,6 +1,6 @@
 # Project status
 
-Release version: **0.8.0**, October 18, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
+Release version: **0.8.1**, October 18, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
 
 The application now has its own logo across Windows icons, the tray, sidebar and favicon. Companion portraits stay independent. Incremental builds rebuild icon resources when branding changes, and the English README features the new identity and a refreshed control-panel screenshot.
 
@@ -17,6 +17,12 @@ Startup recovery keeps signed updates available when settings or databases are i
 Optional DuckDuckGo search offers disabled, on-request and automatic modes, bounded snippets and persistent source links. Widget controls now dismiss on pointer exit, focus loss and opening the panel. See [web search](WEB_SEARCH.md).
 
 The public release adds localized widget/tray controls, polished settings fields and a built-in Sherka personality in each language. The original Sherka follows the interface language; custom companions keep the language chosen at creation. Models and voices remain user-configured. See [languages](LANGUAGES.md).
+
+## 0.8.1 — refreshed artwork
+
+The tightly cropped golden logo supplies the application, Windows, tray, installer and uninstaller icons. Alba replaces Candis's artwork and display name, keeping the same localized personality traits. Minerva uses the new armored image pack with the same irritable personality. Both packs contain all seven expressions. The original Candis name/personality migrate at startup without replacing personal settings, histories or image overrides; edited names/personality text remain user-owned. The stored preset identifier stays compatible with 0.8.0. README images use fresh filenames, including a new control-panel capture.
+
+Validation: three focused Rust tests passed, including upgrades in all seven languages with retained history, memory, models, voices and custom portraits. TypeScript, formatting, Clippy and three localization tests passed. The final no-install executable passed three native scenarios covering all bundled expression images, avatar voice selection, 500 ms crossfades, settings persistence and a clean English documentation capture. Both updater signatures verified and rejected altered data; installer and portable binary audits passed. The extracted application and installer icons are identical and use the V2 crop. The installer was inspected without installing on the developer account.
 
 ## 0.8.0 — companions and Hermes controls
 

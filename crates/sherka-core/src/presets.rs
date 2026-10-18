@@ -42,7 +42,7 @@ pub fn companion(preset: crate::avatar::AvatarPreset, language: Language) -> Pro
         draft.personality = COMPANIONS[preset.name()][language.code()].clone();
         draft.accent = match preset {
             AvatarPreset::Botsy => "amber",
-            AvatarPreset::Candis => "coral",
+            AvatarPreset::Alba => "coral",
             AvatarPreset::Kit => "teal",
             _ => "violet",
         }
@@ -50,6 +50,23 @@ pub fn companion(preset: crate::avatar::AvatarPreset, language: Language) -> Pro
         draft.avatar_preset = Some(preset);
     }
     draft
+}
+
+/// Update the shipped identity while retaining all personal settings. Edited
+/// names/personality text are user-owned and do not match this migration.
+pub(crate) fn upgrade_candis(draft: &mut ProfileDraft) -> bool {
+    if draft.avatar_preset != Some(crate::avatar::AvatarPreset::Alba) || draft.name != "Candis" {
+        return false;
+    }
+    let Some(personality) = COMPANIONS["Alba"].get(&draft.connections.language) else {
+        return false;
+    };
+    if draft.personality != personality.replacen("Alba", "Candis", 1) {
+        return false;
+    }
+    draft.name = "Alba".into();
+    draft.personality.clone_from(personality);
+    true
 }
 
 pub(crate) fn is_builtin_sherka(draft: &ProfileDraft) -> bool {

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/sherka-logo-gold.png" alt="Sherka Companion — golden orbital star emblem" width="200">
+  <img src="docs/images/sherka-logo-gold-v2.png" alt="Sherka Companion — golden orbital star emblem" width="200">
 </p>
 
 <h1 align="center">Sherka Companion</h1>
@@ -21,21 +21,21 @@
 ---
 
 <p align="center">
-  <img src="docs/images/sherka-0.8.0.png" alt="Sherka 0.8.0 control panel: golden app logo, five companions and avatar settings" width="1000">
+  <img src="docs/images/sherka-0.8.1.png" alt="Sherka 0.8.1 control panel: golden app logo, five companions and avatar settings" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
 ## Meet your companions
 
-Choose your company, then give each character its own voice and model. **New in 0.8.0:** five bundled companions, expressive avatars and all character settings together in **Companions**.
+Choose your company, then give each character its own voice and model. **Updated in 0.8.1:** five bundled companions, expressive avatars and all character settings together in **Companions**.
 
 <table>
   <tr>
     <td align="center"><img src="public/assets/sherka.png" alt="Sherka" width="120"><br><strong>Sherka</strong><br>Calm, warm, attentive.</td>
     <td align="center"><img src="public/assets/botsy/neutral.png" alt="Botsy" width="120"><br><strong>Botsy</strong><br>Your curious little tinkerer.</td>
-    <td align="center"><img src="public/assets/candis/neutral.png" alt="Candis" width="120"><br><strong>Candis</strong><br>Playful, lively, adventurous.</td>
+    <td align="center"><img src="public/assets/alba/neutral.png" alt="Alba" width="120"><br><strong>Alba</strong><br><em>White &amp; gold android.</em><br>Playful, lively, adventurous.</td>
     <td align="center"><img src="public/assets/kit/neutral.png" alt="Kit" width="120"><br><strong>Kit</strong><br>Precision and deadpan wit.</td>
-    <td align="center"><img src="public/assets/minerva/neutral.png" alt="Minerva" width="120"><br><strong>Minerva</strong><br>Fiery, impatient, sharp-tongued.</td>
+    <td align="center"><img src="public/assets/minerva-v2/neutral.png" alt="Minerva" width="120"><br><strong>Minerva</strong><br><em>Armored android.</em><br>Fiery, impatient, sharp-tongued.</td>
   </tr>
 </table>
 

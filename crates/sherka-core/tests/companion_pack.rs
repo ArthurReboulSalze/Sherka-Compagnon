@@ -15,7 +15,7 @@ fn starter_pack_is_complete_localized_and_never_recreates_deleted_characters() {
     for preset in [
         AvatarPreset::Sherka,
         AvatarPreset::Botsy,
-        AvatarPreset::Candis,
+        AvatarPreset::Alba,
         AvatarPreset::Kit,
         AvatarPreset::Minerva,
     ] {
@@ -96,4 +96,99 @@ fn web_mode_is_per_companion_and_agent_mode_always_bypasses_it() {
             .unwrap(),
         SearchMode::Off
     );
+}
+
+#[test]
+fn legacy_candis_upgrades_to_alba_without_losing_personal_data_or_overwriting_edits() {
+    use sherka_core::{
+        avatar::Emotion,
+        memory::MemoryDraft,
+        storage::{Delivery, MessageRole},
+    };
+    assert_eq!(
+        serde_json::from_str::<AvatarPreset>("\"candis\"").unwrap(),
+        AvatarPreset::Alba
+    );
+    assert_eq!(
+        serde_json::to_string(&AvatarPreset::Alba).unwrap(),
+        "\"candis\""
+    );
+    for language in Language::ALL {
+        let root = tempdir().unwrap();
+        let mut app = Companion::open(root.path()).unwrap();
+        let mut expected = presets::companion(AvatarPreset::Alba, language);
+        expected.connections.llm_model = Some("personal-model".into());
+        expected.connections.tts_voice = Some("personal-voice".into());
+        expected.instructions = "Personal instructions remain mine.".into();
+        let mut legacy = expected.clone();
+        legacy.name = "Candis".into();
+        legacy.personality = legacy.personality.replacen("Alba", "Candis", 1);
+        let profile = app.store.create(legacy.clone(), None).unwrap();
+        let png = include_bytes!("../../../public/assets/botsy/neutral.png");
+        let profile = app
+            .store
+            .set_avatar(profile.id, profile.revision, Some(png))
+            .unwrap();
+        let profile = app
+            .store
+            .set_emotion_avatar(profile.id, profile.revision, Emotion::Joy, Some(png))
+            .unwrap();
+        app.switch_profile(profile.id).unwrap();
+        let tag = app.session.begin_text_turn();
+        app.store
+            .append_message(
+                tag,
+                MessageRole::User,
+                "Keep this conversation.",
+                Delivery::TextOnly,
+            )
+            .unwrap();
+        app.store
+            .write_memory(
+                &app.store.memory_guard(profile.id).unwrap(),
+                None,
+                &MemoryDraft {
+                    content: "Keep this memory.".into(),
+                    category: "Personal".into(),
+                    kind: "essential".into(),
+                },
+            )
+            .unwrap();
+        let memories = app.store.export_memories(profile.id).unwrap();
+        let count = app.store.list().unwrap().len();
+        let mut edited = legacy.clone();
+        edited.personality.push_str(" My own character detail.");
+        let edited = app.store.create(edited, None).unwrap();
+        let mut named = legacy;
+        named.name = "My companion".into();
+        let named = app.store.create(named, None).unwrap();
+        drop(app);
+        let app = Companion::open(root.path()).unwrap();
+        let migrated = app.store.profile(profile.id).unwrap();
+        assert_eq!(migrated.details, expected);
+        assert_eq!(migrated.avatar, profile.avatar);
+        assert_eq!(migrated.emotion_avatars, profile.emotion_avatars);
+        assert_eq!(
+            app.store.history(profile.id, 10).unwrap()[0].content,
+            "Keep this conversation."
+        );
+        assert_eq!(app.store.export_memories(profile.id).unwrap(), memories);
+        assert_eq!(
+            app.store.profile(edited.id).unwrap().details,
+            edited.details
+        );
+        assert_eq!(app.store.profile(named.id).unwrap().details, named.details);
+        assert_eq!(app.store.list().unwrap().len(), count + 2);
+        let revision = migrated.revision;
+        drop(app);
+        assert_eq!(
+            Companion::open(root.path())
+                .unwrap()
+                .store
+                .profile(profile.id)
+                .unwrap()
+                .revision,
+            revision
+        );
+    }
 }
