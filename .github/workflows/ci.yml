@@ -36,8 +36,10 @@ jobs:
       - name: Prepare native runtime dependencies
         run: ./scripts/prepare_native_ci.ps1
       - name: Native UI and updater boundaries
+        env:
+          SHERKA_TEST_TEXT_ONLY: '1'
         run: |
-          npx playwright test --grep 'startup recovery:|widget discret|dÃ©marrage avec le compagnon seul|imports validÃ©s|updates: manual|languages:|web search:|providers: API|hermes:|avatars:|companion settings:|hermes stop:|privacy:|desktop scenes:|widget text resize:'
+          npx playwright test --grep 'startup recovery:|widget discret|démarrage avec le compagnon seul|imports validés|updates: manual|languages:|web search:|providers: API|hermes:|avatars:|companion settings:|hermes stop:|privacy:|desktop scenes:|widget text resize:'
   linux:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -53,9 +55,9 @@ jobs:
         with:
           toolchain: '1.92.0'
           components: rustfmt, clippy
-      - run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libssl-dev libasound2-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libsecret-tools
+      - run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libssl-dev libasound2-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libsecret-tools gnome-keyring
       - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c
       - run: npm ci
       - run: npm run check
-      - run: cargo test --workspace --locked
+      - run: bash scripts/test_linux_ci.sh
       - run: npm run tauri -- build --debug --no-bundle
