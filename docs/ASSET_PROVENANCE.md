@@ -7,5 +7,7 @@ The current companion image packs and golden orbital-star application logo were 
 - `public/assets/botsy/`, `alba/`, `kit/` and `minerva-v2/`: author-supplied neutral and emotion images for the four starter companions.
 - `docs/images/sherka-0.9.0.png`: screenshot of the actual 0.9.0 application using fresh isolated demo profiles, without personal conversations or memories.
 - `docs/images/features-gold.svg`: repository-authored feature badges matching the golden application identity.
+- `config/workflows/illustrious.json`: derived from the author's supplied Sherka ComfyUI API workflow, with runtime prompt/CLIP wiring and temporary output normalization. It contains graph structure and installed-file references, not model or LoRA weights.
+- `config/presets/appearance.json`: repository-authored English physical descriptions for the five supplied companions, used as editable starting points for conversation illustrations.
 
 The original October 10 Sherka and Orion illustrations were generated with the integrated image tool. Orion is no longer distributed as a starter companion. Voice profiles, private conversations and downloaded models are not distributed.

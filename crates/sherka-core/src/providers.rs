@@ -14,6 +14,7 @@ pub struct Providers {
     pub(crate) api_key: Option<String>,
     pub(crate) api_model: Option<crate::catalogs::LanguageModel>,
     pub connections: Connections,
+    pub images: Vec<String>,
 }
 
 #[derive(Debug, Default, Clone, serde::Serialize)]
@@ -47,6 +48,42 @@ pub(crate) fn network(service: &str, error: &reqwest::Error) -> Error {
 }
 
 impl Providers {
+    pub fn supports_images(
+        &self,
+        model: &crate::catalogs::LanguageModel,
+    ) -> crate::attachments::Support {
+        crate::attachments::Support {
+            images: !self.connections.llm_provider.is_agent()
+                && model.vision.unwrap_or(self.connections.vision_confirmed),
+            known: model.vision.is_some(),
+        }
+    }
+    pub async fn image_support(&self) -> Result<crate::attachments::Support> {
+        if self.connections.llm_provider.is_agent() {
+            return Ok(crate::attachments::Support {
+                images: false,
+                known: true,
+            });
+        }
+        let model = if self.connections.llm_provider.is_local() {
+            let catalog = crate::catalogs::CatalogClient::new(&self.connections.lm_studio_url)
+                .map_err(|_| failure("LM Studio est indisponible."))?
+                .language_models()
+                .await
+                .map_err(|_| failure("LM Studio est indisponible."))?;
+            catalog
+                .models
+                .into_iter()
+                .find(|m| {
+                    Some(&m.id) == self.connections.llm_model.as_ref()
+                        || Some(&m.key) == self.connections.llm_model_key.as_ref()
+                })
+                .ok_or_else(|| failure("Choisis un modèle de conversation dans Compagnons."))?
+        } else {
+            self.remote_model().await?
+        };
+        Ok(self.supports_images(&model))
+    }
     pub fn new(connections: Connections) -> Result<Self> {
         let api_key = crate::credentials::load(&connections)?;
         Self::with_api_key(connections, api_key)
@@ -65,6 +102,7 @@ impl Providers {
             .build()
             .map_err(|_| failure("Impossible d'initialiser les connexions."))?;
         Ok(Self {
+            images: vec![],
             http,
             connections,
             api_key,
@@ -156,6 +194,7 @@ impl Providers {
             .as_deref()
             .ok_or_else(|| failure("Choisis un modèle LM Studio dans les réglages."))?;
         let mut body = json!({"model":model,"messages":messages,"stream":true,"stream_options":{"include_usage":true},"temperature":0.65,"max_tokens":max_tokens});
+        crate::attachments::inject(&mut body, &self.images, false)?;
         if let Some(effort) = self.connections.reasoning_effort() {
             body["reasoning_effort"] = json!(effort);
         }
@@ -290,8 +329,8 @@ impl Providers {
         Ok(())
     }
 
-    /// Bounded structured operation used only for explicit memory changes or
-    /// idle consolidation. It never shares the spoken token/audio stream.
+    /// Bounded structured operation for memory, idle consolidation or a separate
+    /// illustration scene. It never shares the spoken token/audio stream.
     pub async fn structured<T: serde::de::DeserializeOwned>(
         &self,
         messages: Vec<ChatMessage>,
@@ -598,6 +637,7 @@ impl Providers {
                 socket = None;
             }
             let mut final_text = None;
+            let mut segments = String::new();
             while pcm.len() < 16_000 * 20 {
                 if let Some(ws) = socket.as_mut() {
                     tokio::select! {
@@ -616,7 +656,9 @@ impl Providers {
                                     match v["type"].as_str() {
                                         Some("partial")|Some("final") => {
                                             let partial = v["text"].as_str().unwrap_or("");
-                                            progress(&format!("{}{}",result,partial),false);
+                                            if v["type"] == "final" { segments=crate::transcript::join(&segments,partial); }
+                                            let shown=crate::transcript::join(&segments,partial);
+                                            progress(&crate::transcript::join(&result,&shown),false);
                                             // Mid-session finals are display-only. The final
                                             // response must acknowledge our input_audio.end.
                                         },
@@ -651,6 +693,12 @@ impl Providers {
                             if v["type"] == "error" {
                                 return None;
                             }
+                            if v["type"] == "final" && v["final_kind"] != "summary" {
+                                segments = crate::transcript::join(
+                                    &segments,
+                                    v["text"].as_str().unwrap_or(""),
+                                );
+                            }
                             if v["type"] == "final" && v["final_kind"] == "summary" {
                                 if let Some(engine) = v["engine"].as_str()
                                     && Some(engine) != self.connections.stt_model.as_deref()
@@ -659,7 +707,9 @@ impl Providers {
                                 {
                                     return None;
                                 }
-                                return v["text"].as_str().map(|s| s.trim().to_string());
+                                return v["text"]
+                                    .as_str()
+                                    .map(|s| crate::transcript::join(&segments, s));
                             }
                         }
                     }
@@ -700,10 +750,7 @@ impl Providers {
                     }
                 }
             };
-            if !text.is_empty() {
-                result.push_str(&text);
-                result.push(' ');
-            }
+            result = crate::transcript::join(&result, &text);
             if result.len() > 6000 {
                 return Err(failure(
                     "Cette prise de parole est trop longue pour le contexte choisi. Fais une pause et reprends avec une phrase plus courte.",

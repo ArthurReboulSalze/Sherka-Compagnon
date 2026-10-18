@@ -101,6 +101,7 @@ impl CatalogClient {
                 for model in response.models.into_iter().filter(|m| m.kind == "llm") {
                     if model.loaded_instances.is_empty() {
                         models.push(LanguageModel {
+                            vision: model.capabilities.vision,
                             api: None,
                             key: model.key.clone(),
                             id: model.key,
@@ -114,6 +115,7 @@ impl CatalogClient {
                     } else {
                         for instance in model.loaded_instances {
                             models.push(LanguageModel {
+                                vision: model.capabilities.vision,
                                 api: None,
                                 key: model.key.clone(),
                                 id: instance.id,
@@ -152,6 +154,7 @@ impl CatalogClient {
                             .into_iter()
                             .filter(|m| ["llm", "vlm"].contains(&m.kind.as_str()))
                             .map(|m| LanguageModel {
+                                vision: Some(m.kind == "vlm"),
                                 api: None,
                                 key: m.id.clone(),
                                 label: m.id.clone(),
@@ -279,6 +282,7 @@ pub struct LanguageCatalog {
 }
 #[derive(Debug, Clone, Serialize)]
 pub struct LanguageModel {
+    pub vision: Option<bool>,
     pub api: Option<ApiModelCapabilities>,
     pub key: String,
     pub id: String,
@@ -303,6 +307,7 @@ pub struct ReasoningCapabilities {
 }
 #[derive(Default, Deserialize)]
 struct ModelCapabilities {
+    vision: Option<bool>,
     reasoning: Option<ReasoningCapabilities>,
 }
 #[derive(Deserialize)]

@@ -37,4 +37,25 @@ jobs:
         run: ./scripts/prepare_native_ci.ps1
       - name: Native UI and updater boundaries
         run: |
-          npx playwright test --grep 'startup recovery:|widget discret|démarrage avec le compagnon seul|imports validés|updates: manual|languages:|web search:|providers: API|hermes:|avatars:|companion settings:|hermes stop:|privacy:'
+          npx playwright test --grep 'startup recovery:|widget discret|démarrage avec le compagnon seul|imports validés|updates: manual|languages:|web search:|providers: API|hermes:|avatars:|companion settings:|hermes stop:|privacy:|desktop scenes:'
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249
+        with:
+          toolchain: '1.92.0'
+          components: rustfmt, clippy
+      - run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libssl-dev libasound2-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libsecret-tools
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c
+      - run: npm ci
+      - run: npm run check
+      - run: cargo test --workspace --locked
+      - run: npm run tauri -- build --debug --no-bundle

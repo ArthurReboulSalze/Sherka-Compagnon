@@ -1,4 +1,5 @@
 //! A verified new executable acts as a short-lived helper after the old app exits.
+#[cfg(any(windows, test))]
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -161,6 +162,7 @@ pub fn run_if_requested() -> bool {
     true
 }
 
+#[cfg(any(windows, test))]
 fn verify(bytes: &[u8], signature: &str) -> Result<(), String> {
     let config: serde_json::Value =
         serde_json::from_str(include_str!("../tauri.conf.json")).map_err(|e| e.to_string())?;

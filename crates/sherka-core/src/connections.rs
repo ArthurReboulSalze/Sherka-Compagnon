@@ -81,6 +81,7 @@ pub struct Connections {
     pub context_limit: Option<u32>,
     pub response_tokens: u32,
     pub reasoning: Option<String>,
+    pub vision_confirmed: bool,
 }
 
 impl Default for Connections {
@@ -102,6 +103,7 @@ impl Default for Connections {
             context_limit: None,
             response_tokens: DEFAULT_RESPONSE_TOKENS,
             reasoning: None,
+            vision_confirmed: false,
         }
     }
 }

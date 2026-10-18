@@ -278,6 +278,7 @@ fn expression_prompt_respects_context_budget_and_agent_boundary() {
         memory::Recall,
     };
     let model = LanguageModel {
+        vision: None,
         api: None,
         id: "fixture".into(),
         key: "fixture".into(),

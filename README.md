@@ -27,6 +27,8 @@
 
 **New in 0.9.0:** clear a conversation from the panel or by saying “Clear our conversation.” Saved facts stay unless you choose otherwise. Audio recovery also keeps temporary capture congestion from shutting down a spoken reply.
 
+**In development — 0.10:** type, paste or drop content into a transparent cell beneath your companion, choose a color theme, and bring conversations to life with [ComfyUI and Illustrious](docs/COMFYUI.md). Images begin preparing while the voice is still speaking, with optional looping slideshows. Each character keeps its own models, LoRAs and [search engine](docs/WEB_SEARCH.md). A [Linux port](docs/LINUX.md) is also being validated; the latest published downloads above remain 0.9.0.
+
 ## Meet your companions
 
 Choose your company, then give each character its own voice and model. Five bundled companions, expressive avatars and all character settings together in **Companions**.
@@ -85,7 +87,7 @@ Check for signed updates directly from **Settings**. Both editions keep profiles
 
 ## What's next
 
-Next come speaking/listening animations, easier character sharing and avatar generation through **ComfyUI**. Image generation is not integrated yet; today's avatar editor uses local images. Hermes remains outside the emotion system.
+Next come speaking/listening animations, easier character sharing and consistent avatar packs through **ComfyUI**. The development connector illustrates conversations; generating the avatar's seven expressions is a separate future step. Hermes remains outside the emotion and illustration systems.
 
 Sherka is an early project. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
 

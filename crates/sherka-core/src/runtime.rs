@@ -41,6 +41,13 @@ pub struct Companion {
 }
 
 impl Companion {
+    pub fn set_theme(&mut self, theme: crate::model::Theme) -> Result<()> {
+        let mut next = self.settings.clone();
+        next.theme = theme;
+        self.store.save_settings(&next)?;
+        self.settings = next;
+        Ok(())
+    }
     pub fn open(root: impl Into<PathBuf>) -> Result<Self> {
         let store = Store::open(root)?;
         let mut settings = store.settings()?;

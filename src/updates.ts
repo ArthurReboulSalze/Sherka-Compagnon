@@ -12,7 +12,7 @@ export function paintUpdate(): void {
   const card = document.querySelector<HTMLElement>('#updates-card');
   if (!card) return;
   const busy = ['checking', 'downloading', 'installing'].includes(status.phase);
-  card.querySelector('#update-version')!.textContent = t`Version ${status.current_version} · ${status.mode === 'portable' ? t('Sans installation') : t('Installée')}`;
+  card.querySelector('#update-version')!.textContent = t`Version ${status.current_version} · ${status.mode === 'linux' ? 'Linux' : status.mode === 'portable' ? t('Sans installation') : t('Installée')}`;
   card.querySelector('#update-status')!.textContent = feedback(status.message);
   const check = card.querySelector<HTMLButtonElement>('#check-update')!;
   const install = card.querySelector<HTMLButtonElement>('#install-update')!;

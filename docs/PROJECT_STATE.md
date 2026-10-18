@@ -2,6 +2,24 @@
 
 Release version: **0.9.0**, October 18, 2026. Windows x64, Rust/Tauri 2, seven interface languages.
 
+## 0.10 development — inline cells, scenes and Linux
+
+The working version is **0.10.0-alpha.2**. Widget controls follow visible image bounds, including Kit's wide silhouette, and the active halo follows the character's accent. Six global themes color the interface. Text and image cells share the avatar's transparent window: text stays below the buttons, while the image can move and resize relative to the companion. Both follow the widget and toggle from the same buttons. Text supports typing/pasting, drops, optional spoken replies and IME composition. Widget errors are brief and cannot intercept the controls.
+
+Classic companions can use a per-profile ComfyUI connection with an Illustrious checkpoint, physical description, optional LoRAs/strength sliders and automatic hidden Turbo LoRA selection. The supplied graph repairs prompt/CLIP wiring and generates square temporary previews. Planning starts as soon as text generation completes, while voice continues. One freely composed Illustrious scene prompt drives 1–8 sequential variants, shown in a looping slideshow with configurable timing and 500 ms crossfades. Only the latest user/reply pair and appearance are used; dialogue, memory and avatar emotions remain separate. Hermes is excluded. New input, profile/configuration changes or clearing invalidate older jobs. See [ComfyUI setup](COMFYUI.md).
+
+ASR now preserves segment finals and resumed audio during recognition, with run/turn isolation and conservative filtering of specific subtitle-credit noise. Dropped image attachments are accepted only for vision-capable/explicitly confirmed models, normalized and sent for that turn without storing pixels in history, memory or exports. Per-character web search adds Brave, Tavily and SearXNG to DuckDuckGo, with OS-vault keys and bounded requests. See [web search](WEB_SEARCH.md).
+
+Windows core validation: **110 Rust tests passed**, with the opt-in public DuckDuckGo request skipped. TypeScript, formatting, Clippy and the three localization tests passed. Twelve focused native scenarios passed across runs, covering the seven locales, provider and profile isolation, privacy, Hermes, long speech, image batches, cell geometry and readiness while speech is held. The optimized Windows executable passed the illustration/cell scenario with both speech enabled and the CI text-only setting. API search contracts are simulated; no live Brave/Tavily credits were used.
+
+Earlier alpha.1 service validation passed a real synthetic exchange through GLM 5.3 Flash on Z.ai Coding Plan and the local ComfyUI server, producing a square scene with the installed Illustrious checkpoint and Turbo LoRA. A separate direct ComfyUI generation passed. Existing conversation history was not read; neither test used a physical microphone or listening assessment. Appearance consistency is approximate without reference-image conditioning.
+
+Linux has Secret Service credentials, native source-link opening, Debian packaging and CI configuration. External voice services start separately and updates are manual. Debian 13 x86-64 passed 109 Rust tests, all static/localization checks, native Debian packaging and an extracted-package startup under Xvfb. No LM Studio or VoiceStudio was installed. Physical desktop/audio checks remain unvalidated; see [Linux development](LINUX.md).
+
+Profile/settings schema is **8** and profile exports are **version 4**, accepting legacy versions 1–3. Development checks use isolated data and singleton identifiers. The published stable release remains **0.9.0**.
+
+## Published release history
+
 The application now has its own logo across Windows icons, the tray, sidebar and favicon. Companion portraits stay independent. Incremental builds rebuild icon resources when branding changes, and the English README features the new identity and a refreshed control-panel screenshot.
 
 Hermes remote-agent mode connects to server profiles with protected keys, persistent conversations, streaming, interruption, explicit tool approvals and a widget **New conversation** action. Hermes owns personality, memory, tools and model budgets; emotional avatars are explicitly excluded. See [Hermes setup](HERMES.md).

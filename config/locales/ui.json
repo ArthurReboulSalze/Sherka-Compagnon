@@ -1,18 +1,116 @@
 {
-  "Cette action ne peut pas être annulée.": ["This action cannot be undone.", "Esta acción no se puede deshacer.", "Questa azione non può essere annullata.", "Diese Aktion kann nicht rückgängig gemacht werden.", "此操作无法撤销。", "この操作は取り消せません。"],
-  "Conversation effacée. Les faits sauvegardés sont conservés.": ["Conversation cleared. Saved facts have been kept.", "Conversación borrada. Los datos guardados se han conservado.", "Conversazione cancellata. I fatti salvati sono stati conservati.", "Gespräch gelöscht. Gespeicherte Fakten wurden beibehalten.", "对话已清除，已保存的事实已保留。", "会話を削除しました。保存済みの情報は保持されています。"],
-  "Conversation et faits sauvegardés effacés.": ["Conversation and saved facts cleared.", "Conversación y datos guardados borrados.", "Conversazione e fatti salvati cancellati.", "Gespräch und gespeicherte Fakten gelöscht.", "对话和已保存的事实均已清除。", "会話と保存済みの情報を削除しました。"],
-  "Effacer aussi les faits sauvegardés": ["Also delete saved facts", "Borrar también los datos guardados", "Elimina anche i fatti salvati", "Auch gespeicherte Fakten löschen", "同时删除已保存的事实", "保存済みの情報も削除する"],
-  "Effacer l’historique local": ["Clear local history", "Borrar el historial local", "Cancella la cronologia locale", "Lokalen Verlauf löschen", "清除本地历史记录", "ローカルの履歴を削除"],
-  "Effacer la conversation": ["Clear conversation", "Borrar la conversación", "Cancella la conversazione", "Gespräch löschen", "清除对话", "会話を削除"],
-  "Effacer la conversation avec {0} ?": ["Clear the conversation with {0}?", "¿Borrar la conversación con {0}?", "Cancellare la conversazione con {0}?", "Gespräch mit {0} löschen?", "要清除与 {0} 的对话吗？", "{0} との会話を削除しますか？"],
-  "Fait supprimé de la mémoire. Les anciens échanges restent exclus du rappel.": ["Fact deleted from memory. Previous exchanges remain excluded from recall.", "Dato eliminado de la memoria. Los intercambios anteriores siguen excluidos del recuerdo.", "Fatto eliminato dalla memoria. Gli scambi precedenti restano esclusi dal richiamo.", "Fakt aus dem Gedächtnis gelöscht. Frühere Gespräche bleiben vom Abruf ausgeschlossen.", "该事实已从记忆中删除，之前的交流仍不会被用于回忆。", "記憶から情報を削除しました。過去のやり取りは引き続き参照対象から除外されます。"],
-  "Hermes conserve ses conversations et sa mémoire sur son serveur. Cette action efface uniquement l’historique local et démarre une nouvelle conversation côté Sherka.": ["Hermes stores its conversations and memory on its server. This only clears local history and starts a fresh conversation in Sherka.", "Hermes conserva sus conversaciones y memoria en su servidor. Esto solo borra el historial local e inicia una nueva conversación en Sherka.", "Hermes conserva conversazioni e memoria sul suo server. Questa azione cancella solo la cronologia locale e avvia una nuova conversazione in Sherka.", "Hermes speichert Gespräche und Erinnerungen auf seinem Server. Diese Aktion löscht nur den lokalen Verlauf und beginnt ein neues Gespräch in Sherka.", "Hermes 将对话和记忆保存在其服务器上。此操作仅清除本地历史记录，并在 Sherka 中开始新的对话。", "Hermes はサーバー上に会話と記憶を保存します。この操作はローカルの履歴だけを削除し、Sherka で新しい会話を開始します。"],
-  "Historique local effacé. Les conversations et souvenirs du serveur Hermes restent gérés par Hermes.": ["Local history cleared. Conversations and memories on the Hermes server remain managed by Hermes.", "Historial local borrado. Hermes sigue gestionando las conversaciones y recuerdos de su servidor.", "Cronologia locale cancellata. Le conversazioni e i ricordi sul server Hermes restano gestiti da Hermes.", "Lokaler Verlauf gelöscht. Gespräche und Erinnerungen auf dem Hermes-Server werden weiterhin von Hermes verwaltet.", "本地历史记录已清除。Hermes 服务器上的对话和记忆仍由 Hermes 管理。", "ローカルの履歴を削除しました。Hermes サーバー上の会話と記憶は引き続き Hermes が管理します。"],
-  "La confirmation vocale n’a pas pu être lue. La conversation a bien été effacée.": ["The spoken confirmation could not be played. The conversation was cleared successfully.", "No se pudo reproducir la confirmación de voz. La conversación se ha borrado correctamente.", "Impossibile riprodurre la conferma vocale. La conversazione è stata cancellata correttamente.", "Die Sprachbestätigung konnte nicht abgespielt werden. Das Gespräch wurde erfolgreich gelöscht.", "无法播放语音确认，但对话已成功清除。", "音声による確認を再生できませんでしたが、会話は正常に削除されました。"],
-  "Les messages, leurs sources et les résumés seront supprimés de ce PC. Les faits que tu as enregistrés ou validés seront conservés.": ["Messages, their sources and summaries will be deleted from this PC. Facts you saved or approved will be kept.", "Los mensajes, sus fuentes y resúmenes se eliminarán de este PC. Se conservarán los datos que hayas guardado o aprobado.", "Messaggi, fonti e riepiloghi saranno eliminati da questo PC. I fatti che hai salvato o approvato saranno conservati.", "Nachrichten, ihre Quellen und Zusammenfassungen werden von diesem PC gelöscht. Von dir gespeicherte oder bestätigte Fakten bleiben erhalten.", "此电脑上的消息、来源和摘要将被删除。你保存或确认的事实将被保留。", "この PC 上のメッセージ、出典、要約を削除します。保存または承認した情報は保持されます。"],
-  "Supprimer ce fait": ["Delete this fact", "Eliminar este dato", "Elimina questo fatto", "Diesen Fakt löschen", "删除此事实", "この情報を削除"],
-  "Tu peux aussi dire « Efface notre conversation » ou écrire /clear. Tes faits sauvegardés restent en mémoire.": ["You can also say “Clear our conversation” or type /clear. Your saved facts stay in memory.", "También puedes decir «Borra nuestra conversación» o escribir /clear. Tus datos guardados permanecen en la memoria.", "Puoi anche dire «Cancella la nostra conversazione» o scrivere /clear. I fatti salvati restano in memoria.", "Du kannst auch „Lösche unseren Chatverlauf“ sagen oder /clear eingeben. Gespeicherte Fakten bleiben erhalten.", "你也可以说“清空我们的对话”或输入 /clear。已保存的事实会保留在记忆中。", "「会話履歴を削除して」と話すか、/clear と入力することもできます。保存済みの情報は記憶に残ります。"],
+  "Cette action ne peut pas être annulée.": [
+    "This action cannot be undone.",
+    "Esta acción no se puede deshacer.",
+    "Questa azione non può essere annullata.",
+    "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "此操作无法撤销。",
+    "この操作は取り消せません。"
+  ],
+  "Conversation effacée. Les faits sauvegardés sont conservés.": [
+    "Conversation cleared. Saved facts have been kept.",
+    "Conversación borrada. Los datos guardados se han conservado.",
+    "Conversazione cancellata. I fatti salvati sono stati conservati.",
+    "Gespräch gelöscht. Gespeicherte Fakten wurden beibehalten.",
+    "对话已清除，已保存的事实已保留。",
+    "会話を削除しました。保存済みの情報は保持されています。"
+  ],
+  "Conversation et faits sauvegardés effacés.": [
+    "Conversation and saved facts cleared.",
+    "Conversación y datos guardados borrados.",
+    "Conversazione e fatti salvati cancellati.",
+    "Gespräch und gespeicherte Fakten gelöscht.",
+    "对话和已保存的事实均已清除。",
+    "会話と保存済みの情報を削除しました。"
+  ],
+  "Effacer aussi les faits sauvegardés": [
+    "Also delete saved facts",
+    "Borrar también los datos guardados",
+    "Elimina anche i fatti salvati",
+    "Auch gespeicherte Fakten löschen",
+    "同时删除已保存的事实",
+    "保存済みの情報も削除する"
+  ],
+  "Effacer l’historique local": [
+    "Clear local history",
+    "Borrar el historial local",
+    "Cancella la cronologia locale",
+    "Lokalen Verlauf löschen",
+    "清除本地历史记录",
+    "ローカルの履歴を削除"
+  ],
+  "Effacer la conversation": [
+    "Clear conversation",
+    "Borrar la conversación",
+    "Cancella la conversazione",
+    "Gespräch löschen",
+    "清除对话",
+    "会話を削除"
+  ],
+  "Effacer la conversation avec {0} ?": [
+    "Clear the conversation with {0}?",
+    "¿Borrar la conversación con {0}?",
+    "Cancellare la conversazione con {0}?",
+    "Gespräch mit {0} löschen?",
+    "要清除与 {0} 的对话吗？",
+    "{0} との会話を削除しますか？"
+  ],
+  "Fait supprimé de la mémoire. Les anciens échanges restent exclus du rappel.": [
+    "Fact deleted from memory. Previous exchanges remain excluded from recall.",
+    "Dato eliminado de la memoria. Los intercambios anteriores siguen excluidos del recuerdo.",
+    "Fatto eliminato dalla memoria. Gli scambi precedenti restano esclusi dal richiamo.",
+    "Fakt aus dem Gedächtnis gelöscht. Frühere Gespräche bleiben vom Abruf ausgeschlossen.",
+    "该事实已从记忆中删除，之前的交流仍不会被用于回忆。",
+    "記憶から情報を削除しました。過去のやり取りは引き続き参照対象から除外されます。"
+  ],
+  "Hermes conserve ses conversations et sa mémoire sur son serveur. Cette action efface uniquement l’historique local et démarre une nouvelle conversation côté Sherka.": [
+    "Hermes stores its conversations and memory on its server. This only clears local history and starts a fresh conversation in Sherka.",
+    "Hermes conserva sus conversaciones y memoria en su servidor. Esto solo borra el historial local e inicia una nueva conversación en Sherka.",
+    "Hermes conserva conversazioni e memoria sul suo server. Questa azione cancella solo la cronologia locale e avvia una nuova conversazione in Sherka.",
+    "Hermes speichert Gespräche und Erinnerungen auf seinem Server. Diese Aktion löscht nur den lokalen Verlauf und beginnt ein neues Gespräch in Sherka.",
+    "Hermes 将对话和记忆保存在其服务器上。此操作仅清除本地历史记录，并在 Sherka 中开始新的对话。",
+    "Hermes はサーバー上に会話と記憶を保存します。この操作はローカルの履歴だけを削除し、Sherka で新しい会話を開始します。"
+  ],
+  "Historique local effacé. Les conversations et souvenirs du serveur Hermes restent gérés par Hermes.": [
+    "Local history cleared. Conversations and memories on the Hermes server remain managed by Hermes.",
+    "Historial local borrado. Hermes sigue gestionando las conversaciones y recuerdos de su servidor.",
+    "Cronologia locale cancellata. Le conversazioni e i ricordi sul server Hermes restano gestiti da Hermes.",
+    "Lokaler Verlauf gelöscht. Gespräche und Erinnerungen auf dem Hermes-Server werden weiterhin von Hermes verwaltet.",
+    "本地历史记录已清除。Hermes 服务器上的对话和记忆仍由 Hermes 管理。",
+    "ローカルの履歴を削除しました。Hermes サーバー上の会話と記憶は引き続き Hermes が管理します。"
+  ],
+  "La confirmation vocale n’a pas pu être lue. La conversation a bien été effacée.": [
+    "The spoken confirmation could not be played. The conversation was cleared successfully.",
+    "No se pudo reproducir la confirmación de voz. La conversación se ha borrado correctamente.",
+    "Impossibile riprodurre la conferma vocale. La conversazione è stata cancellata correttamente.",
+    "Die Sprachbestätigung konnte nicht abgespielt werden. Das Gespräch wurde erfolgreich gelöscht.",
+    "无法播放语音确认，但对话已成功清除。",
+    "音声による確認を再生できませんでしたが、会話は正常に削除されました。"
+  ],
+  "Les messages, leurs sources et les résumés seront supprimés de ce PC. Les faits que tu as enregistrés ou validés seront conservés.": [
+    "Messages, their sources and summaries will be deleted from this PC. Facts you saved or approved will be kept.",
+    "Los mensajes, sus fuentes y resúmenes se eliminarán de este PC. Se conservarán los datos que hayas guardado o aprobado.",
+    "Messaggi, fonti e riepiloghi saranno eliminati da questo PC. I fatti che hai salvato o approvato saranno conservati.",
+    "Nachrichten, ihre Quellen und Zusammenfassungen werden von diesem PC gelöscht. Von dir gespeicherte oder bestätigte Fakten bleiben erhalten.",
+    "此电脑上的消息、来源和摘要将被删除。你保存或确认的事实将被保留。",
+    "この PC 上のメッセージ、出典、要約を削除します。保存または承認した情報は保持されます。"
+  ],
+  "Supprimer ce fait": [
+    "Delete this fact",
+    "Eliminar este dato",
+    "Elimina questo fatto",
+    "Diesen Fakt löschen",
+    "删除此事实",
+    "この情報を削除"
+  ],
+  "Tu peux aussi dire « Efface notre conversation » ou écrire /clear. Tes faits sauvegardés restent en mémoire.": [
+    "You can also say “Clear our conversation” or type /clear. Your saved facts stay in memory.",
+    "También puedes decir «Borra nuestra conversación» o escribir /clear. Tus datos guardados permanecen en la memoria.",
+    "Puoi anche dire «Cancella la nostra conversazione» o scrivere /clear. I fatti salvati restano in memoria.",
+    "Du kannst auch „Lösche unseren Chatverlauf“ sagen oder /clear eingeben. Gespeicherte Fakten bleiben erhalten.",
+    "你也可以说“清空我们的对话”或输入 /clear。已保存的事实会保留在记忆中。",
+    "「会話履歴を削除して」と話すか、/clear と入力することもできます。保存済みの情報は記憶に残ります。"
+  ],
   "La transcription a été interrompue. Le micro reste actif ; fais une pause puis répète ta phrase.": [
     "Transcription was interrupted. The microphone is still on; pause, then repeat your sentence.",
     "La transcripción se ha interrumpido. El micrófono sigue activo; haz una pausa y repite la frase.",
@@ -821,14 +919,6 @@
     "选择每个伙伴的模型和声音。这些选项将在下一次对话中使用。",
     "各コンパニオンのモデルと声を選んでください。次の会話から適用されます。"
   ],
-  "Choisis un format Windows PCM 16/32 bits ou flottant.": [
-    "Choose a Windows PCM 16/32-bit or floating-point format.",
-    "Elige un formato Windows PCM de 16/32 bits o flotante.",
-    "Scegli un formato Windows PCM a 16/32 bit o in virgola mobile.",
-    "Wähle ein Windows-Format mit PCM 16/32 Bit oder Fließkomma.",
-    "请选择 Windows PCM 16/32 位或浮点格式。",
-    "Windows の PCM 16/32 ビットまたは浮動小数点形式を選んでください。"
-  ],
   "Choisis un microphone PCM 16/32 bits ou flottant.": [
     "Choose a PCM 16/32-bit or floating-point microphone.",
     "Elige un micrófono PCM de 16/32 bits o flotante.",
@@ -892,14 +982,6 @@
     "Wähle einen einzeiligen Namen mit 1 bis 60 Zeichen.",
     "名称须为单行，长度为 1 至 60 个字符。",
     "名前は 1〜60 文字で、1 行に収めてください。"
-  ],
-  "Choisis une fréquence Windows entre 8 et 96 kHz (44,1 ou 48 kHz conseillés).": [
-    "Choose a Windows sample rate from 8 to 96 kHz (44.1 or 48 kHz recommended).",
-    "Elige una frecuencia Windows de 8 a 96 kHz (se recomienda 44,1 o 48 kHz).",
-    "Scegli una frequenza Windows da 8 a 96 kHz (consigliati 44,1 o 48 kHz).",
-    "Wähle eine Windows-Abtastrate von 8 bis 96 kHz (44,1 oder 48 kHz empfohlen).",
-    "请选择 8 至 96 kHz 的 Windows 采样率（推荐 44.1 或 48 kHz）。",
-    "Windows のサンプルレートは 8〜96 kHz にしてください（44.1 または 48 kHz 推奨）。"
   ],
   "Choisis une image de moins de 10 Mio.": [
     "Choose an image smaller than 10 MiB.",
@@ -1661,14 +1743,6 @@
     "无法读取音频设备。",
     "音声デバイスを取得できません。"
   ],
-  "Impossible de lister les microphones Windows.": [
-    "Cannot list Windows microphones.",
-    "No se pueden listar los micrófonos de Windows.",
-    "Impossibile elencare i microfoni Windows.",
-    "Windows-Mikrofone können nicht aufgelistet werden.",
-    "无法列出 Windows 麦克风。",
-    "Windows のマイク一覧を取得できません。"
-  ],
   "Impossible de masquer la fenêtre : {0}": [
     "Cannot hide window: {0}",
     "No se puede ocultar la ventana: {0}",
@@ -2349,14 +2423,6 @@
     "所选 STT 引擎已不在 VoiceStudio 中启用。请刷新设置。",
     "選択した STT エンジンが VoiceStudio で有効ではありません。設定を更新してください。"
   ],
-  "Le périphérique Windows par défaut a changé. Réactive le micro pour utiliser le nouveau périphérique.": [
-    "Default Windows device changed. Turn the mic back on to use the new device.",
-    "El dispositivo predeterminado de Windows cambió. Reactiva el micrófono para usar el nuevo.",
-    "Il dispositivo predefinito Windows è cambiato. Riattiva il microfono per usare il nuovo.",
-    "Das Windows-Standardgerät wurde geändert. Schalte das Mikrofon erneut ein, um das neue Gerät zu nutzen.",
-    "Windows 默认设备已更改。重新开启麦克风以使用新设备。",
-    "Windows の既定デバイスが変わりました。マイクを再度有効にして新しいデバイスを使用してください。"
-  ],
   "Le plafond de contexte ou la réserve de réponse est invalide.": [
     "Invalid context limit or response reserve.",
     "Límite de contexto o reserva de respuesta no válido.",
@@ -2509,14 +2575,6 @@
     "小组件",
     "ウィジェット"
   ],
-  "Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification Windows.": [
-    "The widget can pass clicks to windows behind it. To regain control, click Sherka's icon in the Windows notification area.",
-    "El widget puede dejar pasar clics a lo que tiene detrás. Para recuperar el control, haz clic en el icono de Sherka en el área de notificación de Windows.",
-    "Il widget può lasciare passare i clic alle finestre sottostanti. Per riprendere il controllo, clicca su Sherka nell'area di notifica Windows.",
-    "Das Widget kann Klicks an dahinterliegende Fenster durchlassen. Klicke zum Wiederherstellen der Steuerung auf Sherka im Windows-Infobereich.",
-    "小组件可将点击传递到后方窗口。要恢复控制，请点击 Windows 通知区域中的 Sherka 图标。",
-    "ウィジェットは背後のウィンドウへクリックを通せます。操作を戻すには Windows の通知領域の Sherka アイコンをクリックしてください。"
-  ],
   "Lecture de sa voix…": [
     "Playing its voice…",
     "Reproduciendo su voz…",
@@ -2524,14 +2582,6 @@
     "Stimme wird abgespielt…",
     "正在播放声音…",
     "声を再生中…"
-  ],
-  "Lecture des périphériques Windows…": [
-    "Reading Windows devices…",
-    "Leyendo dispositivos de Windows…",
-    "Lettura dei dispositivi Windows…",
-    "Windows-Geräte werden gelesen…",
-    "正在读取 Windows 设备…",
-    "Windows のデバイスを取得中…"
   ],
   "Lecture des voix VoiceStudio…": [
     "Reading VoiceStudio voices…",
@@ -2572,14 +2622,6 @@
     "Denkoptionen erscheinen nach dem Einlesen des Modells.",
     "读取模型后将显示推理选项。",
     "モデルを取得すると思考オプションが表示されます。"
-  ],
-  "Les périphériques audio Windows sont indisponibles.": [
-    "Windows audio devices unavailable.",
-    "Dispositivos de audio Windows no disponibles.",
-    "Dispositivi audio Windows non disponibili.",
-    "Windows-Audiogeräte nicht verfügbar.",
-    "Windows 音频设备不可用。",
-    "Windows の音声デバイスが利用できません。"
   ],
   "Les profils et les souvenirs sont conservés. La voix s’arrête avant le redémarrage.": [
     "Profiles and memories are kept. Speech stops before restart.",
@@ -4413,14 +4455,6 @@
     "偏好",
     "好み"
   ],
-  "Windows refuse le microphone. Vérifie les autorisations et le périphérique choisi.": [
-    "Windows denied microphone access. Check permissions and the selected device.",
-    "Windows deniega el micrófono. Comprueba los permisos y el dispositivo elegido.",
-    "Windows nega l'accesso al microfono. Controlla autorizzazioni e dispositivo scelto.",
-    "Windows verweigert den Mikrofonzugriff. Prüfe Berechtigungen und gewähltes Gerät.",
-    "Windows 拒绝访问麦克风。请检查权限和所选设备。",
-    "Windows がマイクへのアクセスを拒否しました。権限と選択したデバイスを確認してください。"
-  ],
   "Afficher Sherka / reprendre les clics": [
     "Show Sherka / restore clicks",
     "Mostrar Sherka / recuperar clics",
@@ -4452,14 +4486,6 @@
     "Verbindungen können nicht initialisiert werden.",
     "无法初始化连接。",
     "接続を初期化できません。"
-  ],
-  "Impossible de lister les sorties audio Windows.": [
-    "Cannot list Windows audio outputs.",
-    "No se pueden listar las salidas de audio de Windows.",
-    "Impossibile elencare le uscite audio Windows.",
-    "Windows-Audioausgaben können nicht aufgelistet werden.",
-    "无法列出 Windows 音频输出。",
-    "Windows の音声出力一覧を取得できません。"
   ],
   "L’application d’origine est introuvable.": [
     "Original application not found.",
@@ -5101,14 +5127,6 @@
     "API 密钥为空或无效。",
     "API キーが空または無効です。"
   ],
-  "La clé est protégée par Windows, partagée pour cette adresse et exclue des profils exportés.": [
-    "Windows protects the key. It is shared for this address and excluded from exported profiles.",
-    "Windows protege la clave. Se comparte para esta dirección y se excluye de los perfiles exportados.",
-    "Windows protegge la chiave. È condivisa per questo indirizzo ed esclusa dai profili esportati.",
-    "Windows schützt den Schlüssel. Er gilt für diese Adresse und wird nicht mit Profilen exportiert.",
-    "密钥由 Windows 保护，同一地址共用，且不包含在导出的角色档案中。",
-    "キーは Windows が保護します。同じアドレスで共有され、プロフィールのエクスポートには含まれません。"
-  ],
   "La demande structurée dépasse le budget du modèle ; aucune mémoire n’a été modifiée.": [
     "The structured request exceeds the model’s budget; no memory was changed.",
     "La solicitud estructurada supera el presupuesto del modelo; no se modificó ningún recuerdo.",
@@ -5172,14 +5190,6 @@
     "Der Katalog des Anbieters ist zu groß.",
     "提供商目录过大。",
     "プロバイダーのカタログが大きすぎます。"
-  ],
-  "Le coffre de clés API n’est pas accessible. Vérifie ta session Windows.": [
-    "The API key vault is unavailable. Check your Windows session.",
-    "El almacén de claves API no está disponible. Comprueba tu sesión de Windows.",
-    "L’archivio delle chiavi API non è accessibile. Controlla la sessione Windows.",
-    "Der API-Schlüsselspeicher ist nicht erreichbar. Prüfe deine Windows-Sitzung.",
-    "无法访问 API 密钥库。请检查你的 Windows 会话。",
-    "API キー保管庫にアクセスできません。Windows セッションを確認してください。"
   ],
   "Le flux du fournisseur contient un événement invalide.": [
     "The provider’s stream contains an invalid event.",
@@ -6100,5 +6110,989 @@
     "Wähle ein Gesprächsmodell in den Begleiter.",
     "请在伙伴中选择对话模型。",
     "コンパニオンで会話モデルを選択してください。"
+  ],
+  "Accélère la génération avec le LoRA Turbo du workflow, appliqué automatiquement.": [
+    "Speeds up generation with the workflow's automatically applied Turbo LoRA.",
+    "Acelera la generación con el LoRA Turbo del flujo, aplicado automáticamente.",
+    "Accelera la generazione con il LoRA Turbo del workflow, applicato automaticamente.",
+    "Beschleunigt die Erzeugung mit dem automatisch angewendeten Turbo-LoRA des Workflows.",
+    "自动应用工作流的 Turbo LoRA，加快生成速度。",
+    "ワークフローのTurbo LoRAを自動適用して生成を高速化します。"
+  ],
+  "Actualiser les modèles et LoRA": [
+    "Refresh models and LoRAs",
+    "Actualizar modelos y LoRA",
+    "Aggiorna modelli e LoRA",
+    "Modelle und LoRAs aktualisieren",
+    "刷新模型与 LoRA",
+    "モデルとLoRAを更新"
+  ],
+  "Ajouter un LoRA": [
+    "Add a LoRA",
+    "Añadir un LoRA",
+    "Aggiungi un LoRA",
+    "LoRA hinzufügen",
+    "添加 LoRA",
+    "LoRAを追加"
+  ],
+  "Ambiance de l’application": [
+    "Application theme",
+    "Tema de la aplicación",
+    "Tema dell’applicazione",
+    "Anwendungsdesign",
+    "应用主题",
+    "アプリのテーマ"
+  ],
+  "Ambiance enregistrée.": [
+    "Theme saved.",
+    "Tema guardado.",
+    "Tema salvato.",
+    "Design gespeichert.",
+    "主题已保存。",
+    "テーマを保存しました。"
+  ],
+  "Choisir un LoRA": [
+    "Choose a LoRA",
+    "Elegir un LoRA",
+    "Scegli un LoRA",
+    "LoRA auswählen",
+    "选择 LoRA",
+    "LoRAを選択"
+  ],
+  "Choisir un modèle": [
+    "Choose a model",
+    "Elegir un modelo",
+    "Scegli un modello",
+    "Modell auswählen",
+    "选择模型",
+    "モデルを選択"
+  ],
+  "Choisis les couleurs du poste de bord. Chaque compagnon garde sa propre couleur de halo.": [
+    "Choose the control panel's colors. Each companion keeps its own halo color.",
+    "Elige los colores del panel. Cada compañero conserva su propio color de halo.",
+    "Scegli i colori del pannello. Ogni compagno mantiene il proprio colore dell’alone.",
+    "Wähle die Farben des Bedienfelds. Jeder Begleiter behält seine eigene Leuchtfarbe.",
+    "选择控制面板的配色。每位伙伴保留自己的光环颜色。",
+    "操作パネルの配色を選びます。各コンパニオンの光の色は個別に設定できます。"
+  ],
+  "Choisis un modèle Illustrious et décris le physique du compagnon avant d’activer les images.": [
+    "Choose an Illustrious model and describe the companion's appearance before enabling images.",
+    "Elige un modelo Illustrious y describe el aspecto del compañero antes de activar las imágenes.",
+    "Scegli un modello Illustrious e descrivi l’aspetto del compagno prima di attivare le immagini.",
+    "Wähle ein Illustrious-Modell und beschreibe das Aussehen des Begleiters, bevor du Bilder aktivierst.",
+    "启用图像前，请选择 Illustrious 模型并描述伙伴的外观。",
+    "画像を有効にする前に、Illustriousモデルを選び、コンパニオンの外見を記述してください。"
+  ],
+  "Choisis un workflow API JSON de moins de 256 Kio.": [
+    "Choose an API JSON workflow smaller than 256 KiB.",
+    "Elige un flujo API JSON de menos de 256 KiB.",
+    "Scegli un workflow API JSON inferiore a 256 KiB.",
+    "Wähle einen API-JSON-Workflow unter 256 KiB.",
+    "请选择小于 256 KiB 的 API JSON 工作流。",
+    "256 KiB未満のAPI JSONワークフローを選んでください。"
+  ],
+  "ComfyUI a refusé la demande (HTTP {0}).": [
+    "ComfyUI rejected the request (HTTP {0}).",
+    "ComfyUI rechazó la solicitud (HTTP {0}).",
+    "ComfyUI ha rifiutato la richiesta (HTTP {0}).",
+    "ComfyUI hat die Anfrage abgelehnt (HTTP {0}).",
+    "ComfyUI 拒绝了请求（HTTP {0}）。",
+    "ComfyUIがリクエストを拒否しました（HTTP {0}）。"
+  ],
+  "ComfyUI connecté · {0} modèles Illustrious": [
+    "ComfyUI connected · {0} Illustrious models",
+    "ComfyUI conectado · {0} modelos Illustrious",
+    "ComfyUI connesso · {0} modelli Illustrious",
+    "ComfyUI verbunden · {0} Illustrious-Modelle",
+    "ComfyUI 已连接 · {0} 个 Illustrious 模型",
+    "ComfyUIに接続済み · Illustriousモデル {0}個"
+  ],
+  "ComfyUI dessine la scène…": [
+    "ComfyUI is drawing the scene…",
+    "ComfyUI está dibujando la escena…",
+    "ComfyUI sta disegnando la scena…",
+    "ComfyUI zeichnet die Szene…",
+    "ComfyUI 正在绘制场景…",
+    "ComfyUIがシーンを描いています…"
+  ],
+  "ComfyUI est indisponible. Vérifie son adresse et son serveur.": [
+    "ComfyUI is unavailable. Check its address and server.",
+    "ComfyUI no está disponible. Comprueba su dirección y servidor.",
+    "ComfyUI non è disponibile. Controlla l’indirizzo e il server.",
+    "ComfyUI ist nicht erreichbar. Prüfe Adresse und Server.",
+    "ComfyUI 不可用，请检查地址和服务器。",
+    "ComfyUIに接続できません。アドレスとサーバーを確認してください。"
+  ],
+  "ComfyUI met trop de temps à générer l’image. Vérifie sa file d’attente.": [
+    "ComfyUI is taking too long to generate the image. Check its queue.",
+    "ComfyUI tarda demasiado en generar la imagen. Comprueba su cola.",
+    "ComfyUI impiega troppo tempo a generare l’immagine. Controlla la coda.",
+    "ComfyUI braucht zu lange für das Bild. Prüfe die Warteschlange.",
+    "ComfyUI 生成图像耗时过长，请检查队列。",
+    "ComfyUIの画像生成に時間がかかっています。キューを確認してください。"
+  ],
+  "ComfyUI n’a pas pu générer l’image. Vérifie le workflow et la mémoire GPU disponible.": [
+    "ComfyUI could not generate the image. Check the workflow and available GPU memory.",
+    "ComfyUI no pudo generar la imagen. Comprueba el flujo y la memoria GPU disponible.",
+    "ComfyUI non ha generato l’immagine. Controlla il workflow e la memoria GPU disponibile.",
+    "ComfyUI konnte das Bild nicht erzeugen. Prüfe Workflow und verfügbaren GPU-Speicher.",
+    "ComfyUI 无法生成图像，请检查工作流和可用显存。",
+    "ComfyUIが画像を生成できませんでした。ワークフローとGPUの空きメモリを確認してください。"
+  ],
+  "Connexion à ComfyUI…": [
+    "Connecting to ComfyUI…",
+    "Conectando con ComfyUI…",
+    "Connessione a ComfyUI…",
+    "Verbindung zu ComfyUI…",
+    "正在连接 ComfyUI…",
+    "ComfyUIに接続中…"
+  ],
+  "Description physique du compagnon": [
+    "Companion appearance",
+    "Aspecto físico del compañero",
+    "Aspetto fisico del compagno",
+    "Aussehen des Begleiters",
+    "伙伴外观描述",
+    "コンパニオンの外見"
+  ],
+  "Écrire au compagnon": [
+    "Write to your companion",
+    "Escribir al compañero",
+    "Scrivi al compagno",
+    "Dem Begleiter schreiben",
+    "给伙伴写消息",
+    "コンパニオンに入力"
+  ],
+  "Écris ou colle ton texte ici.": [
+    "Write or paste your text here.",
+    "Escribe o pega tu texto aquí.",
+    "Scrivi o incolla il testo qui.",
+    "Schreibe oder füge deinen Text hier ein.",
+    "在此输入或粘贴文本。",
+    "ここに入力またはテキストを貼り付けてください。"
+  ],
+  "Enregistrer les illustrations": [
+    "Save illustration settings",
+    "Guardar ilustraciones",
+    "Salva le illustrazioni",
+    "Bildeinstellungen speichern",
+    "保存插图设置",
+    "イラスト設定を保存"
+  ],
+  "Exporte le workflow au format API de ComfyUI.": [
+    "Export the workflow in ComfyUI's API format.",
+    "Exporta el flujo en formato API de ComfyUI.",
+    "Esporta il workflow nel formato API di ComfyUI.",
+    "Exportiere den Workflow im API-Format von ComfyUI.",
+    "请将工作流导出为 ComfyUI API 格式。",
+    "ComfyUIのAPI形式でワークフローをエクスポートしてください。"
+  ],
+  "Fenêtre indisponible.": [
+    "Window unavailable.",
+    "Ventana no disponible.",
+    "Finestra non disponibile.",
+    "Fenster nicht verfügbar.",
+    "窗口不可用。",
+    "ウィンドウを開けません。"
+  ],
+  "Force": [
+    "Strength",
+    "Intensidad",
+    "Intensità",
+    "Stärke",
+    "强度",
+    "強度"
+  ],
+  "Graphite": [
+    "Graphite",
+    "Grafito",
+    "Grafite",
+    "Graphit",
+    "石墨",
+    "グラファイト"
+  ],
+  "Illustration de la conversation": [
+    "Conversation illustration",
+    "Ilustración de la conversación",
+    "Illustrazione della conversazione",
+    "Illustration des Gesprächs",
+    "对话插图",
+    "会話のイラスト"
+  ],
+  "Illustrations de la conversation": [
+    "Conversation illustrations",
+    "Ilustraciones de la conversación",
+    "Illustrazioni della conversazione",
+    "Gesprächsbilder",
+    "对话插图",
+    "会話のイラスト"
+  ],
+  "Illustrations désactivées": [
+    "Illustrations disabled",
+    "Ilustraciones desactivadas",
+    "Illustrazioni disattivate",
+    "Bilder deaktiviert",
+    "插图已关闭",
+    "イラストは無効です"
+  ],
+  "Illustrations enregistrées.": [
+    "Illustration settings saved.",
+    "Ilustraciones guardadas.",
+    "Illustrazioni salvate.",
+    "Bildeinstellungen gespeichert.",
+    "插图设置已保存。",
+    "イラスト設定を保存しました。"
+  ],
+  "Illustrer la conversation": [
+    "Illustrate the conversation",
+    "Ilustrar la conversación",
+    "Illustra la conversazione",
+    "Gespräch illustrieren",
+    "生成对话插图",
+    "会話をイラスト化"
+  ],
+  "Image": [
+    "Image",
+    "Imagen",
+    "Immagine",
+    "Bild",
+    "图像",
+    "画像"
+  ],
+  "Image du dernier échange": [
+    "Image of the latest exchange",
+    "Imagen del último intercambio",
+    "Immagine dell’ultimo scambio",
+    "Bild zum letzten Austausch",
+    "最新对话的图像",
+    "直近のやり取りの画像"
+  ],
+  "Images pendant la conversation": [
+    "Images during conversation",
+    "Imágenes durante la conversación",
+    "Immagini durante la conversazione",
+    "Bilder während des Gesprächs",
+    "对话期间生成图像",
+    "会話中に画像を生成"
+  ],
+  "Importer un workflow API": [
+    "Import an API workflow",
+    "Importar un flujo API",
+    "Importa un workflow API",
+    "API-Workflow importieren",
+    "导入 API 工作流",
+    "APIワークフローを読み込む"
+  ],
+  "indisponible": [
+    "unavailable",
+    "no disponible",
+    "non disponibile",
+    "nicht verfügbar",
+    "不可用",
+    "利用不可"
+  ],
+  "Jardin de sauge": [
+    "Sage garden",
+    "Jardín de salvia",
+    "Giardino di salvia",
+    "Salbeigarten",
+    "鼠尾草花园",
+    "セージガーデン"
+  ],
+  "Je prépare une réponse…": [
+    "I'm preparing a reply…",
+    "Estoy preparando una respuesta…",
+    "Sto preparando una risposta…",
+    "Ich bereite eine Antwort vor…",
+    "正在准备回答…",
+    "返答を準備しています…"
+  ],
+  "La configuration des illustrations ComfyUI est invalide.": [
+    "The ComfyUI illustration settings are invalid.",
+    "La configuración de ilustraciones de ComfyUI no es válida.",
+    "La configurazione delle illustrazioni ComfyUI non è valida.",
+    "Die ComfyUI-Bildeinstellungen sind ungültig.",
+    "ComfyUI 插图设置无效。",
+    "ComfyUIのイラスト設定が無効です。"
+  ],
+  "La prochaine conversation inspirera une image.": [
+    "The next conversation will inspire an image.",
+    "La próxima conversación inspirará una imagen.",
+    "La prossima conversazione ispirerà un’immagine.",
+    "Das nächste Gespräch inspiriert ein Bild.",
+    "下一次对话将带来新的图像。",
+    "次の会話をもとに画像が生成されます。"
+  ],
+  "Le coffre de clés API n’est pas accessible. Vérifie le coffre de ta session.": [
+    "The API key vault is unavailable. Check your session’s credential vault.",
+    "El almacén de claves API no está disponible. Comprueba el almacén de credenciales de tu sesión.",
+    "L’archivio delle chiavi API non è accessibile. Controlla l’archivio delle credenziali della sessione.",
+    "Der API-Schlüsselspeicher ist nicht erreichbar. Prüfe den Anmeldedatenspeicher deiner Sitzung.",
+    "无法访问 API 密钥库。请检查会话的凭据库。",
+    "API キー保管庫にアクセスできません。セッションの資格情報保管庫を確認してください。"
+  ],
+  "Le dernier échange est envoyé au modèle de conversation pour préparer la scène, puis les tags à ComfyUI. Les images et modèles de diffusion restent gérés par ton serveur.": [
+    "The latest exchange goes to the conversation model to compose a scene, then its tags go to ComfyUI. Your server manages images and diffusion models.",
+    "El último intercambio se envía al modelo de conversación para preparar la escena y sus etiquetas a ComfyUI. Tu servidor gestiona las imágenes y los modelos de difusión.",
+    "L’ultimo scambio viene inviato al modello di conversazione per creare la scena, poi i tag a ComfyUI. Il server gestisce immagini e modelli di diffusione.",
+    "Der letzte Austausch geht an das Gesprächsmodell für die Szene, anschließend gehen die Tags an ComfyUI. Dein Server verwaltet Bilder und Diffusionsmodelle.",
+    "最新对话会发送给对话模型以构思场景，然后将标签发送至 ComfyUI。图像与扩散模型由你的服务器管理。",
+    "直近のやり取りを会話モデルに送り、シーンを構成してからタグをComfyUIに送ります。画像と拡散モデルはサーバー側で管理されます。"
+  ],
+  "Le LoRA Turbo requis est absent du serveur ComfyUI.": [
+    "The required Turbo LoRA is missing from the ComfyUI server.",
+    "Falta el LoRA Turbo requerido en el servidor ComfyUI.",
+    "Il LoRA Turbo richiesto manca sul server ComfyUI.",
+    "Der erforderliche Turbo-LoRA fehlt auf dem ComfyUI-Server.",
+    "ComfyUI 服务器缺少所需的 Turbo LoRA。",
+    "ComfyUIサーバーに必要なTurbo LoRAがありません。"
+  ],
+  "Le modèle n’a pas préparé de description utilisable pour l’image.": [
+    "The model did not prepare a usable image description.",
+    "El modelo no preparó una descripción utilizable para la imagen.",
+    "Il modello non ha preparato una descrizione utilizzabile per l’immagine.",
+    "Das Modell hat keine verwendbare Bildbeschreibung erstellt.",
+    "模型未能生成可用的图像描述。",
+    "モデルが使用可能な画像の説明を作成できませんでした。"
+  ],
+  "Lire à voix haute": [
+    "Read aloud",
+    "Leer en voz alta",
+    "Leggi ad alta voce",
+    "Vorlesen",
+    "朗读",
+    "読み上げる"
+  ],
+  "LoRA supplémentaires": [
+    "Additional LoRAs",
+    "LoRA adicionales",
+    "LoRA aggiuntivi",
+    "Zusätzliche LoRAs",
+    "附加 LoRA",
+    "追加のLoRA"
+  ],
+  "LoRA Turbo absent du serveur.": [
+    "Turbo LoRA missing from the server.",
+    "Falta el LoRA Turbo en el servidor.",
+    "LoRA Turbo assente sul server.",
+    "Turbo-LoRA fehlt auf dem Server.",
+    "服务器缺少 Turbo LoRA。",
+    "サーバーにTurbo LoRAがありません。"
+  ],
+  "Message": [
+    "Message",
+    "Mensaje",
+    "Messaggio",
+    "Nachricht",
+    "消息",
+    "メッセージ"
+  ],
+  "Message au compagnon": [
+    "Message to your companion",
+    "Mensaje al compañero",
+    "Messaggio al compagno",
+    "Nachricht an den Begleiter",
+    "发送给伙伴的消息",
+    "コンパニオンへのメッセージ"
+  ],
+  "Mode Turbo": [
+    "Turbo mode",
+    "Modo Turbo",
+    "Modalità Turbo",
+    "Turbo-Modus",
+    "Turbo 模式",
+    "Turboモード"
+  ],
+  "Modèle Illustrious": [
+    "Illustrious model",
+    "Modelo Illustrious",
+    "Modello Illustrious",
+    "Illustrious-Modell",
+    "Illustrious 模型",
+    "Illustriousモデル"
+  ],
+  "Nébuleuse iris": [
+    "Iris nebula",
+    "Nebulosa iris",
+    "Nebulosa iris",
+    "Irisnebel",
+    "鸢尾星云",
+    "アイリス星雲"
+  ],
+  "Nodes manquants : {0}": [
+    "Missing nodes: {0}",
+    "Nodos ausentes: {0}",
+    "Nodi mancanti: {0}",
+    "Fehlende Nodes: {0}",
+    "缺少节点：{0}",
+    "不足しているノード：{0}"
+  ],
+  "Océan nocturne": [
+    "Night ocean",
+    "Océano nocturno",
+    "Oceano notturno",
+    "Nachtmeer",
+    "夜海",
+    "夜の海"
+  ],
+  "Or orbital": [
+    "Orbital gold",
+    "Oro orbital",
+    "Oro orbitale",
+    "Orbitalgold",
+    "轨道金",
+    "オービタルゴールド"
+  ],
+  "Périphérique par défaut": [
+    "Default device",
+    "Dispositivo predeterminado",
+    "Dispositivo predefinito",
+    "Standardgerät",
+    "默认设备",
+    "既定のデバイス"
+  ],
+  "Préparation de la scène…": [
+    "Preparing the scene…",
+    "Preparando la escena…",
+    "Preparazione della scena…",
+    "Szene wird vorbereitet…",
+    "正在构思场景…",
+    "シーンを準備中…"
+  ],
+  "Prépare une nouvelle image après chaque réponse complète. Désactive ce mode pour arrêter les prochaines générations.": [
+    "Prepares a new image after each complete reply. Turn this off to stop future generations.",
+    "Prepara una nueva imagen tras cada respuesta completa. Desactívalo para detener las siguientes generaciones.",
+    "Prepara una nuova immagine dopo ogni risposta completa. Disattiva per fermare le generazioni successive.",
+    "Erstellt nach jeder vollständigen Antwort ein neues Bild. Deaktiviere dies, um weitere Bilder zu stoppen.",
+    "每次完整回答后生成新图像。关闭此模式可停止后续生成。",
+    "返答の完了後に新しい画像を準備します。無効にすると以後の生成を停止します。"
+  ],
+  "Régénérer l’image": [
+    "Regenerate image",
+    "Regenerar imagen",
+    "Rigenera immagine",
+    "Bild neu erzeugen",
+    "重新生成图像",
+    "画像を再生成"
+  ],
+  "Rose crépuscule": [
+    "Twilight rose",
+    "Rosa crepuscular",
+    "Rosa crepuscolo",
+    "Dämmerrose",
+    "暮光玫瑰",
+    "トワイライトローズ"
+  ],
+  "Sa silhouette, ses couleurs, ses vêtements ou sa carrosserie…": [
+    "Their silhouette, colors, clothes or bodywork…",
+    "Su silueta, colores, ropa o carrocería…",
+    "Silhouette, colori, abiti o carrozzeria…",
+    "Silhouette, Farben, Kleidung oder Karosserie…",
+    "外形、颜色、服装或车身…",
+    "シルエット、色、服装、または車体の特徴…"
+  ],
+  "Sans image de référence : cette description guide son apparence. L’IA compose librement les tags et descriptions en anglais adaptés à Illustrious.": [
+    "Without a reference image, this description guides their appearance. The AI freely composes English tags and descriptions suited to Illustrious.",
+    "Sin imagen de referencia, esta descripción guía su aspecto. La IA compone libremente etiquetas y descripciones en inglés adaptadas a Illustrious.",
+    "Senza un’immagine di riferimento, questa descrizione ne guida l’aspetto. L’IA compone liberamente tag e descrizioni in inglese adatti a Illustrious.",
+    "Ohne Referenzbild bestimmt diese Beschreibung das Aussehen. Die KI erstellt frei passende englische Tags und Beschreibungen für Illustrious.",
+    "没有参考图时，此描述将指导角色外观。AI 会自由组合适合 Illustrious 的英文标签和简短描述。",
+    "参照画像の代わりに、この説明を外見の手がかりにします。AIはIllustriousに適した英語のタグや説明を自由に構成します。"
+  ],
+  "Serveur ComfyUI": [
+    "ComfyUI server",
+    "Servidor ComfyUI",
+    "Server ComfyUI",
+    "ComfyUI-Server",
+    "ComfyUI 服务器",
+    "ComfyUIサーバー"
+  ],
+  "Supprimer ce LoRA": [
+    "Remove this LoRA",
+    "Eliminar este LoRA",
+    "Rimuovi questo LoRA",
+    "Diesen LoRA entfernen",
+    "移除此 LoRA",
+    "このLoRAを削除"
+  ],
+  "Sur Linux, installe le nouveau paquet depuis les releases GitHub pour mettre Sherka à jour.": [
+    "On Linux, install the new package from GitHub releases to update Sherka.",
+    "En Linux, instala el nuevo paquete de las versiones de GitHub para actualizar Sherka.",
+    "Su Linux, installa il nuovo pacchetto dalle release GitHub per aggiornare Sherka.",
+    "Unter Linux aktualisierst du Sherka mit dem neuen Paket aus den GitHub-Releases.",
+    "在 Linux 上，请安装 GitHub 发布页面的新软件包来更新 Sherka。",
+    "LinuxではGitHubリリースの新しいパッケージをインストールしてSherkaを更新します。"
+  ],
+  "Thèmes de couleurs": [
+    "Color themes",
+    "Temas de color",
+    "Temi di colore",
+    "Farbthemen",
+    "配色主题",
+    "カラーテーマ"
+  ],
+  "Un node ComfyUI requis est absent : {0}": [
+    "A required ComfyUI node is missing: {0}",
+    "Falta un nodo ComfyUI requerido: {0}",
+    "Manca un nodo ComfyUI richiesto: {0}",
+    "Ein erforderlicher ComfyUI-Node fehlt: {0}",
+    "缺少所需的 ComfyUI 节点：{0}",
+    "必要なComfyUIノードがありません：{0}"
+  ],
+  "Une scène carrée inspirée de votre dernier échange, générée avec ComfyUI et Illustrious.": [
+    "A square scene inspired by your latest exchange, generated with ComfyUI and Illustrious.",
+    "Una escena cuadrada inspirada en el último intercambio, generada con ComfyUI e Illustrious.",
+    "Una scena quadrata ispirata all’ultimo scambio, generata con ComfyUI e Illustrious.",
+    "Eine quadratische Szene zum letzten Austausch, erzeugt mit ComfyUI und Illustrious.",
+    "由最新对话启发，使用 ComfyUI 和 Illustrious 生成的正方形场景。",
+    "直近のやり取りをもとにComfyUIとIllustriousで生成する正方形のシーンです。"
+  ],
+  "Workflow API JSON pour Illustrious, avec Power LoRA Loader. Le modèle, les LoRA, les textes et les graines sont injectés par Sherka. Les images sont produites dans les fichiers temporaires de ComfyUI.": [
+    "Illustrious API JSON workflow with Power LoRA Loader. Sherka supplies the model, LoRAs, text and seeds. Images are produced in ComfyUI's temporary files.",
+    "Flujo API JSON de Illustrious con Power LoRA Loader. Sherka inyecta el modelo, LoRA, textos y semillas. Las imágenes se generan en los archivos temporales de ComfyUI.",
+    "Workflow API JSON per Illustrious con Power LoRA Loader. Sherka inserisce modello, LoRA, testi e semi. Le immagini vengono prodotte nei file temporanei di ComfyUI.",
+    "Illustrious-API-JSON-Workflow mit Power LoRA Loader. Sherka setzt Modell, LoRAs, Texte und Seeds ein. Bilder landen in den temporären Dateien von ComfyUI.",
+    "适用于 Illustrious 的 API JSON 工作流，包含 Power LoRA Loader。Sherka 注入模型、LoRA、文本及随机种子。图像生成于 ComfyUI 临时文件中。",
+    "Power LoRA Loaderを含むIllustrious用API JSONワークフローです。Sherkaがモデル、LoRA、テキスト、シードを設定します。画像はComfyUIの一時ファイルに生成されます。"
+  ],
+  "Workflow ComfyUI": [
+    "ComfyUI workflow",
+    "Flujo ComfyUI",
+    "Workflow ComfyUI",
+    "ComfyUI-Workflow",
+    "ComfyUI 工作流",
+    "ComfyUIワークフロー"
+  ],
+  "Workflow par défaut": [
+    "Default workflow",
+    "Flujo predeterminado",
+    "Workflow predefinito",
+    "Standard-Workflow",
+    "默认工作流",
+    "既定のワークフロー"
+  ],
+  "Workflow personnalisé": [
+    "Custom workflow",
+    "Flujo personalizado",
+    "Workflow personalizzato",
+    "Eigener Workflow",
+    "自定义工作流",
+    "カスタムワークフロー"
+  ],
+  "Workflow Sherka": [
+    "Sherka workflow",
+    "Flujo Sherka",
+    "Workflow Sherka",
+    "Sherka-Workflow",
+    "Sherka 工作流",
+    "Sherkaワークフロー"
+  ],
+  "×": [
+    "×",
+    "×",
+    "×",
+    "×",
+    "×",
+    "×"
+  ],
+  "ILLUSTRIOUS": [
+    "ILLUSTRIOUS",
+    "ILLUSTRIOUS",
+    "ILLUSTRIOUS",
+    "ILLUSTRIOUS",
+    "ILLUSTRIOUS",
+    "ILLUSTRIOUS"
+  ],
+  "LoRA": [
+    "LoRA",
+    "LoRA",
+    "LoRA",
+    "LoRA",
+    "LoRA",
+    "LoRA"
+  ],
+  "http://127.0.0.1:8188": [
+    "http://127.0.0.1:8188",
+    "http://127.0.0.1:8188",
+    "http://127.0.0.1:8188",
+    "http://127.0.0.1:8188",
+    "http://127.0.0.1:8188",
+    "http://127.0.0.1:8188"
+  ],
+  "La préparation de la scène a échoué. Vérifie le modèle de conversation puis réessaie.": [
+    "Scene preparation failed. Check the conversation model and try again.",
+    "Falló la preparación de la escena. Comprueba el modelo de conversación e inténtalo de nuevo.",
+    "Preparazione della scena non riuscita. Controlla il modello di conversazione e riprova.",
+    "Die Vorbereitung der Szene ist fehlgeschlagen. Prüfe das Gesprächsmodell und versuche es erneut.",
+    "场景准备失败，请检查对话模型后重试。",
+    "シーンの準備に失敗しました。会話モデルを確認してから再試行してください。"
+  ],
+  "Lecture des périphériques audio…": [
+    "Reading audio devices…",
+    "Leyendo dispositivos de audio…",
+    "Lettura dei dispositivi audio…",
+    "Audiogeräte werden gelesen…",
+    "正在读取音频设备…",
+    "音声デバイスを取得中…"
+  ],
+  "Impossible de lister les microphones.": [
+    "Cannot list microphones.",
+    "No se pueden listar los micrófonos.",
+    "Impossibile elencare i microfoni.",
+    "Mikrofone können nicht aufgelistet werden.",
+    "无法列出麦克风。",
+    "マイク一覧を取得できません。"
+  ],
+  "Impossible de lister les sorties audio.": [
+    "Cannot list audio outputs.",
+    "No se pueden listar las salidas de audio.",
+    "Impossibile elencare le uscite audio.",
+    "Audioausgaben können nicht aufgelistet werden.",
+    "无法列出音频输出。",
+    "音声出力一覧を取得できません。"
+  ],
+  "Les périphériques audio sont indisponibles.": [
+    "Audio devices are unavailable.",
+    "Los dispositivos de audio no están disponibles.",
+    "I dispositivi audio non sono disponibili.",
+    "Audiogeräte sind nicht verfügbar.",
+    "音频设备不可用。",
+    "音声デバイスが利用できません。"
+  ],
+  "L’accès au microphone est refusé. Vérifie les autorisations et le périphérique choisi.": [
+    "Microphone access was denied. Check permissions and the selected device.",
+    "Se ha denegado el acceso al micrófono. Comprueba los permisos y el dispositivo elegido.",
+    "Accesso al microfono negato. Controlla autorizzazioni e dispositivo scelto.",
+    "Der Mikrofonzugriff wurde verweigert. Prüfe Berechtigungen und gewähltes Gerät.",
+    "麦克风访问被拒绝。请检查权限和所选设备。",
+    "マイクへのアクセスが拒否されました。権限と選択したデバイスを確認してください。"
+  ],
+  "L’accès à la sortie audio choisie est refusé.": [
+    "Access to the selected audio output was denied.",
+    "Se ha denegado el acceso a la salida de audio elegida.",
+    "Accesso all’uscita audio selezionata negato.",
+    "Der Zugriff auf die gewählte Audioausgabe wurde verweigert.",
+    "所选音频输出的访问被拒绝。",
+    "選択した音声出力へのアクセスが拒否されました。"
+  ],
+  "Choisis un format PCM 16/32 bits ou flottant.": [
+    "Choose a PCM 16/32-bit or floating-point format.",
+    "Elige un formato PCM de 16/32 bits o flotante.",
+    "Scegli un formato PCM a 16/32 bit o in virgola mobile.",
+    "Wähle ein PCM-Format mit 16/32 Bit oder Fließkomma.",
+    "请选择 PCM 16/32 位或浮点格式。",
+    "PCM 16/32 ビットまたは浮動小数点形式を選んでください。"
+  ],
+  "Choisis une fréquence entre 8 et 96 kHz (44,1 ou 48 kHz conseillés).": [
+    "Choose a sample rate from 8 to 96 kHz (44.1 or 48 kHz recommended).",
+    "Elige una frecuencia de 8 a 96 kHz (se recomienda 44,1 o 48 kHz).",
+    "Scegli una frequenza da 8 a 96 kHz (consigliati 44,1 o 48 kHz).",
+    "Wähle eine Abtastrate von 8 bis 96 kHz (44,1 oder 48 kHz empfohlen).",
+    "请选择 8 至 96 kHz 的采样率（推荐 44.1 或 48 kHz）。",
+    "サンプルレートは 8〜96 kHz にしてください（44.1 または 48 kHz 推奨）。"
+  ],
+  "Le périphérique audio par défaut a changé. Réactive le micro pour utiliser le nouveau périphérique.": [
+    "The default audio device changed. Turn the mic back on to use the new device.",
+    "El dispositivo de audio predeterminado cambió. Reactiva el micrófono para usar el nuevo.",
+    "Il dispositivo audio predefinito è cambiato. Riattiva il microfono per usare il nuovo.",
+    "Das Standard-Audiogerät wurde geändert. Schalte das Mikrofon erneut ein, um das neue Gerät zu nutzen.",
+    "默认音频设备已更改。重新开启麦克风以使用新设备。",
+    "既定の音声デバイスが変わりました。マイクを再度有効にして新しいデバイスを使用してください。"
+  ],
+  "La clé est protégée par le coffre de ta session, partagée pour cette adresse et exclue des profils exportés.": [
+    "Your session’s credential vault protects the key. It is shared for this address and excluded from exported profiles.",
+    "El almacén de credenciales de tu sesión protege la clave. Se comparte para esta dirección y se excluye de los perfiles exportados.",
+    "L’archivio delle credenziali della sessione protegge la chiave. È condivisa per questo indirizzo ed esclusa dai profili esportati.",
+    "Der Anmeldedatenspeicher deiner Sitzung schützt den Schlüssel. Er gilt für diese Adresse und wird nicht mit Profilen exportiert.",
+    "密钥由会话凭据库保护，同一地址共用，且不包含在导出的角色档案中。",
+    "キーはセッションの資格情報保管庫で保護されます。同じアドレスで共有され、プロフィールのエクスポートには含まれません。"
+  ],
+  "Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification.": [
+    "The widget can pass clicks to windows behind it. To regain control, click Sherka’s icon in the notification area.",
+    "El widget puede dejar pasar clics a lo que tiene detrás. Para recuperar el control, haz clic en el icono de Sherka en el área de notificación.",
+    "Il widget può lasciare passare i clic alle finestre sottostanti. Per riprendere il controllo, clicca su Sherka nell’area di notifica.",
+    "Das Widget kann Klicks an dahinterliegende Fenster durchlassen. Klicke zum Wiederherstellen der Steuerung auf Sherka im Infobereich.",
+    "小组件可将点击传递到后方窗口。要恢复控制，请点击通知区域中的 Sherka 图标。",
+    "ウィジェットは背後のウィンドウへクリックを通せます。操作を戻すには通知領域の Sherka アイコンをクリックしてください。"
+  ],
+  "Adresse de SearXNG": [
+    "SearXNG address",
+    "Dirección de SearXNG",
+    "Indirizzo SearXNG",
+    "SearXNG-Adresse",
+    "SearXNG 地址",
+    "SearXNG のアドレス"
+  ],
+  "Capacité visuelle non annoncée": [
+    "Unreported image capability",
+    "Capacidad visual no anunciada",
+    "Capacità visiva non dichiarata",
+    "Nicht gemeldete Bildfähigkeit",
+    "未声明的图像能力",
+    "未公表の画像対応"
+  ],
+  "Ce fichier texte est trop volumineux.": [
+    "This text file is too large.",
+    "Este archivo de texto es demasiado grande.",
+    "Questo file di testo è troppo grande.",
+    "Diese Textdatei ist zu groß.",
+    "此文本文件过大。",
+    "このテキストファイルは大きすぎます。"
+  ],
+  "Ce modèle n’accepte pas les images ou sa capacité visuelle n’est pas confirmée.": [
+    "This model does not accept images, or its image capability has not been confirmed.",
+    "Este modelo no acepta imágenes o no se ha confirmado su capacidad visual.",
+    "Questo modello non accetta immagini oppure la sua capacità visiva non è confermata.",
+    "Dieses Modell akzeptiert keine Bilder oder seine Bildfähigkeit ist nicht bestätigt.",
+    "此模型不支持图像，或其图像能力尚未确认。",
+    "このモデルは画像に非対応か、画像対応が確認されていません。"
+  ],
+  "Ce moteur ne nécessite pas de clé API.": [
+    "This search engine does not require an API key.",
+    "Este buscador no necesita clave API.",
+    "Questo motore di ricerca non richiede una chiave API.",
+    "Diese Suchmaschine benötigt keinen API-Schlüssel.",
+    "此搜索引擎无需 API 密钥。",
+    "この検索エンジンには API キーは不要です。"
+  ],
+  "Choisis au maximum quatre images de moins de 10 Mio.": [
+    "Choose up to four images smaller than 10 MiB.",
+    "Elige hasta cuatro imágenes de menos de 10 MiB.",
+    "Scegli fino a quattro immagini di meno di 10 MiB.",
+    "Wähle bis zu vier Bilder unter 10 MiB.",
+    "最多选择四张小于 10 MiB 的图像。",
+    "10 MiB 未満の画像を最大4枚選んでください。"
+  ],
+  "Choisis au maximum quatre images PNG, JPEG ou WebP de moins de 10 Mio.": [
+    "Choose up to four PNG, JPEG or WebP images smaller than 10 MiB.",
+    "Elige hasta cuatro imágenes PNG, JPEG o WebP de menos de 10 MiB.",
+    "Scegli fino a quattro immagini PNG, JPEG o WebP di meno di 10 MiB.",
+    "Wähle bis zu vier PNG-, JPEG- oder WebP-Bilder unter 10 MiB.",
+    "最多选择四张小于 10 MiB 的 PNG、JPEG 或 WebP 图像。",
+    "10 MiB 未満の PNG、JPEG、WebP 画像を最大4枚選んでください。"
+  ],
+  "Choisis une image ou un fichier texte.": [
+    "Choose an image or a text file.",
+    "Elige una imagen o un archivo de texto.",
+    "Scegli un’immagine o un file di testo.",
+    "Wähle ein Bild oder eine Textdatei.",
+    "请选择图像或文本文件。",
+    "画像またはテキストファイルを選んでください。"
+  ],
+  "Clé API du moteur": [
+    "Search API key",
+    "Clave API del buscador",
+    "Chiave API del motore",
+    "Such-API-Schlüssel",
+    "搜索 API 密钥",
+    "検索 API キー"
+  ],
+  "Confirmer seulement si la documentation de ce modèle autorise les images. Une capacité explicitement absente reste bloquée.": [
+    "Confirm only if this model’s documentation supports images. Explicitly unsupported models remain blocked.",
+    "Confirma solo si la documentación del modelo admite imágenes. Los modelos explícitamente incompatibles siguen bloqueados.",
+    "Conferma solo se la documentazione del modello supporta le immagini. I modelli esplicitamente incompatibili restano bloccati.",
+    "Nur bestätigen, wenn die Modelldokumentation Bilder unterstützt. Ausdrücklich nicht unterstützte Modelle bleiben gesperrt.",
+    "仅在模型文档确认支持图像时启用。明确不支持的模型仍会被阻止。",
+    "モデルの仕様で画像対応が確認できる場合のみ有効にしてください。明示的に非対応のモデルは引き続きブロックされます。"
+  ],
+  "Décris cette image.": [
+    "Describe this image.",
+    "Describe esta imagen.",
+    "Descrivi questa immagine.",
+    "Beschreibe dieses Bild.",
+    "请描述这张图像。",
+    "この画像を説明してください。"
+  ],
+  "Dépose au maximum quatre fichiers.": [
+    "Drop up to four files.",
+    "Suelta hasta cuatro archivos.",
+    "Trascina fino a quattro file.",
+    "Lege bis zu vier Dateien ab.",
+    "最多拖放四个文件。",
+    "最大4個のファイルをドロップしてください。"
+  ],
+  "DuckDuckGo reste sans compte mais peut être bloqué. Brave et Tavily nécessitent ta propre clé ; des frais ou quotas peuvent s’appliquer. SearXNG utilise ton instance avec le format JSON activé.": [
+    "DuckDuckGo requires no account but can be blocked. Brave and Tavily require your own key; fees or quotas may apply. SearXNG uses your instance with JSON enabled.",
+    "DuckDuckGo no requiere cuenta, pero puede bloquearse. Brave y Tavily necesitan tu propia clave; pueden aplicar costes o cuotas. SearXNG usa tu instancia con JSON activado.",
+    "DuckDuckGo non richiede un account ma può essere bloccato. Brave e Tavily richiedono una chiave personale; possono applicarsi costi o quote. SearXNG usa la tua istanza con JSON attivo.",
+    "DuckDuckGo benötigt kein Konto, kann aber blockiert werden. Brave und Tavily benötigen deinen Schlüssel; Gebühren oder Kontingente sind möglich. SearXNG nutzt deine Instanz mit aktiviertem JSON.",
+    "DuckDuckGo 无需账号，但可能被拦截。Brave 和 Tavily 需要你自己的密钥，并可能有费用或配额。SearXNG 使用已启用 JSON 格式的实例。",
+    "DuckDuckGo はアカウント不要ですが、ブロックされる場合があります。Brave と Tavily は自分のキーが必要で、料金や利用制限が適用される場合があります。SearXNG は JSON を有効にした自分のインスタンスを使用します。"
+  ],
+  "Durée par image (secondes)": [
+    "Time per image (seconds)",
+    "Duración por imagen (segundos)",
+    "Durata per immagine (secondi)",
+    "Dauer pro Bild (Sekunden)",
+    "每张图像的时长（秒）",
+    "画像ごとの表示時間（秒）"
+  ],
+  "Enregistre la clé API de ce moteur de recherche dans Compagnons.": [
+    "Save this search engine’s API key in Companions.",
+    "Guarda la clave API de este buscador en Compañeros.",
+    "Salva la chiave API del motore in Compagni.",
+    "Speichere den API-Schlüssel der Suchmaschine unter Begleiter.",
+    "请在伙伴设置中保存此搜索引擎的 API 密钥。",
+    "「コンパニオン」でこの検索エンジンの API キーを保存してください。"
+  ],
+  "Enregistrer le moteur": [
+    "Save search engine",
+    "Guardar buscador",
+    "Salva motore",
+    "Suchmaschine speichern",
+    "保存搜索引擎",
+    "検索エンジンを保存"
+  ],
+  "Envoyer": [
+    "Send",
+    "Enviar",
+    "Invia",
+    "Senden",
+    "发送",
+    "送信"
+  ],
+  "Images par échange": [
+    "Images per exchange",
+    "Imágenes por intercambio",
+    "Immagini per scambio",
+    "Bilder pro Austausch",
+    "每次交流的图像数",
+    "会話ごとの画像数"
+  ],
+  "Impossible de lire ce fichier.": [
+    "Cannot read this file.",
+    "No se puede leer este archivo.",
+    "Impossibile leggere questo file.",
+    "Diese Datei kann nicht gelesen werden.",
+    "无法读取此文件。",
+    "このファイルを読み込めません。"
+  ],
+  "La clé du moteur de recherche est refusée. Vérifie-la dans Compagnons.": [
+    "The search API key was rejected. Check it in Companions.",
+    "La clave del buscador fue rechazada. Revísala en Compañeros.",
+    "La chiave del motore è stata rifiutata. Controllala in Compagni.",
+    "Der Such-API-Schlüssel wurde abgelehnt. Prüfe ihn unter Begleiter.",
+    "搜索 API 密钥被拒绝，请在伙伴设置中检查。",
+    "検索 API キーが拒否されました。「コンパニオン」で確認してください。"
+  ],
+  "La configuration du moteur de recherche est invalide.": [
+    "The search engine configuration is invalid.",
+    "La configuración del buscador no es válida.",
+    "La configurazione del motore non è valida.",
+    "Die Suchmaschinenkonfiguration ist ungültig.",
+    "搜索引擎配置无效。",
+    "検索エンジンの設定が無効です。"
+  ],
+  "La requête est transmise au moteur sélectionné. Les clés sont protégées par le coffre de ta session et exclues des exports.": [
+    "The query is sent to the selected search engine. Keys are protected by your session’s credential vault and excluded from exports.",
+    "La consulta se envía al buscador elegido. Las claves están protegidas por el almacén de tu sesión y se excluyen de las exportaciones.",
+    "La richiesta viene inviata al motore selezionato. Le chiavi sono protette dall’archivio della sessione ed escluse dalle esportazioni.",
+    "Die Anfrage wird an die gewählte Suchmaschine gesendet. Schlüssel werden im Anmeldedatenspeicher geschützt und nicht exportiert.",
+    "查询会发送到选定的搜索引擎。密钥由会话凭据库保护，且不包含在导出中。",
+    "検索語は選択した検索エンジンに送信されます。キーはセッションの資格情報保管庫で保護され、エクスポートされません。"
+  ],
+  "La taille du widget est invalide.": [
+    "The widget size is invalid.",
+    "El tamaño del widget no es válido.",
+    "La dimensione del widget non è valida.",
+    "Die Widget-Größe ist ungültig.",
+    "小组件尺寸无效。",
+    "ウィジェットのサイズが無効です。"
+  ],
+  "Le quota du moteur de recherche est atteint. Réessaie plus tard ou choisis un autre moteur.": [
+    "The search engine quota has been reached. Try later or choose another engine.",
+    "Se alcanzó la cuota del buscador. Inténtalo más tarde o elige otro.",
+    "Quota del motore raggiunta. Riprova più tardi o scegli un altro motore.",
+    "Das Suchkontingent ist aufgebraucht. Versuche es später oder wähle eine andere Suchmaschine.",
+    "搜索引擎配额已用尽，请稍后重试或选择其他引擎。",
+    "検索エンジンの利用上限に達しました。後で再試行するか、別のエンジンを選んでください。"
+  ],
+  "Les variantes défilent en boucle avec un fondu. La génération commence dès que le texte est complet, pendant la lecture vocale.": [
+    "Variants loop with a crossfade. Generation starts as soon as the text is complete, while speech continues.",
+    "Las variantes se repiten en bucle con fundido. La generación empieza al completar el texto, mientras continúa la voz.",
+    "Le varianti scorrono in ciclo con dissolvenza. La generazione inizia appena il testo è completo, mentre la voce continua.",
+    "Varianten laufen mit Überblendung in einer Schleife. Die Generierung startet nach dem vollständigen Text, während die Sprachausgabe weiterläuft.",
+    "多个版本会循环淡入淡出。文本生成完成后即开始生图，无需等待语音结束。",
+    "画像はフェード付きでループします。テキストが完成すると、音声の再生中でも画像生成を開始します。"
+  ],
+  "Moteur de recherche": [
+    "Search engine",
+    "Buscador",
+    "Motore di ricerca",
+    "Suchmaschine",
+    "搜索引擎",
+    "検索エンジン"
+  ],
+  "Moteur de recherche enregistré.": [
+    "Search engine saved.",
+    "Buscador guardado.",
+    "Motore salvato.",
+    "Suchmaschine gespeichert.",
+    "搜索引擎已保存。",
+    "検索エンジンを保存しました。"
+  ],
+  "Nombre maximal de résultats": [
+    "Maximum results",
+    "Máximo de resultados",
+    "Numero massimo di risultati",
+    "Maximale Ergebniszahl",
+    "最大结果数",
+    "最大検索結果数"
+  ],
+  "Redimensionner l’image": [
+    "Resize image",
+    "Redimensionar imagen",
+    "Ridimensiona immagine",
+    "Bildgröße ändern",
+    "调整图像尺寸",
+    "画像サイズを変更"
+  ],
+  "Retirer l’image": [
+    "Remove image",
+    "Quitar imagen",
+    "Rimuovi immagine",
+    "Bild entfernen",
+    "移除图像",
+    "画像を削除"
+  ],
+  "SearXNG refuse le format JSON. Active-le dans les réglages de ton instance.": [
+    "SearXNG rejected JSON output. Enable it in your instance settings.",
+    "SearXNG rechazó JSON. Actívalo en la configuración de tu instancia.",
+    "SearXNG ha rifiutato JSON. Attivalo nelle impostazioni dell’istanza.",
+    "SearXNG hat JSON abgelehnt. Aktiviere es in deinen Instanzeinstellungen.",
+    "SearXNG 拒绝了 JSON 格式，请在实例设置中启用。",
+    "SearXNG が JSON 形式を拒否しました。インスタンス設定で有効にしてください。"
+  ],
+  "Brave Search API": [
+    "Brave Search API",
+    "Brave Search API",
+    "Brave Search API",
+    "Brave Search API",
+    "Brave Search API",
+    "Brave Search API"
+  ],
+  "DuckDuckGo": [
+    "DuckDuckGo",
+    "DuckDuckGo",
+    "DuckDuckGo",
+    "DuckDuckGo",
+    "DuckDuckGo",
+    "DuckDuckGo"
+  ],
+  "SearXNG": [
+    "SearXNG",
+    "SearXNG",
+    "SearXNG",
+    "SearXNG",
+    "SearXNG",
+    "SearXNG"
+  ],
+  "Tavily API": [
+    "Tavily API",
+    "Tavily API",
+    "Tavily API",
+    "Tavily API",
+    "Tavily API",
+    "Tavily API"
   ]
 }

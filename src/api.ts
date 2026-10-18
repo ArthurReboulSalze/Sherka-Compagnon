@@ -1,5 +1,16 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import type { IllustrationConfig, IllustrationStatus, IllustrationCatalog } from './types';
+export const desktopTool = (tool:'text'|'image',open:boolean) => invoke<void>('desktop_tool',{tool,open});
+export const widgetSurface = (surface?:import('./types').WidgetSurface) => invoke<import('./types').WidgetSurface>('widget_surface',{surface:surface??null});
+export const onAvatarSize=(callback:(size:[number,number])=>void)=>listen<[number,number]>('sherka:avatar-size',e=>callback(e.payload));
+export const attachmentSupport = (profileId:string) => invoke<{images:boolean;known:boolean}>('get_attachment_support',{profileId});
+export const searchKeyStatus=(provider:import('./types').SearchProvider)=>invoke<boolean>('search_key_status',{provider});
+export const setSearchKey=(provider:import('./types').SearchProvider,key:string|null)=>invoke<void>('set_search_key',{provider,key});
+export const illustration = () => invoke<IllustrationStatus>('get_illustration');
+export const discoverIllustration = (config:IllustrationConfig) => invoke<IllustrationCatalog>('discover_illustration',{config});
+export const refreshIllustration = () => invoke<void>('refresh_illustration');
+export const onIllustration = (callback:(status:IllustrationStatus)=>void) => listen<IllustrationStatus>('sherka:illustration',e=>callback(e.payload));
 import type { Message, Mutation, Snapshot, WidgetAction, LanguageCatalog, VoiceCatalog, AudioDevices, LiveState, Connections } from './types';
 import type { MemoryState, MemoryEdit, MemorySource } from './types';
 
@@ -33,7 +44,7 @@ export const setProviderKey = (connections: Connections, key: string | null) => 
 export const discoverVoices = (baseUrl: string) => invoke<VoiceCatalog>('discover_voices', { baseUrl });
 export const audioDevices = () => invoke<AudioDevices>('get_audio_devices');
 export const conversation = () => invoke<LiveState>('get_conversation');
-export const sendMessage = (profileId: string, text: string, speak: boolean) => invoke<void>('send_message', { profileId, text, speak });
+export const sendMessage = (profileId: string, text: string, speak: boolean,attachments:import('./types').Attachment[]=[]) => invoke<void>('send_message', { profileId, text, speak,attachments });
 export const openWebSource = (profileId: string, messageId: string | null, index: number) => invoke<void>('open_web_source', { profileId, messageId, index });
 export const onLive = (callback: (state: LiveState) => void) => listen<LiveState>('sherka:live', (e) => callback(e.payload));
 export const onHistory = (callback: (profileId: string) => void) => listen<string>('sherka:history', (e) => callback(e.payload));
@@ -45,7 +56,7 @@ export const getVoiceService = () => invoke<VoiceService>('get_voice_service');
 export const retryVoiceService = () => invoke<void>('retry_voice_service');
 export const onVoiceService = (callback: (value: VoiceService) => void) => listen<VoiceService>('sherka:voice-service', event => callback(event.payload));
 
-export interface UpdateStatus { current_version: string; mode: 'installed' | 'portable'; phase: 'idle' | 'checking' | 'available' | 'current' | 'downloading' | 'installing' | 'error'; version?: string; notes?: string; downloaded: number; total?: number; message: string }
+export interface UpdateStatus { current_version: string; mode: 'installed' | 'portable' | 'linux'; phase: 'idle' | 'checking' | 'available' | 'current' | 'downloading' | 'installing' | 'manual' | 'error'; version?: string; notes?: string; downloaded: number; total?: number; message: string }
 export const getUpdateStatus = () => invoke<UpdateStatus>('get_update_status');
 export const checkUpdate = () => invoke<UpdateStatus>('check_update');
 export const installUpdate = () => invoke<UpdateStatus>('install_update');

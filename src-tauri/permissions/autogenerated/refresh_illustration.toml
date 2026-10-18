@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-refresh-illustration"
+description = "Enables the refresh_illustration command without any pre-configured scope."
+commands.allow = ["refresh_illustration"]
+
+[[permission]]
+identifier = "deny-refresh-illustration"
+description = "Denies the refresh_illustration command without any pre-configured scope."
+commands.deny = ["refresh_illustration"]

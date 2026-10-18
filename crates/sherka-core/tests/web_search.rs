@@ -157,6 +157,7 @@ fn unavailable_search_uses_a_fixed_reply_in_the_companions_language() {
 fn evidence_is_untrusted_bounded_and_preserves_character_and_context_budget() {
     let p = ProfileDraft::default();
     let model = sherka_core::catalogs::LanguageModel {
+        vision: None,
         api: None,
         id: "fixture".into(),
         key: "fixture".into(),

@@ -1,7 +1,10 @@
 mod audio_diagnostics;
 mod conversation;
+mod desktop_tools;
+mod illustrations;
 pub mod portable_update;
 mod service_process;
+mod speech_input;
 mod startup;
 mod updates;
 mod voice_startup;
@@ -29,10 +32,19 @@ struct Shared(Arc<Mutex<Companion>>);
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Mutation {
+    Theme {
+        theme: sherka_core::model::Theme,
+    },
+    Illustration {
+        id: Uuid,
+        revision: i64,
+        config: sherka_core::illustration::Config,
+    },
     WebSearch {
         mode: sherka_core::web::SearchMode,
         id: Option<Uuid>,
         revision: Option<i64>,
+        config: Option<sherka_core::search_provider::Config>,
     },
     InterfaceLanguage {
         language: sherka_core::i18n::Language,
@@ -152,7 +164,12 @@ async fn apply_mutation(
     }
     let _gate = voice.gate.lock().await;
     windows::ensure_running()?;
-    voice.cancel_pending();
+    if !matches!(
+        &mutation,
+        Mutation::Theme { .. } | Mutation::Illustration { .. }
+    ) {
+        voice.cancel_pending();
+    }
     let interface_language = match &mutation {
         Mutation::InterfaceLanguage { language } => Some(*language),
         _ => None,
@@ -174,9 +191,31 @@ async fn apply_mutation(
     .await?;
     let snapshot = with_core(shared.inner().clone(), move |core| {
         match mutation {
-            Mutation::WebSearch { mode, id, revision } => {
+            Mutation::Theme { theme } => core.set_theme(theme)?,
+            Mutation::Illustration {
+                id,
+                revision,
+                config,
+            } => {
+                let mut draft = core.store.profile(id)?.details;
+                draft.illustration = config;
+                core.update_profile(id, revision, draft)?;
+            }
+            Mutation::WebSearch {
+                mode,
+                id,
+                revision,
+                config,
+            } => {
                 if let (Some(id), Some(revision)) = (id, revision) {
-                    core.set_profile_web_search(id, revision, mode)?;
+                    if let Some(config) = config {
+                        let mut draft = core.store.profile(id)?.details;
+                        draft.web_search = Some(mode);
+                        draft.search = config;
+                        core.update_profile(id, revision, draft)?;
+                    } else {
+                        core.set_profile_web_search(id, revision, mode)?;
+                    }
                 } else {
                     core.set_web_search_mode(mode)?;
                 }
@@ -267,6 +306,7 @@ async fn apply_mutation(
         voice.stop_audio().await;
     }
     conversation::emit(&app, shared.inner());
+    illustrations::synchronize(&app, shared.inner());
     if let Some(language) = interface_language {
         windows::set_language(&app, language).map_err(|error| error.to_string())?;
     }
@@ -299,6 +339,7 @@ async fn send_message(
     profile_id: Uuid,
     text: String,
     speak: bool,
+    attachments: Option<Vec<sherka_core::attachments::Input>>,
 ) -> Result<(), String> {
     conversation::send(
         app,
@@ -307,8 +348,28 @@ async fn send_message(
         profile_id,
         text,
         speak,
+        attachments.unwrap_or_default(),
     )
     .await
+}
+
+#[tauri::command]
+async fn get_attachment_support(
+    shared: State<'_, Shared>,
+    profile_id: Uuid,
+) -> Result<sherka_core::attachments::Support, String> {
+    let connections = with_core(shared.inner().clone(), move |c| {
+        if c.session.snapshot().profile_id != profile_id {
+            return Err(Error::StaleOperation);
+        }
+        Ok(c.store.profile(profile_id)?.details.connections)
+    })
+    .await?;
+    sherka_core::providers::Providers::new(connections)
+        .map_err(|e| e.to_string())?
+        .image_support()
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -510,8 +571,33 @@ async fn get_provider_key_status(connections: Connections) -> Result<bool, Strin
     })
     .await
     .map_err(|_| {
-        "Le coffre de clés API n’est pas accessible. Vérifie ta session Windows.".to_owned()
+        "Le coffre de clés API n’est pas accessible. Vérifie le coffre de ta session.".to_owned()
     })?
+}
+
+#[tauri::command]
+async fn search_key_status(
+    provider: sherka_core::search_provider::Provider,
+) -> Result<bool, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        sherka_core::credentials::load_search_key(provider)
+            .map(|v| v.is_some())
+            .map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|_| "Moteur indisponible.".to_string())?
+}
+#[tauri::command]
+async fn set_search_key(
+    provider: sherka_core::search_provider::Provider,
+    key: Option<String>,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        sherka_core::credentials::set_search_key(provider, key.as_deref())
+            .map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|_| "Moteur indisponible.".to_string())?
 }
 #[tauri::command]
 async fn set_provider_key(connections: Connections, key: Option<String>) -> Result<(), String> {
@@ -520,7 +606,7 @@ async fn set_provider_key(connections: Connections, key: Option<String>) -> Resu
     })
     .await
     .map_err(|_| {
-        "Le coffre de clés API n’est pas accessible. Vérifie ta session Windows.".to_owned()
+        "Le coffre de clés API n’est pas accessible. Vérifie le coffre de ta session.".to_owned()
     })?
 }
 
@@ -754,6 +840,24 @@ async fn widget_action(
 }
 
 pub fn run() {
+    let mut context = tauri::generate_context!();
+    // An explicit data directory also scopes singleton ownership, so tests
+    // cannot restore or send commands to an already running personal copy.
+    if let Some(directory) = std::env::var_os("SHERKA_DATA_DIR") {
+        use std::hash::{Hash, Hasher};
+        let path = std::path::PathBuf::from(directory);
+        let path = std::fs::canonicalize(&path).unwrap_or_else(|_| {
+            if path.is_absolute() {
+                path.clone()
+            } else {
+                std::env::current_dir().unwrap_or_default().join(&path)
+            }
+        });
+        let mut hash = std::collections::hash_map::DefaultHasher::new();
+        path.hash(&mut hash);
+        context.config_mut().identifier =
+            format!("fr.sherka.compagnon.isolated.h{:x}", hash.finish());
+    }
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             if app.try_state::<startup::Issue>().is_some() {
@@ -770,6 +874,11 @@ pub fn run() {
             startup::get_startup_issue,
             startup::close_startup_recovery,
             get_snapshot,
+            illustrations::get_illustration,
+            illustrations::discover_illustration,
+            illustrations::refresh_illustration,
+            desktop_tools::desktop_tool,
+            desktop_tools::widget_surface,
             get_widget_visibility,
             get_voice_service,
             retry_voice_service,
@@ -789,12 +898,15 @@ pub fn run() {
             test_hermes,
             answer_hermes_approval,
             get_provider_key_status,
+            search_key_status,
+            set_search_key,
             set_provider_key,
             discover_voices,
             widget_action,
             get_audio_devices,
             get_conversation,
             send_message,
+            get_attachment_support,
             open_web_source,
             updates::get_update_status,
             updates::check_update,
@@ -825,6 +937,9 @@ pub fn run() {
                     .map_err(std::io::Error::other)?,
             );
             app.manage(shared.clone());
+            app.manage(illustrations::Illustrations::new());
+            app.manage(desktop_tools::Canvas::default());
+            illustrations::synchronize(app.handle(), &shared);
             app.manage(Voice::setup(app.handle().clone(), shared, &directory));
             // Build webviews only after registering the engine. Config-created
             // webviews can execute JS before setup and race the first IPC call.
@@ -854,7 +969,7 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(windows::on_window_event)
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("Sherka n'a pas pu démarrer")
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { api, .. } = event

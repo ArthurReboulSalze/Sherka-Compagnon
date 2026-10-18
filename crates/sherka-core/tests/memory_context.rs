@@ -10,6 +10,7 @@ use tempfile::tempdir;
 
 fn model(max: u64, loaded: u64) -> LanguageModel {
     LanguageModel {
+        vision: None,
         api: None,
         id: "loaded-alias".into(),
         key: "model-key".into(),

@@ -1,6 +1,16 @@
 export type Emotion = 'neutral' | 'joy' | 'sadness' | 'anger' | 'surprise' | 'reflection' | 'tenderness';
+export type Theme = 'gold' | 'sage' | 'ocean' | 'iris' | 'rose' | 'mono';
+export interface IllustrationConfig { enabled:boolean; server_url:string; checkpoint:string|null; physical_description:string; loras:{name:string;strength:number}[]; turbo:boolean; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
+export interface IllustrationCatalog { checkpoints:string[]; loras:string[]; turbo_available:boolean; missing_nodes:string[] }
+export interface IllustrationStatus { profile_id:string|null; phase:'disabled'|'idle'|'planning'|'generating'|'ready'|'error'; image:string|null; images:string[]; message:string|null }
+export interface Attachment {name:string;data:string}
+export type SearchProvider='duck_duck_go'|'brave'|'tavily'|'searxng';
+export interface SearchConfig {provider:SearchProvider;searxng_url:string;max_results:number}
+export interface WidgetSurface {left:number;top:number;width:number;height:number;base_width:number;base_height:number}
 
 export interface ProfileDraft {
+  illustration?: IllustrationConfig;
+  search?: SearchConfig;
   name: string;
   avatar_preset?: 'sherka' | 'botsy' | 'candis' | 'kit' | 'minerva' | null;
   web_search?: SearchMode | null;
@@ -25,6 +35,7 @@ export interface Snapshot {
   companion_capabilities: { local_personality: boolean; local_memory: boolean; local_emotions: boolean };
   profiles: Profile[];
   settings: {
+    theme: Theme;
     web_search: SearchMode;
     ui_language: import('./i18n').Language;
     default_companion: string | null;
@@ -59,7 +70,9 @@ export interface Message {
 }
 
 export type Mutation =
-  | { kind: 'web_search'; mode: SearchMode; id?: string; revision?: number }
+  | { kind: 'theme'; theme: Theme }
+  | { kind: 'illustration'; id:string; revision:number; config:IllustrationConfig }
+  | { kind: 'web_search'; mode: SearchMode; id?: string; revision?: number;config?:SearchConfig }
   | { kind: 'interface_language'; language: import('./i18n').Language }
   | { kind: 'create_profile'; draft: ProfileDraft }
   | { kind: 'update_profile'; id: string; revision: number; draft: ProfileDraft }
@@ -98,11 +111,12 @@ export interface Connections {
   context_limit: number | null;
   response_tokens: number;
   reasoning: string | null;
+  vision_confirmed?:boolean;
 }
 export type LlmProvider = 'lm_studio' | 'open_router' | 'zai' | 'zai_coding' | 'open_ai' | 'anthropic' | 'custom_open_ai' | 'custom_anthropic' | 'hermes';
 export interface LanguageCatalog {
   source: string;
-  models: { id: string; key: string; label: string; loaded: boolean | null; quantization: string | null; max_context_length: number | null; loaded_context_length: number | null; reasoning: {allowed_options: string[];default: string | null} | null }[];
+  models: { vision?:boolean|null; id: string; key: string; label: string; loaded: boolean | null; quantization: string | null; max_context_length: number | null; loaded_context_length: number | null; reasoning: {allowed_options: string[];default: string | null} | null }[];
   excluded_models: number;
 }
 export interface MemoryDraft { content: string; category: string; kind: 'essential' | 'detail' }
@@ -120,6 +134,6 @@ export interface VoiceCatalog {
   voice_alias_count: number;
   stt_models: string[];
   dictation_engine_available: boolean;
-  dictation_models: { id: string; label: string; languages: string; installed: boolean }[];
+  dictation_models: { vision?:boolean|null; id: string; label: string; languages: string; installed: boolean }[];
 }
 

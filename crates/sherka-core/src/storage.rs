@@ -16,7 +16,7 @@ use std::{
 };
 use uuid::Uuid;
 
-const SCHEMA_VERSION: i64 = 6;
+const SCHEMA_VERSION: i64 = 8;
 const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_EXPORT_BYTES: usize = 48 * 1024 * 1024;
 
@@ -73,7 +73,7 @@ impl Store {
         fs::create_dir_all(store.root.join("profiles"))?;
         let mut db = connect(&store.root.join("settings.sqlite3"), true)?;
         let tx = db.transaction()?;
-        tx.execute_batch("CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); PRAGMA user_version = 1;")?;
+        tx.execute_batch("CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); PRAGMA user_version = 8;")?;
         tx.execute_batch("CREATE TABLE IF NOT EXISTS hermes_sessions (companion TEXT NOT NULL, endpoint TEXT NOT NULL, session TEXT NOT NULL, PRIMARY KEY(companion, endpoint)); CREATE TABLE IF NOT EXISTS hermes_session_tips (session TEXT PRIMARY KEY, tip TEXT NOT NULL); CREATE TABLE IF NOT EXISTS hermes_profiles (server TEXT NOT NULL, profile TEXT NOT NULL, PRIMARY KEY(server, profile));")?;
         tx.execute(
             "INSERT OR IGNORE INTO settings(id,value) VALUES(1,?1)",
@@ -369,6 +369,12 @@ impl Store {
             }
             tx.commit()?;
         }
+        if version < 7 {
+            db.execute_batch("PRAGMA user_version = 7;")?;
+        }
+        if version < 8 {
+            db.execute_batch("PRAGMA user_version = 8;")?;
+        }
         Ok(db)
     }
 
@@ -635,7 +641,7 @@ impl Store {
         let profile = self.profile(id)?;
         let export = ProfileExport {
             format: "sherka-profile".into(),
-            version: 2,
+            version: 4,
             profile: profile.details,
             avatar_png_base64: self.avatar_bytes(id)?.map(|bytes| STANDARD.encode(bytes)),
             emotion_avatars_png_base64: self
@@ -655,7 +661,7 @@ impl Store {
         }
         let export: ProfileExport = serde_json::from_str(json)?;
         if export.format != "sherka-profile"
-            || ![1, 2].contains(&export.version)
+            || ![1, 2, 3, 4].contains(&export.version)
             || (export.version == 1 && !export.emotion_avatars_png_base64.is_empty())
         {
             return Err(Error::Validation(

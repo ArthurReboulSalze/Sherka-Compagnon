@@ -204,6 +204,14 @@ impl Providers {
                     .filter(|n| *n > 0);
                 if !models.iter().any(|m: &LanguageModel| m.id == id) {
                     models.push(LanguageModel {
+                        vision: item["capabilities"]["vision"]
+                            .as_bool()
+                            .or_else(|| item["capabilities"]["vision"]["supported"].as_bool())
+                            .or_else(|| {
+                                item["architecture"]["input_modalities"]
+                                    .as_array()
+                                    .map(|v| v.iter().any(|v| v == "image"))
+                            }),
                         id: id.into(),
                         key: id.into(),
                         label: item["name"]
@@ -259,6 +267,7 @@ impl Providers {
             model.clone()
         } else if catalog.models.is_empty() {
             LanguageModel {
+                vision: None,
                 id: id.into(),
                 key: id.into(),
                 label: id.into(),
@@ -453,7 +462,8 @@ impl Providers {
         max_tokens: u32,
     ) -> Result<ChatOutcome> {
         let kind = self.connections.llm_provider;
-        let body = self.api_body(messages, max_tokens, true, false)?;
+        let mut body = self.api_body(messages, max_tokens, true, false)?;
+        crate::attachments::inject(&mut body, &self.images, kind.is_anthropic())?;
         let response = self
             .api_request(
                 if kind.is_anthropic() {

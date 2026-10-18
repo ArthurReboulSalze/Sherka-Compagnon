@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-illustration"
+description = "Enables the get_illustration command without any pre-configured scope."
+commands.allow = ["get_illustration"]
+
+[[permission]]
+identifier = "deny-get-illustration"
+description = "Denies the get_illustration command without any pre-configured scope."
+commands.deny = ["get_illustration"]

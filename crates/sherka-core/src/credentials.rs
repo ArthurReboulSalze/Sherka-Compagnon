@@ -4,7 +4,7 @@ use crate::{Error, Result, connections::Connections};
 
 fn unavailable() -> Error {
     Error::Validation(
-        "Le coffre de clés API n’est pas accessible. Vérifie ta session Windows.".into(),
+        "Le coffre de clés API n’est pas accessible. Vérifie le coffre de ta session.".into(),
     )
 }
 pub fn validate_key(value: &str) -> Result<&str> {
@@ -27,6 +27,30 @@ pub fn load(config: &Connections) -> Result<Option<String>> {
         return Ok(None);
     }
     platform::load(&target(config)?)
+}
+pub fn load_search_key(provider: crate::search_provider::Provider) -> Result<Option<String>> {
+    if matches!(
+        provider,
+        crate::search_provider::Provider::Brave | crate::search_provider::Provider::Tavily
+    ) {
+        platform::load(&format!("Sherka/search/{provider:?}/v1"))
+    } else {
+        Ok(None)
+    }
+}
+pub fn set_search_key(provider: crate::search_provider::Provider, key: Option<&str>) -> Result<()> {
+    if !matches!(
+        provider,
+        crate::search_provider::Provider::Brave | crate::search_provider::Provider::Tavily
+    ) {
+        return Err(Error::Validation(
+            "Ce moteur ne nécessite pas de clé API.".into(),
+        ));
+    }
+    platform::set(
+        &format!("Sherka/search/{provider:?}/v1"),
+        key.map(validate_key).transpose()?,
+    )
 }
 pub fn set(config: &Connections, key: Option<&str>) -> Result<()> {
     if config.llm_provider.is_local() {
@@ -104,7 +128,70 @@ mod platform {
         if success { Ok(()) } else { Err(unavailable()) }
     }
 }
-#[cfg(not(windows))]
+#[cfg(target_os = "linux")]
+mod platform {
+    use super::*;
+    use std::{
+        io::Write,
+        process::{Command, Stdio},
+    };
+    pub fn load(target: &str) -> Result<Option<String>> {
+        let output = Command::new("secret-tool")
+            .args(["lookup", "service", "fr.sherka.compagnon", "target", target])
+            .stdin(Stdio::null())
+            .stderr(Stdio::piped())
+            .output()
+            .map_err(|_| unavailable())?;
+        if !output.status.success() {
+            return if output.stderr.is_empty() {
+                Ok(None)
+            } else {
+                Err(unavailable())
+            };
+        }
+        let value = String::from_utf8(output.stdout).map_err(|_| unavailable())?;
+        Ok(Some(validate_key(&value)?.to_owned()))
+    }
+    pub fn set(target: &str, key: Option<&str>) -> Result<()> {
+        let Some(key) = key else {
+            let status = Command::new("secret-tool")
+                .args(["clear", "service", "fr.sherka.compagnon", "target", target])
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .map_err(|_| unavailable())?;
+            return if status.success() {
+                Ok(())
+            } else {
+                Err(unavailable())
+            };
+        };
+        let mut child = Command::new("secret-tool")
+            .args([
+                "store",
+                "--label=Sherka Companion API key",
+                "service",
+                "fr.sherka.compagnon",
+                "target",
+                target,
+            ])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|_| unavailable())?;
+        let mut input = child.stdin.take().ok_or_else(unavailable)?;
+        input.write_all(key.as_bytes()).map_err(|_| unavailable())?;
+        drop(input);
+        if child.wait().map_err(|_| unavailable())?.success() {
+            Ok(())
+        } else {
+            Err(unavailable())
+        }
+    }
+}
+#[cfg(not(any(windows, target_os = "linux")))]
 mod platform {
     use super::*;
     pub fn load(_: &str) -> Result<Option<String>> {

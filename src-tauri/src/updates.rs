@@ -34,7 +34,13 @@ impl Updates {
         Self(Mutex::new(Inner {
             status: Status {
                 current_version: env!("CARGO_PKG_VERSION"),
-                mode: if installed { "installed" } else { "portable" },
+                mode: if cfg!(target_os = "linux") {
+                    "linux"
+                } else if installed {
+                    "installed"
+                } else {
+                    "portable"
+                },
                 phase: "idle",
                 version: None,
                 notes: None,
@@ -81,6 +87,10 @@ pub fn get_update_status(state: State<'_, Updates>) -> Status {
 
 #[tauri::command]
 pub async fn check_update(app: AppHandle, state: State<'_, Updates>) -> Result<Status, String> {
+    if state.0.lock().unwrap().status.mode == "linux" {
+        state.publish(&app,"manual","Sur Linux, installe le nouveau paquet depuis les releases GitHub pour mettre Sherka à jour.");
+        return Ok(state.0.lock().unwrap().status.clone());
+    }
     state.begin()?;
     state.0.lock().unwrap().update = None;
     state.publish(

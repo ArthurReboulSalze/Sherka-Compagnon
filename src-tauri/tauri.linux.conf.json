@@ -1,0 +1,11 @@
+{
+  "bundle": {
+    "targets": ["deb"],
+    "createUpdaterArtifacts": false,
+    "linux": {
+      "deb": {
+        "depends": ["libasound2", "libsecret-tools", "xdg-utils"]
+      }
+    }
+  }
+}

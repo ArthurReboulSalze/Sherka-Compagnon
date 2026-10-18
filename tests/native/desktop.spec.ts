@@ -38,12 +38,12 @@ function clearCiWebView(): void {
   ciWebViewPolicy = false;
 }
 
-function modelRoutes(ids: string[], context = 8192, thoughts: Record<string, string[]> = {}) {
+function modelRoutes(ids: string[], context = 8192, thoughts: Record<string, string[]> = {}, vision:(id:string)=>boolean=()=>false) {
   const loaded = new Set(ids);
   return (request: IncomingMessage, response: ServerResponse): boolean => {
     if (request.url === '/api/v1/models') {
       response.writeHead(200, {'Content-Type':'application/json'});
-      response.end(JSON.stringify({models:ids.map(id => ({type:'llm',key:id,display_name:id,capabilities:{reasoning:thoughts[id]?{allowed_options:thoughts[id],default:thoughts[id].at(-1)}:undefined},quantization:null,max_context_length:262144,loaded_instances:loaded.has(id) ? [{id,config:{context_length:context}}] : []}))}));
+      response.end(JSON.stringify({models:ids.map(id => ({type:'llm',key:id,display_name:id,capabilities:{vision:vision(id),reasoning:thoughts[id]?{allowed_options:thoughts[id],default:thoughts[id].at(-1)}:undefined},quantization:null,max_context_length:262144,loaded_instances:loaded.has(id) ? [{id,config:{context_length:context}}] : []}))}));
       return true;
     }
     if (request.url === '/api/v1/models/load' || request.url === '/api/v1/models/unload') {
@@ -66,7 +66,7 @@ async function native<T>(command: string, args?: unknown): Promise<T> {
   }, { command, args }) as Promise<T>;
 }
 
-async function startApplication(hidden = true, autostartVoice = false, recovery = false): Promise<void> {
+async function startApplication(hidden = false, autostartVoice = false, recovery = false): Promise<void> {
   if (!existsSync(executable)) throw new Error('Construis le binaire : npm run tauri -- build --debug --no-bundle');
   // A new port prevents a closing WebView2 from satisfying the next launch.
   const port = await new Promise<number>((done,fail) => {
@@ -111,13 +111,19 @@ async function startApplication(hidden = true, autostartVoice = false, recovery 
   }, {timeout:30_000}).toBe(true);
   browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
   await expect.poll(() => browser.contexts().flatMap((c) => c.pages()).length).toBe(recovery ? 1 : 2);
-  if (!recovery) await expect.poll(() => browser.contexts().flatMap((c) => c.pages()).some((p) => p.url().includes('view=widget'))).toBe(true);
-  const pages = browser.contexts().flatMap((c) => c.pages());
-  widget = pages.find((p) => p.url().includes('view=widget'))!;
-  panel = pages.find((p) => !p.url().includes('view=widget'))!;
+  // WebView2 occasionally reports about:blank in the initial CDP frame cache
+  // even though its target URL has navigated. Read the actual document URL.
+  let pages:Page[]=[];let locations:string[]=[];
+  await expect.poll(async()=>{
+    pages=browser.contexts().flatMap(c=>c.pages());
+    locations=await Promise.all(pages.map(p=>p.evaluate(()=>location.href).catch(()=>p.url())));
+    return recovery?locations.some(url=>url.includes('view=recovery')):locations.some(url=>url.includes('view=widget'));
+  },{timeout:30000}).toBe(true);
+  widget=pages[locations.findIndex(url=>url.includes('view=widget'))]!;
+  panel=pages[locations.findIndex(url=>recovery?url.includes('view=recovery'):!url.includes('view=widget'))]!;
   for (const page of pages) {
-    page.on('pageerror', (e) => consoleErrors.push(e.message));
-    page.on('console', (e) => { if (e.type() === 'error') consoleErrors.push(e.text()); });
+    page.on('pageerror',(e)=>consoleErrors.push(e.message));
+    page.on('console',(e)=>{if(e.type()==='error')consoleErrors.push(e.text());});
   }
   await expect(panel.locator(recovery ? '.startup-recovery' : '#new-profile')).toBeVisible();
 }
@@ -2172,4 +2178,175 @@ test('privacy: clear dialogue, preserve saved facts, delete individual facts and
     expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toEqual([]);
     expect(consoleErrors).toEqual([]);
   } finally {server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+});
+
+
+test('desktop scenes: tight widget chrome, profile halo, themes, quick text and Illustrious images', async () => {
+  test.setTimeout(150_000);
+  const canSpeak=process.env.SHERKA_TEST_TEXT_ONLY!=='1';
+  let visionEnabled=true;const model=modelRoutes(['scene-chat'],32768,{},()=>visionEnabled);const graphs:any[]=[];const plans:any[]=[];const deleted:string[]=[];let held=false;
+  const jobs=new Map<string,boolean>();
+  const template=JSON.parse(readFileSync('config/workflows/illustrious.json','utf8'));
+  const info:any={};for(const node of Object.values(template) as any[])info[node.class_type]={input:{required:{}}};
+  info.CheckpointLoaderSimple={input:{required:{ckpt_name:[['Illustrious/scene.safetensors','Flux/unrelated.safetensors']]}}};
+  info.LoraLoader={input:{required:{lora_name:[['Style/scene.safetensors','Models/Turbo/PAseer-SDXL-LCM+Turbo.safetensors']]}}};
+  const png=readFileSync(process.env.SHERKA_TEST_SCENE_PNG??'public/assets/sherka.png'),png2=readFileSync('public/assets/botsy/neutral.png');
+  const fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));const spoken:ServerResponse[]=[];const streamed:any[]=[];const searches:string[]=[];
+  const server=createServer((req,res)=>{
+    if(model(req,res))return;
+    const url=new URL(req.url??'/','http://127.0.0.1');
+    const respond=(value:any)=>{res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(value));};
+    if(fixture[url.pathname]){respond(fixture[url.pathname]);return;}
+    if(url.pathname==='/search'){searches.push(url.searchParams.get('q')??'');respond({results:[{title:'Official Rust documentation',url:'https://doc.rust-lang.org/book/',content:'The Rust Book provides language documentation.'}]});return;}
+    if(url.pathname==='/health'){respond({status:'ok'});return;}
+    if(url.pathname==='/object_info'){respond(info);return;}
+    if(url.pathname.startsWith('/object_info/')){const cls=decodeURIComponent(url.pathname.slice(13));respond(info[cls]?{[cls]:info[cls]}:{});return;}
+    if(url.pathname==='/queue'&&req.method==='GET'){respond({queue_running:[],queue_pending:[...jobs].filter(([,ready])=>!ready).map(([id])=>[1,id])});return;}
+    if(url.pathname.startsWith('/history/')){const id=url.pathname.slice(9);respond(jobs.get(id)?{[id]:{status:{completed:true,status_str:'success'},outputs:{'33':{images:[{filename:id+'.png',subfolder:'',type:'temp'}]}}}}:{});return;}
+    if(url.pathname==='/view'){res.writeHead(200,{'Content-Type':'image/png'});res.end(url.searchParams.get('filename')==='scene_2.png'?png2:png);return;}
+    if(req.method==='GET'){res.writeHead(404,{'Content-Type':'application/json'});res.end('{}');return;}
+    let raw='';req.on('data',bytes=>raw+=bytes);req.on('end',()=>{
+      const body=raw?JSON.parse(raw):{};
+      if(url.pathname==='/v1/audio/speech'){spoken.push(res);return;}
+      if(url.pathname==='/prompt'){const id='scene_'+(graphs.length+1);graphs.push(body.prompt);jobs.set(id,!held);respond({prompt_id:id});return;}
+      if(url.pathname==='/queue'){for(const id of body.delete??[]){deleted.push(id);jobs.delete(id);}respond({});return;}
+      if(url.pathname==='/interrupt'){throw new Error('A global ComfyUI interrupt must never be sent');}
+      if(url.pathname!=='/v1/chat/completions'){res.writeHead(404,{'Content-Type':'application/json'});res.end('{}');return;}
+      if(body.stream===false){plans.push(body);respond({choices:[{finish_reason:'stop',message:{content:JSON.stringify({positive:'masterpiece, best quality, black sports car, red scanner, camping, forest, newly imagined scene detail',negative:'blurry, text, watermark'})}}]});return;}
+      streamed.push(body);res.writeHead(200,{'Content-Type':'text/event-stream'});res.end('data: '+JSON.stringify({choices:[{delta:{content:'Une tente, une forêt et une carrosserie noire : excellent programme.'}}]})+'\n\ndata: [DONE]\n\n');
+    });
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));const url='http://127.0.0.1:'+(server.address() as {port:number}).port;
+  try {
+    let state=await native<any>('get_snapshot');let p=state.profiles.find((p:any)=>p.name==='Kit');
+    await native('apply_mutation',{mutation:{kind:'switch_profile',id:p.id}});state=await native<any>('get_snapshot');p=state.profiles.find((item:any)=>item.id===p.id);
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...p.connections,lm_studio_url:url,llm_model:'scene-chat',voice_studio_url:url,tts_engine:'omni',tts_voice:'test',volume:0}}});
+    await native('widget_action',{action:'show_widget'});await widget.locator('#drag-region').hover();
+    await expect(widget.locator('#widget-text')).toBeVisible();
+    await expect.poll(()=>widget.evaluate(()=>{
+      const image=document.querySelector<HTMLImageElement>('.widget-portrait img')!;const c=document.createElement('canvas');c.width=image.naturalWidth;c.height=image.naturalHeight;const ctx=c.getContext('2d')!;ctx.drawImage(image,0,0);const a=ctx.getImageData(0,0,c.width,c.height).data;
+      let bottom=0;for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(a[(y*c.width+x)*4+3]!>24)bottom=y;
+      const b=image.getBoundingClientRect(),scale=Math.min(b.width/c.width,b.height/c.height);const visibleBottom=b.top+(b.height-c.height*scale)/2+bottom*scale;
+      const status=document.querySelector('.widget-status')!.getBoundingClientRect();return Math.abs(status.top-visibleBottom);
+    })).toBeLessThan(14);
+    expect(await widget.evaluate(()=>Math.abs(document.querySelector('#resize-widget')!.getBoundingClientRect().top-document.querySelector('.widget-status')!.getBoundingClientRect().top))).toBeLessThan(12);
+    await panel.getByRole('button',{name:'Réglages',exact:true}).click();await panel.locator('[data-theme-choice="ocean"]').click();
+    await expect.poll(async()=>(await native<any>('get_snapshot')).settings.theme).toBe('ocean');
+    await expect(widget.locator('html')).toHaveAttribute('data-theme','ocean');
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();await panel.locator(`[data-profile="${p.id}"]`).click();await panel.locator('#edit-profile').click();await panel.locator('[name="accent"][value="violet"]').check();await panel.locator('#profile-form [type="submit"]').click();
+    await expect(widget.locator('.widget')).toHaveClass(/accent-violet/);
+    const halo=await widget.locator('.widget-portrait img').evaluate(img=>getComputedStyle(img).filter);expect(halo.includes('176, 167, 219')||halo.includes('0.690196')).toBe(true);
+    await panel.locator('[name="image_server"]').fill(url);await panel.locator('#discover-images').click();await expect(panel.locator('#image-catalog-status')).toContainText('1 modèles Illustrious');
+    expect(await panel.locator('[name="image_checkpoint"] option').allTextContents()).not.toContain('Flux/unrelated.safetensors');
+    await panel.locator('[name="image_checkpoint"]').selectOption('Illustrious/scene.safetensors');
+    await expect(panel.locator('[name="image_appearance"]')).toContainText('black');
+    await panel.locator('#add-image-lora').click();await panel.locator('[data-lora="0"]').selectOption('Style/scene.safetensors');
+    expect(await panel.locator('[data-lora="0"] option').allTextContents()).not.toContain('Models/Turbo/PAseer-SDXL-LCM+Turbo.safetensors');
+    await panel.locator('[data-strength="0"]').evaluate((input:HTMLInputElement)=>{input.value='0.65';input.dispatchEvent(new Event('input',{bubbles:true}));});
+    await panel.locator('[name="image_count"]').fill('2');await panel.locator('[name="slide_seconds"]').fill('1');
+    await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).illustration.loras[0]?.strength??-1).toBeCloseTo(0.65);
+    await widget.locator('#drag-region').hover();await widget.locator('#widget-image').click();
+    await expect(widget.locator('#widget-image-cell')).toBeVisible();
+    expect(browser.contexts().flatMap(c=>c.pages())).toHaveLength(2);
+    const scene=widget,quick=widget;
+    await widget.locator('#drag-region').hover();await widget.locator('#widget-text').click();
+    await expect(widget.locator('#widget-text-cell')).toBeVisible();
+    await expect.poll(()=>widget.evaluate(()=>innerHeight>=document.querySelector('#widget-image-cell')!.getBoundingClientRect().bottom)).toBe(true);
+    const textBox=await widget.locator('#widget-text-cell').boundingBox(),buttons=await widget.locator('.widget-toolbar').boundingBox();expect(textBox!.y).toBeGreaterThan(buttons!.y+buttons!.height);
+    await widget.locator('#drag-region').hover();await widget.locator('#widget-text').click();await expect(widget.locator('#widget-text-cell')).toBeHidden();
+    await widget.evaluate(()=>{const data=new DataTransfer();data.setData('text/plain','Texte déposé');document.querySelector('#drag-region')!.dispatchEvent(new DragEvent('drop',{bubbles:true,dataTransfer:data}));});
+    await expect(widget.locator('#cell-text')).toHaveValue('Texte déposé');
+    await widget.evaluate(()=>{
+      const observer=new MutationObserver(()=>{
+        const layers=[...document.querySelectorAll<HTMLImageElement>('#cell-image-layers img')];if(layers.length!==2)return;
+        const animations=layers.flatMap(image=>image.getAnimations().filter(a=>a.effect?.getTiming().duration===500));if(animations.length!==2)return;
+        observer.disconnect();for(const animation of animations){animation.pause();animation.currentTime=250;}
+        (window as any).__sceneFade={opacities:layers.map(image=>Number(getComputedStyle(image).opacity)),loaded:layers.every(image=>image.complete&&image.naturalWidth>0)};
+        (window as any).__resumeSceneFade=()=>animations.forEach(a=>a.play());
+      });observer.observe(document.body,{childList:true,subtree:true});
+    });
+    await quick.locator('#cell-speak').uncheck();await quick.locator('#cell-text').fill('On part en camping dans la forêt.');
+    await quick.locator('#cell-text').dispatchEvent('keydown',{key:'Enter',isComposing:true});
+    await expect(quick.locator('#cell-text')).toHaveValue('On part en camping dans la forêt.');expect(plans).toHaveLength(0);
+    await widget.evaluate((bytes:number[])=>{const data=new DataTransfer();data.items.add(new File([new Uint8Array(bytes)],'sample.png',{type:'image/png'}));document.querySelector('#drag-region')!.dispatchEvent(new DragEvent('drop',{bubbles:true,dataTransfer:data}));},[...readFileSync('src-tauri/icons/32x32.png')]);
+    await expect(widget.locator('.cell-attachment')).toHaveCount(1);
+    await quick.getByRole('button',{name:'Envoyer',exact:true}).click();
+    await expect.poll(async()=>{const status=await native<any>('get_illustration');if(status.phase==='error')throw new Error(status.message+' · planned='+plans.length+' rendered='+graphs.length);return status.phase;}).toBe('ready');
+    await expect(scene.locator('#cell-image-layers img:not(.leaving)')).toBeVisible();await expect.poll(()=>scene.locator('#cell-image-layers img:not(.leaving)').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+    expect((await native<any>('get_illustration')).images).toHaveLength(2);
+    await expect(widget.locator('#cell-image-count')).toHaveText('2/2');
+    await expect.poll(()=>widget.evaluate(()=>(window as any).__sceneFade)).toEqual({opacities:[0.5,0.5],loaded:true});
+    await widget.evaluate(()=>(window as any).__resumeSceneFade());await expect(widget.locator('#cell-image-layers .leaving')).toHaveCount(0);
+    const imageBefore=await widget.locator('#widget-image-cell').boundingBox();const bar=await widget.locator('#cell-image-drag').boundingBox();
+    await widget.mouse.move(bar!.x+35,bar!.y+12);await widget.mouse.down();await widget.mouse.move(bar!.x+65,bar!.y+25,{steps:5});await widget.mouse.up();
+    expect((await widget.locator('#widget-image-cell').boundingBox())!.x).toBeGreaterThan(imageBefore!.x+15);
+    const handle=await widget.locator('#cell-image-resize').boundingBox();await widget.mouse.move(handle!.x+8,handle!.y+8);await widget.mouse.down();await widget.mouse.move(handle!.x+42,handle!.y+42,{steps:5});await widget.mouse.up();
+    expect((await widget.locator('#widget-image-cell').boundingBox())!.width).toBeGreaterThan(imageBefore!.width+20);
+    expect(streamed[0].messages.at(-1).content.some((item:any)=>item.type==='image_url')).toBe(true);
+    expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('data:image');
+    visionEnabled=false;
+    await widget.evaluate((bytes:number[])=>{const data=new DataTransfer();data.items.add(new File([new Uint8Array(bytes)],'unsupported.png',{type:'image/png'}));document.querySelector('#drag-region')!.dispatchEvent(new DragEvent('drop',{bubbles:true,dataTransfer:data}));},[...readFileSync('src-tauri/icons/32x32.png')]);
+    await expect(widget.locator('.toast')).toContainText('Ce modèle n’accepte pas les images');
+    expect(await widget.locator('.toast').evaluate(element=>getComputedStyle(element.parentElement!).pointerEvents)).toBe('none');
+    expect((await widget.locator('.toast').boundingBox())!.y).toBeLessThan((await widget.locator('.widget-toolbar').boundingBox())!.y);
+    await expect(widget.locator('.toast')).toHaveCount(0,{timeout:5000});expect(await widget.locator('.cell-attachment').count()).toBe(0);visionEnabled=true;
+    expect(plans).toHaveLength(1);expect(plans[0].messages[0].content).toContain('NO fixed tag dictionary');
+    const pair=JSON.parse(plans[0].messages[1].content);expect(pair.latest_user).toContain('camping');expect(pair.latest_companion).toContain('carrosserie');expect(pair.appearance).toContain('car');
+    expect(graphs[0]['19'].inputs.text).toEqual(['34',2]);expect(graphs[0]['2'].inputs.lora_2.strength).toBeCloseTo(0.65);expect(graphs[0]['4'].inputs.text).toContain('newly imagined scene detail');
+    await scene.screenshot({path:'artifacts/scene-window.png'});await quick.screenshot({path:'artifacts/quick-text-window.png'});await widget.locator('#drag-region').hover();await widget.screenshot({path:'artifacts/kit-tight-widget.png'});
+    held=true;await native('refresh_illustration');await expect.poll(()=>graphs.length).toBe(3);
+    await widget.locator('#drag-region').hover();await widget.locator('#widget-image').click();await expect.poll(()=>deleted).toContain('scene_3');
+    expect((await native<any>('get_illustration')).image).toBeNull();
+    state=await native<any>('get_snapshot');expect(state.profiles.find((item:any)=>item.id===p.id).illustration.enabled).toBe(false);
+    held=false;await native('desktop_tool',{tool:'image',open:true});
+    await expect.poll(async()=>(await native<any>('get_illustration')).phase).toBe('ready');const oldPlans=plans.length;
+    await native('send_message',{profileId:p.id,text:'On admire les étoiles au bord du lac.',speak:canSpeak});
+    if(canSpeak)await expect.poll(()=>spoken.length).toBeGreaterThan(0);
+    await expect.poll(()=>plans.length).toBe(oldPlans+1);
+    await expect.poll(async()=>(await native<any>('get_illustration')).phase).toBe('ready');
+    const duringSpeech=await native<any>('get_conversation');if(canSpeak){expect(duringSpeech.live.tag).not.toBeNull();expect(duringSpeech.live.text_complete).toBe(true);}
+    for(const response of spoken){response.writeHead(200,{'Content-Type':'audio/pcm'});response.end(Buffer.alloc(4800));}
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    await native('desktop_tool',{tool:'image',open:false});
+    await expect(panel.locator('[name="image_enabled"]')).not.toBeChecked();
+    await panel.locator('#search-provider').selectOption('brave');await expect(panel.locator('#search-api-key')).toBeVisible();
+    await panel.locator('#search-provider').selectOption('searxng');await panel.locator('#search-endpoint').fill(url);
+    await expect(panel.locator('#search-provider')).toHaveValue('searxng');await expect(panel.locator('body')).not.toHaveClass(/working/);await panel.locator('#save-search-config').click();
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).search.provider).toBe('searxng');
+    await panel.locator('#web-search-mode').selectOption('on_request');
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).web_search).toBe('on_request');
+    await native('send_message',{profileId:p.id,text:'/web Rust documentation',speak:false});
+    await expect.poll(()=>searches).toContain('Rust documentation');
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    expect((await native<any>('get_conversation')).live.web.sources[0].title).toBe('Official Rust documentation');
+    await stopApplication();await startApplication();state=await native<any>('get_snapshot');
+    expect(state.settings.theme).toBe('ocean');expect(state.profiles.find((item:any)=>item.id===p.id).illustration.loras[0]?.strength??-1).toBeCloseTo(0.65);
+    const hermes=state.profiles.find((item:any)=>item.id===p.id);await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:hermes.revision,connections:{...hermes.connections,llm_provider:'hermes',llm_api_url:url,hermes_profile:'default',llm_model:null}}});
+    expect((await native<any>('get_illustration')).phase).toBe('disabled');await expect(widget.locator('#widget-image')).toHaveCount(0);
+    expect(consoleErrors).toEqual([]);
+  } finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+});
+
+
+test('illustrations live: configured provider prepares an Illustrious scene on the real ComfyUI server',async()=>{
+  test.skip(!process.env.SHERKA_LIVE_ILLUSTRATION_CONNECTIONS,'Opt-in live provider and ComfyUI generation; synthetic dialogue only.');
+  test.setTimeout(240000);
+  const connections=JSON.parse(readFileSync(process.env.SHERKA_LIVE_ILLUSTRATION_CONNECTIONS!,'utf8'));
+  expect(connections.llm_provider).not.toBe('hermes');
+  expect(await native('get_provider_key_status',{connections})).toBe(true);
+  let state=await native<any>('get_snapshot');let p=state.profiles.find((p:any)=>p.name==='Kit');
+  await native('apply_mutation',{mutation:{kind:'switch_profile',id:p.id}});state=await native<any>('get_snapshot');p=state.profiles.find((item:any)=>item.id===p.id);
+  await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections}});
+  state=await native<any>('get_snapshot');p=state.profiles.find((item:any)=>item.id===p.id);
+  const config={enabled:true,server_url:process.env.SHERKA_LIVE_COMFY_URL??'http://127.0.0.1:8188',checkpoint:process.env.SHERKA_LIVE_COMFY_CHECKPOINT,physical_description:'A sleek black 1980s sports car, glossy black bodywork, narrow red scanner light in the front grille, no human face.',loras:[],turbo:true,workflow:null};
+  await native('apply_mutation',{mutation:{kind:'illustration',id:p.id,revision:p.revision,config}});
+  await native('send_message',{profileId:p.id,text:'Test technique, sans recherche Internet ni souvenir durable. Ce soir nous campons au bord d’un lac dans une forêt. Réponds en une seule phrase courte et chaleureuse.',speak:false});
+  await expect.poll(async()=>{const c=await native<any>('get_conversation');if(c.live.error)throw new Error(c.live.error);return c.live.tag;},{timeout:90000}).toBeNull();
+  await expect.poll(async()=>{const image=await native<any>('get_illustration');if(image.phase==='error')throw new Error(image.message);return image.phase;},{timeout:150000}).toBe('ready');
+  const image=await native<any>('get_illustration');expect(image.image).toMatch(/^data:image\/png;base64,/);
+  writeFileSync('artifacts/live-conversation-illustration.png',Buffer.from(image.image.split(',')[1],'base64'));
+  const usage=(await native<any>('get_conversation')).live.usage;
+  writeFileSync('artifacts/live-conversation-illustration.json',JSON.stringify({provider:connections.llm_provider,model:connections.llm_model,realProvider:true,realComfy:true,syntheticDialogue:true,existingHistoryRead:false,physicalAudioTest:false,usage},null,2));
+  expect(consoleErrors).toEqual([]);
 });

@@ -12,7 +12,7 @@ serde_json.workspace = true
 uuid.workspace = true
 thiserror.workspace = true
 rusqlite = { version = "0.40.2", default-features = false, features = ["bundled"] }
-image = { version = "0.25.10", default-features = false, features = ["png", "webp"] }
+image = { version = "0.25.10", default-features = false, features = ["png", "webp", "jpeg"] }
 base64 = "0.22"
 tokio-util = { version = "0.7", features = ["rt"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "multipart", "stream"] }

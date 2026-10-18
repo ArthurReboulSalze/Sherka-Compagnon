@@ -9,12 +9,17 @@
     "core:event:allow-listen",
     "core:event:allow-unlisten",
     "core:window:allow-start-dragging",
-    "core:window:allow-start-resize-dragging",
     "allow-get-snapshot",
     "allow-switch-companion",
     "allow-new-hermes-conversation",
     "allow-widget-action",
     "allow-get-conversation",
-    "allow-get-voice-service"
+    "allow-get-voice-service",
+    "allow-desktop-tool",
+    "allow-get-illustration",
+    "allow-widget-surface",
+    "allow-send-message",
+    "allow-get-attachment-support",
+    "allow-refresh-illustration"
   ]
 }

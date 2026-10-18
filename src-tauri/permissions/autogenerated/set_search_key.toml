@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-search-key"
+description = "Enables the set_search_key command without any pre-configured scope."
+commands.allow = ["set_search_key"]
+
+[[permission]]
+identifier = "deny-set-search-key"
+description = "Denies the set_search_key command without any pre-configured scope."
+commands.deny = ["set_search_key"]

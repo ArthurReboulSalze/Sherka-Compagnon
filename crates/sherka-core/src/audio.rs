@@ -65,13 +65,13 @@ pub fn devices() -> Result<Devices> {
     Ok(Devices {
         inputs: list(
             host.input_devices()
-                .map_err(|_| audio_error("Impossible de lister les microphones Windows."))?
+                .map_err(|_| audio_error("Impossible de lister les microphones."))?
                 .collect(),
             input,
         ),
         outputs: list(
             host.output_devices()
-                .map_err(|_| audio_error("Impossible de lister les sorties audio Windows."))?
+                .map_err(|_| audio_error("Impossible de lister les sorties audio."))?
                 .collect(),
             output,
         ),
@@ -470,7 +470,7 @@ fn choose(host: &cpal::Host, id: &Option<String>, input: bool) -> Result<Device>
     // default-device reroute while microphone consent is active.
     let mut devices = host
         .devices()
-        .map_err(|_| audio_error("Les périphériques audio Windows sont indisponibles."))?;
+        .map_err(|_| audio_error("Les périphériques audio sont indisponibles."))?;
     devices
         .find(|d| {
             d.id()
@@ -502,7 +502,7 @@ where
         let time=info.timestamp(); latency.store(time.callback.duration_since(time.capture).as_millis() as u64,Ordering::Relaxed);
         for frame in data.chunks_exact(channels) { sink.push(frame.iter().map(|s| f32::from_sample(*s)).sum::<f32>()/channels as f32); }
     },move |_| {failed.store(true,Ordering::Release);},Some(Duration::from_secs(3)))
-    .map_err(|_| audio_error("Windows refuse le microphone. Vérifie les autorisations et le périphérique choisi."))
+    .map_err(|_| audio_error("L’accès au microphone est refusé. Vérifie les autorisations et le périphérique choisi."))
 }
 
 fn output_stream<T>(
@@ -549,7 +549,7 @@ where
             },
             Some(Duration::from_secs(3)),
         )
-        .map_err(|_| audio_error("Windows refuse la sortie audio choisie."))
+        .map_err(|_| audio_error("L’accès à la sortie audio choisie est refusé."))
 }
 
 fn run_audio(
@@ -613,9 +613,7 @@ fn run_audio(
                 failed.clone(),
                 out_delay.clone(),
             ),
-            _ => Err(audio_error(
-                "Choisis un format Windows PCM 16/32 bits ou flottant.",
-            )),
+            _ => Err(audio_error("Choisis un format PCM 16/32 bits ou flottant.")),
         }?;
         let mut input_stream_value = None;
         let mut input_rate = 48000;
@@ -662,7 +660,7 @@ fn run_audio(
             || output_rate % 100 != 0
         {
             return Err(audio_error(
-                "Choisis une fréquence Windows entre 8 et 96 kHz (44,1 ou 48 kHz conseillés).",
+                "Choisis une fréquence entre 8 et 96 kHz (44,1 ou 48 kHz conseillés).",
             ));
         }
         let acoustics = Acoustics::new(input_rate, output_rate, options.speakers)?;
@@ -738,7 +736,7 @@ fn run_audio(
             {
                 playback.interrupt();
                 return Err(audio_error(
-                    "Le périphérique Windows par défaut a changé. Réactive le micro pour utiliser le nouveau périphérique.",
+                    "Le périphérique audio par défaut a changé. Réactive le micro pour utiliser le nouveau périphérique.",
                 ));
             }
         }

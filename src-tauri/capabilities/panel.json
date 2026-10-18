@@ -28,6 +28,8 @@
     "allow-test-hermes",
     "allow-answer-hermes-approval",
     "allow-get-provider-key-status",
+    "allow-search-key-status",
+    "allow-set-search-key",
     "allow-set-provider-key",
     "allow-discover-voices",
     "allow-get-audio-devices",
@@ -38,6 +40,10 @@
     "allow-retry-voice-service",
     "allow-get-update-status",
     "allow-check-update",
-    "allow-install-update"
+    "allow-install-update",
+    "allow-discover-illustration",
+    "allow-get-illustration",
+    "allow-refresh-illustration",
+    "allow-desktop-tool"
   ]
 }

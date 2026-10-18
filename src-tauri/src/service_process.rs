@@ -1,4 +1,5 @@
 //! Launch the installed VoiceStudio desktop app, never commands from a profile.
+#[cfg(windows)]
 use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
@@ -86,6 +87,7 @@ fn registered_executable(name: &str, file: &str) -> Option<PathBuf> {
     None
 }
 
+#[cfg(windows)]
 fn app_executable() -> Option<PathBuf> {
     let name = "VoiceStudio";
     let file = "VoiceStudio.exe";
@@ -110,6 +112,7 @@ fn app_executable() -> Option<PathBuf> {
     })
 }
 
+#[cfg(windows)]
 fn command(path: &Path) -> Command {
     let mut command = Command::new(path);
     command

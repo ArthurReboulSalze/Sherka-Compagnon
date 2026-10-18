@@ -1,51 +1,52 @@
 # Web search
 
-Sherka offers optional DuckDuckGo search, with no account or API key. Search planning uses the companion's selected conversation provider. Speech stays in VoiceStudio. Web search requires an Internet connection.
+Sherka offers optional web search through **DuckDuckGo, Brave Search, Tavily or SearXNG**. Search planning uses the companion's conversation model; speech stays in VoiceStudio. Each companion has its own engine and search mode. Hermes always bypasses Sherka's search controls and uses its server's tools.
+
+## Choose an engine
+
+Open **Companions → Web search**. Choose the engine, maximum result count (1–10) and save. The default is DuckDuckGo without an account.
+
+| Engine | Setup | Notes |
+| --- | --- | --- |
+| DuckDuckGo | No key | Lightweight HTML search; can be rate-limited or blocked by bot checks. |
+| Brave Search | Your Brave Search API key | Official search API with titles, links and available extra excerpts. |
+| Tavily | Your Tavily API key | Basic general search, without a generated answer or full raw-page payload. |
+| SearXNG | Your instance URL | Enable JSON output in the instance settings; no Sherka API key is required. |
+
+Enter Brave/Tavily keys in this section. They are stored in Windows Credential Manager or Linux Secret Service, separately from profiles and exports. A key is shared by companions using that search service. Removing a key does not erase the companion's engine choice. Keys are sent only to the service's fixed HTTPS endpoint. An external API account may incur usage charges.
+
+SearXNG accepts HTTPS addresses, or HTTP on loopback/private IP addresses. Addresses cannot contain credentials, a query or a fragment. Sherka calls the instance's `/search` endpoint with `format=json`. If it refuses JSON, enable that format in SearXNG rather than supplying an unrelated API key.
 
 ## Choose when to search
 
-Open **Companions**, select a character, then **Web search → Internet access**. Each companion keeps its own choice. Profiles without an individual choice inherit the previous application setting until edited. Hermes hides these controls and always bypasses local search; its server owns web tools.
+- **Disabled** is the default. No search query is sent.
+- **On request** searches when you check **Search the web for this message** in Conversation, type `/web your question`, or explicitly ask to search the web. Voice requests use the same path.
+- **Automatic** asks the conversation model whether the current message needs public information, then runs at most one short search. Personal stories, feelings, greetings, creative writing and memory edits do not need search. If planning fails, ordinary conversation continues without claiming a search happened. Use an explicit request if a model misses a needed search.
 
-- **Disabled** is the default. Sherka does not send search requests.
-- **On request** searches when you check **Search the web for this message** in Conversation, type `/web your question`, or explicitly ask to search the web. Voice requests work too; in French, say “cherche sur Internet…”.
-- **Automatic** asks the conversation model whether the current message requires external public information. It then runs at most one short search before answering. Personal stories, daily activities, feelings, greetings, creative writing and memory edits do not need search. If the planning request fails or returns invalid JSON, Sherka continues the ordinary conversation without claiming a search happened. Reliability depends on the model; use an explicit request if it misses a needed search.
-
-The setting applies across companions. Changing it stops the current response. Switching companions, interrupting, pausing or quitting cancels work in progress. The next response continues to use the companion's own personality, language, model and voice.
+Profiles without an individual mode inherit the old application preference until edited. A configuration change stops the current response. Switching companions, interruption, pause or quitting cancels work in progress. No engine silently falls back to another paid or unpaid service.
 
 ## Results and sources
 
-Sherka retrieves up to five titles, links and snippets from DuckDuckGo's lightweight HTML interface. It supplies only the entries that fit the current model's context budget, with space still reserved for the answer. The final answer keeps the usual text streaming and speech preparation.
+Sherka supplies the titles, validated links and excerpts that fit the selected model's context budget, preserving space for its answer. Text streaming and speech preparation then continue normally. These are **search excerpts**, not proof that the complete pages have been read. Full-page reading remains future work.
 
-Source numbers can appear in the written answer. Sources are shown with that exchange and survive restart in the companion's own history. Click a source to open it in your default browser. Source numbers and web URLs are removed from speech passages for a web-backed answer.
+Sources accompany that response and survive restart in the companion's own history. Click a source to open it in your browser. Source numbers and web URLs are removed from spoken passages. A model-invented URL is not added to the trusted source cards; small models can still misinterpret excerpts or cite them poorly.
 
-**These are search snippets, not full page readings.** A result does not prove the whole article was read or that its claims are correct. Verify important information at the source. Reading full pages and more search providers are future work.
+## Privacy and limits
 
-Local models can still misinterpret snippets or misattribute a citation, especially small models. The source cards contain the links actually retrieved; a URL invented in the written answer is not added as a trusted source.
+The chosen engine receives a short query, language preference where supported and normal network metadata. Sherka does not attach memories, recordings, image attachments or full conversation history. The question itself may contain personal information, so review what you ask to search.
 
-## Privacy and limitations
+Automatic planning sends a bounded structured request to the selected conversation provider. With a hosted model this is additional API usage. Search evidence is untrusted content: it cannot directly execute commands or edit memory. Requests have time/size limits, do not follow redirects, and filter unsafe or private source links.
 
-Only the short search query and a language/region preference go to DuckDuckGo, along with normal connection metadata such as your IP address. Sherka does not attach stored memories, voice recordings or conversation history. A query can still contain personal information from the question you ask; keep that in mind when enabling search.
+DuckDuckGo's HTML interface can change or demand a challenge. Official API options avoid depending on that HTML parser, but still have their own quotas and availability. Sherka reports missing/refused keys, quota errors and SearXNG JSON refusals. For an explicit search with no usable evidence it uses a fixed localized notice rather than inventing a verification. It never bypasses challenges.
 
-Automatic search decisions use a bounded structured JSON request to the selected conversation provider, separate from the spoken answer. A remote conversation provider also receives this planning request; VoiceStudio remains local. Search evidence is treated as untrusted text and cannot directly execute commands or edit memory. Links are validated in Rust and the model cannot fetch arbitrary URLs.
+If a firewall blocks outbound traffic, allow the executable path you actually run. Rules for another installation or portable folder may not cover it. Sherka does not change firewall rules. There is no autonomous background browsing or polling.
 
-DuckDuckGo's HTML interface is not a guaranteed search API. It can change, rate-limit requests or demand a bot check. If a search fails or returns no usable evidence, Sherka speaks a fixed notice in the companion's language instead of letting the model fabricate a verification. It does not solve or bypass challenges, and does not silently switch to another provider. Try later or search in your browser.
-
-With an outbound-blocking firewall such as Windows Firewall Control, allow Internet access for the Sherka executable you actually run, then try again. Rules for another installation path may not cover a development build or a new portable folder. Sherka does not modify firewall settings.
-
-Search adds latency before the answer starts, especially in Automatic mode. There is no background polling or autonomous browsing. The provider request has a timeout and bounded response size.
-
-Search receipts were introduced with database schema 4. Version 0.6.1 upgrades profiles to schema 5 to raise the former reply default once. Older binaries open startup recovery for these profiles so an update remains possible. Keep installed and no-install versions aligned; use a separate backup to run an older version with its original data.
+Engine preferences are included in profile export version 4; keys and search receipts are excluded. Current development databases use schema 8. Keep installed and portable versions aligned, and use a separate backup/data folder when testing an older executable.
 
 ## Development checks
 
-`cargo test --workspace --locked` covers parsing, unsafe links, bounded evidence, context budgets, source isolation and the schema migration. The native `web search:` scenario covers settings, explicit and automatic requests, history, restart, provider errors and cancellation using loopback fixtures.
+`cargo test --workspace --locked` checks source parsing, unsafe links, provider request/response contracts, context budgets, isolation and migrations. Brave, Tavily and SearXNG contracts use loopback fixtures and synthetic keys; they do not spend a real API account's credits. The native scenarios cover search settings, explicit/automatic requests, source history, restart, failure and cancellation. No live Brave/Tavily account is required.
 
-For an intentional live public request:
+An optional live DuckDuckGo check is available through `cargo test -p sherka-core --test web_search live_duckduckgo_search -- --ignored --nocapture`. The debug-only `SHERKA_TEST_SEARCH_URL` override accepts HTTP on `127.0.0.1`; release builds use the fixed endpoint.
 
-```powershell
-cargo test -p sherka-core --test web_search live_duckduckgo_search -- --ignored --nocapture
-```
-
-`SHERKA_TEST_SEARCH_URL` is accepted only in debug builds and only for HTTP on `127.0.0.1`. Release builds use the fixed DuckDuckGo endpoint.
-
-References: [DuckDuckGo Lite](https://lite.duckduckgo.com/lite/), [LM Studio structured output](https://lmstudio.ai/docs/developer/openai-compat/structured-output).
+References: [DuckDuckGo Lite](https://lite.duckduckgo.com/lite/), [Brave Search API](https://api-dashboard.search.brave.com/documentation), [Tavily search](https://docs.tavily.com/documentation/api-reference/endpoint/search), [SearXNG search API](https://docs.searxng.org/dev/search_api.html).

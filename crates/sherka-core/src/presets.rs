@@ -22,6 +22,8 @@ pub fn sherka(language: Language) -> ProfileDraft {
         accent: "amber".into(),
         avatar_preset: Some(crate::avatar::AvatarPreset::Sherka),
         web_search: None,
+        illustration: crate::illustration::Config::default(),
+        search: crate::search_provider::Config::default(),
         connections: Connections {
             language: language.code().into(),
             ..Default::default()

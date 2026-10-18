@@ -15,6 +15,10 @@ pub struct ProfileDraft {
     pub web_search: Option<crate::web::SearchMode>,
     #[serde(default)]
     pub connections: crate::connections::Connections,
+    #[serde(default)]
+    pub illustration: crate::illustration::Config,
+    #[serde(default)]
+    pub search: crate::search_provider::Config,
 }
 
 impl Default for ProfileDraft {
@@ -26,6 +30,8 @@ impl Default for ProfileDraft {
 impl ProfileDraft {
     pub fn validated(mut self) -> Result<Self> {
         self.connections = self.connections.validated()?;
+        self.illustration = self.illustration.validated()?;
+        self.search = self.search.validated()?;
         self.name = self.name.trim().to_string();
         self.personality = self.personality.trim().to_string();
         self.instructions = self.instructions.trim().to_string();
@@ -72,6 +78,7 @@ pub struct Profile {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
+    pub theme: Theme,
     pub companion_pack_initialized: bool,
     pub web_search: crate::web::SearchMode,
     pub ui_language: crate::i18n::Language,
@@ -87,6 +94,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            theme: Theme::default(),
             companion_pack_initialized: false,
             web_search: Default::default(),
             ui_language: Default::default(),
@@ -99,6 +107,18 @@ impl Default for Settings {
             audio: Default::default(),
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Theme {
+    #[default]
+    Gold,
+    Sage,
+    Ocean,
+    Iris,
+    Rose,
+    Mono,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -16,6 +16,7 @@ pub struct LiveConversation {
     pub tag: Option<OperationTag>,
     pub transcript: String,
     pub reply: String,
+    pub text_complete: bool,
     pub heard: String,
     pub error: Option<String>,
     pub notice: Option<String>,
@@ -109,6 +110,7 @@ pub fn context(
     user: &str,
 ) -> Result<Vec<ChatMessage>> {
     let model = crate::catalogs::LanguageModel {
+        vision: None,
         api: None,
         id: "fixture".into(),
         key: "fixture".into(),

@@ -4,6 +4,8 @@
 - [User guide](USER_GUIDE.md): characters, voices, memory and backups.
 - [Languages](LANGUAGES.md): interface language, companion language and your models.
 - [Web search](WEB_SEARCH.md): optional DuckDuckGo search and sources.
+- [Conversation illustrations](COMFYUI.md): Illustrious scenes, per-character models and LoRAs in the 0.10 development build.
+- [Linux](LINUX.md): native dependencies, Debian builds and desktop limitations.
 - [Startup recovery](STARTUP_RECOVERY.md): shared data, version mismatches and signed updates when startup fails.
 - [Roadmap](ROADMAP.md): priorities and limitations.
 - [Development](DEVELOPMENT.md): building, testing and contributing.

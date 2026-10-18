@@ -1,6 +1,6 @@
 # Roadmap
 
-Sherka 0.7.0 adds Hermes agent conversations alongside local and API models, web search, independent characters, editable memories and seven interface languages. These are directions, not delivery promises.
+Sherka 0.9.0 is the current published release. The 0.10 development build adds desktop text, themes, Illustrious conversation illustrations and a first Linux port. These remaining directions are not delivery promises.
 
 ## Bring companions to life
 
@@ -10,6 +10,7 @@ Sherka 0.7.0 adds Hermes agent conversations alongside local and API models, web
 - Refine model-selected expressions, transitions and reactions beyond the seven static image slots. Hermes remote-agent mode remains excluded: neutral avatar, with listening/speaking indicators only.
 - Voice-driven mouth or portrait animation beyond the existing half-second image crossfades.
 - Animated formats and shareable character packs without personal data.
+- Extend the conversation illustration connector beyond Illustrious to other SDXL families and improve appearance consistency without changing the avatar editor.
 
 ## Refine conversations
 
@@ -20,9 +21,9 @@ Sherka 0.7.0 adds Hermes agent conversations alongside local and API models, web
 
 ## Expand intelligence and memory
 
-- Full web page reading and additional search providers after the initial DuckDuckGo snippet search.
+- Full web page reading and stronger source selection beyond the excerpts supplied by DuckDuckGo, Brave, Tavily and SearXNG.
 - Broader provider/model compatibility, cost visibility and the OpenAI Responses API.
-- VoiceStudio authentication and additional operating system key vaults.
+- VoiceStudio authentication and broader credential-service coverage beyond Windows Credential Manager and Linux Secret Service.
 - Exact tokenizer counts, semantic retrieval and narrative summaries.
 - Better memory relevance and corrections with smaller models.
 
@@ -32,5 +33,6 @@ Sherka 0.7.0 adds Hermes agent conversations alongside local and API models, web
 - More Windows configurations and audio devices tested.
 - Accessibility, translation review and guided backup/restore.
 - Ongoing update and migration validation between published versions.
+- Physical Linux desktop/audio validation, wider distribution compatibility and a Linux update mechanism beyond manual Debian packages.
 
 Visual effects must respect reduced-motion preferences and keep the desktop widget unobtrusive.

@@ -39,7 +39,18 @@ pub fn open_web_url(url: &str) -> Result<(), String> {
             Err("Impossible d’ouvrir la source Internet.".into())
         }
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(url)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .map(|_| ())
+            .map_err(|_| "Impossible d’ouvrir la source Internet.".into())
+    }
+    #[cfg(not(any(windows, target_os = "linux")))]
     {
         let _ = url;
         Err("Impossible d’ouvrir la source Internet.".into())
@@ -111,6 +122,8 @@ pub async fn prepare_shutdown(app: &AppHandle) -> Result<(), String> {
         return Ok(());
     }
     app.state::<crate::voice_startup::VoiceStartup>().cancel();
+    app.state::<crate::illustrations::Illustrations>()
+        .cancel(app, true);
     let _ = app.emit("sherka:quit", serde_json::json!({"stage":"unloading"}));
     let voice = app.state::<Voice>().inner().clone();
     let shared = app.state::<Shared>().inner().clone();
@@ -199,7 +212,9 @@ pub fn apply_preferences(app: &AppHandle, settings: &Settings) -> tauri::Result<
     if let Some(window) = app.get_webview_window("widget") {
         window.set_always_on_top(settings.always_on_top)?;
         let factor = f64::from(settings.widget_scale) / 100.0;
-        window.set_size(tauri::LogicalSize::new(290.0 * factor, 350.0 * factor))?;
+        if !crate::desktop_tools::resize_avatar(app, 290.0 * factor, 350.0 * factor) {
+            window.set_size(tauri::LogicalSize::new(290.0 * factor, 350.0 * factor))?;
+        }
     }
     Ok(())
 }
@@ -402,12 +417,12 @@ fn save_geometry_now(app: &AppHandle) {
         return;
     };
     if core
-        .save_bounds(Bounds {
+        .save_bounds(crate::desktop_tools::avatar_bounds(app).unwrap_or(Bounds {
             x: position.x,
             y: position.y,
             width: size.width,
             height: size.height,
-        })
+        }))
         .is_err()
     {
         eprintln!("La position du widget n'a pas été enregistrée.");

@@ -14,8 +14,12 @@ import { paintProfileVoice, editProfileVoice } from './profile-voice';
 import { editAvatar, portrait, paintAvatar } from './avatar';
 import { updatesView, mountUpdates, initializeUpdates } from './updates';
 import { bindRangeControls } from './settings-controls';
-import { webSettings } from './web';
+import { webSettings,mountWebSettings } from './web';
 import { mountStartupRecovery } from './startup-recovery';
+import {layoutWidget} from './widget-layout';
+import {themesView,paintTheme} from './themes';
+import {illustrationSettings,mountIllustrationSettings} from './illustration-settings';
+import {mountWidgetCells,captureCellFocus} from './widget-cells';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 const widget = new URLSearchParams(location.search).get('view') === 'widget';
@@ -57,13 +61,13 @@ function toast(message: string, error = false): void {
   }
   // Keep feedback readable during rapid edits and profile changes.
   if (!error) notifications.querySelectorAll('.toast:not(.error)').forEach((item) => item.remove());
-  while (notifications.childElementCount >= 2) notifications.firstElementChild?.remove();
+  while (notifications.childElementCount >= (widget ? 1 : 2)) notifications.firstElementChild?.remove();
   const element = document.createElement('div');
   element.className = `toast${error ? ' error' : ''}`;
   element.setAttribute('role', error ? 'alert' : 'status');
   element.textContent = message;
   notifications.append(element);
-  setTimeout(() => element.remove(), error ? 8500 : 4200);
+  setTimeout(() => element.remove(), widget ? 2800 : error ? 6500 : 4200);
 }
 
 function report(error: unknown): void { toast(feedback(String(error)), true); }
@@ -121,6 +125,7 @@ function showStartupError(message: string): void {
 function render(): void {
   if (!state) return;
   setLanguage(state.settings.ui_language);
+  paintTheme(state.settings.theme);
   app.setAttribute('aria-busy', 'false');
   if (widget) { renderWidget(); paintAvatar(state); paintLive(state); paintVoiceService(); return; }
   const profile = selectedProfile();
@@ -156,6 +161,7 @@ function render(): void {
     (id) => { selected = id; render(); },
     (revision, connections) => change({ kind: 'connections', id: profile.id, revision, connections }, t`Connexions de ${profile.name} enregistrées.`),
     () => openAvatar(profile));
+  if(view==='profiles'){mountIllustrationSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountWebSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);}
 }
 
 function widgetVisibilityLabel(visible: boolean): string {
@@ -174,7 +180,7 @@ function profilesView(profile: Profile): string {
       <div class="portrait-stage"><div class="stage-label"><span class="tiny-cross">+</span> IDENTITÉ DU COMPAGNON <span class="tiny-cross">+</span></div><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><img class="hero-portrait" src="${portrait(profile)}" alt="Apparence de ${escape(profile.name)}" /><div class="portrait-controls"><button class="button glass small" id="change-avatar">${icon('image')} Avatar et voix</button><span id="profile-voice-label"></span><button class="text-button" id="choose-profile-voice">Choisir sa voix →</button></div><span class="stage-coordinate">01 / PRÉSENCE</span></div>
       <div class="companion-copy"><div class="identity-line"><span class="tag ${isActive ? 'live' : ''}">${isActive ? html`<i class="status-dot"></i> ACTIF SUR TON BUREAU` : t('PRÊT À ÊTRE ACTIVÉ')}</span><button class="icon-button" id="edit-profile" aria-label="Modifier le compagnon" title="Modifier">${icon('edit')}</button></div><h2>${escape(profile.name)}</h2><p class="personality-preview">${escape(profile.personality || t('Sa personnalité reste à écrire. Donne-lui une façon bien à lui de t’accompagner.'))}</p><div class="profile-stats"><div><strong>${profile.message_count}</strong><span>messages</span></div><div><strong>${profile.memory_count}</strong><span>souvenirs</span></div><div><strong class="text-value">Indépendant</strong><span>son propre espace</span></div></div><div class="detail-actions">${isActive ? html`<button class="button primary" data-action="show_widget">${icon('eye')} Retrouver ${escape(profile.name)}</button>` : html`<button class="button primary" id="activate-profile">${icon('spark')} Activer ce compagnon</button>`}<button class="button secondary" id="personality-button">Personnalité ${icon('arrow')}</button></div><div class="profile-tools"><button class="text-button" id="duplicate-profile">${icon('copy')} Dupliquer</button><button class="text-button" id="export-profile">${icon('download')} Exporter</button><button class="text-button danger" id="delete-profile" ${isActive ? html`disabled title="Active un autre compagnon avant de supprimer celui-ci."` : ''}>${icon('trash')} Supprimer</button></div></div>
     </article>
-    <div id="connections-root"></div>${profile.connections.llm_provider === 'hermes' ? '' : webSettings(profile.web_search ?? state!.settings.web_search)}
+    ${illustrationSettings(profile)}<div id="connections-root"></div>${profile.connections.llm_provider === 'hermes' ? '' : webSettings(profile.web_search ?? state!.settings.web_search,profile)}
     <div class="bottom-grid"><section class="info-card"><div class="card-icon">${icon('shield')}</div><div><h3>Son histoire reste la sienne.</h3><p>Changer de compagnon change de mémoire. Une copie reprend sa personnalité et son apparence, avec une histoire vierge.</p></div></section><section class="info-card"><div class="card-icon">${icon('image')}</div><div><h3>Sept émotions, ton avatar.</h3><p>Ajoute tes images dans « Avatar et voix ». L’expression suit le ton de la réponse.</p></div></section></div>`;
 }
 
@@ -192,8 +198,8 @@ function interfaceLanguageView(): string {
 function settingsView(): string {
   return html`<div class="page-heading"><div><p class="eyebrow">DISCRET, COMME TU L’AIMES</p><h1>À tes commandes<span>.</span></h1><p>La présence de Sherka sur ton bureau.</p></div></div>
     <section class="settings-card"><div class="section-heading"><h2>Le widget</h2>${icon('orbit')}</div><form id="preferences-form"><label class="setting-row"><span><strong>Toujours au premier plan</strong><small>Garder ton compagnon visible au-dessus des autres fenêtres.</small></span><input class="switch" type="checkbox" name="always_on_top" ${state!.settings.always_on_top ? 'checked' : ''} /></label><label class="setting-row"><span><strong>Taille du compagnon</strong><small>Tu peux aussi tirer le coin inférieur droit du widget.</small></span><span class="scale-control range-control"><input id="widget-scale" name="widget_scale" type="range" min="65" max="160" step="5" value="${state!.settings.widget_scale}" /><output id="scale-value" for="widget-scale" data-percent-scale="0.01">${state!.settings.widget_scale} %</output></span></label><div class="settings-actions"><button class="button primary" type="submit">${icon('check')} Enregistrer</button><button class="button secondary" type="button" data-action="restore_widget">Replacer le widget</button></div></form></section>
-    <section class="settings-card"><h2>Passage des clics</h2><p>Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification Windows.</p><div class="settings-actions"><button class="button secondary" data-action="click_through">Laisser passer les clics</button><button class="text-button" data-action="restore_widget">Reprendre les clics</button></div></section>
-    ${interfaceLanguageView()}${updatesView()}<div id="audio-settings-root"></div>
+    <section class="settings-card"><h2>Passage des clics</h2><p>Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification.</p><div class="settings-actions"><button class="button secondary" data-action="click_through">Laisser passer les clics</button><button class="text-button" data-action="restore_widget">Reprendre les clics</button></div></section>
+    ${themesView(state!.settings.theme)}${interfaceLanguageView()}${updatesView()}<div id="audio-settings-root"></div>
     <section class="settings-card"><h2>Quitter Sherka</h2><p>Arrête le micro et la réponse, puis décharge le modèle du compagnon dans LM Studio.</p><button class="button secondary" data-action="quit">Quitter Sherka</button></section>
     <section class="storage-card">${icon('shield')}<div><strong>Données conservées sur ce PC</strong><p class="storage-path">${escape(state!.data_directory)}</p><small>Un dossier et une base par compagnon. Aucun enregistrement audio.</small></div></section>`;
 }
@@ -203,6 +209,7 @@ function openAvatar(profile: Profile): void {
 }
 
 function bindPanel(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]').forEach(button=>button.onclick=()=>void change({kind:'theme',theme:button.dataset.themeChoice as Snapshot['settings']['theme']},t('Ambiance enregistrée.')));
   document.querySelector<HTMLSelectElement>('#web-search-mode')?.addEventListener('change', event => {
     void change({kind:'web_search', id:selectedProfile()!.id, revision:selectedProfile()!.revision, mode:(event.target as HTMLSelectElement).value as Snapshot['settings']['web_search']}, t('Réglage de recherche Internet enregistré.'));
   });
@@ -285,7 +292,7 @@ function editProfile(profile?: Profile): void {
   element.querySelector('form')!.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget as HTMLFormElement);
-    const draft: ProfileDraft = { web_search: profile?.web_search ?? null, avatar_preset: profile?.avatar_preset ?? null, name: String(form.get('name')), personality: String(form.get('personality')), instructions: String(form.get('instructions')), accent: String(form.get('accent')) as ProfileDraft['accent'], connections: profile?.connections ?? {...freshConnections(), language: String(form.get('companion_language'))} };
+    const draft: ProfileDraft = { illustration: profile?.illustration,search:profile?.search, web_search: profile?.web_search ?? null, avatar_preset: profile?.avatar_preset ?? null, name: String(form.get('name')), personality: String(form.get('personality')), instructions: String(form.get('instructions')), accent: String(form.get('accent')) as ProfileDraft['accent'], connections: profile?.connections ?? {...freshConnections(), language: String(form.get('companion_language'))} };
     const button = element.querySelector<HTMLButtonElement>('[type="submit"]')!;
     button.disabled = true;
     const ok = await change(profile ? { kind: 'update_profile', id: profile.id, revision: profile.revision, draft } : { kind: 'create_profile', draft }, profile ? t('Personnalité enregistrée.') : t('Ton nouveau compagnon est prêt.'), !profile);
@@ -319,14 +326,16 @@ async function loadHistory(id: string): Promise<void> {
 function renderWidget(): void {
   const profile = activeProfile();
   if (!profile) return;
+  captureCellFocus();
   const oldPortrait = document.querySelector<HTMLElement>('.widget-portrait');
   const layers = oldPortrait?.dataset.profileId === profile.id ? Array.from(oldPortrait.childNodes) : [];
-  app.innerHTML = html`<main class="widget accent-${profile.accent}${widgetPointerInside || widgetControlsPinned || widgetKeyboardControls ? ' controls-visible' : ''}"><div class="widget-name widget-chrome"><i class="status-dot"></i><span>${escape(profile.name)}</span></div><button class="widget-portrait" id="drag-region" aria-label="Afficher ou masquer les commandes de ${escape(profile.name)}" aria-pressed="${widgetControlsPinned}" title="Survole ou clique pour les commandes, fais glisser pour déplacer"><img draggable="false" src="${portrait(profile)}" alt="${escape(profile.name)}" /></button><div class="widget-status widget-chrome">${icon('micOff')}<span data-session-status>Microphone coupé</span></div><div class="widget-toolbar widget-chrome"><button class="icon-button" id="choose-companion" aria-label="Changer de compagnon" title="Changer de compagnon" aria-expanded="false" aria-controls="widget-companions">${icon('profiles')}</button><button class="icon-button" data-action="show_panel" aria-label="Ouvrir le poste de bord" title="Poste de bord">${icon('settings')}</button><button class="icon-button" data-mic-toggle data-action="toggle_microphone" aria-label="Activer le micro" title="Activer le micro">${icon('micOff')}</button><button class="icon-button" data-action="${profile.connections.llm_provider === 'hermes' ? 'stop_hermes' : 'stop_response'}" aria-label="${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}" title="${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}">${icon('stop')}</button>${profile.connections.llm_provider === 'hermes' ? html`<button class="icon-button" id="hermes-new" aria-label="Nouvelle conversation Hermes" title="Nouvelle conversation Hermes">${icon('plus')}</button>` : ''}<button class="icon-button" data-action="hide_widget" aria-label="Masquer le compagnon" title="Masquer (accessible dans la zone de notification)">${icon('close')}</button></div>${profile.connections.llm_provider === 'hermes' ? html`<button class="hermes-stop-button" data-action="stop_hermes" hidden>${icon('stop')} Arrêter Hermes (/stop)</button>` : ''}<div class="widget-companions" id="widget-companions" hidden><span>Ton compagnon</span><div role="group" aria-label="Choisir un compagnon">${state!.profiles.map(p => html`<button type="button" data-companion="${p.id}" aria-pressed="${p.id === profile.id}"><img src="${portrait(p)}" alt="" /><span>${escape(p.name)}</span>${p.id === profile.id ? icon('check') : ''}</button>`).join('')}</div></div><button class="resize-handle widget-chrome" id="resize-widget" aria-label="Redimensionner le widget" title="Redimensionner">${icon('resize')}</button></main>`;
+  app.innerHTML = html`<div id="widget-canvas" class="accent-${profile.accent}"><main class="widget accent-${profile.accent}${widgetPointerInside || widgetControlsPinned || widgetKeyboardControls ? ' controls-visible' : ''}"><div class="widget-name widget-chrome"><i class="status-dot"></i><span>${escape(profile.name)}</span></div><button class="widget-portrait" id="drag-region" aria-label="Afficher ou masquer les commandes de ${escape(profile.name)}" aria-pressed="${widgetControlsPinned}" title="Survole ou clique pour les commandes, fais glisser pour déplacer"><img draggable="false" src="${portrait(profile)}" alt="${escape(profile.name)}" /></button><div class="widget-status widget-chrome">${icon('micOff')}<span data-session-status>Microphone coupé</span></div><div class="widget-toolbar widget-chrome"><button class="icon-button" id="choose-companion" aria-label="Changer de compagnon" title="Changer de compagnon" aria-expanded="false" aria-controls="widget-companions">${icon('profiles')}</button><button class="icon-button" data-action="show_panel" aria-label="Ouvrir le poste de bord" title="Poste de bord">${icon('settings')}</button><button class="icon-button" data-mic-toggle data-action="toggle_microphone" aria-label="Activer le micro" title="Activer le micro">${icon('micOff')}</button><button class="icon-button" data-action="${profile.connections.llm_provider === 'hermes' ? 'stop_hermes' : 'stop_response'}" aria-label="${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}" title="${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}">${icon('stop')}</button>${profile.connections.llm_provider === 'hermes' ? html`<button class="icon-button" id="hermes-new" aria-label="Nouvelle conversation Hermes" title="Nouvelle conversation Hermes">${icon('plus')}</button>` : ''}<button class="icon-button" id="widget-text" aria-label="Écrire au compagnon" title="Écrire au compagnon">${icon('chat')}</button>${profile.connections.llm_provider==='hermes'?'':html`<button class="icon-button" id="widget-image" aria-label="Illustrer la conversation" title="Illustrer la conversation" aria-pressed="${!!profile.illustration?.enabled}">${icon('image')}</button>`}<button class="icon-button" data-action="hide_widget" aria-label="Masquer le compagnon" title="Masquer (accessible dans la zone de notification)">${icon('close')}</button></div>${profile.connections.llm_provider === 'hermes' ? html`<button class="hermes-stop-button" data-action="stop_hermes" hidden>${icon('stop')} Arrêter Hermes (/stop)</button>` : ''}<div class="widget-companions" id="widget-companions" hidden><span>Ton compagnon</span><div role="group" aria-label="Choisir un compagnon">${state!.profiles.map(p => html`<button type="button" data-companion="${p.id}" aria-pressed="${p.id === profile.id}"><img src="${portrait(p)}" alt="" /><span>${escape(p.name)}</span>${p.id === profile.id ? icon('check') : ''}</button>`).join('')}</div></div><button class="resize-handle widget-chrome" id="resize-widget" aria-label="Redimensionner le widget" title="Redimensionner">${icon('resize')}</button></main><div id="widget-cells"></div></div>`;
   bindWindowActions();
   const newPortrait = document.querySelector<HTMLElement>('.widget-portrait')!;
   newPortrait.dataset.profileId = profile.id;
   if (layers.length) newPortrait.replaceChildren(...layers);
   newPortrait.querySelector<HTMLImageElement>('img:not(.avatar-outgoing)')!.alt = profile.name;
+  layoutWidget();
   document.querySelector<HTMLButtonElement>('#hermes-new')?.addEventListener('click', async event => {
     const button = event.currentTarget as HTMLButtonElement; button.disabled = true;
     try { await api.newHermesConversation(profile.id); await refresh(); } catch(error) { report(error); button.disabled = false; }
@@ -408,12 +417,7 @@ function renderWidget(): void {
     if (!picker.hidden) { closePicker(); pickerButton.focus(); return; }
     dismissWidgetControls?.();
   });
-  document.querySelector('#resize-widget')?.addEventListener('pointerdown', (event) => {
-    if ((event as PointerEvent).button === 0) {
-      dismissWidgetControls?.();
-      void getCurrentWindow().startResizeDragging('SouthEast').catch(report);
-    }
-  });
+  mountWidgetCells(state!,report);
 }
 
 async function start(): Promise<void> {

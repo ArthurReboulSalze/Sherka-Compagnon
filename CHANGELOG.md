@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.10.0-alpha.2 — in development
+
+- Keep widget controls and its resize handle close to the visible portrait, including wide avatars; use the character's chosen color for its active halo.
+- Add Gold, Sage, Ocean, Iris, Rose and Mono application themes.
+- Toggle a transparent text cell below the widget controls to type, paste or drop text, with optional spoken replies. It follows the avatar without opening another window.
+- Add optional square conversation illustrations through ComfyUI, configured per companion with an Illustrious checkpoint, physical description, additional LoRAs and strength sliders.
+- Prepare each scene from the latest user/companion exchange using freely composed Illustrious tags and English descriptions, independently of speech and memory.
+- Supply the provided workflow, automatic Turbo LoRA resolution and a bounded API-workflow import. Keep only the newest eligible preview; exclude Hermes.
+- Start scene preparation as soon as the reply text is complete, while speech continues. Generate 1–8 images per exchange, with a configurable looping slideshow and half-second crossfades in a movable, resizable inline cell.
+- Preserve confirmed transcription segments and the original audio when speech resumes during recognition. Filter specific subtitle-credit/non-speech hallucinations without discarding real short answers.
+- Show brief, non-interactive widget errors above the controls.
+- Accept dropped PNG, JPEG and WebP images when the selected model advertises vision or the user confirms an undocumented capability. Image pixels are transient and excluded from history, memory and exports.
+- Add per-companion Brave Search, Tavily and SearXNG options alongside DuckDuckGo. Store API keys in the OS vault; keep Hermes search on its server.
+- Add Linux credential storage, browser integration, Debian packaging and CI checks. Linux updates remain manual and external voice services are started separately.
+- Advance profile/settings schema to 8 and profile export format to 4; retain legacy imports and scope isolated native instances to their data directory.
+
 ## 0.9.0 — 2026-10-18
 
 - Clear a companion’s local conversation, archives, sources and summaries while keeping explicitly saved or approved facts by default; optionally clear saved facts too.

@@ -25,6 +25,7 @@ pub struct Voice {
     hermes_gate: Arc<AsyncMutex<()>>,
     hermes_run: Arc<Mutex<Option<(OperationTag, sherka_core::hermes::HermesRun)>>>,
     diagnostics: Arc<crate::audio_diagnostics::AudioDiagnostics>,
+    speech_input: Arc<Mutex<crate::speech_input::PendingSpeech>>,
 }
 
 #[derive(Clone, Serialize)]
@@ -84,6 +85,7 @@ impl Voice {
             hermes_gate: Arc::new(AsyncMutex::new(())),
             hermes_run: Arc::new(Mutex::new(None)),
             diagnostics: Arc::new(crate::audio_diagnostics::AudioDiagnostics::new(directory)),
+            speech_input: Arc::new(Mutex::new(Default::default())),
         };
         tauri::async_runtime::spawn(audio_events(app, shared, voice.clone(), rx));
         voice
@@ -104,8 +106,16 @@ impl Voice {
     }
     pub fn cancel_pending(&self) {
         self.begin_pending();
+        self.speech_input
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
     }
     pub async fn stop_audio(&self) {
+        self.speech_input
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
         if let Ok(mut id) = self.run_id.lock() {
             *id = None;
         }
@@ -314,6 +324,7 @@ pub async fn send(
     profile_id: Uuid,
     text: String,
     speak: bool,
+    attachments: Vec<sherka_core::attachments::Input>,
 ) -> std::result::Result<(), String> {
     crate::windows::ensure_running()?;
     let gate = voice.gate.lock().await;
@@ -381,7 +392,25 @@ pub async fn send(
         }
         return Ok(());
     }
-    let provider = Providers::new(connections).map_err(|e| e.to_string())?;
+    let mut provider = Providers::new(connections).map_err(|e| e.to_string())?;
+    provider.images = tauri::async_runtime::spawn_blocking(move || {
+        sherka_core::attachments::normalize(attachments)
+    })
+    .await
+    .map_err(|_| "Impossible de lire ce fichier.".to_string())?
+    .map_err(|e| e.to_string())?;
+    if !provider.images.is_empty()
+        && !provider
+            .image_support()
+            .await
+            .map_err(|e| e.to_string())?
+            .images
+    {
+        return Err(
+            "Ce modèle n’accepte pas les images ou sa capacité visuelle n’est pas confirmée."
+                .into(),
+        );
+    }
     let pending = voice.begin_pending();
     let _gate = if speak {
         drop(gate);
@@ -416,6 +445,8 @@ pub async fn send(
         Ok((tag, c.session.cancellation()))
     })
     .await?;
+    app.state::<crate::illustrations::Illustrations>()
+        .cancel(&app, false);
     emit(&app, &shared);
     let _ = app.emit("sherka:history", profile_id);
     tauri::async_runtime::spawn(run_turn(
@@ -457,6 +488,8 @@ async fn audio_events(
         }
         match event {
             AudioEvent::Start(id, pcm) => {
+                app.state::<crate::illustrations::Illustrations>()
+                    .cancel(&app, false);
                 voice.diagnose(&shared, "speech_detected", None);
                 capture = None;
                 let current_run = voice.run_id.clone();
@@ -464,15 +497,31 @@ async fn audio_events(
                     if !current_run.lock().is_ok_and(|run| *run == Some(id)) {
                         return Err(Error::StaleOperation);
                     }
+                    let previous = if c.session.snapshot().transcription
+                        == sherka_core::session::TranscriptionState::Transcribing
+                    {
+                        c.live.tag
+                    } else {
+                        None
+                    };
                     c.stop_response()?;
                     let tag = c.session.begin_utterance()?;
                     c.reset_live(tag);
                     let provider =
                         Providers::new(c.store.profile(tag.profile_id)?.details.connections)?;
-                    Ok((tag, c.session.cancellation(), provider))
+                    Ok((tag, c.session.cancellation(), provider, previous))
                 })
                 .await;
-                if let Ok((tag, token, provider)) = prepared {
+                if let Ok((tag, token, provider, previous)) = prepared {
+                    let pcm = voice
+                        .speech_input
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .start(id, previous, tag, pcm);
+                    let Some(pcm) = pcm else {
+                        fail_turn(&app,&shared,tag,"Cette prise de parole est trop longue pour le contexte choisi. Fais une pause et reprends avec une phrase plus courte.").await;
+                        continue;
+                    };
                     let (tx, rx) = mpsc::channel(2048);
                     let _ = tx.try_send(pcm);
                     capture = Some((id, tag, tx));
@@ -496,6 +545,17 @@ async fn audio_events(
                     let current = shared.0.lock().is_ok_and(|c| c.session.accepts(*tag));
                     if !current {
                         capture = None;
+                        continue;
+                    }
+                    if !voice
+                        .speech_input
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .append(id, *tag, &pcm)
+                    {
+                        let tag = *tag;
+                        capture = None;
+                        fail_turn(&app,&shared,tag,"Cette prise de parole est trop longue pour le contexte choisi. Fais une pause et reprends avec une phrase plus courte.").await;
                         continue;
                     }
                     if let Err(error) = tx.try_send(pcm) {
@@ -538,6 +598,11 @@ async fn audio_events(
                 }
             }
             AudioEvent::InputGap(_) => {
+                voice
+                    .speech_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clear();
                 voice.diagnose(&shared, "capture_gap_recovered", None);
                 if let Some((_, tag, input)) = capture.take() {
                     fail_turn(&app, &shared, tag,
@@ -546,6 +611,11 @@ async fn audio_events(
                 }
             }
             AudioEvent::Failed(_, message) => {
+                voice
+                    .speech_input
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clear();
                 voice.diagnose(&shared, "audio_failed", Some(&message));
                 capture = None;
                 voice.playback.interrupt();
@@ -591,6 +661,10 @@ async fn recognize(
     let result = tokio::select! { biased; _=token.cancelled()=>return, r=provider.transcribe(input,progress)=>r };
     match result {
         Ok(text) => {
+            let text = sherka_core::transcript::clean(&text);
+            if text.is_empty() {
+                voice.diagnose(&shared, "stt_noise_discarded", None);
+            }
             let result = with_core(shared.clone(), move |c| {
                 let Some(text) = c.session.accept_stt_final(tag, &text)? else {
                     c.live.tag = None;
@@ -602,6 +676,11 @@ async fn recognize(
                 Ok(Some(text))
             })
             .await;
+            voice
+                .speech_input
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .finish(tag);
             match result {
                 Ok(Some(messages)) => {
                     emit(&app, &shared);
@@ -613,6 +692,11 @@ async fn recognize(
             }
         }
         Err(error) => {
+            voice
+                .speech_input
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .finish(tag);
             voice.diagnose(&shared, "transcription_failed", None);
             fail_turn(&app, &shared, tag, &error.to_string()).await;
         }
@@ -688,6 +772,9 @@ pub async fn clear(
         }.into());
         Ok(c.session.snapshot().session_id)
     }).await?;
+    app.state::<crate::illustrations::Illustrations>()
+        .cancel(app, true);
+    crate::illustrations::synchronize(app, &shared);
     if listening && crate::windows::ensure_running().is_ok() {
         match voice.ensure_audio(&shared, true).await {
             Ok(()) => {
@@ -805,6 +892,12 @@ async fn prepare_turn(
     .map_err(|e| e.to_string())?
     .ok_or("Choisis un modèle de conversation dans Compagnons.")?;
     provider.connections.llm_model = Some(model.id.clone());
+    if !provider.images.is_empty() && !provider.supports_images(&model).images {
+        return Err(
+            "Ce modèle n’accepte pas les images ou sa capacité visuelle n’est pas confirmée."
+                .into(),
+        );
+    }
     provider.use_api_model(&model);
     provider
         .connections
@@ -835,8 +928,9 @@ async fn prepare_turn(
         Ok((profile, source, guard, visible))
     })
     .await?;
-    let budget =
+    let mut budget =
         sherka_core::conversation::budget(&profile.details, &model).map_err(|e| e.to_string())?;
+    budget.safety_tokens += provider.images.len() * 4096;
     let mode = with_core(shared.clone(), |c| c.web_search_mode()).await?;
     let mut web = None;
     if let Some(explicit) = sherka_core::web::explicit_query(user) {
@@ -975,7 +1069,16 @@ async fn search_web(
     })
     .map_err(|e| e.to_string())?;
     let result = match checked {
-        Ok(query) => sherka_core::web::search(&query, language).await,
+        Ok(query) => {
+            let config = with_core(shared.clone(), move |c| {
+                if !c.session.accepts(tag) {
+                    return Err(Error::StaleOperation);
+                }
+                Ok(c.store.profile(tag.profile_id)?.details.search)
+            })
+            .await?;
+            sherka_core::search_provider::search(&config, &query, language).await
+        }
         Err(error) => Err(error),
     };
     report.searching = false;
@@ -1375,7 +1478,26 @@ async fn run_turn(
     let result = tokio::select! {
         biased;
         _=token.cancelled()=>None,
-        result=async {tokio::join!(generate,consume,say)}=>Some(result)
+        result=async {
+            let text=async {
+                let result=tokio::join!(generate,consume);
+                if result.0.is_ok() && result.1.is_ok() {
+                    let complete=update(&app,&shared,tag,|c|{
+                        c.live.text_complete=true;
+                        if !agent && !unavailable && c.store.profile(tag.profile_id)?.details.illustration.enabled {
+                            c.store.save_response(tag,&c.live.reply,&c.live.heard,if speak {Delivery::Uncertain}else{Delivery::TextOnly})?;
+                        }
+                        Ok(())
+                    });
+                    if complete.is_ok() && !agent && !unavailable {
+                        app.state::<crate::illustrations::Illustrations>().request(app.clone(),shared.clone());
+                    }
+                }
+                result
+            };
+            let ((generated,consumed),spoken)=tokio::join!(text,say);
+            (generated,consumed,spoken)
+        }=>Some(result)
     };
     match result {
         None => {
