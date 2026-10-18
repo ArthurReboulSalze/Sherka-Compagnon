@@ -90,4 +90,4 @@ The opt-in `illustrations live:` native scenario connects the full conversation-
 
 ASR contract tests exercise multiple segment finals followed by either a cumulative or last-segment summary. Cleanup tests reject the targeted subtitle-credit noise while preserving ordinary short replies. The desktop PCM-retention test verifies resumed capture and run/turn isolation; no physical cough or microphone is recorded. Search API tests verify fixed endpoint contracts and normalized results with loopback fixtures.
 
-Linux CI starts an isolated D-Bus Secret Service with a disposable unlocked GNOME keyring for provider lifecycle tests. No real keys are used. Windows CI explicitly selects text-only service fixtures because hosted runners have no default audio output; local speech checks remain separate.
+Linux CI starts an isolated D-Bus Secret Service with an empty GNOME keyring for provider lifecycle tests. No real keys are used. Windows CI explicitly selects text-only service fixtures because hosted runners have no default audio output; local speech checks remain separate.
