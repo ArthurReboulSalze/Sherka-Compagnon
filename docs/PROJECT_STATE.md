@@ -1,8 +1,8 @@
 # Project status
 
-Release version: **0.10.0**, October 18, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **0.11.0**, October 18, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
-## In development — scene planning and memory controls
+## 0.11.0 — scene planning and memory controls
 
 Companions now select an explicit Illustrious or SDXL image-model family, with tag-based or visual-prose prompts respectively. The full ComfyUI checkpoint catalog is available, with relative model/LoRA folder filters and an editable, authoritative negative prompt. External directories remain configured on the ComfyUI server. Disabling Turbo uses 16 steps on each sampler and doubles its original CFG (3.8 and 7.0 in the supplied graph). A separate short decision includes the companion's appearance only when the scene calls for it. Minerva's default description now explicitly requires a robotic face; customized descriptions are preserved.
 
@@ -12,7 +12,7 @@ Memory optimization is available in Settings, Memory and explicit conversation c
 
 Validation: 118 Rust tests and three localization tests passed; TypeScript, formatting and Clippy passed, with all 868 authored UI messages covered in seven languages. Across native runs, all 32 default scenarios passed; 12 opt-in scenarios were skipped. Eight focused scenarios also passed on the optimized Windows executable. Three older UI fixtures were updated for visible-widget startup, card activation and read-only catalog discovery. Two native workers exited before their scenarios began; both scenarios passed on rerun.
 
-Synthetic real-service checks passed with local Gemma 4 A4B, Dolphin 8B and NeoHorse: subject selection, both image-prompt families and joy expressions, including optional thinking on/off where supported. NeoHorse also produced a compact memory proposal preserving the synthetic tea preference and the unrelated cat/birth-date fact. A real SDXL Base generation through the production ComfyUI client produced a square mountain/lake landscape without a foreground character, using a custom negative prompt and the non-Turbo schedule. These tests used no personal conversation data or paid API calls; each temporary language-model instance was unloaded. Physical microphone/listening and a new Debian build were not tested for these changes. No new release has been published.
+Synthetic real-service checks passed with local Gemma 4 A4B, Dolphin 8B and NeoHorse: subject selection, both image-prompt families and joy expressions, including optional thinking on/off where supported. NeoHorse also produced a compact memory proposal preserving the synthetic tea preference and the unrelated cat/birth-date fact. A real SDXL Base generation through the production ComfyUI client produced a square mountain/lake landscape without a foreground character, using a custom negative prompt and the non-Turbo schedule. These tests used no personal conversation data or paid API calls; each temporary language-model instance was unloaded. Physical microphone/listening remains outside these automated checks. Release package and CI validation are recorded below.
 
 ## 0.10.0 — inline cells, scenes and Linux
 

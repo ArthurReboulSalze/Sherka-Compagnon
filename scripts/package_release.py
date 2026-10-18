@@ -38,8 +38,11 @@ Remote providers receive conversation context and may charge API fees.
 
 Data stays in %LOCALAPPDATA%\\fr.sherka.compagnon, not beside this executable.
 Check updates manually from Settings. No private data is included here.
-Clear a companion's conversation from Conversation, or say "Clear our conversation".
-Saved facts remain by default; individual facts can be deleted from Memory.
+Clear a companion's conversation from Conversation, or request /clear and confirm
+with /confirm-clear. Saved facts remain; individual facts can be deleted from Memory.
+Preview memory optimization from Settings or Memory before applying it.
+Optional ComfyUI scenes support Illustrious and SDXL, with a per-companion
+negative prompt, model/LoRA folder filters and Turbo or normal sampling.
 For Hermes, clearing in Sherka affects local history only.
 
 Documentation: https://github.com/ArthurReboulSalze/Sherka-Compagnon

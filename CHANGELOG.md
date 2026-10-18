@@ -1,11 +1,24 @@
 # Changelog
 
-## 0.10.0-alpha.2 â€” in development
+## 0.11.0 — 2026-10-18
+
+- Choose Illustrious or SDXL per companion, with image prompts adapted to each family and an editable negative prompt sent exactly as saved.
+- Browse all ComfyUI checkpoints and filter model/LoRA catalogs by relative folder, independently of filenames.
+- Use 16 steps on both samplers when Turbo is off, doubling their original CFG (3.8 and 7.0 in the supplied workflow).
+- Decide whether the companion belongs in each scene; landscapes and unrelated subjects can be illustrated without a foreground avatar.
+- Give Minerva a robotic-face appearance description, preserving customized descriptions.
+- Improve short structured requests for thinking models, including NeoHorse's system-message ordering, bounded output and validated fallback parsing.
+- Help smaller models choose avatar expressions with short examples, accepted aliases and a conservative fallback based on the visible reply.
+- Propose memory optimization from Settings, Memory or conversation commands; preview shorter facts and notes before confirming, preserving source links and untouched facts.
+- Require confirmation before conversation clearing; keep saved facts and reject expired or stale confirmations.
+- Activate the widget companion when selecting its card in the control panel.
+- Refresh the English README with the supplied ecosystem diagram and document the new image and memory settings in all seven interfaces.
+
+## 0.10.0 — 2026-10-18
 
 - Keep widget controls and its resize handle close to the visible portrait, including wide avatars; use the character's chosen color for its active halo.
 - Add Gold, Sage, Ocean, Iris, Rose and Mono application themes.
 - Automatically grow and shrink the transparent widget when its text cell is resized; keep the chosen text height through refreshes and toggles.
-- Automatically grow and shrink the transparent widget when its text cell is resized; keep the chosen height through refreshes and toggles.
 - Toggle a transparent text cell below the widget controls to type, paste or drop text, with optional spoken replies. It follows the avatar without opening another window.
 - Add optional square conversation illustrations through ComfyUI, configured per companion with an Illustrious checkpoint, physical description, additional LoRAs and strength sliders.
 - Prepare each scene from the latest user/companion exchange using freely composed Illustrious tags and English descriptions, independently of speech and memory.

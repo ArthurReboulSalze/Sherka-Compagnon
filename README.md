@@ -30,7 +30,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**New in 0.10.0:** your conversations can become pictures with **ComfyUI + Illustrious**. Type beneath the avatar, loop illustrated scenes with soft fades, and make the interface your own with six color themes. Now available for **Windows and Debian x64**.
+**New in 0.11.0:** illustrate conversations with **Illustrious or SDXL**, shape each scene with your own negative prompt, and let landscapes stand on their own. Keep memory concise with a proposal you review before applying. Available for **Windows and Debian x64**.
 
 ## Meet your companions
 
@@ -50,7 +50,7 @@ Choose your company, then give each character its own voice and model. Five bund
 
 Expressions follow the tone of a reply and blend with a gentle **half-second crossfade**. Use the bundled images or assign your own in **Avatar & voice**, alongside that character's VoiceStudio voice. Short examples help small models choose an expression; a conservative fallback reads the visible reply when the marker is missing. [See how it works](docs/USER_GUIDE.md#how-expressions-change).
 
-Hermes keeps a neutral avatar and its own personality, memory and tools. Its new **/stop** button stops the current task while leaving the server running.
+Hermes keeps a neutral avatar and its own personality, memory and tools. Its **/stop** button stops the current task while leaving the server running.
 
 ## A conversation that keeps up with you
 

@@ -1,6 +1,6 @@
 # Roadmap
 
-Sherka 0.10.0 adds desktop text, themes, Illustrious conversation illustrations and a first Linux port. These remaining directions are not delivery promises.
+Sherka 0.11.0 adds SDXL scenes, editable negative prompts and reviewable memory optimization, building on desktop text, themes and the first Linux port. These remaining directions are not delivery promises.
 
 ## Bring companions to life
 
