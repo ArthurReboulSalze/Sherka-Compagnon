@@ -35,7 +35,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**New in 0.12.0:** duplicate and share complete companions as **.sherka.zip** packs, including their seven expressions. Add your own style to every generated image with a **positive prompt addition**. Companions now come first in the control panel. [Release notes](docs/releases/0.12.0.md).
+**New in 0.12.1:** illustrations follow **your scene, outfit and action** more closely. A single companion is requested by default to reduce accidental doubles, while group scenes keep distinct subjects. SDXL descriptions now reach ComfyUI without being cut into short tags. [Release notes](docs/releases/0.12.1.md).
 
 ## Meet your companions
 
@@ -72,6 +72,8 @@ The built-in Sherka is ready in every interface language. Custom companions keep
 ## Turn conversations into scenes
 
 Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its model family, folders, editable negative prompt and LoRAs. A **positive prompt addition** appends your style, lighting or composition preferences to every generated scene, exactly as written. Landscapes can stand alone; the avatar appears when it belongs in the scene. Images start preparing as soon as the reply text is ready, while the voice continues.
+
+**Your request sets the scene.** Ask your robot companion to dance in a ballet outfit, and its usual armor or serious expression should not freeze the result into the same portrait. The planner prioritizes your requested action, clothes and setting, uses the reply for compatible details, and distinguishes one companion from a scene involving both of you. Prompt and character fidelity still depend on your chosen models and LoRAs.
 
 The **Image** button reveals a movable, resizable cell that follows your companion. Generate up to eight variations and let them loop with gentle crossfades at your chosen pace. The **Text** button reveals a transparent input just beneath the controls: type, paste or drop text, and attach images when your model supports vision.
 

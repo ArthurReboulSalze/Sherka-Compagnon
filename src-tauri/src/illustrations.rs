@@ -2,7 +2,7 @@ use crate::{Shared, with_core};
 use serde::Serialize;
 use sherka_core::{
     Error,
-    illustration::{Client, Config, Scene},
+    illustration::{Client, Config, ScenePlan},
     providers::Providers,
     storage::MessageRole,
 };
@@ -207,7 +207,8 @@ impl Illustrations {
                 let (messages,schema)=sherka_core::illustration::subject_request(&profile.details.name,&history[0].content,&history[1].content);
                 let subject:sherka_core::illustration::Subject=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured_budgeted(messages,schema,limit,128)=>r?};
                 let (messages,schema)=sherka_core::illustration::configured_scene_request(&config,if subject.include_companion {appearance}else{""},&history[0].content,&history[1].content);
-                let scene:Scene=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured(messages,schema,limit)=>r.map_err(|e|if e.to_string().contains("mémoire"){Error::Validation("La préparation de la scène a échoué. Vérifie le modèle de conversation puis réessaie.".into())}else{e})?};
+                let plan:ScenePlan=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured(messages,schema,limit)=>r.map_err(|e|if e.to_string().contains("mémoire"){Error::Validation("La préparation de la scène a échoué. Vérifie le modèle de conversation puis réessaie.".into())}else{e})?};
+                let scene=plan.into_scene(config.model_family);
                 if !valid() {return Err(Error::StaleOperation);}
                 let client=Client::new(&config.server_url)?;
                 let (_,info)=client.catalog(&config).await?;

@@ -199,6 +199,71 @@ fn sdxl_prose_user_negative_and_arbitrary_catalog_paths_are_supported() {
     assert_eq!(c.workflow, Some(custom));
 }
 #[test]
+fn planned_character_count_keeps_solo_out_of_groups_and_landscapes() {
+    use illustration::{ModelFamily, SceneCharacters, ScenePlan};
+    for (characters, prompt, expected) in [
+        (
+            SceneCharacters::One,
+            "best quality, robot dancing, pink tutu",
+            "solo, best quality, robot dancing, pink tutu",
+        ),
+        (
+            SceneCharacters::One,
+            "solo, robot dancing, SOLO",
+            "solo, robot dancing",
+        ),
+        (
+            SceneCharacters::None,
+            "best quality, SOLO, moon craters",
+            "best quality, moon craters",
+        ),
+        (
+            SceneCharacters::Several,
+            "solo, robot, human in a blue coat, lakeside",
+            "robot, human in a blue coat, lakeside",
+        ),
+    ] {
+        let plan = ScenePlan {
+            characters,
+            description: "A visual description used only by the planner.".into(),
+            positive: prompt.into(),
+            negative: "bad anatomy".into(),
+        };
+        assert_eq!(
+            plan.clone().into_scene(ModelFamily::Illustrious).positive,
+            expected
+        );
+        let prose = plan.into_scene(ModelFamily::Sdxl);
+        assert_eq!(prose.positive, prompt);
+        assert_eq!(prose.negative, "bad anatomy");
+    }
+}
+
+#[test]
+fn sdxl_sentences_keep_requested_action_and_clothes_all_the_way_to_clip() {
+    let mut c = config();
+    c.model_family = illustration::ModelFamily::Sdxl;
+    let prose = "A silver robot with a fully mechanical face and green eyes stands beneath a broad canopy of rainclouds wearing a yellow raincoat and rain boots while jumping into a puddle beside the pavement.\nSoft evening light reflects off its metallic face and the wet stones.";
+    let scene = Scene {
+        positive: format!("{prose}, <lora:unmanaged:4>, score_9, http://example.com"),
+        negative: "blurry".into(),
+    };
+    let graph = illustration::workflow(&c, scene, &info(), 42).unwrap();
+    let prompt = graph["4"]["inputs"]["text"].as_str().unwrap();
+    assert_eq!(prompt, prose.replace('\n', " "));
+    assert_eq!(graph["5"]["inputs"]["text"], c.negative_prompt);
+
+    let bounded = Scene {
+        positive: "A robot dancing in a raincoat. ".repeat(1000),
+        negative: String::new(),
+    }
+    .validated_for(illustration::ModelFamily::Sdxl)
+    .unwrap();
+    assert_eq!(bounded.positive.split_whitespace().count(), 180);
+    assert!(bounded.positive.chars().count() <= 4000);
+}
+
+#[test]
 fn illustrious_scene_composition_is_freeform_bounded_and_uses_both_latest_sides() {
     let (messages, schema) = illustration::scene_request(
         "BLACK_CAR_MARKER",

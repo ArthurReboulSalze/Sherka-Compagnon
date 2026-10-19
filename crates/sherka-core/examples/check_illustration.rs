@@ -1,7 +1,7 @@
 //! Opt-in real ComfyUI smoke check with synthetic scene data only.
 //! cargo run -p sherka-core --example check_illustration -- URL CHECKPOINT OUTPUT.png [PROFILE.sqlite3] [--sdxl] [--normal] [--scene SCENE.json]
 use base64::{Engine, engine::general_purpose::STANDARD};
-use sherka_core::illustration::{Client, Config, Scene, workflow};
+use sherka_core::illustration::{Client, Config, Scene, ScenePlan, workflow};
 use tokio_util::sync::CancellationToken;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -80,8 +80,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Une tente au bord du lac, des étoiles et ma carrosserie noire. J’espère que les moustiques apprécient aussi mon humour sec.",
         );
         let limit = provider.connections.context_limit.unwrap_or(8192) as u64;
-        let scene: Scene = provider.structured(messages, schema, limit).await?;
-        let scene = scene.validated()?;
+        let plan: ScenePlan = provider.structured(messages, schema, limit).await?;
+        let scene = plan
+            .into_scene(config.model_family)
+            .validated_for(config.model_family)?;
         std::fs::write(
             std::path::Path::new(&args[2]).with_extension("json"),
             serde_json::to_string_pretty(&scene)?,

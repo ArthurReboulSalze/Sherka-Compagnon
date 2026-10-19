@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.1 — 2026-10-19
+
+- Prioritize the user's visual request over the companion's reply for Illustrious and SDXL scenes, distinguishing stable identity from adaptable clothing, pose and expression.
+- Recognize requests to depict the companion performing an action while keeping unrelated topics and explicit character exclusions separate.
+- Plan one coherent scene before composing image-model syntax, keeping one companion by default and avoiding copies caused by interpreting the dialogue speakers as duplicate avatars.
+- Preserve complete SDXL prompt sentences instead of truncating each comma-separated phrase as a short tag.
+
 ## 0.12.0 — 2026-10-19
 
 - Put Companions first in the control-panel navigation and make duplication more visible, with localized copy names.

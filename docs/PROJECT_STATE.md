@@ -1,6 +1,16 @@
 # Project status
 
-Release version: **0.12.0**, October 19, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **0.12.1**, October 19, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+
+## 0.12.1 — user-led illustration scenes
+
+The user's visual request takes priority over reply context and default clothing, pose or expression. Stable identity remains a reference, while requested outfits and actions can change. Subject selection distinguishes addressing the companion from asking to depict it. Scene planning resolves character count and a short visual description before composing Illustrious tags or SDXL prose, within the existing request. The dialogue speakers do not imply two copies of the companion. Illustrious `solo` is normalized from the planned character count; group and environment scenes omit it. SDXL sentences no longer inherit the short-tag character cutoff. No profile schema or settings changes are required.
+
+The opt-in `check_scene_intent` example exercises seven languages, conflicting reply/appearance context, unrelated scenery and a distinct human/robot pair using synthetic dialogue. Prompt adherence and rendered identity still depend on the selected models. A real ComfyUI illustration showed one armored dancer in the requested tutu; the base checkpoint still rendered a human-looking face, so this is not proof of perfect Minerva likeness.
+
+Validation: 123 Rust tests passed (one opt-in public-search test skipped), along with TypeScript, formatting, Clippy and three localization tests. The final local Gemma 4 E4B run passed all 22 synthetic prompt checks; earlier runs exposed conflicting outfits, duplicated characters and a short-tag cutoff incorrectly applied to SDXL prose. These checks verify representative instructions, not universal compliance by arbitrary models.
+
+The optimized Windows executable passed the native desktop-scenes scenario, including the structured planning response and SDXL workflow. An initial test worker exited before the scenario started; a later run exposed a diagnostic screenshot racing the settings repaint. The fixture now waits for saving to finish and captures the page instead of a replaceable settings element. No physical microphone or speech validation was required for these illustration changes.
 
 ## 0.12.0 — companion packs and image style
 

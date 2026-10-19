@@ -2335,7 +2335,7 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
       if(url.pathname!=='/v1/chat/completions'){res.writeHead(404,{'Content-Type':'application/json'});res.end('{}');return;}
       if(body.stream===false){
         if(body.response_format?.json_schema?.schema?.properties?.include_companion){respond({choices:[{finish_reason:'stop',message:{content:'{"include_companion":true}'}}]});return;}
-        plans.push(body);respond({choices:[{finish_reason:'stop',message:{content:JSON.stringify({positive:'masterpiece, best quality, black sports car, red scanner, camping, forest, newly imagined scene detail',negative:'blurry, text, watermark'})}}]});return;
+        plans.push(body);respond({choices:[{finish_reason:'stop',message:{content:JSON.stringify({characters:'one',description:'A single black sports car camping in a forest.',positive:'masterpiece, best quality, black sports car, red scanner, camping, forest, newly imagined scene detail',negative:'blurry, text, watermark'})}}]});return;
       }
       streamed.push(body);res.writeHead(200,{'Content-Type':'text/event-stream'});res.end('data: '+JSON.stringify({choices:[{delta:{content:'Une tente, une forêt et une carrosserie noire : excellent programme.'}}]})+'\n\ndata: [DONE]\n\n');
     });
@@ -2373,7 +2373,10 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await panel.locator('[name="image_count"]').fill('2');await panel.locator('[name="slide_seconds"]').fill('1');
     await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();
     await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).illustration.loras[0]?.strength??-1).toBeCloseTo(0.65);
-    await panel.locator('#illustration-settings').screenshot({path:'artifacts/illustration-sdxl-settings.png'});
+    await expect(panel.locator('body')).not.toHaveClass(/\bworking\b/);
+    // Saving repaints the settings card; capture the page rather than a DOM
+    // element that can be replaced while Playwright waits for fonts/stability.
+    await panel.screenshot({path:'artifacts/illustration-sdxl-settings.png'});
     await widget.locator('#drag-region').hover();await widget.locator('#widget-image').click();
     await expect(widget.locator('#widget-image-cell')).toBeVisible();
     expect(browser.contexts().flatMap(c=>c.pages())).toHaveLength(2);
