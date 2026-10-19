@@ -47,7 +47,7 @@ The UTF-8 manifest has four fields:
 }
 ```
 
-Optional profile fields use the versioned application's [ProfileDraft definition](../crates/sherka-core/src/model.rs), [connection settings](../crates/sherka-core/src/connections.rs), [illustration settings](../crates/sherka-core/src/illustration.rs) and [search settings](../crates/sherka-core/src/search_provider.rs). Omitted settings receive defaults. The [manifest JSON Schema](../config/schemas/companion-v1.schema.json) describes the envelope and profile field names; Sherka also validates the nested settings and workflows at import.
+Optional profile fields use the versioned application's [ProfileDraft definition](../crates/sherka-core/src/model.rs), [connection settings](../crates/sherka-core/src/connections.rs), [illustration settings](../crates/sherka-core/src/illustration.rs) and [search settings](../crates/sherka-core/src/search_provider.rs). Omitted settings receive defaults. The optional `mood_persistence` boolean travels with the character; accumulated mood points never do. The [manifest JSON Schema](../config/schemas/companion-v1.schema.json) describes the envelope and profile field names; Sherka also validates the nested settings and workflows at import.
 
 Exports embed the visible image for every slot, including bundled artwork. An unset expression becomes a copy of the neutral image. Imported images do not depend on the receiving application's built-in presets. Hermes can retain these images for later use, but its conversation mode still displays only neutral.
 
@@ -57,6 +57,6 @@ Exports embed the visible image for every slot, including bundled artwork. An un
 - The archive and its total decoded content are limited to 48 MiB. The manifest is limited to 512 KiB; each PNG to 10 MiB and 4096 × 4096 decoded pixels. Images are normalized to PNG within 1024 × 1024 while retaining transparency.
 - All entries are read and validated in memory. Nothing is extracted to a path supplied by the archive. Unsupported versions, unknown manifest/profile fields, invalid images and unsupported workflows fail before a new profile is created.
 - Credentials never belong in this format. Importing a pack does not execute its prompts or workflows. Choosing to activate and use the imported companion is a separate action.
-- Archive version 1 is independent of the legacy JSON export version (now 5) and database schema (8). Newer required archive behavior must use a new archive version; unsupported versions are rejected explicitly.
+- Archive version 1 is independent of the legacy JSON export version (now 5) and database schema (9). Newer required archive behavior must use a new archive version; unsupported versions are rejected explicitly.
 
 See also [the user guide](USER_GUIDE.md) and [ComfyUI setup](COMFYUI.md).

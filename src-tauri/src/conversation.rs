@@ -354,7 +354,14 @@ pub async fn send(
         }
         let profile = core.store.profile(profile_id)?;
         let maintenance = (!profile.details.connections.llm_provider.is_agent())
-            .then(|| sherka_core::privacy::command(&command, &profile.details.name))
+            .then(|| {
+                sherka_core::privacy::contextual_command(
+                    &command,
+                    &profile.details.name,
+                    core.pending_clear
+                        .valid(profile_id, core.session.snapshot().session_id),
+                )
+            })
             .flatten();
         if maintenance.is_none() {
             core.pending_clear = Default::default();
@@ -443,6 +450,9 @@ pub async fn send(
         .cancel(&app, false);
     emit(&app, &shared);
     let _ = app.emit("sherka:history", profile_id);
+    let priority = app
+        .state::<crate::illustrations::Illustrations>()
+        .priority(app.clone(), shared.clone());
     tauri::async_runtime::spawn(run_turn(
         app,
         shared,
@@ -452,6 +462,7 @@ pub async fn send(
         provider,
         user,
         speak,
+        priority,
     ));
     Ok(())
 }
@@ -642,6 +653,10 @@ async fn recognize(
     provider: Providers,
     input: mpsc::Receiver<Vec<i16>>,
 ) {
+    let priority = app
+        .state::<crate::illustrations::Illustrations>()
+        .priority(app.clone(), shared.clone());
+    tokio::select! {biased;_=token.cancelled()=>return,_=priority.ready()=>{}}
     let progress = |text: &str, notice: bool| {
         let _ = update(&app, &shared, tag, |c| {
             if notice {
@@ -679,7 +694,10 @@ async fn recognize(
                 Ok(Some(messages)) => {
                     emit(&app, &shared);
                     let _ = app.emit("sherka:history", tag.profile_id);
-                    run_turn(app, shared, voice, tag, token, provider, messages, true).await;
+                    run_turn(
+                        app, shared, voice, tag, token, provider, messages, true, priority,
+                    )
+                    .await;
                 }
                 Ok(None) => emit(&app, &shared),
                 Err(e) => fail_turn(&app, &shared, tag, &e).await,
@@ -764,7 +782,16 @@ async fn maintenance_command(
             })
             .await?;
             if confirmed {
-                clear(app, shared.clone(), voice, profile_id, false, expected).await?;
+                clear(
+                    app,
+                    shared.clone(),
+                    voice,
+                    profile_id,
+                    false,
+                    false,
+                    expected,
+                )
+                .await?;
             }
         }
         Command::RequestClear | Command::Cancel => {
@@ -816,6 +843,7 @@ pub async fn clear(
     voice: &Voice,
     profile_id: Uuid,
     erase_saved_facts: bool,
+    erase_mood: bool,
     expected: Option<OperationTag>,
 ) -> std::result::Result<Uuid, String> {
     crate::windows::ensure_running()?;
@@ -849,7 +877,7 @@ pub async fn clear(
         if c.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
-        c.clear_conversation(profile_id, erase_saved_facts)?;
+        c.clear_conversation_with_mood(profile_id, erase_saved_facts, erase_mood)?;
         c.live.notice = Some(if agent {
             "Historique local effacé. Les conversations et souvenirs du serveur Hermes restent gérés par Hermes."
         } else if erase_saved_facts {
@@ -929,8 +957,13 @@ async fn speak_receipt(
     };
     drop(gate);
     let say = async {
+        let priority = app
+            .state::<crate::illustrations::Illustrations>()
+            .priority(app.clone(), shared.clone());
+        priority.ready().await;
         voice.playback.arm(token.clone())?;
         let pcm = provider.speech(&text).await?;
+        drop(priority);
         let receipt = voice
             .playback
             .enqueue(pcm, provider.connections.volume, token.clone())?;
@@ -1004,7 +1037,7 @@ async fn prepare_turn(
             .memories(tag.profile_id, "")?
             .entries
             .into_iter()
-            .filter(|m| m.approved)
+            .filter(|m| m.status == "active")
         {
             if !visible.iter().any(|v| v.id == m.id) {
                 visible.push(m);
@@ -1124,7 +1157,7 @@ async fn prepare_turn(
             budget,
             receipt.as_deref(),
             web,
-            !profile.emotion_avatars.is_empty(),
+            !profile.emotion_avatars.is_empty() || profile.details.mood_persistence,
         )?;
         c.live.budget = Some(prepared.budget.clone());
         c.live.web = prepared.web.clone();
@@ -1214,6 +1247,10 @@ fn schedule_memory(app: AppHandle, shared: Shared, profile: Uuid, provider: Prov
                     .unwrap_or(sherka_core::connections::FALLBACK_CONTEXT_TOKENS)
             };
             let (messages, schema) = sherka_core::memory::consolidation_request(&batch);
+            let priority = app
+                .state::<crate::illustrations::Illustrations>()
+                .priority(app.clone(), shared.clone());
+            priority.ready().await;
             let value = provider
                 .structured::<sherka_core::memory::Consolidation>(
                     messages,
@@ -1261,7 +1298,11 @@ pub fn switch_model(
         },
         Err(_) => return,
     };
+    let priority = app
+        .state::<crate::illustrations::Illustrations>()
+        .priority(app.clone(), shared.clone());
     tauri::async_runtime::spawn(async move {
+        priority.ready().await;
         let valid = || {
             shared.0.lock().is_ok_and(|c| {
                 c.session.snapshot().profile_id == profile
@@ -1318,17 +1359,21 @@ async fn run_turn(
     mut provider: Providers,
     user: String,
     speak: bool,
+    priority: crate::illustrations::Priority,
 ) {
+    tokio::select! {biased;_=token.cancelled()=>return,_=priority.ready()=>{}}
     let agent = provider.connections.llm_provider.is_agent();
     let maintenance = if agent {
         None
     } else {
         shared.0.lock().ok().and_then(|mut c| {
-            let command = c
-                .store
-                .profile(tag.profile_id)
-                .ok()
-                .and_then(|p| sherka_core::privacy::command(&user, &p.details.name));
+            let command = c.store.profile(tag.profile_id).ok().and_then(|p| {
+                sherka_core::privacy::contextual_command(
+                    &user,
+                    &p.details.name,
+                    c.pending_clear.valid(tag.profile_id, tag.session_id),
+                )
+            });
             if command.is_none() {
                 c.pending_clear = Default::default();
             }
@@ -1429,6 +1474,7 @@ async fn run_turn(
         .and_then(|p| p.web.as_ref())
         .is_some_and(|report| !report.sources.is_empty());
     let speech_text = SpeechText::shared();
+    let (text_done_tx, text_done_rx) = tokio::sync::oneshot::channel::<()>();
     let (audio_tx, audio_rx) = mpsc::channel::<(String, Vec<i16>)>(1);
     let fixed_reply = prepared
         .as_ref()
@@ -1484,6 +1530,7 @@ async fn run_turn(
         let mut web_speech = sherka_core::web::SpeechFilter::default();
         let mut expression = sherka_core::avatar::ExpressionStream::default();
         let mut append = |text: String, emotion| -> sherka_core::Result<()> {
+            let text = sherka_core::conversation::plain_reply(&text);
             update(&app, &shared, tag, |c| {
                 c.live.emotion = emotion;
                 c.live.reply.push_str(&text);
@@ -1548,6 +1595,10 @@ async fn run_turn(
         }
         .await;
         drop(audio_tx);
+        let _ = text_done_rx.await;
+        // TTS synthesis has finished; buffered PCM can play without holding the
+        // GPU. Resume live images only after text and synthesis are both done.
+        drop(priority);
         result
     };
     let play = play_prepared(
@@ -1581,6 +1632,7 @@ async fn run_turn(
                 if result.0.is_ok() && result.1.is_ok() {
                     let complete=update(&app,&shared,tag,|c|{
                         c.live.text_complete=true;
+                        if !agent && !unavailable { c.complete_mood(tag, &user)?; }
                         if !agent && !unavailable && c.store.profile(tag.profile_id)?.details.illustration.enabled {
                             c.store.save_response(tag,&c.live.reply,&c.live.heard,if speak {Delivery::Uncertain}else{Delivery::TextOnly})?;
                         }
@@ -1590,6 +1642,7 @@ async fn run_turn(
                         app.state::<crate::illustrations::Illustrations>().request(app.clone(),shared.clone());
                     }
                 }
+                let _=text_done_tx.send(());
                 result
             };
             let ((generated,consumed),spoken)=tokio::join!(text,say);

@@ -22,35 +22,71 @@ pub fn clear_conversation_intent(text: &str, companion_name: &str) -> bool {
             break;
         }
     }
-    for prefix in [
-        "s'il te plaît, ",
-        "s'il te plaît ",
-        "peux-tu ",
-        "peux tu ",
-        "please ",
-        "can you ",
-        "por favor, ",
-        "por favor ",
-        "per favore, ",
-        "per favore ",
-        "bitte ",
-    ] {
-        if let Some(rest) = s.strip_prefix(prefix) {
-            s = rest;
+    for _ in 0..3 {
+        let mut matched = false;
+        for prefix in [
+            "s'il te plaît, ",
+            "s'il te plaît ",
+            "peux-tu ",
+            "peux tu ",
+            "tu peux ",
+            "pourrais-tu ",
+            "pourrais tu ",
+            "est-ce que tu peux ",
+            "est ce que tu peux ",
+            "je veux que tu ",
+            "j'aimerais que tu ",
+            "je voudrais que tu ",
+            "please ",
+            "can you ",
+            "could you ",
+            "i want you to ",
+            "i would like you to ",
+            "por favor, ",
+            "por favor ",
+            "puedes ",
+            "per favore, ",
+            "per favore ",
+            "puoi ",
+            "bitte ",
+            "kannst du ",
+            "请",
+            "請",
+        ] {
+            if let Some(rest) = s.strip_prefix(prefix) {
+                s = rest;
+                matched = true;
+                break;
+            }
+        }
+        if !matched {
             break;
         }
     }
-    for suffix in [
-        ", s'il te plaît",
-        " s'il te plaît",
-        ", please",
-        " please",
-        " en gardant les faits sauvegardés",
-        " sans effacer les faits sauvegardés",
-        " but keep saved facts",
-    ] {
-        if let Some(rest) = s.strip_suffix(suffix) {
-            s = rest;
+    for _ in 0..3 {
+        let mut matched = false;
+        for suffix in [
+            ", s'il te plaît",
+            " s'il te plaît",
+            ", s'il te plait",
+            " s'il te plait",
+            " stp",
+            ", please",
+            " please",
+            " en gardant les faits sauvegardés",
+            " sans effacer les faits sauvegardés",
+            " but keep saved facts",
+            " sans toucher aux souvenirs",
+            " sans supprimer les souvenirs",
+            " en gardant les souvenirs",
+        ] {
+            if let Some(rest) = s.strip_suffix(suffix) {
+                s = rest;
+                matched = true;
+                break;
+            }
+        }
+        if !matched {
             break;
         }
     }
@@ -63,6 +99,9 @@ pub fn clear_conversation_intent(text: &str, companion_name: &str) -> bool {
                 "supprimer",
                 "oublie",
                 "oublier",
+                "effaces",
+                "supprimes",
+                "oublies",
             ],
             &[
                 "notre conversation",
@@ -80,6 +119,12 @@ pub fn clear_conversation_intent(text: &str, companion_name: &str) -> bool {
                 "tout notre historique",
                 "l'historique de nos conversations",
                 "l'historique de notre conversation",
+                "l'historique de la conversation",
+                "l'historique de la discussion",
+                "l'historique",
+                "tout l'historique",
+                "tous les messages",
+                "tout l'historique de la conversation",
                 "tout ce qu'on s'est dit",
                 "tout ce que nous nous sommes dit",
                 "toute trace de conversation avec toi",
@@ -100,10 +145,16 @@ pub fn clear_conversation_intent(text: &str, companion_name: &str) -> bool {
                 "all our conversation history",
                 "everything we said",
                 "all traces of our conversation",
+                "the chat",
+                "our chat",
+                "the chat history",
+                "all messages",
             ],
         ),
         (
-            &["borra", "elimina", "olvida"],
+            &[
+                "borra", "borrar", "elimina", "eliminar", "olvida", "olvidar",
+            ],
             &[
                 "nuestra conversación",
                 "nuestras conversaciones",
@@ -112,7 +163,13 @@ pub fn clear_conversation_intent(text: &str, companion_name: &str) -> bool {
             ],
         ),
         (
-            &["cancella", "elimina", "dimentica"],
+            &[
+                "cancella",
+                "cancellare",
+                "elimina",
+                "eliminare",
+                "dimentica",
+            ],
             &[
                 "la nostra conversazione",
                 "le nostre conversazioni",
@@ -127,6 +184,7 @@ pub fn clear_conversation_intent(text: &str, companion_name: &str) -> bool {
                 "unsere gespräche",
                 "alle unsere nachrichten",
                 "unseren chatverlauf",
+                "unser gespräch löschen",
             ],
         ),
     ];
@@ -144,6 +202,35 @@ pub fn clear_conversation_intent(text: &str, companion_name: &str) -> bool {
         "会話履歴を消して",
     ]
     .contains(&s)
+}
+
+/// Short confirmations are meaningful only during a valid, profile-bound
+/// deletion request. An unrelated "yes" can never authorize deletion.
+pub fn contextual_command(text: &str, name: &str, pending: bool) -> Option<Command> {
+    command(text, name).or_else(|| {
+        let value = text.trim().to_lowercase();
+        let value = value
+            .trim_end_matches(['.', '!', '?', '。', '！', '？'])
+            .trim();
+        (pending
+            && [
+                "oui",
+                "oui je confirme",
+                "oui, je confirme",
+                "je confirme",
+                "yes",
+                "yes confirm",
+                "i confirm",
+                "sí",
+                "si confermo",
+                "sì",
+                "ja",
+                "确认",
+                "はい",
+            ]
+            .contains(&value))
+        .then_some(Command::ConfirmClear)
+    })
 }
 
 #[derive(Default)]
@@ -303,6 +390,11 @@ mod tests {
     fn only_explicit_whole_requests_clear_history_in_all_seven_languages() {
         for text in [
             "/clear",
+            "Tu peux effacer l’historique de la discussion s’il te plaît ?",
+            "Est-ce que tu peux supprimer toute notre conversation ?",
+            "J’aimerais que tu effaces notre discussion en gardant les souvenirs, s’il te plaît.",
+            "Pourrais-tu effacer la discussion sans toucher aux souvenirs ?",
+            "Please could you clear the chat history?",
             "Kit, efface toute trace de conversation avec toi.",
             "Peux-tu effacer notre conversation sans effacer les faits sauvegardés ?",
             "Please clear our conversation but keep saved facts.",
@@ -314,6 +406,15 @@ mod tests {
         ] {
             assert!(clear_conversation_intent(text, "Kit"), "{text}");
         }
+        assert_eq!(
+            contextual_command("Oui, je confirme.", "Kit", true),
+            Some(Command::ConfirmClear)
+        );
+        assert_eq!(contextual_command("Oui, je confirme.", "Kit", false), None);
+        assert_eq!(
+            contextual_command("Oui, mais ne supprime rien", "Kit", true),
+            None
+        );
         for text in [
             "N'efface pas notre conversation",
             "Don't delete our conversation",

@@ -456,55 +456,12 @@ impl Providers {
                 "Le contexte disponible est trop petit pour décider de la recherche Internet.",
             ));
         }
-        if !self.connections.llm_provider.is_local() {
-            let plan: crate::web::Plan = self
-                .api_structured(messages, schema, 2048, Duration::from_secs(20), limit)
-                .await?;
-            if plan.search {
-                crate::web::query(&plan.query)?;
-            } else if !plan.query.is_empty() {
-                return Err(failure("La décision de recherche Internet est invalide."));
-            }
-            return Ok(plan);
-        }
-        let mut body = json!({"model":self.connections.llm_model,"messages":messages,"stream":false,"temperature":0,"max_tokens":256,
-            "response_format":{"type":"json_schema","json_schema":{"name":"sherka_web_search","strict":true,"schema":schema}}});
-        if self.connections.reasoning.is_some() {
-            body["reasoning_effort"] = json!("none");
-        }
-        let mut response = self
-            .http
-            .post(format!(
-                "{}/v1/chat/completions",
-                self.connections.lm_studio_url
-            ))
-            .timeout(Duration::from_secs(20))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| network("LM Studio", &e))?;
-        response = Self::checked(response, "LM Studio").await?;
-        let mut bytes = Vec::new();
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|e| network("LM Studio", &e))?
-        {
-            if bytes.len() + chunk.len() > 32_000 {
-                return Err(failure(
-                    "La décision de recherche Internet est trop longue.",
-                ));
-            }
-            bytes.extend_from_slice(&chunk);
-        }
-        let value: Value = serde_json::from_slice(&bytes)?;
-        if value["choices"][0]["finish_reason"] != "stop" {
-            return Err(failure("La décision de recherche Internet est incomplète."));
-        }
-        let content = value["choices"][0]["message"]["content"]
-            .as_str()
-            .ok_or_else(|| failure("La décision de recherche Internet est illisible."))?;
-        let plan: crate::web::Plan = serde_json::from_str(content)?;
+        // Use the same reasoning-aware, bounded parser as other auxiliary
+        // tasks. Thinking prefixes and rejected JSON grammars must not silently
+        // prevent automatic web searches on otherwise compatible models.
+        let plan: crate::web::Plan = self
+            .structured_budgeted(messages, schema, limit, 512)
+            .await?;
         if plan.search {
             crate::web::query(&plan.query)?;
         } else if !plan.query.is_empty() {

@@ -1,6 +1,6 @@
 # Roadmap
 
-Sherka 0.11.0 adds SDXL scenes, editable negative prompts and reviewable memory optimization, building on desktop text, themes and the first Linux port. These remaining directions are not delivery promises.
+Sherka 1.0 includes optional persistent moods, live ComfyUI scenes, advanced sampling and local ComfyUI startup, alongside voice, memory, web search and companion packs. These remaining directions are not delivery promises.
 
 ## Bring companions to life
 

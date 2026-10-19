@@ -23,6 +23,31 @@ pub enum ModelFamily {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
+pub struct AdvancedSampling {
+    pub enabled: bool,
+    pub size: u32,
+    pub steps_first: u32,
+    pub steps_second: u32,
+    pub cfg_first: f64,
+    pub cfg_second: f64,
+    pub sampler_name: String,
+}
+impl Default for AdvancedSampling {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            size: 768,
+            steps_first: 16,
+            steps_second: 16,
+            cfg_first: 3.8,
+            cfg_second: 7.0,
+            sampler_name: "euler_ancestral".into(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(default, deny_unknown_fields)]
 pub struct Config {
     pub enabled: bool,
     pub server_url: String,
@@ -35,6 +60,8 @@ pub struct Config {
     pub physical_description: String,
     pub loras: Vec<Lora>,
     pub turbo: bool,
+    pub advanced: AdvancedSampling,
+    pub live: bool,
     pub image_count: u8,
     pub slide_seconds: u32,
     pub workflow: Option<Value>,
@@ -54,6 +81,8 @@ impl Default for Config {
             physical_description: String::new(),
             loras: vec![],
             turbo: true,
+            advanced: AdvancedSampling::default(),
+            live: false,
             image_count: 1,
             slide_seconds: 6,
             workflow: None,
@@ -126,6 +155,20 @@ impl Config {
             || !(1..=8).contains(&self.image_count)
             || !(1..=60).contains(&self.slide_seconds)
             || self.loras.len() > 8
+            || !(256..=2048).contains(&self.advanced.size)
+            || !self.advanced.size.is_multiple_of(64)
+            || !(1..=200).contains(&self.advanced.steps_first)
+            || !(1..=200).contains(&self.advanced.steps_second)
+            || [self.advanced.cfg_first, self.advanced.cfg_second]
+                .iter()
+                .any(|c| !c.is_finite() || !(0.0..=100.0).contains(c))
+            || self.advanced.sampler_name.is_empty()
+            || self.advanced.sampler_name.len() > 80
+            || !self
+                .advanced
+                .sampler_name
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_')
             || self.checkpoint.as_deref().is_some_and(|s| !file_name(s))
             || self.loras.iter().any(|l| {
                 !file_name(&l.name)
@@ -458,16 +501,19 @@ pub struct Catalog {
     pub loras: Vec<String>,
     pub turbo_available: bool,
     pub missing_nodes: Vec<String>,
+    pub samplers: Vec<String>,
 }
 #[derive(Clone)]
 pub struct Client {
     http: reqwest::Client,
     base: Url,
+    interruptible: std::sync::Arc<tokio::sync::OnceCell<bool>>,
 }
 impl Client {
     pub fn new(server: &str) -> Result<Self> {
         Ok(Self {
             base: server_url(server)?,
+            interruptible: Default::default(),
             http: reqwest::Client::builder()
                 .no_proxy()
                 .redirect(reqwest::redirect::Policy::none())
@@ -583,9 +629,72 @@ impl Client {
                     .collect(),
                 turbo_available,
                 missing_nodes,
+                samplers: names("KSampler", "sampler_name"),
             },
             info,
         ))
+    }
+    /// Targeted interrupt was introduced in upstream v0.3.57. Older servers
+    /// interpret /interrupt globally, even when a prompt_id is provided.
+    pub async fn supports_interrupt(&self) -> bool {
+        *self
+            .interruptible
+            .get_or_init(|| async {
+                let Ok(stats) = self.get("system_stats").await else {
+                    return false;
+                };
+                let Some(version) = stats["system"]["comfyui_version"].as_str() else {
+                    return false;
+                };
+                let parts: Vec<_> = version
+                    .trim_start_matches('v')
+                    .split('.')
+                    .take(3)
+                    .map(str::parse::<u32>)
+                    .collect();
+                matches!(parts.as_slice(), [Ok(a),Ok(b),Ok(c)] if (*a,*b,*c) >= (0,3,57))
+            })
+            .await
+    }
+    pub async fn require_live_support(&self) -> Result<()> {
+        if self.supports_interrupt().await {
+            Ok(())
+        } else {
+            Err(Error::Validation("Le mode live nécessite ComfyUI 0.3.57 ou plus récent pour interrompre uniquement ses propres images.".into()))
+        }
+    }
+    /// Release cached GPU weights only while the server queue is empty.
+    /// The server stays running and reloads its models for the next image.
+    pub async fn release_idle(&self) {
+        if let Ok(queue) = self.get("queue").await
+            && ["queue_running", "queue_pending"]
+                .iter()
+                .all(|key| queue[*key].as_array().is_some_and(Vec::is_empty))
+        {
+            let _ = self
+                .http
+                .post(self.base.join("free").unwrap())
+                .json(&json!({"unload_models":true,"free_memory":true}))
+                .send()
+                .await;
+            // /free acknowledges a flag handled by the worker, not the unload
+            // itself. Give it a short, bounded opportunity to release VRAM.
+            for _ in 0..10 {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                let Ok(stats) = self.get("system_stats").await else {
+                    break;
+                };
+                if stats["devices"].as_array().is_none_or(|devices| {
+                    devices.iter().all(|d| {
+                        d["torch_vram_total"]
+                            .as_u64()
+                            .is_none_or(|n| n < 64 * 1024 * 1024)
+                    })
+                }) {
+                    break;
+                }
+            }
+        }
     }
     pub async fn render(&self, graph: Value, cancel: CancellationToken) -> Result<String> {
         if cancel.is_cancelled() {
@@ -613,19 +722,28 @@ impl Client {
         let mut deleted = false;
         loop {
             if cancel.is_cancelled() && !deleted {
-                // Delete only our pending prompt. Never call the global interrupt
-                // endpoint: another ComfyUI client may own the running job.
+                // Delete only our queued job; interrupt only on servers which
+                // check this exact prompt_id atomically against the running job.
                 let _ = self
                     .http
                     .post(self.base.join("queue").unwrap())
                     .json(&json!({"delete":[id]}))
                     .send()
                     .await;
+                if self.supports_interrupt().await {
+                    let _ = self
+                        .http
+                        .post(self.base.join("interrupt").unwrap())
+                        .json(&json!({"prompt_id":id}))
+                        .send()
+                        .await;
+                }
                 deleted = true;
             }
             let history = self.get(&format!("history/{id}")).await?;
             if let Some(entry) = history.get(&id) {
                 if cancel.is_cancelled() {
+                    self.release_idle().await;
                     return Err(Error::StaleOperation);
                 }
                 if entry["status"]["status_str"] == "error" {
@@ -650,6 +768,7 @@ impl Client {
                         .is_some_and(|a| a.iter().any(|r| r[1].as_str() == Some(&id)))
                 });
                 if !owned {
+                    self.release_idle().await;
                     return Err(Error::StaleOperation);
                 }
             }
@@ -711,6 +830,49 @@ pub fn default_workflow() -> Value {
     serde_json::from_str(include_str!("../../../config/workflows/illustrious.json"))
         .expect("validated illustration workflow")
 }
+
+fn ordered_samplers(graph: &Value) -> Result<[String; 2]> {
+    let nodes = graph.as_object().ok_or_else(invalid)?;
+    let ids: Vec<_> = nodes
+        .iter()
+        .filter(|(_, n)| n["class_type"] == "KSampler")
+        .map(|(id, _)| id.clone())
+        .collect();
+    let [a, b] = ids.as_slice() else {
+        return Err(Error::Validation(
+            "Le mode avancé nécessite exactement deux samplers reliés dans le workflow.".into(),
+        ));
+    };
+    let upstream = |start: &str, target: &str| {
+        let mut pending = vec![start.to_owned()];
+        let mut seen = HashSet::new();
+        while let Some(id) = pending.pop() {
+            if !seen.insert(id.clone()) {
+                continue;
+            }
+            if let Some(inputs) = nodes.get(&id).and_then(|n| n["inputs"].as_object()) {
+                for value in inputs.values() {
+                    if let Some(link) = value.as_array().filter(|v| v.len() == 2 && v[1].is_u64())
+                        && let Some(id) = link[0].as_str()
+                    {
+                        if id == target {
+                            return true;
+                        }
+                        pending.push(id.to_owned());
+                    }
+                }
+            }
+        }
+        false
+    };
+    match (upstream(b, a), upstream(a, b)) {
+        (true, false) => Ok([a.clone(), b.clone()]),
+        (false, true) => Ok([b.clone(), a.clone()]),
+        _ => Err(Error::Validation(
+            "Le mode avancé nécessite exactement deux samplers reliés dans le workflow.".into(),
+        )),
+    }
+}
 pub fn workflow(config: &Config, scene: Scene, info: &Value, seed: u64) -> Result<Value> {
     let config = config.clone().validated()?;
     let mut scene = scene.validated_for(config.model_family)?;
@@ -765,6 +927,19 @@ pub fn workflow(config: &Config, scene: Scene, info: &Value, seed: u64) -> Resul
     }
     let mut graph = config.workflow.unwrap_or_else(default_workflow);
     validate_workflow(&graph)?;
+    let samplers = if config.advanced.enabled {
+        if !list("KSampler", "sampler_name")
+            .iter()
+            .any(|v| v == &config.advanced.sampler_name)
+        {
+            return Err(Error::Validation(
+                "Le sampler choisi est absent du catalogue ComfyUI. Actualise la liste.".into(),
+            ));
+        }
+        Some(ordered_samplers(&graph)?)
+    } else {
+        None
+    };
     let nodes = graph.as_object_mut().unwrap();
     let find = |class: &str| {
         nodes
@@ -830,13 +1005,37 @@ pub fn workflow(config: &Config, scene: Scene, info: &Value, seed: u64) -> Resul
                 inputs.insert("STRING".into(), json!([text, 0]));
             }
             "EmptyLatentImage" => {
-                inputs.insert("width".into(), json!(768));
-                inputs.insert("height".into(), json!(768));
+                let size = if config.advanced.enabled {
+                    config.advanced.size
+                } else {
+                    768
+                };
+                inputs.insert("width".into(), json!(size));
+                inputs.insert("height".into(), json!(size));
                 inputs.insert("batch_size".into(), json!(1));
             }
             "KSampler" => {
                 inputs.insert("seed".into(), json!(seed));
-                if !config.turbo {
+                if let Some(ids) = &samplers {
+                    let first = id == &ids[0];
+                    inputs.insert(
+                        "steps".into(),
+                        json!(if first {
+                            config.advanced.steps_first
+                        } else {
+                            config.advanced.steps_second
+                        }),
+                    );
+                    inputs.insert(
+                        "cfg".into(),
+                        json!(if first {
+                            config.advanced.cfg_first
+                        } else {
+                            config.advanced.cfg_second
+                        }),
+                    );
+                    inputs.insert("sampler_name".into(), json!(config.advanced.sampler_name));
+                } else if !config.turbo {
                     inputs.insert("steps".into(), json!(16));
                     let cfg = inputs
                         .get("cfg")

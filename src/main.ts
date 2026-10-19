@@ -12,6 +12,8 @@ import { mountAudioSettings } from './audio-settings';
 import { memoryPanel, mountMemory } from './memory';
 import { paintProfileVoice, editProfileVoice } from './profile-voice';
 import { editAvatar, portrait, paintAvatar } from './avatar';
+import { moodSettings, mountMoodSettings } from './mood-settings';
+import {mountComfyService} from './comfy-startup';
 import { updatesView, mountUpdates, initializeUpdates } from './updates';
 import { bindRangeControls } from './settings-controls';
 import { webSettings,mountWebSettings } from './web';
@@ -151,7 +153,7 @@ function render(): void {
   </div>`;
   bindPanel();
   if (view === 'profiles') void paintProfileVoice(document.querySelector('#profile-voice-label')!, profile);
-  if (view === 'conversation') mountConversation(activeProfile()!, report);
+  if (view === 'conversation') mountConversation(activeProfile()!, report, change);
   paintLive(state);
   paintVoiceService();
   if (view === 'settings') mountUpdates();
@@ -161,7 +163,7 @@ function render(): void {
     (id) => { selected = id; render(); },
     (revision, connections) => change({ kind: 'connections', id: profile.id, revision, connections }, t`Connexions de ${profile.name} enregistrées.`),
     () => openAvatar(profile));
-  if(view==='profiles'){mountIllustrationSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountWebSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);}
+  if(view==='profiles'){mountMoodSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountIllustrationSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountWebSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);}
 }
 
 function widgetVisibilityLabel(visible: boolean): string {
@@ -181,7 +183,7 @@ function profilesView(profile: Profile): string {
       <div class="portrait-stage"><div class="stage-label"><span class="tiny-cross">+</span> IDENTITÉ DU COMPAGNON <span class="tiny-cross">+</span></div><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><img class="hero-portrait" src="${portrait(profile)}" alt="Apparence de ${escape(profile.name)}" /><div class="portrait-controls"><button class="button glass small" id="change-avatar">${icon('image')} Avatar et voix</button><span id="profile-voice-label"></span><button class="text-button" id="choose-profile-voice">Choisir sa voix →</button></div><span class="stage-coordinate">01 / PRÉSENCE</span></div>
       <div class="companion-copy"><div class="identity-line"><span class="tag ${isActive ? 'live' : ''}">${isActive ? html`<i class="status-dot"></i> ACTIF SUR TON BUREAU` : t('PRÊT À ÊTRE ACTIVÉ')}</span><button class="icon-button" id="edit-profile" aria-label="Modifier le compagnon" title="Modifier">${icon('edit')}</button></div><h2>${escape(profile.name)}</h2><p class="personality-preview">${escape(profile.personality || t('Sa personnalité reste à écrire. Donne-lui une façon bien à lui de t’accompagner.'))}</p><div class="profile-stats"><div><strong>${profile.message_count}</strong><span>messages</span></div><div><strong>${profile.memory_count}</strong><span>souvenirs</span></div><div><strong class="text-value">Indépendant</strong><span>son propre espace</span></div></div><div class="detail-actions">${isActive ? html`<button class="button primary" data-action="show_widget">${icon('eye')} Retrouver ${escape(profile.name)}</button>` : html`<button class="button primary" id="activate-profile">${icon('spark')} Activer ce compagnon</button>`}<button class="button secondary" id="personality-button">Personnalité ${icon('arrow')}</button></div><div class="profile-tools"><button class="button secondary small" id="duplicate-profile">${icon('copy')} Dupliquer ce compagnon</button><button class="text-button" id="export-profile">${icon('download')} Exporter</button><button class="text-button danger" id="delete-profile" ${isActive ? html`disabled title="Active un autre compagnon avant de supprimer celui-ci."` : ''}>${icon('trash')} Supprimer</button></div></div>
     </article>
-    ${illustrationSettings(profile)}<div id="connections-root"></div>${profile.connections.llm_provider === 'hermes' ? '' : webSettings(profile.web_search ?? state!.settings.web_search,profile)}
+    ${moodSettings(profile)}${illustrationSettings(profile,state!.settings.comfyui_startup)}<div id="connections-root"></div>${profile.connections.llm_provider === 'hermes' ? '' : webSettings(profile.web_search ?? state!.settings.web_search,profile)}
     <div class="bottom-grid"><section class="info-card"><div class="card-icon">${icon('shield')}</div><div><h3>Son histoire reste la sienne.</h3><p>Changer de compagnon change de mémoire. Une copie reprend sa personnalité et son apparence, avec une histoire vierge.</p></div></section><section class="info-card"><div class="card-icon">${icon('image')}</div><div><h3>Sept émotions, ton avatar.</h3><p>Ajoute tes images dans « Avatar et voix ». L’expression suit le ton de la réponse.</p></div></section></div>`;
 }
 
@@ -309,7 +311,7 @@ function editProfile(profile?: Profile): void {
   element.querySelector('form')!.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget as HTMLFormElement);
-    const draft: ProfileDraft = { illustration: profile?.illustration,search:profile?.search, web_search: profile?.web_search ?? null, avatar_preset: profile?.avatar_preset ?? null, name: String(form.get('name')), personality: String(form.get('personality')), instructions: String(form.get('instructions')), accent: String(form.get('accent')) as ProfileDraft['accent'], connections: profile?.connections ?? {...freshConnections(), language: String(form.get('companion_language'))} };
+    const draft: ProfileDraft = { mood_persistence:profile?.mood_persistence??false,illustration: profile?.illustration,search:profile?.search, web_search: profile?.web_search ?? null, avatar_preset: profile?.avatar_preset ?? null, name: String(form.get('name')), personality: String(form.get('personality')), instructions: String(form.get('instructions')), accent: String(form.get('accent')) as ProfileDraft['accent'], connections: profile?.connections ?? {...freshConnections(), language: String(form.get('companion_language'))} };
     const button = element.querySelector<HTMLButtonElement>('[type="submit"]')!;
     button.disabled = true;
     const ok = await change(profile ? { kind: 'update_profile', id: profile.id, revision: profile.revision, draft } : { kind: 'create_profile', draft }, profile ? t('Personnalité enregistrée.') : t('Ton nouveau compagnon est prêt.'), !profile);
@@ -454,6 +456,7 @@ async function start(): Promise<void> {
       await getCurrentWindow().onFocusChanged(({ payload }) => { if (!payload) dismissWidgetControls?.(); });
     }
     await mountVoiceService(() => { if (state) paintLive(state); });
+    await mountComfyService();
     if (!widget) await initializeUpdates();
     if (!widget) {
       let visibilityEvents = 0;

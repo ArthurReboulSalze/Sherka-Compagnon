@@ -14,6 +14,7 @@ mod llm;
 pub mod memory;
 pub mod model;
 pub mod models;
+pub mod mood;
 pub mod presets;
 pub mod privacy;
 pub mod providers;

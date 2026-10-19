@@ -38,6 +38,84 @@ fn record(app: &mut Companion, text: &str) -> sherka_core::memory::Source {
         .source_for_turn(tag.profile_id, tag.turn_id)
         .unwrap()
 }
+
+#[test]
+fn explicit_forgetting_also_removes_unapproved_extracted_memories() {
+    let dir = tempdir().unwrap();
+    let mut app = Companion::open(dir.path()).unwrap();
+    let p = app.session.snapshot().profile_id;
+    let saved = app
+        .store
+        .write_memory(
+            &app.store.memory_guard(p).unwrap(),
+            None,
+            &draft("Mon instrument favori est le piano.", "essential"),
+        )
+        .unwrap();
+    for n in 0..6 {
+        record(
+            &mut app,
+            &format!("Mon projet astronomie numéro {n} utilise une lunette."),
+        );
+    }
+    let batch = app.store.extraction_batch(p).unwrap().unwrap();
+    app.store
+        .consolidate(
+            &batch,
+            Consolidation {
+                memories: vec![Extract {
+                    source_id: batch.sources[0].id.clone(),
+                    quote: "utilise une lunette".into(),
+                    category: "Astronomie".into(),
+                    kind: "detail".into(),
+                }],
+                summary: vec![],
+            },
+        )
+        .unwrap();
+    let auto = app
+        .store
+        .memories(p, "")
+        .unwrap()
+        .entries
+        .into_iter()
+        .find(|m| !m.approved)
+        .unwrap();
+    let source = record(&mut app, "Peux-tu supprimer le souvenir sur ma lunette ?");
+    let receipt = app
+        .store
+        .apply_memory_plan(
+            &app.store.memory_guard(p).unwrap(),
+            &source,
+            std::slice::from_ref(&auto),
+            MemoryPlan {
+                actions: vec![MemoryAction {
+                    action: "forget".into(),
+                    id: Some(auto.id),
+                    content: String::new(),
+                    category: String::new(),
+                    kind: String::new(),
+                }],
+            },
+            "forget-auto",
+        )
+        .unwrap();
+    assert!(receipt.contains("oublié"));
+    let active = app.store.memories(p, "").unwrap().entries;
+    assert!(active.iter().any(|m| m.id == saved));
+    assert!(!active.iter().any(|m| m.id == auto.id));
+    assert!(
+        app.store
+            .consolidate(
+                &batch,
+                Consolidation {
+                    memories: vec![],
+                    summary: vec![]
+                }
+            )
+            .is_err()
+    );
+}
 #[test]
 fn budget_uses_loaded_context_and_explicit_response_reserve() {
     let p = ProfileDraft::default();

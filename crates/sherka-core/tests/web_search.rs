@@ -21,6 +21,87 @@ fn report() -> Report {
     }
 }
 
+#[tokio::test]
+async fn automatic_web_planning_handles_thinking_prefixes_and_rejected_json_grammars() {
+    use serde_json::{Value, json};
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    let server = tokio::spawn(async move {
+        for attempt in 0..2 {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut bytes = vec![];
+            let mut buf = [0; 4096];
+            let end = loop {
+                let n = stream.read(&mut buf).await.unwrap();
+                assert!(n > 0);
+                bytes.extend_from_slice(&buf[..n]);
+                let text = String::from_utf8_lossy(&bytes);
+                if let Some(end) = text.find("\r\n\r\n") {
+                    let count = text[..end]
+                        .lines()
+                        .find_map(|l| {
+                            l.to_lowercase()
+                                .strip_prefix("content-length: ")
+                                .and_then(|s| s.parse::<usize>().ok())
+                        })
+                        .unwrap_or(0);
+                    if bytes.len() >= end + 4 + count {
+                        break end + 4;
+                    }
+                }
+            };
+            let body: Value = serde_json::from_slice(&bytes[end..]).unwrap();
+            assert_eq!(body["reasoning_effort"], "none");
+            assert_eq!(body["stream"], false);
+            assert_eq!(body["max_tokens"], if attempt == 0 { 512 } else { 1024 });
+            if attempt == 1 {
+                assert!(body.get("response_format").is_none());
+            }
+            let reply=if attempt==0 {json!({"error":"grammar rejected"})} else {json!({"choices":[{"finish_reason":"stop","message":{"content":"<think>Plan only.</think>\n{\"search\":true,\"query\":\"NASA Moon distance\"}"}}]})}.to_string();
+            let response = format!(
+                "HTTP/1.1 {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{reply}",
+                if attempt == 0 {
+                    "422 Unprocessable Entity"
+                } else {
+                    "200 OK"
+                },
+                reply.len()
+            );
+            stream.write_all(response.as_bytes()).await.unwrap();
+        }
+    });
+    let mut provider =
+        sherka_core::providers::Providers::new(sherka_core::connections::Connections {
+            lm_studio_url: url,
+            llm_model: Some("thinking-fixture".into()),
+            ..Default::default()
+        })
+        .unwrap();
+    provider.use_api_model(&sherka_core::catalogs::LanguageModel {
+        vision: None,
+        api: None,
+        key: "thinking-fixture".into(),
+        id: "thinking-fixture".into(),
+        label: "Thinking fixture".into(),
+        loaded: Some(true),
+        quantization: None,
+        max_context_length: Some(8192),
+        loaded_context_length: Some(8192),
+        reasoning: Some(sherka_core::catalogs::ReasoningCapabilities {
+            allowed_options: vec!["off".into(), "on".into()],
+            default: Some("on".into()),
+        }),
+    });
+    let plan = provider
+        .web_plan("Quelle est la distance Terre Lune selon la NASA ?", 8192)
+        .await
+        .unwrap();
+    assert!(plan.search);
+    assert_eq!(plan.query, "NASA Moon distance");
+    server.await.unwrap();
+}
+
 #[test]
 fn lite_results_decode_entities_redirects_and_skip_unsafe_duplicate_links() {
     let html = r#"<a class='result-link' href='//duckduckgo.com/l/?uddg=https%3A%2F%2Fscience.nasa.gov%2Fmoon%2F&amp;rut=tracking'>Moon &amp; Earth</a><div class='result-snippet'>384,400 <b>km</b> &#x6708;</div>

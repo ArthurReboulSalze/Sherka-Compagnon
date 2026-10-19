@@ -1,6 +1,6 @@
 {
   "name": "sherka-compagnon",
-  "version": "0.12.1",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,8 +13,9 @@
     "build:linux": "tauri build --bundles deb",
     "test:core": "cargo test -p sherka-core",
     "test:ui": "tauri build --debug --no-bundle && playwright test",
-    "check": "npm run test:i18n && tsc --noEmit && cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings",
-    "test:i18n": "node scripts/i18n.mjs && node --test tests/i18n.test.mjs"
+    "check": "npm run test:i18n && npm run test:catalog && tsc --noEmit && cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings",
+    "test:i18n": "node scripts/i18n.mjs && node --test tests/i18n.test.mjs",
+    "test:catalog": "node --test tests/illustration-catalog.test.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.2"

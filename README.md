@@ -35,7 +35,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**New in 0.12.1:** illustrations follow **your scene, outfit and action** more closely. A single companion is requested by default to reduce accidental doubles, while group scenes keep distinct subjects. SDXL descriptions now reach ComfyUI without being cut into short tags. [Release notes](docs/releases/0.12.1.md).
+**Sherka 1.0 is here:** optional **persistent moods**, a widget that follows your theme, **live ComfyUI scenes** with advanced sampling, remembered model catalogs and optional local startup. More control over your companion, with conversation always first. [What's new](docs/releases/1.0.0.md).
 
 ## Meet your companions
 
@@ -53,7 +53,7 @@ Choose your company, then give each character its own voice and model. Five bund
 
 **😐 Neutral · 😊 Joy · 😢 Sadness · 😠 Anger · 😮 Surprise · 🤔 Reflection · 🥰 Tenderness**
 
-Expressions follow the tone of a reply and blend with a gentle **half-second crossfade**. Use the bundled images or assign your own in **Avatar & voice**, alongside that character's VoiceStudio voice. Short examples help small models choose an expression; a conservative fallback reads the visible reply when the marker is missing. [See how it works](docs/USER_GUIDE.md#how-expressions-change).
+Expressions follow the tone of a reply and blend with a gentle **half-second crossfade**. Use the bundled images or assign your own in **Avatar & voice**, alongside that character's VoiceStudio voice. Enable **Persistent moods** per companion to let repeated reactions linger, soften over later exchanges and respond to a change in tone. Reset mood independently of messages and memories. Short examples help small models choose an expression; a conservative fallback reads the visible reply when the marker is missing. [See how it works](docs/USER_GUIDE.md#how-expressions-change).
 
 Hermes keeps a neutral avatar and its own personality, memory and tools. Its **/stop** button stops the current task while leaving the server running.
 
@@ -63,7 +63,7 @@ Sherka gives your AI a presence beyond a chat window: a transparent companion th
 
 | 🎙️ Talk naturally | ✨ Make it personal | 🪟 Keep it close |
 | --- | --- | --- |
-| Interrupt a spoken reply, pause while talking, then continue. Streaming and speech prepared ahead keep the exchange flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click. |
+| Interrupt a spoken reply, pause while talking, then continue. Streaming and speech prepared ahead keep the exchange flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click and follow your selected theme. Its active halo keeps the character's own color. |
 | **🧠 Memories you control** | **🌐 A little help from the web** | **💬 Seven interface languages** |
 | Persistent memory for each companion. Review, edit or delete facts; preview built-in memory optimization before applying it. Clear a conversation with confirmation while keeping saved facts. | [Search the web with sources](docs/WEB_SEARCH.md). Use DuckDuckGo without an account, or Brave, Tavily or SearXNG. Drop text files and, with a vision-capable model, images onto your companion. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
 
@@ -76,6 +76,10 @@ Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, des
 **Your request sets the scene.** Ask your robot companion to dance in a ballet outfit, and its usual armor or serious expression should not freeze the result into the same portrait. The planner prioritizes your requested action, clothes and setting, uses the reply for compatible details, and distinguishes one companion from a scene involving both of you. Prompt and character fidelity still depend on your chosen models and LoRAs.
 
 The **Image** button reveals a movable, resizable cell that follows your companion. Generate up to eight variations and let them loop with gentle crossfades at your chosen pace. The **Text** button reveals a transparent input just beneath the controls: type, paste or drop text, and attach images when your model supports vision.
+
+**Live scenes, with conversation first.** Enable live mode for continuous variations that follow the latest exchange. Sherka pauses its image work for speech recognition, text generation and speech synthesis, then resumes automatically. Advanced settings let you choose the square output size, set each sampler’s steps and CFG independently and choose a shared sampler; your values stay in place when you toggle Turbo. Export the API workflow from the same settings to use it as a starting point in ComfyUI.
+
+**Ready when you are.** Model, LoRA and sampler lists are remembered on this device; the highlighted refresh button rescans the whole catalog. For a local Python or portable ComfyUI installation, save its folder and optional Python path: Sherka can start it when illustrations are enabled. The first images take longer while the server and models load. Remote servers remain manually managed.
 
 These scenes illustrate the conversation; the avatar's seven expressions remain separate. Hermes uses its own tools and stays outside local scene generation.
 
@@ -113,13 +117,13 @@ Development and real-service testing used an **NVIDIA RTX 3090**. You do not nee
 
 Follow the [getting-started guide](docs/GETTING_STARTED.md) for Windows or the [Linux guide](docs/LINUX.md) for Debian. Windows requires WebView2 and the Visual C++ x64 runtime. Models and voices are separate downloads. Headphones are recommended for voice interruption; the microphone is off at startup.
 
-Check for signed Windows updates directly from **Settings**. Installed and no-install copies share your Windows user data. Linux uses its own user data folder and manual package updates; start external voice/model services separately. This first Linux port has compilation and headless startup validation; physical audio and desktop behavior need broader testing.
+Check for signed Windows updates directly from **Settings**. Installed and no-install copies share your Windows user data. Linux uses its own user data folder and manual package updates; start external voice/model services separately. The Debian port has compilation and headless startup validation; physical audio and desktop behavior need broader testing.
 
 ## What's next
 
 Next come speaking/listening animations, richer character customization and consistent avatar packs through **ComfyUI**. Conversation illustrations are available now; generating the avatar's seven expressions is a separate future step. Hermes remains outside the emotion and illustration systems.
 
-Sherka is an early project. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
+Sherka 1.0 is the first major release, with plenty still to explore. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
 
 ## Open source, made to grow
 

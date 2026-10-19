@@ -43,6 +43,10 @@ If a firewall blocks outbound traffic, allow the executable path you actually ru
 
 Engine preferences are included in profile export version 4; keys and search receipts are excluded. Current development databases use schema 8. Keep installed and portable versions aligned, and use a separate backup/data folder when testing an older executable.
 
+Use **Test search engine** beside the saved engine settings to send a fixed, non-personal test query. This tests the selected draft engine and its stored key directly, without asking the companion model to choose a search. It does not save the draft settings. Save the engine separately when satisfied. A Windows 10013 message means the executable's outbound connection was blocked locally, rather than a key refusal.
+
+Automatic search decisions use the same bounded, reasoning-aware JSON path as memory and scene planning, including a retry without a JSON grammar when the model rejects it. Very small models can still misclassify intent; an explicit “search the web” request or the Conversation search button bypasses this decision.
+
 ## Development checks
 
 `cargo test --workspace --locked` checks source parsing, unsafe links, provider request/response contracts, context budgets, isolation and migrations. Brave, Tavily and SearXNG contracts use loopback fixtures and synthetic keys; they do not spend a real API account's credits. The native scenarios cover search settings, explicit/automatic requests, source history, restart, failure and cancellation. No live Brave/Tavily account is required.

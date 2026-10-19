@@ -236,6 +236,14 @@ impl Store {
     /// one companion. Facts explicitly saved/approved by the user survive by
     /// default. The epoch invalidates in-flight extraction and edits.
     pub fn clear_conversation(&self, profile: Uuid, erase_saved_facts: bool) -> Result<()> {
+        self.clear_conversation_with_mood(profile, erase_saved_facts, false)
+    }
+    pub fn clear_conversation_with_mood(
+        &self,
+        profile: Uuid,
+        erase_saved_facts: bool,
+        erase_mood: bool,
+    ) -> Result<()> {
         let mut db = self.db(profile)?;
         db.execute_batch("PRAGMA secure_delete=ON;")?;
         let tx = db.transaction()?;
@@ -253,6 +261,12 @@ impl Store {
             )?;
         }
         tx.execute("DELETE FROM messages", [])?;
+        if erase_saved_facts || erase_mood {
+            tx.execute(
+                "UPDATE mood_state SET epoch=epoch+1,data='{}' WHERE singleton=1",
+                [],
+            )?;
+        }
         tx.execute("UPDATE memory_meta SET cursor=0", [])?;
         changed(&tx)?;
         // Rebuild FTS too: deleted terms must not remain in its segment tables.
@@ -474,9 +488,7 @@ impl Store {
                     Error::Validation("Souvenir à modifier non identifié.".into())
                 })?;
                 if !targets.insert(id)
-                    || !visible
-                        .iter()
-                        .any(|m| m.id == id && m.status == "active" && m.approved)
+                    || !visible.iter().any(|m| m.id == id && m.status == "active")
                 {
                     return Err(Error::Conflict);
                 }
@@ -665,6 +677,7 @@ impl Store {
 
 /// Only explicit memory requests enter the write planner. Ordinary chat stays
 /// on the low-latency streaming path; incidental facts become reviewable drafts.
+// i18n: data-start
 pub fn memory_intent(text: &str) -> bool {
     let s = normalized(text);
     [
@@ -684,6 +697,30 @@ pub fn memory_intent(text: &str) -> bool {
         "remember",
         "forget",
         "memory",
+        "supprime le fait",
+        "supprimer le fait",
+        "efface le fait",
+        "delete the fact",
+        "remove the fact",
+        "saved fact",
+        "recuerda",
+        "olvida",
+        "memoria",
+        "recuerdo",
+        "ricorda",
+        "dimentica",
+        "ricordo",
+        "erinnere",
+        "vergiss",
+        "gedächtnis",
+        "erinnerung",
+        "记住",
+        "记忆",
+        "忘记",
+        "忘掉",
+        "記憶",
+        "覚えて",
+        "忘れて",
     ]
     .iter()
     .any(|w| s.contains(w))
@@ -701,13 +738,45 @@ pub fn plan_request(
         ChatMessage{role:"user",content:json!({"demande":user,"souvenirs_disponibles":memories}).to_string()},
     ];
     let request = normalized(user);
-    let forgetting = request.starts_with("oublie ")
-        || request.starts_with("forget ")
-        || [
+    let forgetting = ![
+        "n'oublie pas",
+        "n’oublie pas",
+        "don't forget",
+        "do not forget",
+        "ne supprime pas",
+        "n'efface pas",
+        "no olvides",
+        "non dimenticare",
+        "nicht vergessen",
+        "别忘",
+        "不要忘",
+        "忘れない",
+    ]
+    .iter()
+    .any(|s| request.contains(s))
+        && [
+            "oublie ",
+            "forget ",
             "peux-tu oublier",
             "peux tu oublier",
             "efface de ta mémoire",
             "supprime de ta mémoire",
+            "supprime ce souvenir",
+            "supprime le souvenir",
+            "supprime le fait",
+            "efface ce souvenir",
+            "efface le souvenir",
+            "efface le fait",
+            "delete the memory",
+            "remove the memory",
+            "delete the fact",
+            "remove the fact",
+            "olvida ",
+            "dimentica ",
+            "vergiss ",
+            "忘记",
+            "忘掉",
+            "忘れて",
         ]
         .iter()
         .any(|s| request.contains(s));
@@ -724,6 +793,7 @@ pub fn plan_request(
     },"required":["action","id","content","category","kind"]}}},"required":["actions"]});
     (messages, schema)
 }
+// i18n: data-end
 pub fn consolidation_request(
     batch: &ExtractionBatch,
 ) -> (Vec<crate::conversation::ChatMessage>, serde_json::Value) {

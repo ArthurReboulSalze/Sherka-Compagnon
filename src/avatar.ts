@@ -61,7 +61,7 @@ export function paintAvatar(state: Snapshot): void {
   const profile = state.profiles.find(p => p.id === state.session.profile_id);
   const image = document.querySelector<HTMLImageElement>('.widget-portrait > img:not(.avatar-outgoing)');
   if (!profile || !image) return;
-  const emotion = state.companion_capabilities.local_emotions && state.live.tag ? state.live.emotion : 'neutral';
+  const emotion = state.companion_capabilities.local_emotions ? profile.mood_persistence ? state.live.mood : state.live.tag ? state.live.emotion : 'neutral' : 'neutral';
   const src = portrait(profile, emotion);
   fadePortrait(image, src);
   image.dataset.emotion = emotion;

@@ -7,8 +7,13 @@ export const onAvatarSize=(callback:(size:[number,number])=>void)=>listen<[numbe
 export const attachmentSupport = (profileId:string) => invoke<{images:boolean;known:boolean}>('get_attachment_support',{profileId});
 export const searchKeyStatus=(provider:import('./types').SearchProvider)=>invoke<boolean>('search_key_status',{provider});
 export const setSearchKey=(provider:import('./types').SearchProvider,key:string|null)=>invoke<void>('set_search_key',{provider,key});
+export const testSearchConfig=(config:import('./types').SearchConfig,language:string)=>invoke<number>('test_search_config',{config,language});
+export const comfyService=()=>invoke<import('./types').ComfyServiceStatus>('get_comfy_service');
+export const onComfyService=(callback:(value:import('./types').ComfyServiceStatus)=>void)=>listen<import('./types').ComfyServiceStatus>('sherka:comfy-service',e=>callback(e.payload));
+export const selectComfyPath=(python:boolean)=>invoke<string|null>('select_comfyui_path',{python});
 export const illustration = () => invoke<IllustrationStatus>('get_illustration');
-export const discoverIllustration = (config:IllustrationConfig) => invoke<IllustrationCatalog>('discover_illustration',{config});
+// Discovery depends only on the server and graph, not unfinished form values.
+export const discoverIllustration = (config:IllustrationConfig) => invoke<IllustrationCatalog>('discover_illustration',{config:{server_url:config.server_url,workflow:config.workflow},startIfNeeded:config.enabled});
 export const refreshIllustration = () => invoke<void>('refresh_illustration');
 export const onIllustration = (callback:(status:IllustrationStatus)=>void) => listen<IllustrationStatus>('sherka:illustration',e=>callback(e.payload));
 import type { Message, Mutation, Snapshot, WidgetAction, LanguageCatalog, VoiceCatalog, AudioDevices, LiveState, Connections } from './types';
@@ -20,7 +25,7 @@ export const closeStartupRecovery = () => invoke<void>('close_startup_recovery')
 export const getSnapshot = () => invoke<Snapshot>('get_snapshot');
 export const mutate = (mutation: Mutation) => invoke<Snapshot>('apply_mutation', { mutation });
 export const history = (profileId: string) => invoke<Message[]>('get_history', { profileId });
-export const clearConversation = (profileId: string, eraseSavedFacts = false) => invoke<void>('clear_conversation', { profileId, eraseSavedFacts });
+export const clearConversation = (profileId: string, eraseSavedFacts = false, eraseMood = false) => invoke<void>('clear_conversation', { profileId, eraseSavedFacts, eraseMood });
 export const onCleared = (callback: (id: string) => void) => listen<string>('sherka:cleared', e => callback(e.payload));
 export const memories = (profileId: string, query = '') => invoke<MemoryState>('get_memories', { profileId, query });
 export const editMemory = (profileId: string, epoch: number, edit: MemoryEdit) => invoke<MemoryState>('edit_memory', { profileId, epoch, edit });
@@ -66,3 +71,5 @@ export const installUpdate = () => invoke<UpdateStatus>('install_update');
 export const onUpdate = (callback: (value: UpdateStatus) => void) => listen<UpdateStatus>('sherka:update', event => callback(event.payload));
 
 export const newHermesConversation = (profileId: string) => invoke<Snapshot>('new_hermes_conversation', { profileId });
+
+export const exportIllustrationWorkflow=(config:import('./types').IllustrationConfig)=>invoke<boolean>('export_illustration_workflow',{config});

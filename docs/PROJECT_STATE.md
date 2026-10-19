@@ -1,6 +1,14 @@
 # Project status
 
-Release version: **0.12.1**, October 19, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.0.0**, October 19, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+
+## 1.0.0 — persistent moods and live scenes
+
+Optional mood persistence is stored separately from messages and facts in schema 9. A completed text turn updates bounded scores once, with gradual decay, grounded user cues and diminishing repeated model signals; there are no timed/model loops. Independent reset fences in-flight replies. Copies and exports carry the setting but no accumulated state; Hermes is excluded. Widget chrome follows the board theme, while the avatar halo keeps its character accent.
+
+ComfyUI adds advanced per-pass steps/CFG, a shared sampler, square output size, API-workflow export and live variations with conversation priority. Only Sherka-owned jobs are interrupted; live mode requires prompt-specific interruption in ComfyUI 0.3.57+. Model/LoRA/sampler catalogs persist per server on this device and full refresh replaces them. Optional device-specific Python/portable startup applies only to HTTP loopback addresses, deduplicates launches, reuses ready servers and leaves ComfyUI running after Sherka exits. First-generation startup/model-loading delays are explained in the interface.
+
+Search planning handles reasoning-model responses, search settings have a connection check, speech omits emojis and local deletion commands distinguish conversation history from saved facts. Seven-language coverage, mood/migration tests, native reset/restart/theme checks, isolated ComfyUI launch/reuse tests and a read-only existing-server catalog probe passed during development. These automated checks do not validate physical microphone/audio behavior or every model's emotional accuracy.
 
 ## 0.12.1 — user-led illustration scenes
 

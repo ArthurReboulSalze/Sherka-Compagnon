@@ -40,9 +40,23 @@ pub struct Companion {
     pub optimization: Option<crate::memory::OptimizationPreview>,
     pub pending_clear: crate::privacy::PendingClear,
     settings: Settings,
+    mood_epoch: i64,
 }
 
 impl Companion {
+    pub fn comfy_startup_config(&self) -> crate::model::ComfyStartupConfig {
+        self.settings.comfyui_startup.clone()
+    }
+    pub fn set_comfy_startup_config(
+        &mut self,
+        config: crate::model::ComfyStartupConfig,
+    ) -> Result<()> {
+        let mut next = self.settings.clone();
+        next.comfyui_startup = config.validated()?;
+        self.store.save_settings(&next)?;
+        self.settings = next;
+        Ok(())
+    }
     pub fn set_theme(&mut self, theme: crate::model::Theme) -> Result<()> {
         let mut next = self.settings.clone();
         next.theme = theme;
@@ -109,7 +123,7 @@ impl Companion {
             .unwrap_or(profiles[0].id);
         settings.active_profile = Some(active);
         store.save_settings(&settings)?;
-        Ok(Self {
+        let mut companion = Self {
             store,
             session: Session::new(active),
             live: Default::default(),
@@ -117,7 +131,10 @@ impl Companion {
             optimization: None,
             pending_clear: Default::default(),
             settings,
-        })
+            mood_epoch: 0,
+        };
+        companion.load_mood()?;
+        Ok(companion)
     }
 
     pub fn snapshot(&self) -> Result<Snapshot> {
@@ -158,6 +175,7 @@ impl Companion {
         self.pending_clear = Default::default();
         self.live = Default::default();
         self.settings = next;
+        self.load_mood()?;
         Ok(())
     }
 
@@ -178,6 +196,14 @@ impl Companion {
             self.stop_response()?;
         }
         let updated = self.store.update(id, revision, draft)?;
+        if self.settings.active_profile == Some(id)
+            && (previous.details.mood_persistence != updated.details.mood_persistence
+                || previous.details.connections.llm_provider
+                    != updated.details.connections.llm_provider)
+        {
+            self.live.mood_updated = true;
+            self.load_mood()?;
+        }
         if self.settings.default_companion == Some(id)
             && (previous.details.name != updated.details.name
                 || previous.details.personality != updated.details.personality
@@ -326,6 +352,15 @@ impl Companion {
         profile: uuid::Uuid,
         erase_saved_facts: bool,
     ) -> Result<()> {
+        self.clear_conversation_with_mood(profile, erase_saved_facts, false)
+    }
+
+    pub fn clear_conversation_with_mood(
+        &mut self,
+        profile: Uuid,
+        erase_saved_facts: bool,
+        erase_mood: bool,
+    ) -> Result<()> {
         self.store.profile(profile)?;
         let active = self.session.snapshot().profile_id == profile;
         if active {
@@ -333,13 +368,15 @@ impl Companion {
             // restore the conversation. Microphone consent remains unchanged.
             self.stop_response()?;
         }
-        self.store.clear_conversation(profile, erase_saved_facts)?;
+        self.store
+            .clear_conversation_with_mood(profile, erase_saved_facts, erase_mood)?;
         self.store.clear_hermes_sessions(profile)?;
         if active {
             self.session.switch_profile(profile);
             self.pending_clear = Default::default();
             self.optimization = None;
             self.live = Default::default();
+            self.load_mood()?;
         }
         Ok(())
     }
@@ -349,8 +386,51 @@ impl Companion {
         self.memory_job = tokio_util::sync::CancellationToken::new();
         self.live = crate::conversation::LiveConversation {
             tag: Some(tag),
+            mood: self.live.mood,
             ..Default::default()
         };
+    }
+
+    fn load_mood(&mut self) -> Result<()> {
+        let id = self.session.snapshot().profile_id;
+        let profile = self.store.profile(id)?;
+        let stored = self.store.mood(id)?;
+        self.mood_epoch = stored.epoch;
+        self.live.mood = if profile.details.mood_persistence
+            && !profile.details.connections.llm_provider.is_agent()
+        {
+            stored.state.dominant
+        } else {
+            Default::default()
+        };
+        Ok(())
+    }
+
+    pub fn reset_mood(&mut self, id: Uuid) -> Result<()> {
+        self.store.reset_mood(id)?;
+        if self.session.snapshot().profile_id == id {
+            // A reply already in flight cannot immediately restore this mood.
+            self.live.mood_updated = true;
+            self.load_mood()?;
+        }
+        Ok(())
+    }
+
+    pub fn complete_mood(&mut self, tag: crate::session::OperationTag, user: &str) -> Result<()> {
+        if !self.session.accepts(tag) {
+            return Err(Error::StaleOperation);
+        }
+        if !self.live.mood_updated && !self.live.reply.trim().is_empty() {
+            self.live.mood = self.store.advance_mood(
+                tag.profile_id,
+                self.mood_epoch,
+                tag.turn_id,
+                user,
+                self.live.emotion,
+            )?;
+            self.live.mood_updated = true;
+        }
+        Ok(())
     }
 
     pub fn finish_response(

@@ -122,6 +122,7 @@ pub async fn prepare_shutdown(app: &AppHandle) -> Result<(), String> {
         return Ok(());
     }
     app.state::<crate::voice_startup::VoiceStartup>().cancel();
+    app.state::<crate::comfy_startup::ComfyStartup>().cancel();
     app.state::<crate::illustrations::Illustrations>()
         .cancel(app, true);
     let _ = app.emit("sherka:quit", serde_json::json!({"stage":"unloading"}));

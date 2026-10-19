@@ -1789,7 +1789,7 @@ test('web search: modes, sources, context, restart, failures and cancellation', 
     } else if(request.url==='/v1/chat/completions') {
       let data='';request.on('data',bytes=>data+=bytes);request.on('end',()=>{
         const body=JSON.parse(data);
-        if(body.response_format?.json_schema?.name==='sherka_web_search') {
+        if(body.stream===false) {
           plans.push(body);
           if(planningFails) { response.writeHead(200,{'Content-Type':'application/json'});response.end(JSON.stringify({choices:[{finish_reason:'length',message:{content:''}}]}));return; }
           const search=body.messages.at(-1).content!=='Bonjour';
@@ -2205,13 +2205,13 @@ test('privacy: clear dialogue, preserve saved facts, delete individual facts and
     const before=chats;
     const devices=await native<{outputs:{is_default:boolean}[]}>('get_audio_devices');
     const canSpeak=!process.env.SHERKA_TEST_TEXT_ONLY && devices.outputs.some(d=>d.is_default);
-    await native('send_message',{profileId:p.id,text:'Efface notre conversation',speak:canSpeak});
+    await native('send_message',{profileId:p.id,text:'Est-ce que tu peux effacer l’historique de notre conversation s’il te plaît ?',speak:canSpeak});
     await expect.poll(async()=> (await native<any>('get_conversation')).live.notice).toContain('/confirm-clear');
     expect((await native<any[]>('get_history',{profileId:p.id})).length).toBe(2);
     expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries.length).toBe(1);
     if(canSpeak) await expect.poll(()=>speech.length).toBe(1);
     await expect.poll(async()=> (await native<any>('get_snapshot')).session.response).toBe('idle');
-    await native('send_message',{profileId:p.id,text:'confirme la suppression',speak:canSpeak});
+    await native('send_message',{profileId:p.id,text:'Oui, je confirme.',speak:canSpeak});
     await expect.poll(async()=> (await native<any>('get_conversation')).live.notice).toContain('Conversation effacée');
     if(canSpeak) await expect.poll(()=>speech.length).toBe(2);
     await expect.poll(async()=> (await native<any>('get_snapshot')).session.response).toBe('idle');
@@ -2300,6 +2300,210 @@ test('widget text resize: canvas follows text height without moving the image an
   await expect.poll(()=>widget.evaluate(()=>innerHeight)).toBeLessThan(original+10);
   await widget.screenshot({path:'artifacts/widget-text-resize.png'});
   expect(consoleErrors).toEqual([]);
+});
+
+test('persistent moods: optional per companion, decay, reset, deletion and themed widget chrome',async()=>{
+  test.setTimeout(150000);
+  const models=modelRoutes(['mood-chat']);const fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
+  const server=createServer((req,res)=>{
+    if(models(req,res))return;
+    if(req.method==='GET'&&fixture[req.url??'']){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(fixture[req.url!]));return;}
+    let raw='';req.on('data',part=>raw+=part);req.on('end',()=>{
+      const body=JSON.parse(raw||'{}');
+      if(body.stream===false){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({choices:[{finish_reason:'stop',message:{content:'{"memories":[],"summary":[]}'}}]}));return;}
+      const user=String(body.messages?.at(-1)?.content??'');const emotion=user.includes('question neutre')?'neutral':'anger';
+      res.writeHead(200,{'Content-Type':'text/event-stream'});res.end('data: '+JSON.stringify({choices:[{delta:{content:`[[emotion:${emotion}]]Une réponse de test, sans action extérieure.`}}]})+'\n\ndata: [DONE]\n\n');
+    });
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));const url='http://127.0.0.1:'+(server.address() as {port:number}).port;
+  try{
+    let snapshot=await native<any>('get_snapshot');let p=snapshot.profiles.find((p:any)=>p.id===snapshot.session.profile_id);
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...p.connections,lm_studio_url:url,llm_model:'mood-chat',voice_studio_url:url,volume:0}}});
+    p=(await native<any>('get_snapshot')).profiles.find((x:any)=>x.id===p.id);
+    await native('apply_mutation',{mutation:{kind:'web_search',id:p.id,revision:p.revision,mode:'off'}});
+    await stopApplication();await startApplication();await native('widget_action',{action:'show_widget'});
+    const send=async(text:string)=>{await native('send_message',{profileId:p.id,text,speak:false});await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();};
+    const portrait=()=>widget.locator('.widget-portrait > img:not(.avatar-outgoing)');
+    await expect(panel.locator('#mood-persistence')).not.toBeChecked();
+    await send('Tu es nul');await expect(portrait()).toHaveAttribute('data-emotion','neutral');
+    await panel.locator('#mood-persistence').check();
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((x:any)=>x.id===p.id).mood_persistence).toBe(true);
+    await expect(panel.locator('body')).not.toHaveClass(/working/);
+    await panel.locator('#edit-profile').click();await panel.locator('[name="accent"][value="violet"]').check();await panel.locator('#profile-form [type="submit"]').click();
+    await expect(panel.locator('#mood-persistence')).toBeChecked();
+    await panel.locator('[data-nav="settings"]').click();
+    for(const theme of ['gold','sage','ocean','iris','rose','mono']){
+      await panel.locator(`[data-theme-choice="${theme}"]`).click();await expect(widget.locator('html')).toHaveAttribute('data-theme',theme);
+      await expect(panel.locator('body')).not.toHaveClass(/working/);
+      const color=await panel.locator(`[data-theme-choice="${theme}"] i`).evaluate(e=>getComputedStyle(e).backgroundColor);
+      await expect.poll(()=>widget.locator('#widget-text').evaluate(e=>getComputedStyle(e).color)).toBe(color);
+    }
+    await panel.locator('[data-theme-choice="ocean"]').click();await expect(widget.locator('html')).toHaveAttribute('data-theme','ocean');
+    await widget.locator('#drag-region').hover();await widget.locator('#widget-text').click();await expect(widget.locator('#widget-text-cell')).toBeVisible();
+    await widget.locator('#cell-text').blur();
+    const colors=await widget.evaluate(()=>['#widget-text-cell','#widget-image-cell'].map(selector=>{const c=getComputedStyle(document.querySelector(selector)!);return {border:c.borderColor,background:c.backgroundColor};}));expect(colors[0]).toEqual(colors[1]);
+    expect(await portrait().evaluate(e=>getComputedStyle(e).filter)).toMatch(/176, 167, 219|0\.690196/);
+    await send('Tu es nul');await send('Tu es stupide');await send('Tu es nul');
+    await expect(portrait()).toHaveAttribute('data-emotion','anger');
+    await expect(portrait()).toHaveAttribute('src','/assets/sherka/anger.png');
+    await widget.locator('#drag-region').hover();await widget.screenshot({path:'artifacts/widget-ocean-persistent-mood.png',omitBackground:true});
+    await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode,{timeout:30000}).toBe(0);await stopApplication();await startApplication();
+    await expect(portrait()).toHaveAttribute('data-emotion','anger');await expect(widget.locator('html')).toHaveAttribute('data-theme','ocean');
+    const other=(await native<any>('get_snapshot')).profiles.find((x:any)=>x.id!==p.id);
+    await panel.locator(`button[data-profile="${other.id}"]`).click();await expect(panel.locator(`button[data-profile="${other.id}"]`)).toHaveAttribute('aria-pressed','true');await expect(portrait()).toHaveAttribute('data-emotion','neutral');await expect(panel.locator('#mood-persistence')).not.toBeChecked();
+    await panel.locator(`button[data-profile="${p.id}"]`).click();await expect(panel.locator(`button[data-profile="${p.id}"]`)).toHaveAttribute('aria-pressed','true');await expect(portrait()).toHaveAttribute('data-emotion','anger');
+    await send('Tu es super, merci pour ton aide');await send("Je t'adore");await expect(portrait()).not.toHaveAttribute('data-emotion','anger');
+    for(let i=0;i<8;i++)await send('Une question neutre '+i);await expect(portrait()).toHaveAttribute('data-emotion','neutral');
+    await send('Tu es nul');await expect(portrait()).toHaveAttribute('data-emotion','anger');
+    const memory=await native<any>('get_memories',{profileId:p.id,query:''});await native('edit_memory',{profileId:p.id,epoch:memory.epoch,edit:{action:'write',id:null,draft:{content:'A saved mood test fact.',category:'Test',kind:'essential'}}});
+    const before=(await native<any[]>('get_history',{profileId:p.id})).length;
+    await panel.locator('[data-nav="conversation"]').click();await panel.locator('#reset-mood-conversation').click();await expect(portrait()).toHaveAttribute('data-emotion','neutral');
+    expect((await native<any[]>('get_history',{profileId:p.id})).length).toBe(before);expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toHaveLength(1);
+    await send('Tu es nul');await panel.locator('#clear-conversation').click();await expect(panel.locator('#erase-mood')).not.toBeChecked();await panel.locator('#clear-confirm').click();await expect(panel.locator('#clear-confirm')).toHaveCount(0);await expect(portrait()).toHaveAttribute('data-emotion','anger');
+    await panel.locator('#clear-conversation').click();await panel.locator('#erase-mood').check();await panel.locator('#clear-confirm').click();await expect(portrait()).toHaveAttribute('data-emotion','neutral');expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toHaveLength(1);
+    await send('Tu es nul');await panel.locator('#clear-conversation').click();await panel.locator('#erase-saved-facts').check();await expect(panel.locator('#erase-mood')).toBeChecked();await expect(panel.locator('#erase-mood')).toBeDisabled();await panel.locator('#clear-confirm').click();await expect(portrait()).toHaveAttribute('data-emotion','neutral');expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toHaveLength(0);
+    await panel.locator('[data-nav="profiles"]').click();await panel.locator('#reset-mood-settings').click();await expect(panel.locator('.toast')).toContainText('Humeur réinitialisée.');
+    expect(consoleErrors).toEqual([]);
+  }finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+});
+
+test('ComfyUI startup: optional local launcher, headless arguments, readiness, reuse and remote controls',async()=>{
+  test.setTimeout(120000);
+  const reservation=createServer();await new Promise<void>(done=>reservation.listen(0,'127.0.0.1',done));const port=(reservation.address() as {port:number}).port;await new Promise<void>(done=>reservation.close(()=>done()));
+  const url=`http://127.0.0.1:${port}`,folder=resolve(dataDirectory,'fixture-comfy');mkdirSync(folder,{recursive:true});
+  const template=JSON.parse(readFileSync('config/workflows/illustrious.json','utf8')),info:any={};for(const node of Object.values(template) as any[])info[node.class_type]={input:{required:{}}};
+  info.PreviewImage={input:{required:{}}};info.CheckpointLoaderSimple={input:{required:{ckpt_name:[['fixture.safetensors']]}}};info.LoraLoader={input:{required:{lora_name:[['Style/fixture.safetensors','PAseer-SDXL-LCM+Turbo.safetensors']]}}};info.KSampler={input:{required:{sampler_name:[['euler_ancestral']]}}};
+  writeFileSync(resolve(folder,'main.py'),`import argparse,json,os,sys,time,threading
+from pathlib import Path
+from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+parser=argparse.ArgumentParser();parser.add_argument('--listen');parser.add_argument('--port',type=int);parser.add_argument('--disable-auto-launch',action='store_true');args=parser.parse_args()
+Path('launch.json').write_text(json.dumps({'pid':os.getpid(),'args':sys.argv[1:]}),encoding='utf-8')
+info=json.loads(${JSON.stringify(JSON.stringify(info))})
+class Handler(BaseHTTPRequestHandler):
+    def log_message(self,*args): pass
+    def do_GET(self):
+        if self.path=='/system_stats':
+            time.sleep(0.5);value={'system':{'comfyui_version':'0.39.0'},'devices':[]}
+        elif self.path.startswith('/object_info/'):
+            from urllib.parse import unquote
+            key=unquote(self.path[len('/object_info/'):]);value={key:info[key]} if key in info else {}
+        else: value={}
+        body=json.dumps(value).encode();self.send_response(200);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+    def do_POST(self):
+        self.send_response(200);self.end_headers()
+        if self.path=='/shutdown':threading.Thread(target=server.shutdown,daemon=True).start()
+server=ThreadingHTTPServer((args.listen,args.port),Handler);server.serve_forever();server.server_close()
+`);
+  const python=execFileSync('python',['-c','import sys;print(sys.executable)'],{encoding:'utf8'}).trim();
+  try{
+    await panel.locator('.comfy-startup-options > summary').click();await panel.locator('#comfy-directory').fill(folder);await panel.locator('#comfy-python').fill(python);await panel.locator('#save-comfy-startup').click();
+    await expect.poll(async()=>(await native<any>('get_snapshot')).settings.comfyui_startup.directory).toBe(folder);await expect(panel.locator('body')).not.toHaveClass(/working/);
+    expect((await native<any>('get_comfy_service')).phase).toBe('disabled');expect(existsSync(resolve(folder,'launch.json'))).toBe(false);
+    await panel.locator('[name="image_server"]').fill(url);await panel.locator('[name="image_enabled"]').check();await panel.locator('#discover-images').click();
+    await expect(panel.locator('#comfy-startup-status')).toContainText('premières générations');await expect(panel.locator('#image-catalog-status')).toContainText('1 modèles');
+    await expect.poll(async()=>(await native<any>('get_comfy_service')).phase).toBe('ready');
+    const launch=JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8'));expect(launch.args).toEqual(['--listen','127.0.0.1','--port',String(port),'--disable-auto-launch']);
+    await panel.locator('[name="image_checkpoint"]').selectOption('fixture.safetensors');await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();await expect(panel.locator('body')).not.toHaveClass(/working/);
+    await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode,{timeout:30000}).toBe(0);await stopApplication();
+    expect((await fetch(url+'/system_stats')).ok).toBe(true);
+    await startApplication();await expect.poll(async()=>(await native<any>('get_comfy_service')).phase).toBe('ready');expect(JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8')).pid).toBe(launch.pid);
+    await panel.locator('[name="image_server"]').fill('http://192.0.2.1:8188');await panel.locator('.comfy-startup-options > summary').click();await expect(panel.locator('#comfy-directory')).toBeDisabled();await expect(panel.locator('#comfy-python')).toBeDisabled();await expect(panel.locator('#comfy-remote-note')).toBeVisible();
+    await panel.screenshot({path:'artifacts/comfy-remote-startup-options.png'});expect(consoleErrors).toEqual([]);
+  }finally{await fetch(url+'/shutdown',{method:'POST'}).catch(()=>{});await expect.poll(async()=>{try{await fetch(url+'/system_stats');return false;}catch{return true;}},{timeout:10000}).toBe(true);}
+});
+
+
+test('ComfyUI live probe: existing real server is reused without launching or generating',async()=>{
+  test.skip(!process.env.SHERKA_LIVE_COMFY_URL,'Opt-in read-only catalog probe of an already running ComfyUI server.');
+  await native('apply_mutation',{mutation:{kind:'comfyui_startup',config:{directory:'not-a-launchable-installation',python:''}}});
+  const catalog=await native<any>('discover_illustration',{config:{server_url:process.env.SHERKA_LIVE_COMFY_URL},startIfNeeded:true});
+  expect((await native<any>('get_comfy_service')).phase).toBe('ready');expect(catalog.checkpoints.length).toBeGreaterThan(0);
+  writeFileSync('artifacts/comfy-existing-service-verification.json',JSON.stringify({realServer:true,readOnly:true,launchedProcess:false,generatedImages:false,checkpoints:catalog.checkpoints.length,loras:catalog.loras.length,samplers:catalog.samplers.length,missingNodes:catalog.missing_nodes},null,2));
+});
+
+test('catalog cache: complete refresh, companion sharing, restart and offline reuse', async () => {
+  const template=JSON.parse(readFileSync('config/workflows/illustrious.json','utf8'));
+  async function mockCatalog(prefix:string) {
+    const fixture={checkpoints:[`${prefix}/keep.safetensors`,`${prefix}/removed.safetensors`],loras:[`${prefix}/keep-lora.safetensors`,`${prefix}/removed-lora.safetensors`],available:true,scans:0};
+    const server=createServer((req,res)=>{
+      const cls=decodeURIComponent((req.url??'').slice('/object_info/'.length));
+      if(cls==='CheckpointLoaderSimple')fixture.scans++;
+      if(!fixture.available){res.writeHead(503,{'Content-Type':'application/json'});res.end('{}');return;}
+      const info:any={PreviewImage:{input:{required:{}}}};
+      for(const node of Object.values(template) as any[])info[node.class_type]={input:{required:{}}};
+      info.CheckpointLoaderSimple={input:{required:{ckpt_name:[fixture.checkpoints]}}};
+      info.LoraLoader={input:{required:{lora_name:[[...fixture.loras,'PAseer-SDXL-LCM+Turbo.safetensors']]}}};
+      info.KSampler={input:{required:{sampler_name:[['euler_ancestral','dpmpp_2m']]}}};
+      res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(info[cls]?{[cls]:info[cls]}:{}));
+    });
+    await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
+    return {fixture,url:'http://127.0.0.1:'+(server.address() as {port:number}).port,close:async()=>{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}};
+  }
+  const a=await mockCatalog('ModelsA'),b=await mockCatalog('ModelsB');
+  try {
+    const state=await native<any>('get_snapshot'),profile=state.profiles.find((p:any)=>p.id===state.settings.active_profile);
+    const other=state.profiles.find((p:any)=>p.id!==profile.id&&p.connections.llm_provider!=='hermes');
+    await panel.locator('[name="image_server"]').fill(a.url);
+    const button=panel.locator('#discover-images');await expect(button).toHaveClass(/\bprimary\b/);
+    expect(await button.evaluate(element=>getComputedStyle(element).backgroundColor)).not.toBe('rgba(0, 0, 0, 0)');
+    await button.click();await expect(panel.locator('#image-catalog-status')).toContainText('2 modèles');
+    expect(a.fixture.scans).toBe(1);
+    await panel.locator('[name="image_checkpoint"]').selectOption(a.fixture.checkpoints[0]);
+    await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===profile.id).illustration.server_url).toBe(a.url);
+    await expect(panel.locator('body')).not.toHaveClass(/\bworking\b/);
+    await panel.locator('[data-nav="conversation"]').click();await panel.locator('[data-nav="profiles"]').click();
+    await expect(panel.locator('#image-catalog-status')).toContainText('Liste mémorisée');
+    await panel.locator('#add-image-lora').click();
+    await expect(panel.locator('[data-lora="0"] option')).toHaveText(['Choisir un LoRA',...a.fixture.loras]);
+    await panel.locator('[data-lora="0"]').selectOption(a.fixture.loras[0]);expect(a.fixture.scans).toBe(1);
+    await panel.locator(`button[data-profile="${other.id}"]`).click();
+    await expect(panel.locator(`button[data-profile="${other.id}"]`)).toHaveAttribute('aria-pressed','true');
+    await expect(panel.locator('body')).not.toHaveClass(/\bworking\b/);
+    await panel.locator('[name="image_server"]').fill(a.url);
+    await expect(panel.locator('#image-catalog-status')).toContainText('Liste mémorisée');
+    await panel.locator('#add-image-lora').click();
+    await expect(panel.locator('[data-lora="0"] option')).toHaveText(['Choisir un LoRA',...a.fixture.loras]);
+    expect(a.fixture.scans).toBe(1);
+    await panel.locator(`button[data-profile="${profile.id}"]`).click();
+    await expect(panel.locator(`button[data-profile="${profile.id}"]`)).toHaveAttribute('aria-pressed','true');
+    await expect(panel.locator('body')).not.toHaveClass(/\bworking\b/);
+    expect(await panel.evaluate(()=>localStorage.getItem('sherka.comfyui.catalog.v1'))).toContain(a.url);
+    // Exercise a normal user exit so WebView2 flushes its browser storage.
+    await native('widget_action',{action:'quit'}).catch(()=>{});
+    await expect.poll(()=>child.exitCode,{timeout:30000}).toBe(0);
+    await stopApplication();await startApplication();
+    expect(await panel.evaluate(()=>localStorage.getItem('sherka.comfyui.catalog.v1'))).toContain(a.url);
+    await panel.locator(`button[data-profile="${profile.id}"]`).click();
+    await expect(panel.locator('#image-catalog-status')).toContainText('Liste mémorisée');
+    await panel.locator('#add-image-lora').click();
+    await expect(panel.locator('[data-lora="0"] option')).toHaveText(['Choisir un LoRA',...a.fixture.loras]);
+    expect(a.fixture.scans).toBe(1);
+    await panel.locator('[name="image_server"]').fill(b.url);
+    await expect(panel.locator('[data-lora="0"] option')).toHaveText(['Choisir un LoRA']);
+    await panel.locator('#discover-images').click();
+    await expect.poll(()=>b.fixture.scans).toBe(1);
+    await expect(panel.locator('#image-catalog-status')).toContainText('2 modèles');
+    await expect(panel.locator('[data-lora="0"] option')).toHaveText(['Choisir un LoRA',...b.fixture.loras]);
+    await panel.locator('[name="image_server"]').fill(a.url);
+    await expect(panel.locator('[data-lora="0"] option')).toHaveText(['Choisir un LoRA',...a.fixture.loras]);
+    expect(a.fixture.scans).toBe(1);expect(b.fixture.scans).toBe(1);
+    a.fixture.checkpoints=[a.fixture.checkpoints[0],'Moved/new.safetensors'];
+    a.fixture.loras=[a.fixture.loras[0],'Moved/new-lora.safetensors'];
+    await panel.locator('#discover-images').click();await expect(panel.locator('#discover-images')).toBeEnabled();
+    await expect(panel.locator('[name="image_checkpoint"] option')).toHaveText(['Choisir un modèle',...a.fixture.checkpoints]);
+    await expect(panel.locator('[data-lora="0"] option')).toHaveText(['Choisir un LoRA',...a.fixture.loras]);
+    expect(a.fixture.scans).toBe(2);
+    await panel.locator('#discover-images').scrollIntoViewIfNeeded();
+    await panel.screenshot({path:'artifacts/illustration-catalog-cache.png'});
+    a.fixture.available=false;await panel.locator('#discover-images').click();
+    await expect(panel.locator('#image-settings-error')).not.toHaveText('');
+    await expect(panel.locator('#discover-images')).toBeEnabled();
+    await expect(panel.locator('#image-catalog-status')).toContainText('Liste mémorisée');
+    await expect(panel.locator('[data-lora="0"] option')).toHaveText(['Choisir un LoRA',...a.fixture.loras]);
+    await panel.locator('[data-lora="0"]').selectOption('Moved/new-lora.safetensors');
+    expect(consoleErrors).toEqual([]);
+  } finally {await a.close();await b.close();}
 });
 
 test('desktop scenes: tight widget chrome, profile halo, themes, quick text and SDXL images', async () => {
@@ -2450,6 +2654,7 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await panel.locator('#search-provider').selectOption('searxng');await panel.locator('#search-endpoint').fill(url);
     await expect(panel.locator('#search-provider')).toHaveValue('searxng');await expect(panel.locator('body')).not.toHaveClass(/working/);await panel.locator('#save-search-config').click();
     await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).search.provider).toBe('searxng');
+    await panel.locator('#test-search-config').click();await expect(panel.locator('#search-test-status')).toContainText('Moteur accessible');
     await panel.locator('#web-search-mode').selectOption('on_request');
     await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).web_search).toBe('on_request');
     await native('send_message',{profileId:p.id,text:'/web Rust documentation',speak:false});
@@ -2485,4 +2690,107 @@ test('illustrations live: configured provider prepares an Illustrious scene on t
   const usage=(await native<any>('get_conversation')).live.usage;
   writeFileSync('artifacts/live-conversation-illustration.json',JSON.stringify({provider:connections.llm_provider,model:connections.llm_model,realProvider:true,realComfy:true,syntheticDialogue:true,existingHistoryRead:false,physicalAudioTest:false,usage},null,2));
   expect(consoleErrors).toEqual([]);
+});
+
+
+test('live scenes: advanced settings, targeted interruption and text/TTS priority resume', async()=>{
+  test.setTimeout(150_000);
+  const canSpeak=process.env.SHERKA_TEST_TEXT_ONLY!=='1';
+  const model=modelRoutes(['live-chat'],32768,{'live-chat':['off','on']});
+  const graph=JSON.parse(readFileSync('config/workflows/illustrious.json','utf8'));
+  const info:any={};for(const node of Object.values(graph) as any[])info[node.class_type]={input:{required:{}}};
+  info.CheckpointLoaderSimple={input:{required:{ckpt_name:[['scene.safetensors']]}}};
+  info.LoraLoader={input:{required:{lora_name:[['PAseer-SDXL-LCM+Turbo.safetensors']]}}};
+  info.KSampler={input:{required:{sampler_name:[['euler_ancestral','dpmpp_2m']]}}};
+  const png=readFileSync('public/assets/sherka.png'),fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
+  const jobs=new Map<string,boolean>(),graphs:any[]=[],events:string[]=[],speech:string[]=[];
+  let heldChat:ServerResponse|undefined,heldSpeech:ServerResponse|undefined,holdChat=false,holdSpeech=false;
+  const answer=(res:ServerResponse)=>{res.writeHead(200,{'Content-Type':'text/event-stream'});res.end('data: '+JSON.stringify({choices:[{delta:{content:'Une lune brillante dans le ciel. 😊'}}]})+'\n\ndata: [DONE]\n\n');};
+  const audio=(res:ServerResponse)=>{res.writeHead(200,{'Content-Type':'audio/pcm'});res.end(Buffer.alloc(4800));};
+  const server=createServer((req,res)=>{
+    if(model(req,res))return;
+    const path=new URL(req.url??'/','http://127.0.0.1').pathname;
+    const json=(data:any)=>{res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(data));};
+    if(path==='/system_stats'){json({system:{comfyui_version:'0.39.0'},devices:[]});return;}
+    if(path==='/health'){json({status:'ok'});return;}
+    if(fixture[path]){json(fixture[path]);return;}
+    if(path.startsWith('/object_info/')){const cls=decodeURIComponent(path.slice(13));json({[cls]:info[cls]??{}});return;}
+    if(path==='/queue'&&req.method==='GET'){json({queue_running:[...jobs].filter(([,done])=>!done).map(([id])=>[1,id]),queue_pending:[]});return;}
+    if(path.startsWith('/history/')){const id=path.slice(9);json(jobs.get(id)?{[id]:{status:{completed:true,status_str:'success'},outputs:{preview:{images:[{filename:id+'.png',subfolder:'',type:'temp'}]}}}}:{});return;}
+    if(path==='/view'){res.writeHead(200,{'Content-Type':'image/png'});res.end(png);return;}
+    let raw='';req.on('data',v=>raw+=v);req.on('end',()=>{
+      const body=raw?JSON.parse(raw):{};
+      if(path==='/prompt'){const id='live_'+(graphs.length+1);graphs.push(body.prompt);jobs.set(id,false);events.push('prompt:'+id);json({prompt_id:id});return;}
+      if(path==='/queue'){for(const id of body.delete??[])jobs.delete(id);json({});return;}
+      if(path==='/interrupt'){expect(body.prompt_id).toMatch(/^live_\d+$/);events.push('interrupt:'+body.prompt_id);json({});return;}
+      if(path==='/free'){expect(body.unload_models).toBe(true);events.push('free');json({});return;}
+      if(path==='/v1/audio/speech'){speech.push(body.input);events.push('tts');if(holdSpeech)heldSpeech=res;else audio(res);return;}
+      if(path==='/v1/chat/completions'){
+        if(!body.stream){
+          if(body.response_format?.json_schema?.schema?.properties?.include_companion){json({choices:[{finish_reason:'stop',message:{content:'{"include_companion":false}'}}]});return;}
+          json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({characters:'none',description:'The Moon in the sky.',positive:'moon, night sky, stars',negative:''})}}]});return;
+        }
+        expect(JSON.stringify(body.messages)).toContain('Do not write emojis');events.push('chat');if(holdChat)heldChat=res;else answer(res);return;
+      }
+      res.writeHead(404);res.end('{}');
+    });
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));const url='http://127.0.0.1:'+(server.address() as {port:number}).port;
+  try{
+    let state=await native<any>('get_snapshot'),p=state.profiles.find((item:any)=>item.id===state.session.profile_id);
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...p.connections,lm_studio_url:url,llm_model:'live-chat',reasoning:'on',voice_studio_url:url,tts_engine:'omni',tts_voice:'test',volume:0}}});
+    state=await native<any>('get_snapshot');p=state.profiles.find((item:any)=>item.id===p.id);
+    await native('apply_mutation',{mutation:{kind:'web_search',id:p.id,revision:p.revision,mode:'off',config:p.search}});
+    // Reopen saved setup so late setup events cannot replace a form being edited.
+    await stopApplication();await startApplication();
+    await panel.getByRole('button',{name:'Compagnons',exact:true}).click();
+    await panel.locator('[name="image_server"]').fill(url);await panel.locator('#discover-images').click();
+    await expect(panel.locator('#image-catalog-status')).toContainText('1 modèles');
+    await panel.locator('[name="image_checkpoint"]').selectOption('scene.safetensors');
+    await panel.locator('[name="image_advanced"]').check();
+    await expect(panel.locator('#image-advanced-fields')).toBeVisible();
+    await expect(panel.locator('[name="image_size"]')).toHaveValue('768');await panel.locator('[name="image_size"]').fill('1024');
+    await panel.locator('[name="steps_first"]').fill('26');await panel.locator('[name="steps_second"]').fill('9');
+    await panel.locator('[name="cfg_first"]').fill('4.1');await panel.locator('[name="cfg_second"]').fill('5.7');
+    await panel.locator('[name="image_sampler"]').selectOption('dpmpp_2m');
+    await panel.locator('[name="image_turbo"]').uncheck();
+    await panel.locator('[name="image_live"]').check();
+    await expect(panel.locator('[name="image_count"]')).toBeHidden();
+    await panel.locator('.image-workflow summary').click();await expect(panel.locator('#image-export-workflow')).toBeVisible();
+    await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();
+    await expect(panel.locator('body')).not.toHaveClass(/working/);
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).illustration.live).toBe(true);
+    await native('send_message',{profileId:p.id,text:'Imagine la Lune.',speak:false});
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    await native('desktop_tool',{tool:'image',open:true});
+    await expect.poll(()=>graphs.length).toBe(1);
+    expect(graphs[0]['18'].inputs).toMatchObject({width:1024,height:1024});
+    expect(graphs[0]['21'].inputs).toMatchObject({steps:26,cfg:4.1,sampler_name:'dpmpp_2m'});
+    expect(graphs[0]['25'].inputs).toMatchObject({steps:9,cfg:5.7,sampler_name:'dpmpp_2m'});
+    jobs.set('live_1',true);await expect.poll(()=>graphs.length).toBe(2);
+    expect((await native<any>('get_illustration')).images).toHaveLength(1);
+    await expect(widget.locator('#cell-image-count')).toBeHidden();
+    holdChat=true;holdSpeech=true;const before=graphs.length;
+    await native('send_message',{profileId:p.id,text:'Imagine maintenant une forêt.',speak:canSpeak});
+    await expect.poll(()=>!!heldChat).toBe(true);
+    expect(events.indexOf('interrupt:live_2')).toBeGreaterThan(events.indexOf('prompt:live_2'));
+    expect(events.lastIndexOf('free')).toBeLessThan(events.lastIndexOf('chat'));
+    expect(graphs.length).toBe(before);
+    answer(heldChat!);heldChat=undefined;holdChat=false;
+    if(canSpeak){
+      await expect.poll(()=>!!heldSpeech).toBe(true);
+      await expect.poll(async()=>(await native<any>('get_conversation')).live.text_complete).toBe(true);
+      expect(graphs.length).toBe(before);expect(speech.join('')).not.toContain('😊');
+      audio(heldSpeech!);heldSpeech=undefined;holdSpeech=false;
+    }
+    await expect.poll(()=>graphs.length).toBeGreaterThan(before);
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('😊');
+    await native('desktop_tool',{tool:'image',open:false});
+    await expect.poll(async()=>(await native<any>('get_illustration')).phase).toBe('disabled');
+    const stopped=graphs.length;await new Promise(done=>setTimeout(done,400));expect(graphs.length).toBe(stopped);
+    await expect(panel.locator('[name="image_enabled"]')).not.toBeChecked();
+    await panel.locator('#image-advanced-fields').scrollIntoViewIfNeeded();await panel.screenshot({path:'artifacts/illustration-live-advanced-settings.png'});
+    expect(consoleErrors).toEqual([]);
+  }finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
 });

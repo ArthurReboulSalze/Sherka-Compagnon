@@ -1,4 +1,5 @@
 mod audio_diagnostics;
+mod comfy_startup;
 mod conversation;
 mod desktop_tools;
 mod illustrations;
@@ -35,6 +36,17 @@ struct Shared(Arc<Mutex<Companion>>);
 enum Mutation {
     Theme {
         theme: sherka_core::model::Theme,
+    },
+    MoodPersistence {
+        id: Uuid,
+        revision: i64,
+        enabled: bool,
+    },
+    ResetMood {
+        id: Uuid,
+    },
+    ComfyuiStartup {
+        config: sherka_core::model::ComfyStartupConfig,
     },
     Illustration {
         id: Uuid,
@@ -170,7 +182,11 @@ async fn apply_mutation(
     windows::ensure_running()?;
     if !matches!(
         &mutation,
-        Mutation::Theme { .. } | Mutation::Illustration { .. }
+        Mutation::Theme { .. }
+            | Mutation::Illustration { .. }
+            | Mutation::MoodPersistence { .. }
+            | Mutation::ResetMood { .. }
+            | Mutation::ComfyuiStartup { .. }
     ) {
         voice.cancel_pending();
     }
@@ -196,6 +212,17 @@ async fn apply_mutation(
     let snapshot = with_core(shared.inner().clone(), move |core| {
         match mutation {
             Mutation::Theme { theme } => core.set_theme(theme)?,
+            Mutation::ComfyuiStartup { config } => core.set_comfy_startup_config(config)?,
+            Mutation::MoodPersistence {
+                id,
+                revision,
+                enabled,
+            } => {
+                let mut draft = core.store.profile(id)?.details;
+                draft.mood_persistence = enabled;
+                core.update_profile(id, revision, draft)?;
+            }
+            Mutation::ResetMood { id } => core.reset_mood(id)?,
             Mutation::Illustration {
                 id,
                 revision,
@@ -441,6 +468,7 @@ async fn clear_conversation(
     voice: State<'_, Voice>,
     profile_id: Uuid,
     erase_saved_facts: bool,
+    erase_mood: Option<bool>,
 ) -> Result<(), String> {
     conversation::clear(
         &app,
@@ -448,6 +476,7 @@ async fn clear_conversation(
         voice.inner(),
         profile_id,
         erase_saved_facts,
+        erase_mood.unwrap_or(false),
         None,
     )
     .await
@@ -604,6 +633,22 @@ async fn search_key_status(
     .await
     .map_err(|_| "Moteur indisponible.".to_string())?
 }
+#[tauri::command]
+async fn test_search_config(
+    config: sherka_core::search_provider::Config,
+    language: String,
+) -> Result<usize, String> {
+    crate::windows::ensure_running()?;
+    sherka_core::search_provider::search(
+        &config,
+        "Rust programming language official documentation",
+        &language,
+    )
+    .await
+    .map(|sources| sources.len())
+    .map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn set_search_key(
     provider: sherka_core::search_provider::Provider,
@@ -894,6 +939,8 @@ pub fn run() {
             startup::get_startup_issue,
             startup::close_startup_recovery,
             get_snapshot,
+            comfy_startup::get_comfy_service,
+            comfy_startup::select_comfyui_path,
             illustrations::get_illustration,
             illustrations::discover_illustration,
             illustrations::refresh_illustration,
@@ -923,6 +970,8 @@ pub fn run() {
             get_provider_key_status,
             search_key_status,
             set_search_key,
+            test_search_config,
+            illustrations::export_illustration_workflow,
             set_provider_key,
             discover_voices,
             widget_action,
@@ -957,6 +1006,10 @@ pub fn run() {
             let shared = Shared(Arc::new(Mutex::new(companion)));
             app.manage(
                 voice_startup::VoiceStartup::new(app.handle().clone())
+                    .map_err(std::io::Error::other)?,
+            );
+            app.manage(
+                comfy_startup::ComfyStartup::new(app.handle().clone(), directory.clone())
                     .map_err(std::io::Error::other)?,
             );
             app.manage(shared.clone());

@@ -4044,7 +4044,7 @@ dependencies = [
 
 [[package]]
 name = "sherka-compagnon"
-version = "0.12.1"
+version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -4069,7 +4069,7 @@ dependencies = [
 
 [[package]]
 name = "sherka-core"
-version = "0.12.1"
+version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
  "cpal",

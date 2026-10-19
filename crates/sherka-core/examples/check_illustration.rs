@@ -14,6 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let sdxl = flag("--sdxl");
     let normal = flag("--normal");
+    let cancel_check = flag("--cancel");
     let scene_file = if let Some(i) = args.iter().position(|s| s == "--scene") {
         args.remove(i);
         if i >= args.len() {
@@ -94,7 +95,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Scene{positive:"masterpiece, best quality, black sports car, red scanner light, glossy bodywork, forest clearing, camping tent, warm lantern light, starry night, peaceful atmosphere, detailed background, cinematic lighting, wide view".into(),negative:"worst quality, low quality, blurry, text, watermark, bad perspective".into()}
     };
     let graph = workflow(&config, scene, &info, 1776723)?;
-    let data = client.render(graph, CancellationToken::new()).await?;
+    let cancel = CancellationToken::new();
+    let started = std::time::Instant::now();
+    if cancel_check {
+        client.require_live_support().await?;
+        let stop = cancel.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+            stop.cancel();
+        });
+    }
+    let result = client.render(graph, cancel).await;
+    if cancel_check {
+        if matches!(result, Err(sherka_core::Error::StaleOperation)) {
+            println!(
+                "Owned generation cancelled and idle GPU release requested in {:.1}s; no image saved.",
+                started.elapsed().as_secs_f32()
+            );
+            return Ok(());
+        }
+        return Err("Generation was not cancelled as expected".into());
+    }
+    let data = result?;
     std::fs::write(
         &args[2],
         STANDARD.decode(

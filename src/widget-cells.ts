@@ -1,6 +1,7 @@
 import * as api from './api';
 import {html,t} from './i18n';
 import {icon} from './icons';
+import {comfyStartupMessage} from './comfy-startup';
 import type {Snapshot,IllustrationStatus,WidgetSurface,Attachment} from './types';
 const esc=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 type Cell={text:boolean;draft:string;speak:boolean;attachments:Attachment[];textHeight?:number;image?:{x:number;y:number;size:number;moved?:boolean}};
@@ -39,7 +40,7 @@ function layout():void{
 }
 function showSlide():void{
  const layers=root?.querySelector<HTMLElement>('#cell-image-layers');if(!layers)return;const version=++decode;
- root!.querySelector('#cell-image-count')!.textContent=slides.length?`${slide+1}/${slides.length}`:'';
+ const counter=root!.querySelector<HTMLElement>('#cell-image-count')!;counter.hidden=!!profile().illustration?.live;counter.textContent=!counter.hidden&&slides.length?`${slide+1}/${slides.length}`:'';
  if(!slides.length){layers.replaceChildren();return;}
  const src=slides[slide]!;if(layers.querySelector<HTMLImageElement>('img:not(.leaving)')?.src===src)return;
  const img=new Image();img.src=src;img.alt=t('Illustration de la conversation');img.draggable=false;
@@ -48,10 +49,10 @@ function showSlide():void{
 function paintImages():void{
  if(!root||!current)return;const active=status?.profile_id===profile().id?status:undefined;
  const images=active?.images??(active?.image?[active.image]:[]);if(images[0]!==first){first=images[0]??'';slide=0;}slides=images;slide=slides.length?slide%slides.length:0;
- const message=active?.message??(active?.phase==='planning'?t('Préparation de la scène…'):active?.phase==='generating'?t('ComfyUI dessine la scène…'):active?.phase==='ready'?t('Image du dernier échange'):t('La prochaine conversation inspirera une image.'));
+ const message=comfyStartupMessage(profile().illustration?.server_url??'')??active?.message??(active?.phase==='paused'?t('Images en pause : priorité à la conversation.'):active?.phase==='planning'?t('Préparation de la scène…'):active?.phase==='generating'?t('ComfyUI dessine la scène…'):active?.phase==='ready'?t('Image du dernier échange'):t('La prochaine conversation inspirera une image.'));
  root.querySelector('#cell-image-status')!.textContent=message;
  root.querySelector<HTMLElement>('#cell-image-placeholder')!.hidden=slides.length>0;
- root.querySelector<HTMLButtonElement>('#cell-image-refresh')!.disabled=['planning','generating','disabled'].includes(active?.phase??'disabled');
+ root.querySelector<HTMLButtonElement>('#cell-image-refresh')!.disabled=['planning','generating','paused','disabled'].includes(active?.phase??'disabled');
  showSlide();
 }
 function paint():void{
@@ -88,7 +89,7 @@ async function drop(event:DragEvent):Promise<void>{
 export function mountWidgetCells(snapshot:Snapshot,onError:(e:unknown)=>void):void{
  for(const id of cells.keys())if(!snapshot.profiles.some(p=>p.id===id))cells.delete(id);
  current=snapshot;report=onError;root=document.querySelector('#widget-cells');if(!root)return;
- if(!started){started=true;void api.onAvatarSize(size=>{if(base){base.base_width=size[0];base.base_height=size[1];schedule();}});void api.widgetSurface().then(value=>{base=value;schedule();}).catch(report);void api.onIllustration(value=>{status=value;paintImages();});void api.illustration().then(value=>{status=value;paintImages();}).catch(report);document.addEventListener('sherka:widget-layout',schedule);document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>void drop(e));void api.onCleared(id=>{cells.delete(id);if(current?.session.profile_id===id)paint();});}
+ if(!started){started=true;void api.onAvatarSize(size=>{if(base){base.base_width=size[0];base.base_height=size[1];schedule();}});void api.widgetSurface().then(value=>{base=value;schedule();}).catch(report);void api.onIllustration(value=>{status=value;paintImages();});void api.illustration().then(value=>{status=value;paintImages();}).catch(report);document.addEventListener('sherka:widget-layout',schedule);document.addEventListener('sherka:comfy-service',paintImages);document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>void drop(e));void api.onCleared(id=>{cells.delete(id);if(current?.session.profile_id===id)paint();});}
  document.querySelector('#widget-text')?.addEventListener('click',()=>{const c=cell();c.text=!c.text;focus=c.text;if(!c.image)c.image=undefined;paint();});
  document.querySelector('#widget-image')?.addEventListener('click',()=>void api.desktopTool('image',!profile().illustration?.enabled).catch(report));
  document.querySelector('#resize-widget')?.addEventListener('pointerdown',e=>{const event=e as PointerEvent;if(event.button!==0||!base)return;event.preventDefault();const target=event.currentTarget as HTMLElement;target.setPointerCapture(event.pointerId);const w=base.base_width,h=base.base_height,x=event.screenX,y=event.screenY;const move=(v:PointerEvent)=>{base!.base_width=Math.max(188,Math.min(600,w+v.screenX-x));base!.base_height=Math.max(228,Math.min(720,h+v.screenY-y));schedule();};const end=()=>{target.removeEventListener('pointermove',move);target.removeEventListener('pointerup',end);target.removeEventListener('pointercancel',end);};target.addEventListener('pointermove',move);target.addEventListener('pointerup',end);target.addEventListener('pointercancel',end);});

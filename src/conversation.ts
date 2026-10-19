@@ -1,7 +1,7 @@
 import { t, html, feedback, formatLocale } from './i18n';
 import * as api from './api';
 import { icon } from './icons';
-import type { Profile, Snapshot, LiveState } from './types';
+import type { Profile, Snapshot, LiveState, Mutation } from './types';
 import { webReport } from './web';
 
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -24,14 +24,19 @@ function confirmClear(profile: Profile, report: (e: unknown) => void): void {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal';
   dialog.setAttribute('aria-labelledby', 'clear-title');
-  dialog.innerHTML = html`<div class="modal-header"><h2 id="clear-title">Effacer la conversation avec ${escape(profile.name)} ?</h2></div><p>Les messages, leurs sources et les résumés seront supprimés de ce PC. Les faits que tu as enregistrés ou validés seront conservés.</p>${remote ? html`<p class="modal-hint">Hermes conserve ses conversations et sa mémoire sur son serveur. Cette action efface uniquement l’historique local et démarre une nouvelle conversation côté Sherka.</p>` : html`<label class="inline-check"><input type="checkbox" id="erase-saved-facts" /> Effacer aussi les faits sauvegardés</label>`}<p class="muted">Cette action ne peut pas être annulée.</p><p id="clear-error" role="alert"></p><div class="modal-actions"><button type="button" class="button quiet" id="clear-cancel">Annuler</button><button type="button" class="button destructive" id="clear-confirm">Effacer la conversation</button></div>`;
+  dialog.innerHTML = html`<div class="modal-header"><h2 id="clear-title">Effacer la conversation avec ${escape(profile.name)} ?</h2></div><p>Les messages, leurs sources et les résumés seront supprimés de ce PC. Les faits que tu as enregistrés ou validés seront conservés.</p>${remote ? html`<p class="modal-hint">Hermes conserve ses conversations et sa mémoire sur son serveur. Cette action efface uniquement l’historique local et démarre une nouvelle conversation côté Sherka.</p>` : html`<label class="inline-check"><input type="checkbox" id="erase-saved-facts" /> Effacer aussi les faits sauvegardés</label><label class="inline-check"><input type="checkbox" id="erase-mood" /> Réinitialiser aussi l’humeur</label>`}<p class="muted">Cette action ne peut pas être annulée.</p><p id="clear-error" role="alert"></p><div class="modal-actions"><button type="button" class="button quiet" id="clear-cancel">Annuler</button><button type="button" class="button destructive" id="clear-confirm">Effacer la conversation</button></div>`;
   dialog.addEventListener('close', () => dialog.remove());
   dialog.querySelector('#clear-cancel')!.addEventListener('click', () => dialog.close());
+  dialog.querySelector<HTMLInputElement>('#erase-saved-facts')?.addEventListener('change',event=>{
+    const all=(event.target as HTMLInputElement).checked;
+    const mood=dialog.querySelector<HTMLInputElement>('#erase-mood')!;
+    mood.disabled=all;if(all)mood.checked=true;
+  });
   dialog.querySelector<HTMLButtonElement>('#clear-confirm')!.addEventListener('click', async () => {
     const button = dialog.querySelector<HTMLButtonElement>('#clear-confirm')!;
     button.disabled = true;
     try {
-      await api.clearConversation(profile.id, dialog.querySelector<HTMLInputElement>('#erase-saved-facts')?.checked ?? false);
+      await api.clearConversation(profile.id, dialog.querySelector<HTMLInputElement>('#erase-saved-facts')?.checked ?? false, dialog.querySelector<HTMLInputElement>('#erase-mood')?.checked ?? false);
       clearConversationDraft(profile.id);
       dialog.close();
     } catch (e) {
@@ -57,7 +62,7 @@ export function status(session: Snapshot['session']): string {
 export function conversationView(profile: Profile, mode: Snapshot['settings']['web_search']): string {
   return html`<div class="page-heading"><div><p class="eyebrow">UNE CONVERSATION, TOUT SIMPLEMENT</p><h1>Avec ${escape(profile.name)}<span>.</span></h1><p>Active le micro, parle naturellement. Tu peux l’interrompre à tout moment.</p></div></div>
     <section class="conversation-controls"><button class="button primary" data-action="toggle_microphone" data-mic-toggle>${icon('mic')} <span>Activer le micro</span></button><button class="button secondary" data-action="${profile.connections.llm_provider === 'hermes' ? 'stop_hermes' : 'stop_response'}">${icon('stop')} ${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}</button><div class="voice-indicator"><span data-session-status></span><meter data-meter min="0" max="1" value="0" aria-label="Niveau du microphone"></meter><small data-speech-indicator>Microphone coupé</small></div></section>
-    <div class="conversation-privacy"><button type="button" class="button quiet small" id="clear-conversation">${icon('trash')} ${profile.connections.llm_provider === 'hermes' ? t('Effacer l’historique local') : t('Effacer la conversation')}</button>${profile.connections.llm_provider === 'hermes' ? '' : html`<small>Dis « Efface la discussion » ou écris /clear, puis confirme avec /confirm-clear. Les faits mémorisés sont conservés. Pour résumer la mémoire : /optimize-memory.</small>`}</div>
+    <div class="conversation-privacy"><button type="button" class="button quiet small" id="clear-conversation">${icon('trash')} ${profile.connections.llm_provider === 'hermes' ? t('Effacer l’historique local') : t('Effacer la conversation')}</button>${profile.connections.llm_provider === 'hermes' ? '' : html`<button type="button" class="button quiet small" id="reset-mood-conversation">Réinitialiser l’humeur</button><small>Dis « Efface la discussion » ou écris /clear, puis confirme avec /confirm-clear. Les faits mémorisés sont conservés. Pour résumer la mémoire : /optimize-memory.</small>`}</div>
     <p class="conversation-error" id="conversation-error" role="alert" hidden></p><p class="muted" id="conversation-notice" hidden></p>
     <section class="settings-card" id="hermes-approval" hidden></section>
     <p class="memory-receipt" id="memory-receipt" role="status" hidden></p>
@@ -66,10 +71,11 @@ export function conversationView(profile: Profile, mode: Snapshot['settings']['w
     <form id="message-form" class="message-form"><label for="chat-text">Ou écris-lui ici</label><textarea id="chat-text" name="text" rows="2" maxlength="128000" placeholder="Qu’est-ce que tu as en tête ?">${escape(drafts.get(profile.id) ?? '')}</textarea><div class="message-actions"><label class="inline-check"><input id="speak-reply" type="checkbox" ${spoken ? 'checked' : ''} /> Lire la réponse à voix haute</label><label class="inline-check" ${profile.connections.llm_provider === 'hermes' ? 'hidden' : ''}><input id="search-message" type="checkbox" ${mode==='off'||profile.connections.llm_provider==='hermes'?'disabled':''} /> Chercher sur Internet pour ce message</label><button type="submit" class="button primary">Envoyer ${icon('arrow')}</button></div></form>`;
 }
 
-export function mountConversation(profile: Profile, report: (e: unknown) => void): void {
+export function mountConversation(profile: Profile, report: (e: unknown) => void, save:(mutation:Mutation,message:string)=>Promise<boolean>): void {
   const form = document.querySelector<HTMLFormElement>('#message-form');
   if (!form) return;
   document.querySelector('#clear-conversation')?.addEventListener('click', () => confirmClear(profile, report));
+  document.querySelector('#reset-mood-conversation')?.addEventListener('click',()=>void save({kind:'reset_mood',id:profile.id},t('Humeur réinitialisée.')));
   const input = form.querySelector<HTMLTextAreaElement>('#chat-text')!;
   input.addEventListener('input', () => drafts.set(profile.id, input.value));
   form.querySelector<HTMLInputElement>('#speak-reply')!.addEventListener('change', (e) => { spoken = (e.target as HTMLInputElement).checked; });

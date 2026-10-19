@@ -7494,5 +7494,525 @@
     "{0} Diesen Begleiter duplizieren",
     "{0} 复制此伙伴",
     "{0} このコンパニオンを複製"
+  ],
+  "Mode avancé": [
+    "Advanced mode",
+    "Modo avanzado",
+    "Modalità avanzata",
+    "Erweiterter Modus",
+    "高级模式",
+    "詳細モード"
+  ],
+  "Mode live": [
+    "Live mode",
+    "Modo en vivo",
+    "Modalità live",
+    "Live-Modus",
+    "实时模式",
+    "ライブモード"
+  ],
+  "Échantillonnage": [
+    "Sampling",
+    "Muestreo",
+    "Campionamento",
+    "Sampling",
+    "采样",
+    "サンプリング"
+  ],
+  "Steps du premier sampler": [
+    "First sampler steps",
+    "Pasos del primer muestreador",
+    "Passi del primo campionatore",
+    "Schritte des ersten Samplers",
+    "第一采样器步数",
+    "第1サンプラーのステップ数"
+  ],
+  "Steps du second sampler": [
+    "Second sampler steps",
+    "Pasos del segundo muestreador",
+    "Passi del secondo campionatore",
+    "Schritte des zweiten Samplers",
+    "第二采样器步数",
+    "第2サンプラーのステップ数"
+  ],
+  "CFG du premier sampler": [
+    "First sampler CFG",
+    "CFG del primer muestreador",
+    "CFG del primo campionatore",
+    "CFG des ersten Samplers",
+    "第一采样器 CFG",
+    "第1サンプラーのCFG"
+  ],
+  "CFG du second sampler": [
+    "Second sampler CFG",
+    "CFG del segundo muestreador",
+    "CFG del secondo campionatore",
+    "CFG des zweiten Samplers",
+    "第二采样器 CFG",
+    "第2サンプラーのCFG"
+  ],
+  "Sampler commun": [
+    "Shared sampler",
+    "Muestreador común",
+    "Campionatore condiviso",
+    "Gemeinsamer Sampler",
+    "共用采样器",
+    "共通サンプラー"
+  ],
+  "Steps et CFG indépendants ; le même sampler pour les deux passes. Ces valeurs restent prioritaires sur Turbo.": [
+    "Independent steps and CFG; the same sampler for both passes. These values take priority over Turbo.",
+    "Pasos y CFG independientes; el mismo muestreador para ambas pasadas. Estos valores tienen prioridad sobre Turbo.",
+    "Passi e CFG indipendenti; lo stesso campionatore per entrambe le passate. Questi valori hanno priorità su Turbo.",
+    "Unabhängige Schritte und CFG; derselbe Sampler für beide Durchgänge. Diese Werte haben Vorrang vor Turbo.",
+    "步数和 CFG 分别设置，两遍共用同一采样器。这些值优先于 Turbo。",
+    "ステップ数とCFGは個別に設定し、両パスで同じサンプラーを使います。これらの値はTurboより優先されます。"
+  ],
+  "Turbo : LoRA accélérateur automatique. Sans Turbo, le mode standard utilise 16 steps par sampler et double les CFG. Le mode avancé conserve tes valeurs.": [
+    "Turbo: automatic acceleration LoRA. Without Turbo, standard mode uses 16 steps per sampler and doubles CFG. Advanced mode keeps your values.",
+    "Turbo: LoRA de aceleración automático. Sin Turbo, el modo estándar usa 16 pasos por muestreador y duplica los CFG. El modo avanzado conserva tus valores.",
+    "Turbo: LoRA di accelerazione automatico. Senza Turbo, la modalità standard usa 16 passi per campionatore e raddoppia i CFG. La modalità avanzata mantiene i tuoi valori.",
+    "Turbo: automatisches Beschleunigungs-LoRA. Ohne Turbo verwendet der Standardmodus 16 Schritte pro Sampler und verdoppelt CFG. Der erweiterte Modus behält deine Werte.",
+    "Turbo 自动添加加速 LoRA。关闭后，标准模式使用每个采样器16步并将 CFG 加倍；高级模式保留你的设置。",
+    "Turboは加速LoRAを自動追加します。オフの場合、標準モードは各サンプラー16ステップ、CFGは2倍です。詳細モードでは設定値を維持します。"
+  ],
+  "Renouvelle les images en continu à partir du dernier échange. Le texte et la synthèse vocale sont prioritaires ; les images reprennent ensuite automatiquement.": [
+    "Continuously refresh images from the latest exchange. Text and speech synthesis take priority; images resume automatically afterwards.",
+    "Renueva las imágenes continuamente a partir del último intercambio. El texto y la síntesis de voz tienen prioridad; las imágenes se reanudan automáticamente después.",
+    "Aggiorna continuamente le immagini dall'ultimo scambio. Testo e sintesi vocale hanno priorità; le immagini riprendono poi automaticamente.",
+    "Erneuert Bilder fortlaufend anhand des letzten Austauschs. Text und Sprachsynthese haben Vorrang; danach werden Bilder automatisch fortgesetzt.",
+    "根据最新对话持续更新图像。文本和语音合成优先，之后自动恢复图像生成。",
+    "最新のやり取りをもとに画像を継続更新します。テキストと音声合成を優先し、終了後に画像生成を自動再開します。"
+  ],
+  "Images en pause : priorité à la conversation.": [
+    "Images paused: conversation takes priority.",
+    "Imágenes en pausa: la conversación tiene prioridad.",
+    "Immagini in pausa: priorità alla conversazione.",
+    "Bilder pausiert: Das Gespräch hat Vorrang.",
+    "图像已暂停：对话优先。",
+    "画像を一時停止中：会話を優先しています。"
+  ],
+  "Le mode avancé nécessite exactement deux samplers reliés dans le workflow.": [
+    "Advanced mode requires exactly two connected samplers in the workflow.",
+    "El modo avanzado requiere exactamente dos muestreadores conectados en el workflow.",
+    "La modalità avanzata richiede esattamente due campionatori collegati nel workflow.",
+    "Der erweiterte Modus erfordert genau zwei verbundene Sampler im Workflow.",
+    "高级模式要求工作流中恰好有两个相连的采样器。",
+    "詳細モードにはワークフロー内で接続された2つのサンプラーが必要です。"
+  ],
+  "Le mode live nécessite ComfyUI 0.3.57 ou plus récent pour interrompre uniquement ses propres images.": [
+    "Live mode requires ComfyUI 0.3.57 or newer to interrupt only its own images.",
+    "El modo en vivo requiere ComfyUI 0.3.57 o posterior para interrumpir solo sus propias imágenes.",
+    "La modalità live richiede ComfyUI 0.3.57 o successivo per interrompere solo le proprie immagini.",
+    "Der Live-Modus erfordert ComfyUI 0.3.57 oder neuer, um nur eigene Bilder zu unterbrechen.",
+    "实时模式需要 ComfyUI 0.3.57 或更高版本，以便仅中断自身的图像任务。",
+    "ライブモードにはComfyUI 0.3.57以降が必要です。自分の画像生成のみを中断するためです。"
+  ],
+  "Le sampler choisi est absent du catalogue ComfyUI. Actualise la liste.": [
+    "The selected sampler is missing from ComfyUI's catalog. Refresh the list.",
+    "El muestreador seleccionado no está en el catálogo de ComfyUI. Actualiza la lista.",
+    "Il campionatore selezionato non è nel catalogo ComfyUI. Aggiorna l'elenco.",
+    "Der gewählte Sampler fehlt im ComfyUI-Katalog. Aktualisiere die Liste.",
+    "所选采样器不在 ComfyUI 目录中，请刷新列表。",
+    "選択したサンプラーがComfyUIカタログにありません。一覧を更新してください。"
+  ],
+  "Tester le moteur": [
+    "Test search engine",
+    "Probar el motor",
+    "Prova il motore",
+    "Suchmaschine testen",
+    "测试搜索引擎",
+    "検索エンジンをテスト"
+  ],
+  "Test du moteur…": [
+    "Testing search engine…",
+    "Probando el motor…",
+    "Test del motore…",
+    "Suchmaschine wird getestet…",
+    "正在测试搜索引擎…",
+    "検索エンジンをテスト中…"
+  ],
+  "Moteur accessible · {0} résultats": [
+    "Search engine reachable · {0} results",
+    "Motor accesible · {0} resultados",
+    "Motore raggiungibile · {0} risultati",
+    "Suchmaschine erreichbar · {0} Ergebnisse",
+    "搜索引擎可用 · {0} 条结果",
+    "検索エンジンに接続済み · {0} 件"
+  ],
+  "Windows bloque la connexion de Sherka au moteur de recherche (10013). Autorise cet exécutable dans ton pare-feu.": [
+    "Windows is blocking Sherka's connection to the search engine (10013). Allow this executable in your firewall.",
+    "Windows bloquea la conexión de Sherka al motor de búsqueda (10013). Permite este ejecutable en tu cortafuegos.",
+    "Windows blocca la connessione di Sherka al motore di ricerca (10013). Consenti questo eseguibile nel firewall.",
+    "Windows blockiert Sherkas Verbindung zur Suchmaschine (10013). Erlaube diese Programmdatei in deiner Firewall.",
+    "Windows 阻止了 Sherka 连接搜索引擎（10013）。请在防火墙中允许此程序。",
+    "WindowsがSherkaの検索エンジンへの接続をブロックしています（10013）。ファイアウォールでこの実行ファイルを許可してください。"
+  ],
+  "Le moteur de recherche met trop de temps à répondre. Réessaie.": [
+    "The search engine is taking too long to respond. Try again.",
+    "El motor de búsqueda tarda demasiado en responder. Vuelve a intentarlo.",
+    "Il motore di ricerca impiega troppo tempo a rispondere. Riprova.",
+    "Die Suchmaschine antwortet zu langsam. Versuche es erneut.",
+    "搜索引擎响应超时，请重试。",
+    "検索エンジンの応答が遅すぎます。再試行してください。"
+  ],
+  "Brave refuse l’accès. Vérifie la clé, son abonnement Search et son quota dans le tableau de bord Brave.": [
+    "Brave denied access. Check the key, its Search subscription and quota in the Brave dashboard.",
+    "Brave denegó el acceso. Comprueba la clave, la suscripción Search y su cuota en el panel de Brave.",
+    "Brave ha negato l'accesso. Controlla la chiave, l'abbonamento Search e la quota nel pannello di Brave.",
+    "Brave verweigert den Zugriff. Prüfe Schlüssel, Search-Abonnement und Kontingent im Brave-Dashboard.",
+    "Brave 拒绝访问。请在 Brave 控制台检查密钥、Search 订阅及配额。",
+    "Braveがアクセスを拒否しました。Braveの管理画面でキー、Search契約、利用枠を確認してください。"
+  ],
+  "Le moteur de recherche refuse les paramètres de la requête. Vérifie sa configuration.": [
+    "The search engine rejected the request parameters. Check its configuration.",
+    "El motor de búsqueda rechazó los parámetros. Revisa su configuración.",
+    "Il motore di ricerca ha rifiutato i parametri. Controlla la configurazione.",
+    "Die Suchmaschine hat die Anfrageparameter abgelehnt. Prüfe ihre Konfiguration.",
+    "搜索引擎拒绝了请求参数，请检查配置。",
+    "検索エンジンがリクエストのパラメーターを拒否しました。設定を確認してください。"
+  ],
+  "Exporter le workflow API": [
+    "Export API workflow",
+    "Exportar workflow API",
+    "Esporta workflow API",
+    "API-Workflow exportieren",
+    "导出 API 工作流",
+    "APIワークフローをエクスポート"
+  ],
+  "L’export du workflow a échoué.": [
+    "Workflow export failed.",
+    "No se pudo exportar el workflow.",
+    "Esportazione del workflow non riuscita.",
+    "Workflow-Export fehlgeschlagen.",
+    "工作流导出失败。",
+    "ワークフローのエクスポートに失敗しました。"
+  ],
+  "Exporte le workflow actuel comme point de départ : le modèle intégré ou ton workflow importé. Sherka injecte les réglages et les prompts au moment de générer.": [
+    "Export the current workflow as a starting point: the built-in template or your imported graph. Sherka injects settings and prompts at generation time.",
+    "Exporta el workflow actual como punto de partida: la plantilla integrada o tu workflow importado. Sherka incorpora los ajustes y prompts al generar.",
+    "Esporta il workflow attuale come punto di partenza: il modello integrato o il tuo workflow importato. Sherka inserisce impostazioni e prompt durante la generazione.",
+    "Exportiere den aktuellen Workflow als Ausgangspunkt: die integrierte Vorlage oder deinen importierten Workflow. Sherka setzt Einstellungen und Prompts bei der Generierung ein.",
+    "导出当前工作流作为起点：内置模板或你导入的工作流。Sherka 会在生成时注入设置和提示词。",
+    "現在のワークフローをひな形としてエクスポートします。内蔵テンプレートまたはインポートしたグラフを使用し、設定とプロンプトは生成時にSherkaが挿入します。"
+  ],
+  "Taille de sortie (px)": [
+    "Output size (px)",
+    "Tamaño de salida (px)",
+    "Dimensione di uscita (px)",
+    "Ausgabegröße (px)",
+    "输出尺寸（像素）",
+    "出力サイズ（px）"
+  ],
+  "Image carrée, de 256 à 2048 px par pas de 64. Une grande image demande plus de mémoire et de temps.": [
+    "Square image, 256–2048 px in steps of 64. Larger images require more memory and time.",
+    "Imagen cuadrada, de 256 a 2048 px en pasos de 64. Las imágenes grandes requieren más memoria y tiempo.",
+    "Immagine quadrata, da 256 a 2048 px con incrementi di 64. Le immagini grandi richiedono più memoria e tempo.",
+    "Quadratisches Bild, 256 bis 2048 px in 64er-Schritten. Größere Bilder benötigen mehr Speicher und Zeit.",
+    "正方形图像，256至2048像素，步长64。较大的图像需要更多内存和时间。",
+    "正方形の画像。256〜2048px、64px刻みです。大きい画像ほどメモリと時間を必要とします。"
+  ],
+  "Actualisation…": [
+    "Refreshing…",
+    "Actualizando…",
+    "Aggiornamento…",
+    "Wird aktualisiert…",
+    "正在刷新…",
+    "更新中…"
+  ],
+  "Liste mémorisée · {0} modèles · {1} LoRA": [
+    "Cached list · {0} models · {1} LoRAs",
+    "Lista guardada · {0} modelos · {1} LoRA",
+    "Elenco memorizzato · {0} modelli · {1} LoRA",
+    "Gespeicherte Liste · {0} Modelle · {1} LoRAs",
+    "已缓存列表 · {0} 个模型 · {1} 个 LoRA",
+    "保存済み一覧 · モデル{0}件 · LoRA{1}件"
+  ],
+  "Activer la persistance des humeurs": [
+    "Enable persistent moods",
+    "Activar la persistencia del estado de ánimo",
+    "Attiva la persistenza degli stati d’animo",
+    "Anhaltende Stimmungen aktivieren",
+    "启用持续心情",
+    "気分の持続を有効にする"
+  ],
+  "Ce dossier ne contient pas main.py. Choisis une installation Python ou portable de ComfyUI.": [
+    "This folder does not contain main.py. Choose a Python or portable ComfyUI installation.",
+    "Esta carpeta no contiene main.py. Elige una instalación Python o portátil de ComfyUI.",
+    "Questa cartella non contiene main.py. Scegli un’installazione Python o portatile di ComfyUI.",
+    "Dieser Ordner enthält keine main.py. Wähle eine Python- oder portable ComfyUI-Installation.",
+    "此文件夹不包含 main.py。请选择 ComfyUI 的 Python 或便携版安装目录。",
+    "このフォルダーには main.py がありません。ComfyUI の Python 版またはポータブル版を選んでください。"
+  ],
+  "Cette adresse ne renvoie pas un serveur ComfyUI compatible.": [
+    "This address does not return a compatible ComfyUI server.",
+    "Esta dirección no corresponde a un servidor ComfyUI compatible.",
+    "Questo indirizzo non restituisce un server ComfyUI compatibile.",
+    "Diese Adresse liefert keinen kompatiblen ComfyUI-Server.",
+    "此地址未返回兼容的 ComfyUI 服务器。",
+    "このアドレスから互換性のある ComfyUI サーバーが応答していません。"
+  ],
+  "Choisis le chemin absolu du dossier ComfyUI.": [
+    "Choose the absolute path to the ComfyUI folder.",
+    "Elige la ruta absoluta de la carpeta ComfyUI.",
+    "Scegli il percorso assoluto della cartella ComfyUI.",
+    "Wähle den absoluten Pfad zum ComfyUI-Ordner.",
+    "请选择 ComfyUI 文件夹的绝对路径。",
+    "ComfyUI フォルダーの絶対パスを指定してください。"
+  ],
+  "Choisis le dossier contenant main.py, ou la racine de l’installation portable. Laisse le dossier vide pour désactiver ce lancement.": [
+    "Choose the folder containing main.py, or the root of the portable installation. Leave it empty to disable startup.",
+    "Elige la carpeta que contiene main.py o la raíz de la instalación portátil. Déjala vacía para desactivar el inicio.",
+    "Scegli la cartella con main.py o la radice dell’installazione portatile. Lasciala vuota per disattivare l’avvio.",
+    "Wähle den Ordner mit main.py oder das Stammverzeichnis der portablen Installation. Leer lassen, um den Start zu deaktivieren.",
+    "请选择包含 main.py 的文件夹或便携版安装根目录。留空可禁用自动启动。",
+    "main.py のあるフォルダー、またはポータブル版のルートを選んでください。空欄にすると起動を無効にします。"
+  ],
+  "ComfyUI démarre. Les premières générations peuvent prendre plus de temps pendant le chargement des modèles.": [
+    "ComfyUI is starting. The first generations may take longer while models load.",
+    "ComfyUI está iniciándose. Las primeras generaciones pueden tardar más mientras se cargan los modelos.",
+    "ComfyUI si sta avviando. Le prime generazioni possono richiedere più tempo durante il caricamento dei modelli.",
+    "ComfyUI startet. Die ersten Generierungen können beim Laden der Modelle länger dauern.",
+    "ComfyUI 正在启动。模型加载期间，首次生成可能需要更长时间。",
+    "ComfyUI を起動中です。モデル読み込み中は、最初の画像生成に時間がかかることがあります。"
+  ],
+  "ComfyUI est inaccessible (HTTP {0}). Vérifie l’adresse et les autorisations.": [
+    "ComfyUI is inaccessible (HTTP {0}). Check the address and permissions.",
+    "ComfyUI no es accesible (HTTP {0}). Comprueba la dirección y los permisos.",
+    "ComfyUI non è accessibile (HTTP {0}). Controlla l’indirizzo e le autorizzazioni.",
+    "ComfyUI ist nicht erreichbar (HTTP {0}). Prüfe Adresse und Berechtigungen.",
+    "无法访问 ComfyUI（HTTP {0}）。请检查地址和权限。",
+    "ComfyUI にアクセスできません（HTTP {0}）。アドレスと権限を確認してください。"
+  ],
+  "ComfyUI est prêt.": [
+    "ComfyUI is ready.",
+    "ComfyUI está listo.",
+    "ComfyUI è pronto.",
+    "ComfyUI ist bereit.",
+    "ComfyUI 已就绪。",
+    "ComfyUI の準備ができました。"
+  ],
+  "ComfyUI n’est pas prêt après 5 minutes. Vérifie son chemin, son environnement Python et son journal.": [
+    "ComfyUI is still not ready after 5 minutes. Check its path, Python environment and log.",
+    "ComfyUI no está listo después de 5 minutos. Comprueba la ruta, el entorno Python y el registro.",
+    "ComfyUI non è pronto dopo 5 minuti. Controlla il percorso, l’ambiente Python e il registro.",
+    "ComfyUI ist nach 5 Minuten nicht bereit. Prüfe Pfad, Python-Umgebung und Protokoll.",
+    "ComfyUI 在 5 分钟后仍未就绪。请检查路径、Python 环境和日志。",
+    "5 分経っても ComfyUI が準備できません。パス、Python 環境、ログを確認してください。"
+  ],
+  "ComfyUI s’est arrêté pendant le démarrage. Vérifie Python et le journal logs/comfyui.log dans les données de Sherka.": [
+    "ComfyUI exited during startup. Check Python and logs/comfyui.log in Sherka’s data folder.",
+    "ComfyUI se cerró durante el inicio. Comprueba Python y logs/comfyui.log en los datos de Sherka.",
+    "ComfyUI si è chiuso durante l’avvio. Controlla Python e logs/comfyui.log nella cartella dati di Sherka.",
+    "ComfyUI wurde beim Start beendet. Prüfe Python und logs/comfyui.log im Datenordner von Sherka.",
+    "ComfyUI 在启动过程中退出。请检查 Python 和 Sherka 数据目录中的 logs/comfyui.log。",
+    "ComfyUI が起動中に終了しました。Python と Sherka のデータフォルダーにある logs/comfyui.log を確認してください。"
+  ],
+  "Démarrage de ComfyUI annulé.": [
+    "ComfyUI startup cancelled.",
+    "Inicio de ComfyUI cancelado.",
+    "Avvio di ComfyUI annullato.",
+    "ComfyUI-Start abgebrochen.",
+    "已取消启动 ComfyUI。",
+    "ComfyUI の起動をキャンセルしました。"
+  ],
+  "Démarrage de ComfyUI indisponible.": [
+    "ComfyUI startup is unavailable.",
+    "El inicio de ComfyUI no está disponible.",
+    "L’avvio di ComfyUI non è disponibile.",
+    "ComfyUI-Start ist nicht verfügbar.",
+    "无法启动 ComfyUI。",
+    "ComfyUI を起動できません。"
+  ],
+  "Démarrage local de ComfyUI": [
+    "Local ComfyUI startup",
+    "Inicio local de ComfyUI",
+    "Avvio locale di ComfyUI",
+    "Lokaler ComfyUI-Start",
+    "本地 ComfyUI 启动",
+    "ローカル ComfyUI の起動"
+  ],
+  "Démarrage local de ComfyUI enregistré.": [
+    "Local ComfyUI startup saved.",
+    "Inicio local de ComfyUI guardado.",
+    "Avvio locale di ComfyUI salvato.",
+    "Lokaler ComfyUI-Start gespeichert.",
+    "已保存本地 ComfyUI 启动设置。",
+    "ローカル ComfyUI の起動設定を保存しました。"
+  ],
+  "Dossier ComfyUI": [
+    "ComfyUI folder",
+    "Carpeta de ComfyUI",
+    "Cartella ComfyUI",
+    "ComfyUI-Ordner",
+    "ComfyUI 文件夹",
+    "ComfyUI フォルダー"
+  ],
+  "Enregistrer le démarrage local": [
+    "Save local startup",
+    "Guardar inicio local",
+    "Salva l’avvio locale",
+    "Lokalen Start speichern",
+    "保存本地启动设置",
+    "ローカル起動設定を保存"
+  ],
+  "Facultatif avec un environnement .venv ou une installation portable. Sinon, indique le Python de ton environnement ComfyUI, par exemple Conda.": [
+    "Optional with a .venv environment or portable installation. Otherwise, select the Python from your ComfyUI environment, for example Conda.",
+    "Opcional con un entorno .venv o una instalación portátil. En otro caso, indica el Python de tu entorno ComfyUI, por ejemplo Conda.",
+    "Facoltativo con un ambiente .venv o un’installazione portatile. Altrimenti indica il Python dell’ambiente ComfyUI, per esempio Conda.",
+    "Optional bei einer .venv-Umgebung oder portablen Installation. Wähle sonst Python aus deiner ComfyUI-Umgebung, zum Beispiel Conda.",
+    "使用 .venv 环境或便携版时可留空。否则请选择 ComfyUI 环境中的 Python，例如 Conda。",
+    " .venv 環境やポータブル版では任意です。それ以外では、Conda など ComfyUI 環境の Python を指定してください。"
+  ],
+  "Facultatif, sur ce PC : si le chemin est renseigné, Sherka démarre ComfyUI quand les illustrations sont activées. Ces chemins sont partagés entre tes compagnons et exclus des exports.": [
+    "Optional, on this PC: when a path is set, Sherka starts ComfyUI when illustrations are enabled. These paths are shared by your companions and excluded from exports.",
+    "Opcional, en este PC: si indicas la ruta, Sherka inicia ComfyUI al activar las ilustraciones. Las rutas se comparten entre tus compañeros y no se exportan.",
+    "Facoltativo, su questo PC: se il percorso è impostato, Sherka avvia ComfyUI quando attivi le illustrazioni. I percorsi sono condivisi tra i compagni ed esclusi dalle esportazioni.",
+    "Optional auf diesem PC: Mit hinterlegtem Pfad startet Sherka ComfyUI bei aktivierten Illustrationen. Diese Pfade gelten für alle Begleiter und werden nicht exportiert.",
+    "仅此电脑上的可选设置：指定路径后，Sherka 会在启用插图时启动 ComfyUI。这些路径由各伴侣共享，不会导出。",
+    "この PC の任意設定です。パスを指定すると、イラスト有効時に Sherka が ComfyUI を起動します。パスは全コンパニオンで共有し、エクスポートには含めません。"
+  ],
+  "Humeur réinitialisée.": [
+    "Mood reset.",
+    "Estado de ánimo restablecido.",
+    "Stato d’animo azzerato.",
+    "Stimmung zurückgesetzt.",
+    "已重置心情。",
+    "気分をリセットしました。"
+  ],
+  "Humeurs du compagnon": [
+    "Companion moods",
+    "Estado de ánimo del compañero",
+    "Stati d’animo del compagno",
+    "Stimmungen des Begleiters",
+    "伴侣心情",
+    "コンパニオンの気分"
+  ],
+  "Impossible d’ouvrir le sélecteur de fichiers.": [
+    "Unable to open the file picker.",
+    "No se puede abrir el selector de archivos.",
+    "Impossibile aprire il selettore di file.",
+    "Die Dateiauswahl kann nicht geöffnet werden.",
+    "无法打开文件选择器。",
+    "ファイル選択画面を開けません。"
+  ],
+  "Impossible de démarrer ComfyUI : {0}": [
+    "Unable to start ComfyUI: {0}",
+    "No se puede iniciar ComfyUI: {0}",
+    "Impossibile avviare ComfyUI: {0}",
+    "ComfyUI kann nicht gestartet werden: {0}",
+    "无法启动 ComfyUI：{0}",
+    "ComfyUI を起動できません：{0}"
+  ],
+  "Impossible de démarrer ComfyUI.": [
+    "Unable to start ComfyUI.",
+    "No se puede iniciar ComfyUI.",
+    "Impossibile avviare ComfyUI.",
+    "ComfyUI kann nicht gestartet werden.",
+    "无法启动 ComfyUI。",
+    "ComfyUI を起動できません。"
+  ],
+  "Le chemin de ComfyUI ou de Python est invalide.": [
+    "The ComfyUI or Python path is invalid.",
+    "La ruta de ComfyUI o Python no es válida.",
+    "Il percorso di ComfyUI o Python non è valido.",
+    "Der ComfyUI- oder Python-Pfad ist ungültig.",
+    "ComfyUI 或 Python 路径无效。",
+    "ComfyUI または Python のパスが無効です。"
+  ],
+  "Le chemin de Python est introuvable. Choisis le Python de ton environnement ComfyUI.": [
+    "Python was not found at this path. Select the Python from your ComfyUI environment.",
+    "No se encontró Python en esta ruta. Elige el Python de tu entorno ComfyUI.",
+    "Python non è stato trovato in questo percorso. Scegli il Python dell’ambiente ComfyUI.",
+    "Python wurde unter diesem Pfad nicht gefunden. Wähle Python aus deiner ComfyUI-Umgebung.",
+    "此路径下未找到 Python。请选择 ComfyUI 环境中的 Python。",
+    "指定したパスに Python がありません。ComfyUI 環境の Python を選んでください。"
+  ],
+  "Le dossier ComfyUI est introuvable.": [
+    "The ComfyUI folder was not found.",
+    "No se encontró la carpeta ComfyUI.",
+    "La cartella ComfyUI non è stata trovata.",
+    "Der ComfyUI-Ordner wurde nicht gefunden.",
+    "未找到 ComfyUI 文件夹。",
+    "ComfyUI フォルダーが見つかりません。"
+  ],
+  "Les émotions s’accumulent au fil des échanges et retombent progressivement. Une interaction positive peut apaiser une colère. L’humeur est propre à ce compagnon et conservée au redémarrage.": [
+    "Emotions build up across exchanges and gradually fade. Positive interactions can soothe anger. Each companion’s mood is saved across restarts.",
+    "Las emociones se acumulan con los intercambios y se atenúan gradualmente. Una interacción positiva puede calmar el enfado. Cada compañero conserva su estado de ánimo al reiniciar.",
+    "Le emozioni si accumulano negli scambi e si attenuano gradualmente. Un’interazione positiva può calmare la rabbia. Lo stato d’animo di ogni compagno viene conservato al riavvio.",
+    "Emotionen sammeln sich über Gespräche an und klingen allmählich ab. Positive Interaktionen können Ärger lindern. Die Stimmung jedes Begleiters bleibt nach einem Neustart erhalten.",
+    "情绪会随交流积累并逐渐减弱。积极互动可以缓解愤怒。每个伴侣的心情独立保存，重启后仍然保留。",
+    "感情は会話で蓄積し、徐々に落ち着きます。前向きなやり取りは怒りを和らげます。気分はコンパニオンごとに保存され、再起動後も引き継がれます。"
+  ],
+  "Les premières générations peuvent prendre plus de temps : ComfyUI doit démarrer et charger ses modèles. Le serveur reste ouvert quand tu quittes Sherka.": [
+    "The first generations may take longer: ComfyUI needs to start and load its models. The server stays open when you quit Sherka.",
+    "Las primeras generaciones pueden tardar más: ComfyUI debe iniciarse y cargar los modelos. El servidor sigue abierto al salir de Sherka.",
+    "Le prime generazioni possono richiedere più tempo: ComfyUI deve avviarsi e caricare i modelli. Il server resta aperto quando chiudi Sherka.",
+    "Die ersten Generierungen können länger dauern: ComfyUI muss starten und seine Modelle laden. Der Server bleibt nach dem Beenden von Sherka geöffnet.",
+    "首次生成可能较慢：ComfyUI 需要启动并加载模型。退出 Sherka 后，服务器仍会保持运行。",
+    "最初の生成は、ComfyUI の起動とモデル読み込みのため時間がかかることがあります。Sherka 終了後もサーバーは動作を続けます。"
+  ],
+  "Parcourir": [
+    "Browse",
+    "Examinar",
+    "Sfoglia",
+    "Durchsuchen",
+    "浏览",
+    "参照"
+  ],
+  "Python de ComfyUI": [
+    "ComfyUI Python",
+    "Python de ComfyUI",
+    "Python di ComfyUI",
+    "Python für ComfyUI",
+    "ComfyUI 的 Python",
+    "ComfyUI の Python"
+  ],
+  "Réglage des humeurs enregistré.": [
+    "Mood setting saved.",
+    "Ajuste del estado de ánimo guardado.",
+    "Impostazione degli stati d’animo salvata.",
+    "Stimmungseinstellung gespeichert.",
+    "已保存心情设置。",
+    "気分の設定を保存しました。"
+  ],
+  "Réinitialiser aussi l’humeur": [
+    "Also reset the mood",
+    "Restablecer también el estado de ánimo",
+    "Azzera anche lo stato d’animo",
+    "Stimmung ebenfalls zurücksetzen",
+    "同时重置心情",
+    "気分もリセットする"
+  ],
+  "Réinitialiser l’humeur": [
+    "Reset mood",
+    "Restablecer el estado de ánimo",
+    "Azzera lo stato d’animo",
+    "Stimmung zurücksetzen",
+    "重置心情",
+    "気分をリセット"
+  ],
+  "Remet les points à zéro sans effacer les messages ni les faits sauvegardés.": [
+    "Resets the points without deleting messages or saved facts.",
+    "Pone los puntos a cero sin borrar los mensajes ni los hechos guardados.",
+    "Azzera i punti senza eliminare i messaggi o i fatti salvati.",
+    "Setzt die Punkte zurück, ohne Nachrichten oder gespeicherte Fakten zu löschen.",
+    "将心情点数归零，不删除消息或已保存的事实。",
+    "メッセージや保存済みの事実を削除せず、ポイントをリセットします。"
+  ],
+  "Réponse ComfyUI interrompue.": [
+    "ComfyUI response interrupted.",
+    "Respuesta de ComfyUI interrumpida.",
+    "Risposta di ComfyUI interrotta.",
+    "ComfyUI-Antwort unterbrochen.",
+    "ComfyUI 响应已中断。",
+    "ComfyUI の応答が中断されました。"
+  ],
+  "Serveur distant : le démarrage automatique ne s’applique pas.": [
+    "Remote server: automatic startup does not apply.",
+    "Servidor remoto: no se aplica el inicio automático.",
+    "Server remoto: l’avvio automatico non si applica.",
+    "Entfernter Server: Automatischer Start wird nicht angewendet.",
+    "远程服务器：不适用自动启动。",
+    "リモートサーバーでは自動起動は適用されません。"
   ]
 }

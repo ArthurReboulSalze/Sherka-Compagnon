@@ -31,6 +31,27 @@ impl Default for Config {
 fn invalid() -> Error {
     Error::Validation("La configuration du moteur de recherche est invalide.".into())
 }
+fn network_failure(error: &reqwest::Error) -> Error {
+    use std::error::Error as _;
+    let mut cause = error.source();
+    while let Some(current) = cause {
+        if current
+            .downcast_ref::<std::io::Error>()
+            .is_some_and(|e| e.raw_os_error() == Some(10013))
+        {
+            return Error::Validation("Windows bloque la connexion de Sherka au moteur de recherche (10013). Autorise cet exécutable dans ton pare-feu.".into());
+        }
+        cause = current.source();
+    }
+    Error::Validation(
+        if error.is_timeout() {
+            "Le moteur de recherche met trop de temps à répondre. Réessaie."
+        } else {
+            "Le moteur de recherche ne répond pas. Vérifie ta connexion Internet."
+        }
+        .into(),
+    )
+}
 impl Config {
     pub fn validated(mut self) -> Result<Self> {
         if !(1..=10).contains(&self.max_results)
@@ -94,7 +115,7 @@ async fn search_at(
     let http = builder.build().map_err(|_| invalid())?;
     let mut request=match config.provider{
   Provider::Tavily=>http.post(endpoint).json(&json!({"query":query,"search_depth":"basic","topic":"general","max_results":config.max_results,"include_answer":false,"include_raw_content":false,"include_images":false,"auto_parameters":false})),
-  Provider::Brave=>http.get(endpoint).query(&[("q",query.as_str()),("count",&config.max_results.to_string()),("extra_snippets","true"),("search_lang",if language=="zh"{"zh-hans"}else{language})]),
+  Provider::Brave=>http.get(endpoint).query(&[("q",query.as_str()),("count",&config.max_results.to_string()),("extra_snippets","true"),("search_lang",match language {"zh"=>"zh-hans","ja"=>"jp",other=>other})]),
   Provider::Searxng=>http.get(endpoint).query(&[("q",query.as_str()),("format","json"),("categories","general"),("language",language)]),
   _=>return Err(invalid()),
  };
@@ -125,13 +146,9 @@ async fn search_at(
         .header("Accept", "application/json")
         .send()
         .await
-        .map_err(|_| {
-            Error::Validation(
-                "Le moteur de recherche ne répond pas. Vérifie ta connexion Internet.".into(),
-            )
-        })?;
+        .map_err(|e| network_failure(&e))?;
     if !response.status().is_success() {
-        return Err(Error::Validation(match response.status().as_u16(){401=>"La clé du moteur de recherche est refusée. Vérifie-la dans Compagnons.",429=>"Le quota du moteur de recherche est atteint. Réessaie plus tard ou choisis un autre moteur.",403 if config.provider==Provider::Searxng=>"SearXNG refuse le format JSON. Active-le dans les réglages de ton instance.",_=>"Le moteur de recherche a refusé la demande. Réessaie plus tard."}.into()));
+        return Err(Error::Validation(match response.status().as_u16(){401=>"La clé du moteur de recherche est refusée. Vérifie-la dans Compagnons.",429=>"Le quota du moteur de recherche est atteint. Réessaie plus tard ou choisis un autre moteur.",403 if config.provider==Provider::Searxng=>"SearXNG refuse le format JSON. Active-le dans les réglages de ton instance.",402|403 if config.provider==Provider::Brave=>"Brave refuse l’accès. Vérifie la clé, son abonnement Search et son quota dans le tableau de bord Brave.",422=>"Le moteur de recherche refuse les paramètres de la requête. Vérifie sa configuration.",_=>"Le moteur de recherche a refusé la demande. Réessaie plus tard."}.into()));
     }
     let mut bytes = vec![];
     while let Some(chunk) = response.chunk().await.map_err(|_| invalid())? {
@@ -157,6 +174,9 @@ fn plain(s: &str, limit: usize) -> String {
         .collect()
 }
 fn parse(provider: Provider, value: &Value, maximum: usize) -> Result<Vec<Source>> {
+    if provider == Provider::Brave && value["type"] == "search" && value["web"].is_null() {
+        return Ok(vec![]);
+    }
     let rows = if provider == Provider::Brave {
         value["web"]["results"].as_array()
     } else {

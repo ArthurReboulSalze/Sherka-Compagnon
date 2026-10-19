@@ -4,7 +4,7 @@ use sherka_core::{
     memory::{OptimizationPlan, OptimizationPreview, SummaryPlan},
     providers::Providers,
 };
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use uuid::Uuid;
 
 pub async fn prepare(
@@ -14,6 +14,10 @@ pub async fn prepare(
     profile_id: Uuid,
 ) -> Result<OptimizationPreview, String> {
     crate::windows::ensure_running()?;
+    let priority = app
+        .state::<crate::illustrations::Illustrations>()
+        .priority(app.clone(), shared.clone());
+    priority.ready().await;
     let gate = voice.gate.lock().await;
     voice.playback.interrupt();
     let (profile, guard, entries, summary, session, token) = with_core(shared.clone(), move |c| {

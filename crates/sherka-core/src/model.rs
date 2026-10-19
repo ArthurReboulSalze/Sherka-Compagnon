@@ -10,6 +10,8 @@ pub struct ProfileDraft {
     pub instructions: String,
     pub accent: String,
     #[serde(default)]
+    pub mood_persistence: bool,
+    #[serde(default)]
     pub avatar_preset: Option<crate::avatar::AvatarPreset>,
     #[serde(default)]
     pub web_search: Option<crate::web::SearchMode>,
@@ -79,6 +81,7 @@ pub struct Profile {
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
     pub theme: Theme,
+    pub comfyui_startup: ComfyStartupConfig,
     pub companion_pack_initialized: bool,
     pub web_search: crate::web::SearchMode,
     pub ui_language: crate::i18n::Language,
@@ -95,6 +98,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             theme: Theme::default(),
+            comfyui_startup: Default::default(),
             companion_pack_initialized: false,
             web_search: Default::default(),
             ui_language: Default::default(),
@@ -106,6 +110,28 @@ impl Default for Settings {
             widget_bounds: None,
             audio: Default::default(),
         }
+    }
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default, deny_unknown_fields)]
+pub struct ComfyStartupConfig {
+    pub directory: String,
+    pub python: String,
+}
+impl ComfyStartupConfig {
+    pub fn validated(mut self) -> Result<Self> {
+        self.directory = self.directory.trim().to_owned();
+        self.python = self.python.trim().to_owned();
+        if [&self.directory, &self.python]
+            .iter()
+            .any(|path| path.len() > 4096 || path.chars().any(char::is_control))
+        {
+            return Err(Error::Validation(
+                "Le chemin de ComfyUI ou de Python est invalide.".into(),
+            ));
+        }
+        Ok(self)
     }
 }
 

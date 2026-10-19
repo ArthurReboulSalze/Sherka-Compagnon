@@ -16,6 +16,72 @@ fn config() -> Config {
         ..Default::default()
     }
 }
+
+#[test]
+fn advanced_sampling_keeps_both_passes_independent_of_turbo_and_node_names() {
+    let mut c = config();
+    c.advanced = illustration::AdvancedSampling {
+        enabled: true,
+        size: 1024,
+        steps_first: 23,
+        steps_second: 11,
+        cfg_first: 4.2,
+        cfg_second: 6.7,
+        sampler_name: "dpmpp_2m".into(),
+    };
+    c.live = true;
+    let mut catalog = info();
+    catalog["KSampler"] =
+        json!({"input":{"required":{"sampler_name":[["euler_ancestral","dpmpp_2m"]]}}});
+    let mut custom = illustration::default_workflow();
+    // Reversed lexical IDs make workflow dependency order observable.
+    let first = custom.as_object_mut().unwrap().remove("21").unwrap();
+    let second = custom.as_object_mut().unwrap().remove("25").unwrap();
+    custom["z_first"] = first;
+    custom["a_second"] = second;
+    for node in custom.as_object_mut().unwrap().values_mut() {
+        for input in node["inputs"].as_object_mut().unwrap().values_mut() {
+            if let Some(link) = input.as_array_mut().filter(|a| a.len() == 2) {
+                if link[0] == "21" {
+                    link[0] = json!("z_first");
+                }
+                if link[0] == "25" {
+                    link[0] = json!("a_second");
+                }
+            }
+        }
+    }
+    c.workflow = Some(custom);
+    let scene = Scene {
+        positive: "moon, stars, sky".into(),
+        negative: String::new(),
+    };
+    for turbo in [true, false] {
+        c.turbo = turbo;
+        let g = illustration::workflow(&c, scene.clone(), &catalog, 42).unwrap();
+        assert_eq!(g["z_first"]["inputs"]["steps"], 23);
+        assert_eq!(g["18"]["inputs"]["width"], 1024);
+        assert_eq!(g["18"]["inputs"]["height"], 1024);
+        assert_eq!(g["a_second"]["inputs"]["steps"], 11);
+        assert_eq!(g["z_first"]["inputs"]["cfg"], 4.2);
+        assert_eq!(g["a_second"]["inputs"]["cfg"], 6.7);
+        assert_eq!(g["z_first"]["inputs"]["sampler_name"], "dpmpp_2m");
+        assert_eq!(g["a_second"]["inputs"]["sampler_name"], "dpmpp_2m");
+    }
+    let roundtrip: Config = serde_json::from_value(serde_json::to_value(&c).unwrap()).unwrap();
+    assert_eq!(roundtrip, c);
+    c.advanced.size = 770;
+    assert!(c.clone().validated().is_err());
+    c.advanced.size = 1024;
+    c.advanced.steps_second = 0;
+    assert!(c.clone().validated().is_err());
+    c.advanced.steps_second = 11;
+    c.advanced.cfg_first = f64::NAN;
+    assert!(c.clone().validated().is_err());
+    c.advanced.cfg_first = 4.2;
+    c.advanced.sampler_name = "absent".into();
+    assert!(illustration::workflow(&c, scene, &catalog, 42).is_err());
+}
 fn info() -> Value {
     let mut out = json!({});
     for node in illustration::default_workflow()

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.0 — 2026-10-19
+
+- Add optional per-companion persistent moods with bounded scores, turn-based decay, de-escalation, restart persistence and an independent reset. Exclude Hermes, copies and exports from accumulated mood state; advance the profile database to schema 9.
+- Apply the selected board theme to widget controls, menus and inline cells while preserving each companion's accent for the active halo.
+- Add continuous live ComfyUI illustrations, prompt-specific cancellation and conversation priority, without global interruption or custom scheduling nodes.
+- Add advanced square output size (default 768), independent steps/CFG for both samplers and a shared sampler; Turbo toggles preserve advanced values.
+- Export the active API workflow and remember full model/LoRA/sampler catalogs per server on this device, with a highlighted full-refresh button and offline cache fallback.
+- Optionally start a configured local Python/portable ComfyUI installation on demand, reuse existing servers and wait for readiness; never launch for remote addresses.
+- Improve thinking-model search planning, expose a search connection test, remove emojis from spoken replies and broaden confirmed conversation/fact deletion commands.
+- Document the new controls in all seven interfaces and publish Windows installer/portable and Debian packages with signed Windows update artifacts.
+
 ## 0.12.1 — 2026-10-19
 
 - Prioritize the user's visual request over the companion's reply for Illustrious and SDXL scenes, distinguishing stable identity from adaptable clothing, pose and expression.

@@ -1,8 +1,10 @@
 export type Emotion = 'neutral' | 'joy' | 'sadness' | 'anger' | 'surprise' | 'reflection' | 'tenderness';
+export interface ComfyStartupConfig {directory:string;python:string}
+export interface ComfyServiceStatus {attempt:number;url:string;phase:'disabled'|'connecting'|'starting'|'ready'|'error';message:string}
 export type Theme = 'gold' | 'sage' | 'ocean' | 'iris' | 'rose' | 'mono';
-export interface IllustrationConfig { enabled:boolean; server_url:string; checkpoint:string|null; model_family:'illustrious'|'sdxl'; checkpoint_folder:string; lora_folder:string; negative_prompt:string; positive_prompt_suffix:string; physical_description:string; loras:{name:string;strength:number}[]; turbo:boolean; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
-export interface IllustrationCatalog { checkpoints:string[]; loras:string[]; turbo_available:boolean; missing_nodes:string[] }
-export interface IllustrationStatus { profile_id:string|null; phase:'disabled'|'idle'|'planning'|'generating'|'ready'|'error'; image:string|null; images:string[]; message:string|null }
+export interface IllustrationConfig { enabled:boolean; server_url:string; checkpoint:string|null; model_family:'illustrious'|'sdxl'; checkpoint_folder:string; lora_folder:string; negative_prompt:string; positive_prompt_suffix:string; physical_description:string; loras:{name:string;strength:number}[]; turbo:boolean; live:boolean; advanced:{enabled:boolean;size:number;steps_first:number;steps_second:number;cfg_first:number;cfg_second:number;sampler_name:string}; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
+export interface IllustrationCatalog { checkpoints:string[]; loras:string[]; turbo_available:boolean; missing_nodes:string[]; samplers:string[] }
+export interface IllustrationStatus { profile_id:string|null; phase:'disabled'|'idle'|'planning'|'generating'|'ready'|'paused'|'error'; image:string|null; images:string[]; message:string|null }
 export interface Attachment {name:string;data:string}
 export type SearchProvider='duck_duck_go'|'brave'|'tavily'|'searxng';
 export interface SearchConfig {provider:SearchProvider;searxng_url:string;max_results:number}
@@ -17,6 +19,7 @@ export interface ProfileDraft {
   personality: string;
   instructions: string;
   accent: 'amber' | 'teal' | 'violet' | 'coral';
+  mood_persistence?: boolean;
   connections: Connections;
 }
 
@@ -36,6 +39,7 @@ export interface Snapshot {
   profiles: Profile[];
   settings: {
     theme: Theme;
+    comfyui_startup: ComfyStartupConfig;
     web_search: SearchMode;
     ui_language: import('./i18n').Language;
     default_companion: string | null;
@@ -71,6 +75,9 @@ export interface Message {
 
 export type Mutation =
   | { kind: 'theme'; theme: Theme }
+  | { kind: 'comfyui_startup'; config: ComfyStartupConfig }
+  | { kind: 'mood_persistence'; id:string; revision:number; enabled:boolean }
+  | { kind: 'reset_mood'; id:string }
   | { kind: 'illustration'; id:string; revision:number; config:IllustrationConfig }
   | { kind: 'web_search'; mode: SearchMode; id?: string; revision?: number;config?:SearchConfig }
   | { kind: 'interface_language'; language: import('./i18n').Language }
@@ -91,7 +98,7 @@ export interface AudioSettings { input_device: string | null; output_device: str
 export interface ContextBudget { model: string; max_context: number | null; loaded_context: number; limit: number; input_estimate: number; response_tokens: number; safety_tokens: number; history_kept: number; history_omitted: number; memories_used: number[]; memories_omitted: number }
 export type SearchMode = 'off' | 'on_request' | 'auto';
 export interface WebReport { query: string; searching: boolean; error: string | null; sources: {title:string;url:string;snippet:string}[] }
-export interface LiveConversation { emotion: Emotion; hermes_approval?: {run_id:string;request_id:string|null;description:string;allow_once:boolean}|null; web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
+export interface LiveConversation { mood: Emotion; emotion: Emotion; hermes_approval?: {run_id:string;request_id:string|null;description:string;allow_once:boolean}|null; web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
 export interface LiveState { session: Snapshot['session']; live: LiveConversation }
 export interface AudioDevices { inputs: { id: string; name: string; is_default: boolean }[]; outputs: { id: string; name: string; is_default: boolean }[] }
 

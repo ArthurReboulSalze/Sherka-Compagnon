@@ -46,7 +46,13 @@ negative prompt, positive prompt addition, model/LoRA folder filters and Turbo o
 Your requested scene, outfit and action take priority over default poses or reply context.
 Scene planning requests one companion by default and distinguishes intentional group scenes.
 Duplicate companions or share a .sherka.zip pack with all seven expression images.
-Packs contain no conversations, memories or API keys. Recheck service connections after import.
+Packs contain no conversations, memories, accumulated moods or API keys. Recheck service connections after import.
+Optional persistent moods remember reactions between turns and can be reset separately.
+Widget controls follow the selected theme; the active halo keeps the character accent.
+ComfyUI adds advanced sampling/output size, live scenes with conversation priority,
+remembered catalogs and optional startup of a configured local Python/portable install.
+The first images may take longer while ComfyUI and models load. See docs/COMFYUI.md.
+Version 1.0 upgrades databases to schema 9; avoid opening them with older executables.
 For Hermes, clearing in Sherka affects local history only.
 
 Documentation: https://github.com/ArthurReboulSalze/Sherka-Compagnon
