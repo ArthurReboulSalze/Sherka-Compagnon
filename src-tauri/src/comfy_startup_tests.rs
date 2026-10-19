@@ -18,6 +18,7 @@ impl Server {
         std::thread::spawn(move || {
             while !done.load(Ordering::SeqCst) {
                 if let Ok((mut stream, _)) = listener.accept() {
+                    stream.set_nonblocking(false).unwrap();
                     stream
                         .set_read_timeout(Some(Duration::from_secs(1)))
                         .unwrap();
