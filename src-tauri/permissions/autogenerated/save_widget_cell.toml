@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-widget-cell"
+description = "Enables the save_widget_cell command without any pre-configured scope."
+commands.allow = ["save_widget_cell"]
+
+[[permission]]
+identifier = "deny-save-widget-cell"
+description = "Denies the save_widget_cell command without any pre-configured scope."
+commands.deny = ["save_widget_cell"]

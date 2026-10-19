@@ -21,6 +21,7 @@ pub struct Surface {
 }
 #[derive(Default)]
 struct CanvasState {
+    profile: Option<uuid::Uuid>,
     surface: Surface,
     correction: (f64, f64),
 }
@@ -53,7 +54,7 @@ pub async fn set_image_enabled(
 ) -> Result<(), String> {
     with_core(shared.clone(), move |c| {
         let id = c.session.snapshot().profile_id;
-        let p = c.store.profile(id)?;
+        let p = c.profile(id)?;
         let mut draft = p.details;
         if enabled && draft.connections.llm_provider.is_agent() {
             return Err(sherka_core::Error::StaleOperation);
@@ -88,7 +89,11 @@ pub fn widget_surface(
     app: AppHandle,
     state: State<'_, Canvas>,
     surface: Option<Surface>,
+    profile_id: Option<uuid::Uuid>,
 ) -> Result<Surface, String> {
+    if profile_id.is_some_and(|id| !is_owner(&app, id)) {
+        return Err("Compagnon modifié.".into());
+    }
     let window = app
         .get_webview_window("widget")
         .ok_or("Fenêtre indisponible.")?;
@@ -157,7 +162,9 @@ pub fn widget_surface(
             y.round() as i32,
         ))
         .map_err(|e| e.to_string())?;
+    let owner = state.0.lock().unwrap_or_else(|e| e.into_inner()).profile;
     *state.0.lock().unwrap_or_else(|e| e.into_inner()) = CanvasState {
+        profile: owner,
         surface: next,
         correction: (x - desired_x, y - desired_y),
     };
@@ -179,4 +186,37 @@ pub fn avatar_bounds(app: &AppHandle) -> Option<sherka_core::window::Bounds> {
         width: (surface.base_width * scale).round() as u32,
         height: (surface.base_height * scale).round() as u32,
     })
+}
+
+pub fn is_owner(app: &AppHandle, id: uuid::Uuid) -> bool {
+    app.try_state::<Canvas>()
+        .is_some_and(|s| s.0.lock().unwrap_or_else(|e| e.into_inner()).profile == Some(id))
+}
+pub fn activate_profile(
+    app: &AppHandle,
+    snapshot: &sherka_core::runtime::Snapshot,
+) -> tauri::Result<()> {
+    let canvas = app.state::<Canvas>();
+    // Suspend late geometry writes until the new avatar has been restored.
+    *canvas.0.lock().unwrap_or_else(|e| e.into_inner()) = CanvasState::default();
+    if let Some(window) = app.get_webview_window("widget") {
+        if snapshot.settings.widget_bounds.is_none() {
+            window.set_size(tauri::LogicalSize::new(290.0, 350.0))?;
+        }
+        crate::windows::recover_widget(app, snapshot.settings.widget_bounds)?;
+    }
+    canvas.0.lock().unwrap_or_else(|e| e.into_inner()).profile = Some(snapshot.session.profile_id);
+    Ok(())
+}
+#[tauri::command]
+pub async fn save_widget_cell(
+    shared: State<'_, Shared>,
+    profile_id: uuid::Uuid,
+    image: Option<sherka_core::model::ImagePlacement>,
+    text_height: Option<f64>,
+) -> Result<(), String> {
+    with_core(shared.inner().clone(), move |c| {
+        c.save_widget_cell(profile_id, image, text_height)
+    })
+    .await
 }

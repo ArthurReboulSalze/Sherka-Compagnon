@@ -39,7 +39,7 @@ jobs:
         env:
           SHERKA_TEST_TEXT_ONLY: '1'
         run: |
-          npx playwright test --grep 'startup recovery:|widget discret|démarrage avec le compagnon seul|imports validés|updates: manual|languages:|web search:|providers: API|hermes:|avatars:|companion settings:|hermes stop:|privacy:|memory optimization:|desktop scenes:|widget text resize:|companion archives:|persistent moods:|ComfyUI startup:|catalog cache:'
+          npx playwright test --grep 'startup recovery:|widget discret|démarrage avec le compagnon seul|imports validés|updates: manual|languages:|web search:|providers: API|hermes:|avatars:|companion settings:|hermes stop:|privacy:|memory optimization:|desktop scenes:|widget text resize:|companion archives:|persistent moods:|ComfyUI startup:|catalog cache:|device settings:|VoiceStudio background:'
   linux:
     runs-on: ubuntu-24.04
     timeout-minutes: 40

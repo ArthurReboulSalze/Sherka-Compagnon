@@ -30,7 +30,10 @@ Set each character's images and VoiceStudio voice in Avatar & voice.
 Hermes mode connects to your agent's own profiles, memory and tools.
 The /stop shortcut stops its current task, not the Hermes server.
 Setup guide: https://github.com/ArthurReboulSalze/Sherka-Compagnon/blob/main/docs/HERMES.md
-Start your local model server; Sherka starts installed VoiceStudio when needed.
+Start your local model server. Configure VoiceStudio and transcription once in Settings;
+Sherka can start its prepared Python server in the background without a desktop window.
+Set custom runtime/Python paths if needed. Each service has one Start with Sherka option:
+servers launched by Sherka close with it; pre-existing or remote services stay independent.
 Choose one of seven interface languages in Settings. The original Sherka's
 personality and instructions follow that language automatically.
 Configure compatible models with your provider and voices in VoiceStudio.
@@ -52,7 +55,12 @@ Widget controls follow the selected theme; the active halo keeps the character a
 ComfyUI adds advanced sampling/output size, live scenes with conversation priority,
 remembered catalogs and optional startup of a configured local Python/portable install.
 The first images may take longer while ComfyUI and models load. See docs/COMFYUI.md.
-Version 1.0 upgrades databases to schema 9; avoid opening them with older executables.
+Avatar and image-cell position/size are remembered per companion across restarts.
+Overlapping images sit behind the avatar. Optional Spontaneous conversation chooses
+one brief invitation after a random idle delay, then waits for a real reply. Hermes is excluded.
+Voice pause, a hidden widget, typing and ongoing conversation postpone invitations.
+Hosted providers may charge for them. Machine paths/shared speech settings stay out of packs.
+Settings may be upgraded; avoid opening them with older executables.
 For Hermes, clearing in Sherka affects local history only.
 
 Documentation: https://github.com/ArthurReboulSalze/Sherka-Compagnon

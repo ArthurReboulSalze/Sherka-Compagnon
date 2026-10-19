@@ -13,8 +13,10 @@ import { memoryPanel, mountMemory } from './memory';
 import { paintProfileVoice, editProfileVoice } from './profile-voice';
 import { editAvatar, portrait, paintAvatar } from './avatar';
 import { moodSettings, mountMoodSettings } from './mood-settings';
-import {mountComfyService} from './comfy-startup';
+import {comfyStartupOptions,mountComfyOptions,mountComfyService} from './comfy-startup';
 import { updatesView, mountUpdates, initializeUpdates } from './updates';
+import {initiativeSettings,mountInitiativeSettings} from './initiative-settings';
+import {voiceServiceOptions,mountVoiceServiceOptions} from './service-settings';
 import { bindRangeControls } from './settings-controls';
 import { webSettings,mountWebSettings } from './web';
 import { mountStartupRecovery } from './startup-recovery';
@@ -156,14 +158,14 @@ function render(): void {
   if (view === 'conversation') mountConversation(activeProfile()!, report, change);
   paintLive(state);
   paintVoiceService();
-  if (view === 'settings') mountUpdates();
+  if (view === 'settings') { mountUpdates(); mountComfyOptions(document.querySelector('#comfy-startup-options')!,change); mountVoiceServiceOptions(state.settings.voice_service,change); }
   if (view === 'settings') void mountAudioSettings(document.querySelector('#audio-settings-root')!, state.settings.audio, (audio) => change({ kind: 'audio_settings', audio }, t('Réglages audio enregistrés.')));
   if (view === 'memory') { void loadHistory(profile.id); mountMemory(profile, report); }
   if (view === 'profiles') mountConnections(document.querySelector('#connections-root')!, profile,
     (id) => { selected = id; render(); },
     (revision, connections) => change({ kind: 'connections', id: profile.id, revision, connections }, t`Connexions de ${profile.name} enregistrées.`),
     () => openAvatar(profile));
-  if(view==='profiles'){mountMoodSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountIllustrationSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountWebSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);}
+  if(view==='profiles'){mountInitiativeSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountMoodSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountIllustrationSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);mountWebSettings(profile,()=>state?.profiles.find(p=>p.id===profile.id),change);}
 }
 
 function widgetVisibilityLabel(visible: boolean): string {
@@ -183,7 +185,7 @@ function profilesView(profile: Profile): string {
       <div class="portrait-stage"><div class="stage-label"><span class="tiny-cross">+</span> IDENTITÉ DU COMPAGNON <span class="tiny-cross">+</span></div><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><img class="hero-portrait" src="${portrait(profile)}" alt="Apparence de ${escape(profile.name)}" /><div class="portrait-controls"><button class="button glass small" id="change-avatar">${icon('image')} Avatar et voix</button><span id="profile-voice-label"></span><button class="text-button" id="choose-profile-voice">Choisir sa voix →</button></div><span class="stage-coordinate">01 / PRÉSENCE</span></div>
       <div class="companion-copy"><div class="identity-line"><span class="tag ${isActive ? 'live' : ''}">${isActive ? html`<i class="status-dot"></i> ACTIF SUR TON BUREAU` : t('PRÊT À ÊTRE ACTIVÉ')}</span><button class="icon-button" id="edit-profile" aria-label="Modifier le compagnon" title="Modifier">${icon('edit')}</button></div><h2>${escape(profile.name)}</h2><p class="personality-preview">${escape(profile.personality || t('Sa personnalité reste à écrire. Donne-lui une façon bien à lui de t’accompagner.'))}</p><div class="profile-stats"><div><strong>${profile.message_count}</strong><span>messages</span></div><div><strong>${profile.memory_count}</strong><span>souvenirs</span></div><div><strong class="text-value">Indépendant</strong><span>son propre espace</span></div></div><div class="detail-actions">${isActive ? html`<button class="button primary" data-action="show_widget">${icon('eye')} Retrouver ${escape(profile.name)}</button>` : html`<button class="button primary" id="activate-profile">${icon('spark')} Activer ce compagnon</button>`}<button class="button secondary" id="personality-button">Personnalité ${icon('arrow')}</button></div><div class="profile-tools"><button class="button secondary small" id="duplicate-profile">${icon('copy')} Dupliquer ce compagnon</button><button class="text-button" id="export-profile">${icon('download')} Exporter</button><button class="text-button danger" id="delete-profile" ${isActive ? html`disabled title="Active un autre compagnon avant de supprimer celui-ci."` : ''}>${icon('trash')} Supprimer</button></div></div>
     </article>
-    ${moodSettings(profile)}${illustrationSettings(profile,state!.settings.comfyui_startup)}<div id="connections-root"></div>${profile.connections.llm_provider === 'hermes' ? '' : webSettings(profile.web_search ?? state!.settings.web_search,profile)}
+    ${moodSettings(profile)}${initiativeSettings(profile)}${illustrationSettings(profile)}<div id="connections-root"></div>${profile.connections.llm_provider === 'hermes' ? '' : webSettings(profile.web_search ?? state!.settings.web_search,profile)}
     <div class="bottom-grid"><section class="info-card"><div class="card-icon">${icon('shield')}</div><div><h3>Son histoire reste la sienne.</h3><p>Changer de compagnon change de mémoire. Une copie reprend sa personnalité et son apparence, avec une histoire vierge.</p></div></section><section class="info-card"><div class="card-icon">${icon('image')}</div><div><h3>Sept émotions, ton avatar.</h3><p>Ajoute tes images dans « Avatar et voix ». L’expression suit le ton de la réponse.</p></div></section></div>`;
 }
 
@@ -202,7 +204,7 @@ function settingsView(): string {
   return html`<div class="page-heading"><div><p class="eyebrow">DISCRET, COMME TU L’AIMES</p><h1>À tes commandes<span>.</span></h1><p>La présence de Sherka sur ton bureau.</p></div></div>
     <section class="settings-card"><div class="section-heading"><h2>Le widget</h2>${icon('orbit')}</div><form id="preferences-form"><label class="setting-row"><span><strong>Toujours au premier plan</strong><small>Garder ton compagnon visible au-dessus des autres fenêtres.</small></span><input class="switch" type="checkbox" name="always_on_top" ${state!.settings.always_on_top ? 'checked' : ''} /></label><label class="setting-row"><span><strong>Taille du compagnon</strong><small>Tu peux aussi tirer le coin inférieur droit du widget.</small></span><span class="scale-control range-control"><input id="widget-scale" name="widget_scale" type="range" min="65" max="160" step="5" value="${state!.settings.widget_scale}" /><output id="scale-value" for="widget-scale" data-percent-scale="0.01">${state!.settings.widget_scale} %</output></span></label><div class="settings-actions"><button class="button primary" type="submit">${icon('check')} Enregistrer</button><button class="button secondary" type="button" data-action="restore_widget">Replacer le widget</button></div></form></section>
     <section class="settings-card"><h2>Passage des clics</h2><p>Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification.</p><div class="settings-actions"><button class="button secondary" data-action="click_through">Laisser passer les clics</button><button class="text-button" data-action="restore_widget">Reprendre les clics</button></div></section>
-    ${themesView(state!.settings.theme)}${interfaceLanguageView()}${updatesView()}<div id="audio-settings-root"></div>
+    ${themesView(state!.settings.theme)}${interfaceLanguageView()}${updatesView()}${voiceServiceOptions(state!.settings.voice_service)}${comfyStartupOptions(state!.settings.comfyui_startup)}<div id="audio-settings-root"></div>
     ${activeProfile()?.connections.llm_provider === 'hermes' ? '' : html`<section class="settings-card"><h2>Mémoire du compagnon</h2><p>Raccourcir et regrouper les souvenirs redondants, avec une proposition à vérifier.</p><button type="button" class="button secondary" id="settings-memory-optimize">Optimiser la mémoire</button></section>`}
     <section class="settings-card"><h2>Quitter Sherka</h2><p>Arrête le micro et la réponse, puis décharge le modèle du compagnon dans LM Studio.</p><button class="button secondary" data-action="quit">Quitter Sherka</button></section>
     <section class="storage-card">${icon('shield')}<div><strong>Données conservées sur ce PC</strong><p class="storage-path">${escape(state!.data_directory)}</p><small>Un dossier et une base par compagnon. Aucun enregistrement audio.</small></div></section>`;
@@ -449,6 +451,10 @@ async function start(): Promise<void> {
       await mountStartupRecovery(app);
       return;
     }
+    let lastActivity=0;
+    const activity=()=>{if(Date.now()-lastActivity<1500)return;lastActivity=Date.now();void api.initiativeActivity().catch(()=>{});};
+    document.addEventListener('input',activity);document.addEventListener('pointerdown',activity);document.addEventListener('keydown',activity);
+    setInterval(()=>{const active=document.activeElement;if(document.hasFocus()&&active instanceof HTMLTextAreaElement&&active.value.trim())activity();},2000);
     await api.onChanged(() => void refresh());
     if (widget) {
       window.addEventListener('blur', () => dismissWidgetControls?.());

@@ -646,7 +646,7 @@ impl Store {
         let export = ProfileExport {
             format: "sherka-profile".into(),
             version: 5,
-            profile: profile.details,
+            profile: profile.details.for_export(),
             avatar_png_base64: self.avatar_bytes(id)?.map(|bytes| STANDARD.encode(bytes)),
             emotion_avatars_png_base64: self
                 .emotion_avatar_bytes(id)?

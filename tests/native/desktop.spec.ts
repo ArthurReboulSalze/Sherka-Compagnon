@@ -61,7 +61,14 @@ function modelRoutes(ids: string[], context = 8192, thoughts: Record<string, str
 }
 
 async function native<T>(command: string, args?: unknown): Promise<T> {
-  return panel.evaluate(async ({ command, args }) => {
+  const mutation=(args as any)?.mutation;
+  if(command==='apply_mutation'&&mutation?.kind==='connections'&&mutation.connections?.voice_studio_url){
+    const snapshot=await native<any>('get_snapshot');
+    const c=mutation.connections,global=snapshot.settings.voice_service;
+    if(global.url!==c.voice_studio_url||global.stt_model!==c.stt_model)await native('apply_mutation',{mutation:{kind:'voice_service',config:{...global,url:c.voice_studio_url,stt_model:c.stt_model}}});
+  }
+
+  return (command==='save_widget_cell'||command==='widget_surface'?widget:panel).evaluate(async ({ command, args }) => {
     return (window as unknown as { __TAURI_INTERNALS__: { invoke: (command: string, args?: unknown) => Promise<unknown> } }).__TAURI_INTERNALS__.invoke(command, args);
   }, { command, args }) as Promise<T>;
 }
@@ -140,7 +147,7 @@ async function stopApplication(): Promise<void> {
 
 test.beforeEach(async () => {
   consoleErrors = [];
-  dataDirectory = resolve('artifacts/native', randomUUID());
+  dataDirectory = resolve(process.env.SHERKA_NATIVE_DATA_ROOT ?? 'artifacts/native', randomUUID());
   mkdirSync(dataDirectory, { recursive: true });
   await startApplication();
 });
@@ -504,6 +511,12 @@ test('catalogues HTTP, choix par profil, indisponibilité et conservation après
   if (!address || typeof address === 'string') throw new Error('Serveur de test indisponible');
   const url = `http://127.0.0.1:${address.port}`;
   try {
+    await panel.locator('[data-nav="settings"]').click();
+    await panel.locator('[name="voice_studio_url"]').fill(url);await panel.locator('#refresh-global-voice').click();
+    await expect(panel.getByLabel('Modèle de transcription').locator('option')).not.toHaveCount(1);
+    await panel.getByLabel('Modèle de transcription').selectOption('faster-whisper');
+    await panel.getByRole('button',{name:'Enregistrer VoiceStudio',exact:true}).click();await expect(panel.locator('body')).not.toHaveClass(/working/);
+    await panel.locator('[data-nav="profiles"]').click();
     const path = resolve(dataDirectory, 'connexion.sherka.json');
     writeFileSync(path, JSON.stringify({ format: 'sherka-profile', version: 1, profile: { name: 'Vega connectée', personality: '', instructions: '', accent: 'teal', connections: { lm_studio_url: url, voice_studio_url: url } }, avatar_png_base64: null }));
     const chooser = panel.waitForEvent('filechooser');
@@ -523,7 +536,6 @@ test('catalogues HTTP, choix par profil, indisponibilité et conservation après
     await panel.getByRole('button',{name:'Associer cette voix',exact:true}).click();
     await expect(panel.locator('.voice-modal')).toHaveCount(0);
     await panel.getByLabel('Modèle de conversation').selectOption('my-loaded-chat');
-    await panel.getByLabel('Modèle de transcription').selectOption('faster-whisper');
     await panel.getByRole('button', { name: 'Enregistrer ces choix' }).click();
     await expect(panel.getByRole('button', { name: 'Enregistrer ces choix' })).toBeDisabled();
     await panel.locator('.profile-card').filter({hasText:'Sherka'}).click();
@@ -2030,7 +2042,7 @@ test('companion settings: starter pack, provider placement, independent web choi
     await panel.locator(`[data-profile="${profile.id}"]`).click();
     await expect(panel.locator('.hero-portrait')).toHaveAttribute('src',`/assets/${imageFolder}/neutral.png`);
     await expect(panel.locator('[name="llm_provider"]')).toBeVisible();
-    await expect(panel.locator('[name="stt_model"]')).toBeVisible();
+    await expect(panel.locator('[name="stt_model"]')).toHaveCount(0);
     await panel.locator('#change-avatar').click();
     await expect(panel.locator('.emotion-slot')).toHaveCount(7);
     for (const emotion of ['neutral','joy','sadness','anger','surprise','reflection','tenderness']) {
@@ -2057,7 +2069,8 @@ test('companion settings: starter pack, provider placement, independent web choi
   await expect(panel.locator('body')).not.toHaveClass(/working/);
   await panel.screenshot({path:'artifacts/companion-settings.png',fullPage:true});
   await panel.locator('[data-nav="settings"]').click();
-  await expect(panel.locator('[name="llm_provider"], [name="stt_model"], #web-search-mode')).toHaveCount(0);
+  await expect(panel.locator('[name="llm_provider"], #web-search-mode')).toHaveCount(0);
+  await expect(panel.locator('[name="stt_model"]')).toBeVisible();
   await expect(panel.locator('#interface-language')).toBeVisible();
   await stopApplication(); await startApplication();
   const saved=await native<any>('get_snapshot');
@@ -2396,18 +2409,18 @@ server=ThreadingHTTPServer((args.listen,args.port),Handler);server.serve_forever
 `);
   const python=execFileSync('python',['-c','import sys;print(sys.executable)'],{encoding:'utf8'}).trim();
   try{
-    await panel.locator('.comfy-startup-options > summary').click();await panel.locator('#comfy-directory').fill(folder);await panel.locator('#comfy-python').fill(python);await panel.locator('#save-comfy-startup').click();
+    await panel.locator('[data-nav="settings"]').click();await panel.locator('#comfy-directory').fill(folder);await panel.locator('#comfy-python').fill(python);await panel.locator('#save-comfy-startup').click();
     await expect.poll(async()=>(await native<any>('get_snapshot')).settings.comfyui_startup.directory).toBe(folder);await expect(panel.locator('body')).not.toHaveClass(/working/);
     expect((await native<any>('get_comfy_service')).phase).toBe('disabled');expect(existsSync(resolve(folder,'launch.json'))).toBe(false);
-    await panel.locator('[name="image_server"]').fill(url);await panel.locator('[name="image_enabled"]').check();await panel.locator('#discover-images').click();
+    await panel.locator('[data-nav="profiles"]').click();await panel.locator('[name="image_server"]').fill(url);await panel.locator('[name="image_enabled"]').check();await panel.locator('#discover-images').click();
     await expect(panel.locator('#comfy-startup-status')).toContainText('premières générations');await expect(panel.locator('#image-catalog-status')).toContainText('1 modèles');
     await expect.poll(async()=>(await native<any>('get_comfy_service')).phase).toBe('ready');
     const launch=JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8'));expect(launch.args).toEqual(['--listen','127.0.0.1','--port',String(port),'--disable-auto-launch']);
     await panel.locator('[name="image_checkpoint"]').selectOption('fixture.safetensors');await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();await expect(panel.locator('body')).not.toHaveClass(/working/);
     await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode,{timeout:30000}).toBe(0);await stopApplication();
-    expect((await fetch(url+'/system_stats')).ok).toBe(true);
-    await startApplication();await expect.poll(async()=>(await native<any>('get_comfy_service')).phase).toBe('ready');expect(JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8')).pid).toBe(launch.pid);
-    await panel.locator('[name="image_server"]').fill('http://192.0.2.1:8188');await panel.locator('.comfy-startup-options > summary').click();await expect(panel.locator('#comfy-directory')).toBeDisabled();await expect(panel.locator('#comfy-python')).toBeDisabled();await expect(panel.locator('#comfy-remote-note')).toBeVisible();
+    await expect.poll(async()=>{try{await fetch(url+'/system_stats');return false;}catch{return true;}}).toBe(true);
+    await startApplication();await expect.poll(async()=>(await native<any>('get_comfy_service')).phase).toBe('ready');expect(JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8')).pid).not.toBe(launch.pid);
+    await panel.locator('[name="image_server"]').fill('http://192.0.2.1:8188');await expect(panel.locator('#comfy-directory')).toHaveCount(0);await panel.locator('[data-nav="settings"]').click();await expect(panel.locator('#comfy-directory')).toHaveValue(folder);await expect(panel.locator('#comfy-directory')).toBeEnabled();
     await panel.screenshot({path:'artifacts/comfy-remote-startup-options.png'});expect(consoleErrors).toEqual([]);
   }finally{await fetch(url+'/shutdown',{method:'POST'}).catch(()=>{});await expect.poll(async()=>{try{await fetch(url+'/system_stats');return false;}catch{return true;}},{timeout:10000}).toBe(true);}
 });
@@ -2793,4 +2806,156 @@ test('live scenes: advanced settings, targeted interruption and text/TTS priorit
     await panel.locator('#image-advanced-fields').scrollIntoViewIfNeeded();await panel.screenshot({path:'artifacts/illustration-live-advanced-settings.png'});
     expect(consoleErrors).toEqual([]);
   }finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+});
+
+
+test('device settings: global speech, per-companion desktop geometry and image stacking survive restart',async()=>{
+  await native('initiative_activity');
+  const original=await native<any>('get_snapshot'),a=original.profiles[0],b=original.profiles[1];
+  await panel.locator('[data-nav="settings"]').click();
+  await panel.locator('[name="voice_studio_url"]').fill('http://127.0.0.1:39999');
+  await panel.locator('[name="autostart"]').uncheck();
+  await panel.locator('[name="directory"]').fill('C:/Custom VoiceStudio');
+  await panel.getByRole('button',{name:'Enregistrer VoiceStudio',exact:true}).click();
+  await expect.poll(async()=>(await native<any>('get_snapshot')).settings.voice_service.directory).toBe('C:/Custom VoiceStudio');
+  await expect(panel.locator('body')).not.toHaveClass(/working/);
+  await panel.locator('#voice-global-settings').scrollIntoViewIfNeeded();await panel.screenshot({path:'artifacts/global-service-settings.png'});
+  await panel.locator('[data-nav="profiles"]').click();
+  await expect(panel.locator('[name="voice_studio_url"], [name="stt_model"], #comfy-directory')).toHaveCount(0);
+  await panel.locator('[name="initiative_enabled"]').check();
+  await panel.locator('[name="initiative_min"]').fill('3');await panel.locator('[name="initiative_max"]').fill('7');
+  await panel.getByRole('button',{name:'Enregistrer la prise de parole',exact:true}).click();await expect(panel.locator('body')).not.toHaveClass(/working/);
+  await native('save_widget_cell',{profileId:a.id,image:{x:20,y:20,size:240,moved:true},textHeight:120});
+  // Reload the widget to exercise hydration from persisted geometry.
+  await widget.reload();await expect(widget.locator('#widget-canvas')).toBeVisible();
+  let state=await native<any>('get_snapshot');let p=state.profiles.find((p:any)=>p.id===a.id);
+  await native('apply_mutation',{mutation:{kind:'illustration',id:a.id,revision:p.revision,config:{...p.illustration,enabled:true,physical_description:'A golden spherical computer companion.',checkpoint:'fixture.safetensors',server_url:'http://127.0.0.1:39998'}}});
+  await expect(widget.locator('#widget-image-cell')).toBeVisible();
+  await expect.poll(()=>widget.locator('#widget-image-cell').evaluate(el=>parseFloat((el as HTMLElement).style.left))).toBe(20);
+  expect(await widget.locator('#drag-region').evaluate(el=>{const r=el.getBoundingClientRect();return Boolean(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest('#drag-region'));})).toBe(true);
+  await widget.locator('#drag-region').hover();const handle=await widget.locator('#resize-widget').boundingBox();expect(handle).not.toBeNull();
+  await widget.mouse.move(handle!.x+8,handle!.y+8);await widget.mouse.down();await widget.mouse.move(handle!.x+65,handle!.y+55,{steps:8});await widget.mouse.up();
+  await expect.poll(async()=>(await native<any>('get_snapshot')).settings.desktop_layouts[a.id].bounds?.width).toBeGreaterThan(320);
+  const savedA=(await native<any>('get_snapshot')).settings.desktop_layouts[a.id];
+  await native('apply_mutation',{mutation:{kind:'switch_profile',id:b.id}});
+  await expect(widget.locator('.widget-name')).toContainText(b.name);
+  await expect(widget.locator('#widget-image-cell')).toBeHidden();
+  await expect.poll(async()=>Math.round((await native<any>('widget_surface')).base_width)).toBe(290);
+  await native('save_widget_cell',{profileId:b.id,image:{x:-40,y:180,size:180,moved:true},textHeight:80});
+  await expect(native('save_widget_cell',{profileId:a.id,image:null,textHeight:null})).rejects.toBeTruthy();
+  await native('apply_mutation',{mutation:{kind:'switch_profile',id:a.id}});
+  await expect(widget.locator('.widget-name')).toContainText(a.name);
+  await expect.poll(async()=>(await native<any>('get_snapshot')).settings.desktop_layouts[a.id].bounds?.width).toBe(savedA.bounds.width);
+  await expect(widget.locator('#widget-image-cell')).toHaveCSS('width','240px');
+  await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode,{timeout:30000}).toBe(0);await stopApplication();await startApplication();
+  state=await native<any>('get_snapshot');
+  expect(state.settings.voice_service).toMatchObject({url:'http://127.0.0.1:39999',directory:'C:/Custom VoiceStudio',autostart:false});
+  expect(state.profiles.every((p:any)=>p.connections.voice_studio_url==='http://127.0.0.1:39999')).toBe(true);
+  expect(state.profiles.find((p:any)=>p.id===a.id).initiative).toEqual({enabled:true,min_minutes:3,max_minutes:7});
+  expect(state.profiles.find((p:any)=>p.id===b.id).initiative.enabled).toBe(false);
+  expect(state.settings.desktop_layouts[a.id].image).toEqual({x:20,y:20,size:240,moved:true});
+  expect(state.settings.desktop_layouts[b.id].image).toEqual({x:-40,y:180,size:180,moved:true});
+  await expect(widget.locator('#widget-image-cell')).toHaveCSS('width','240px');
+  expect(consoleErrors).toEqual([]);
+});
+
+
+test('VoiceStudio background: custom runtime starts headlessly and ownership governs shutdown',async()=>{
+  test.setTimeout(120000);
+  const reservation=createServer();await new Promise<void>(done=>reservation.listen(0,'127.0.0.1',done));const port=(reservation.address() as any).port;await new Promise<void>(done=>reservation.close(()=>done()));
+  const url=`http://127.0.0.1:${port}`,folder=resolve(dataDirectory,'Voice Studio runtime');mkdirSync(resolve(folder,'backend'),{recursive:true});
+  writeFileSync(resolve(folder,'backend/main.py'),'# fixture backend');
+  writeFileSync(resolve(folder,'uvicorn.py'),`import argparse,json,os,sys,threading
+from pathlib import Path
+from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+p=argparse.ArgumentParser();p.add_argument('app');p.add_argument('--app-dir');p.add_argument('--host');p.add_argument('--port',type=int);args=p.parse_args()
+Path('launch.json').write_text(json.dumps({'pid':os.getpid(),'args':sys.argv[1:]}))
+class Handler(BaseHTTPRequestHandler):
+ def log_message(self,*args):pass
+ def do_GET(self):
+  value={'status':'ok','version':'fixture','device':'cpu'} if self.path=='/health' else {'protocol':'voicestudio.speech.v1'}
+  body=json.dumps(value).encode();self.send_response(200);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+ def do_POST(self):
+  self.send_response(200);self.end_headers();threading.Thread(target=server.shutdown,daemon=True).start()
+server=ThreadingHTTPServer((args.host,args.port),Handler);server.serve_forever();server.server_close()
+`);
+  const python=execFileSync('python',['-c','import sys;print(sys.executable)'],{encoding:'utf8'}).trim();
+  const config={url,stt_model:null,directory:folder,python,autostart:true};
+  await native('apply_mutation',{mutation:{kind:'voice_service',config}});
+  await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode).toBe(0);await stopApplication();
+  try{
+    await startApplication(false,true);await expect.poll(async()=>(await native<any>('get_voice_service')).phase,{timeout:20000}).toBe('ready');
+    const launch=JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8'));expect(launch.args).toEqual(['main:app','--app-dir','backend','--host','127.0.0.1','--port',String(port)]);
+    await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode).toBe(0);await stopApplication();
+    await expect.poll(async()=>{try{await fetch(url+'/health');return false;}catch{return true;}}).toBe(true);
+    await startApplication(false,true);await expect.poll(async()=>(await native<any>('get_voice_service')).phase,{timeout:20000}).toBe('ready');
+    expect(JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8')).pid).not.toBe(launch.pid);
+    await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode).toBe(0);await stopApplication();
+    // Start a separate server, then verify Sherka reuses it without owning it.
+    const external=spawn(python,['-m','uvicorn','main:app','--app-dir','backend','--host','127.0.0.1','--port',String(port)],{cwd:folder,windowsHide:true,stdio:'ignore'});
+    await expect.poll(async()=>{try{return (await fetch(url+'/health')).ok;}catch{return false;}}).toBe(true);
+    await startApplication(false,true);await expect.poll(async()=>(await native<any>('get_voice_service')).phase).toBe('ready');
+    await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode).toBe(0);await stopApplication();
+    expect((await fetch(url+'/health')).ok).toBe(true);
+    await fetch(url+'/shutdown',{method:'POST'});await expect.poll(()=>external.exitCode).toBe(0);
+    await startApplication();
+    expect(consoleErrors).toEqual([]);
+  }finally{await fetch(url+'/shutdown',{method:'POST'}).catch(()=>{});}
+});
+
+
+test('spontaneous conversation: one brief spoken invitation without a fabricated user message',async()=>{
+  test.setTimeout(140000);
+  const requests:any[]=[],speech:string[]=[],models=modelRoutes(['idle-chat']);
+  const server=createServer((req,res)=>{
+    if(models(req,res))return;
+    let raw='';req.on('data',c=>raw+=c);req.on('end',()=>{
+      const body=raw?JSON.parse(raw):{};
+      if(req.url==='/v1/chat/completions'){
+        requests.push(body);res.writeHead(200,{'Content-Type':'text/event-stream'});res.end('data: '+JSON.stringify({choices:[{delta:{content:'[[emotion:neutral]]Tu veux discuter un peu ?'}}]})+'\n\ndata: [DONE]\n\n');return;
+      }
+      if(req.url==='/v1/audio/speech'){speech.push(body.input);res.writeHead(200,{'Content-Type':'audio/pcm'});res.end(Buffer.alloc(4800));return;}
+      res.writeHead(404);res.end('{}');
+    });
+  });
+  await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));const url=`http://127.0.0.1:${(server.address() as any).port}`;
+  try{
+    const p=(await native<any>('get_snapshot')).profiles[0];
+    await native('apply_mutation',{mutation:{kind:'connections',id:p.id,revision:p.revision,connections:{...p.connections,lm_studio_url:url,voice_studio_url:url,llm_model:'idle-chat',tts_engine:'omni',tts_voice:'test',volume:0}}});
+    const active=(await native<any>('get_snapshot')).profiles.find((v:any)=>v.id===p.id);
+    await native('apply_mutation',{mutation:{kind:'initiative',id:p.id,revision:active.revision,config:{enabled:true,min_minutes:1,max_minutes:1}}});
+    await expect.poll(()=>requests.length,{timeout:85000,intervals:[1000]}).toBe(1);
+    expect(requests[0].max_tokens).toBeLessThanOrEqual(256);
+    await expect.poll(()=>speech.length,{timeout:15000}).toBeGreaterThan(0);
+    await expect.poll(async()=>(await native<any[]>('get_history',{profileId:p.id})).length).toBe(1);
+    const history=await native<any[]>('get_history',{profileId:p.id});expect(history[0].role).toBe('assistant');expect(history[0].content).toBe('Tu veux discuter un peu ?');
+    expect(requests[0].messages.at(-1).content).toContain('Application idle event');
+    expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toHaveLength(0);
+    expect(consoleErrors).toEqual([]);
+  }finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+});
+
+
+test('real VoiceStudio: prepared local runtime starts without Electron and closes with Sherka',async()=>{
+  test.skip(process.env.SHERKA_TEST_REAL_VOICE!=='1','Opt-in check against the installed VoiceStudio runtime.');
+  test.setTimeout(180000);
+  const url='http://127.0.0.1:3900';
+  const ready=async()=>{try{return (await fetch(url+'/health',{signal:AbortSignal.timeout(1500)})).ok;}catch{return false;}};
+  test.skip(await ready(),'Existing VoiceStudio is independent and must be left running.');
+  const desktops=()=>execFileSync('powershell.exe',['-NoProfile','-Command',"@(Get-Process VoiceStudio -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id) -join ','"],{encoding:'utf8',windowsHide:true}).trim();
+  const before=desktops();
+  await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode).toBe(0);await stopApplication();
+  try {
+    await startApplication(false,true);
+    await expect.poll(async()=>(await native<any>('get_voice_service')).phase,{timeout:150000,intervals:[1000]}).toBe('ready');
+    expect(await ready()).toBe(true);expect(desktops()).toBe(before);
+    const protocol=await (await fetch(url+'/.well-known/voicestudio-speech')).json();
+    expect(protocol.protocol).toBe('voicestudio.speech.v1');
+    await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode,{timeout:30000}).toBe(0);await stopApplication();
+    await expect.poll(ready).toBe(false);
+    writeFileSync('artifacts/voicestudio-headless-check.json',JSON.stringify({ready:true,speechProtocol:protocol.protocol,newElectronProcesses:false,closedOnQuit:true,microphoneOpened:false},null,2));
+    await startApplication();
+  } finally {
+    if(child.exitCode===null)await native('widget_action',{action:'quit'}).catch(()=>{});
+  }
 });

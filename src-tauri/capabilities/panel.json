@@ -51,6 +51,7 @@
     "allow-get-illustration",
     "allow-refresh-illustration",
     "allow-export-illustration-workflow",
-    "allow-desktop-tool"
+    "allow-desktop-tool",
+    "allow-initiative-activity"
   ]
 }

@@ -21,6 +21,7 @@ pub fn sherka(language: Language) -> ProfileDraft {
         instructions: character.instructions.clone(),
         accent: "amber".into(),
         mood_persistence: false,
+        initiative: Default::default(),
         avatar_preset: Some(crate::avatar::AvatarPreset::Sherka),
         web_search: None,
         illustration: crate::illustration::Config::default(),

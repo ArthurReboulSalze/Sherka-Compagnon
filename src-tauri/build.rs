@@ -15,6 +15,8 @@ fn main() {
             "export_illustration_workflow",
             "desktop_tool",
             "widget_surface",
+            "save_widget_cell",
+            "initiative_activity",
             "get_widget_visibility",
             "get_voice_service",
             "retry_voice_service",

@@ -25,7 +25,7 @@ pub async fn prepare(
         if session.profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
-        let profile = c.store.profile(profile_id)?;
+        let profile = c.profile(profile_id)?;
         if profile.details.connections.llm_provider.is_agent() {
             return Err(Error::Validation(
                 "Hermes gère sa mémoire sur le serveur.".into(),

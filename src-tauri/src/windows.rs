@@ -93,7 +93,11 @@ pub fn quit_without_unloading(app: &AppHandle) -> Result<(), String> {
     QUIT_STATE
         .compare_exchange(3, 2, Ordering::SeqCst, Ordering::SeqCst)
         .map_err(|_| "Le déchargement doit être tenté avant de quitter.".to_string())?;
-    app.exit(0);
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        shutdown_services(&app).await;
+        app.exit(0);
+    });
     Ok(())
 }
 
@@ -133,8 +137,7 @@ pub async fn prepare_shutdown(app: &AppHandle) -> Result<(), String> {
     let result = async {
         crate::conversation::pause(app, shared.clone(), &voice, true).await?;
         let active = crate::with_core(shared, |c| {
-            Ok(c.store
-                .profile(c.session.snapshot().profile_id)?
+            Ok(c.profile(c.session.snapshot().profile_id)?
                 .details
                 .connections)
         })
@@ -147,6 +150,9 @@ pub async fn prepare_shutdown(app: &AppHandle) -> Result<(), String> {
             .map_err(|e| e.to_string())
     }
     .await;
+    if result.is_ok() {
+        shutdown_services(app).await;
+    }
     match &result {
         Ok(()) => {
             save_geometry_now(app);
@@ -401,7 +407,7 @@ pub fn on_window_event(window: &tauri::Window, event: &WindowEvent) {
     }
 }
 
-fn save_geometry_now(app: &AppHandle) {
+pub fn save_geometry_now(app: &AppHandle) {
     let Some(window) = app.get_webview_window("widget") else {
         return;
     };
@@ -417,6 +423,9 @@ fn save_geometry_now(app: &AppHandle) {
     let Ok(mut core) = shared.0.lock() else {
         return;
     };
+    if !crate::desktop_tools::is_owner(app, core.session.snapshot().profile_id) {
+        return;
+    }
     if core
         .save_bounds(crate::desktop_tools::avatar_bounds(app).unwrap_or(Bounds {
             x: position.x,
@@ -428,4 +437,16 @@ fn save_geometry_now(app: &AppHandle) {
     {
         eprintln!("La position du widget n'a pas été enregistrée.");
     }
+}
+
+pub async fn shutdown_services(app: &AppHandle) {
+    let service = app
+        .state::<crate::comfy_startup::ComfyStartup>()
+        .inner()
+        .clone();
+    let _ = tauri::async_runtime::spawn_blocking(move || {
+        crate::service_process::shutdown();
+        service.shutdown();
+    })
+    .await;
 }

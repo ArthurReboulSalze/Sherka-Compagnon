@@ -2,7 +2,7 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import type { IllustrationConfig, IllustrationStatus, IllustrationCatalog } from './types';
 export const desktopTool = (tool:'text'|'image',open:boolean) => invoke<void>('desktop_tool',{tool,open});
-export const widgetSurface = (surface?:import('./types').WidgetSurface) => invoke<import('./types').WidgetSurface>('widget_surface',{surface:surface??null});
+export const widgetSurface = (surface?:import('./types').WidgetSurface,profileId?:string) => invoke<import('./types').WidgetSurface>('widget_surface',{surface:surface??null,profileId:profileId??null});
 export const onAvatarSize=(callback:(size:[number,number])=>void)=>listen<[number,number]>('sherka:avatar-size',e=>callback(e.payload));
 export const attachmentSupport = (profileId:string) => invoke<{images:boolean;known:boolean}>('get_attachment_support',{profileId});
 export const searchKeyStatus=(provider:import('./types').SearchProvider)=>invoke<boolean>('search_key_status',{provider});
@@ -73,3 +73,7 @@ export const onUpdate = (callback: (value: UpdateStatus) => void) => listen<Upda
 export const newHermesConversation = (profileId: string) => invoke<Snapshot>('new_hermes_conversation', { profileId });
 
 export const exportIllustrationWorkflow=(config:import('./types').IllustrationConfig)=>invoke<boolean>('export_illustration_workflow',{config});
+
+export const saveWidgetCell=(profileId:string,image:import('./types').ImagePlacement|null,textHeight:number|null)=>invoke<void>('save_widget_cell',{profileId,image,textHeight});
+
+export const initiativeActivity=()=>invoke<void>('initiative_activity');

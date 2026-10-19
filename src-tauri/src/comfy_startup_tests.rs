@@ -58,6 +58,7 @@ impl Drop for Server {
 }
 fn config() -> ComfyStartupConfig {
     ComfyStartupConfig {
+        disabled: false,
         directory: "explicitly-selected-installation".into(),
         python: String::new(),
     }
@@ -214,6 +215,7 @@ fn python_command_is_direct_quoted_by_os_loopback_bound_and_headless() {
     let python = dir.path().join("python test executable");
     std::fs::write(&python, "").unwrap();
     let config = ComfyStartupConfig {
+        disabled: false,
         directory: folder.display().to_string(),
         python: python.display().to_string(),
     };
@@ -270,6 +272,7 @@ fn portable_python_is_found_from_the_root_or_inner_comfy_folder() {
     std::fs::write(&python, "").unwrap();
     for selected in [dir.path(), folder.as_path()] {
         let config = ComfyStartupConfig {
+            disabled: false,
             directory: selected.display().to_string(),
             python: String::new(),
         };

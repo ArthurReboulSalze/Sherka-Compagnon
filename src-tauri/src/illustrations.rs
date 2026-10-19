@@ -135,7 +135,7 @@ impl Illustrations {
     }
     pub fn synchronize(&self, app: &AppHandle, core: &sherka_core::Companion) {
         let snapshot = core.session.snapshot();
-        let Ok(profile) = core.store.profile(snapshot.profile_id) else {
+        let Ok(profile) = core.profile(snapshot.profile_id) else {
             return;
         };
         let mut config = profile.details.illustration;
@@ -233,7 +233,7 @@ impl Illustrations {
         tauri::async_runtime::spawn(async move {
             let prepared = with_core(shared.clone(), |c| {
                 let session = c.session.snapshot();
-                let profile = c.store.profile(session.profile_id)?;
+                let profile = c.profile(session.profile_id)?;
                 if profile.details.connections.llm_provider.is_agent()
                     || !profile.details.illustration.enabled
                     || (c.live.tag.is_some() && !c.live.text_complete)
@@ -302,7 +302,7 @@ impl Illustrations {
                             && c.store
                                 .history(profile.id, 1)
                                 .is_ok_and(|h| h.first().is_some_and(|m| m.id == last))
-                            && c.store.profile(profile.id).is_ok_and(|p| {
+                            && c.profile(profile.id).is_ok_and(|p| {
                                 p.details.illustration == config
                                     && p.details.connections == profile.details.connections
                                     && !p.details.connections.llm_provider.is_agent()

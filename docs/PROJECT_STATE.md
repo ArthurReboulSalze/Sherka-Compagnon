@@ -1,6 +1,14 @@
 # Project status
 
-Release version: **1.0.0**, October 19, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.1.0**, October 20, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+
+## 1.1.0 — shared services and spontaneous conversation
+
+VoiceStudio connection/transcription and VoiceStudio/ComfyUI local startup paths now live in global Settings. Each service has one **Start with Sherka** option. VoiceStudio starts its prepared Python backend without Electron; only servers launched by Sherka and their children close when Sherka exits. Existing and remote services stay independent. Voice engine, voice and speech delivery remain companion-specific.
+
+Avatar and image-cell placement are saved per companion; illustrations overlap behind the avatar. Classic companions can optionally initiate a brief spoken invitation after a random idle interval, respecting conversation, typing, hidden-widget and pause states. One invitation waits for an actual reply before rearming. Hermes is excluded. Machine settings and desktop geometry are not exported with companion packs.
+
+Validation: 144 Rust tests passed on Windows and 142 on Debian (one optional public-search test skipped on each), with localization/catalog checks and TypeScript compilation. Native scenarios exercised shared speech settings, per-companion geometry across restart, image stacking, text-cell resizing, spontaneous speech and service ownership. The installed VoiceStudio backend also started without Electron and stopped on normal Sherka exit; no physical microphone test was performed.
 
 ## 1.0.0 — persistent moods and live scenes
 

@@ -67,7 +67,7 @@ impl Store {
                 .unwrap_or("/assets/sherka.png")
         });
         let neutral_bytes = image_bytes(neutral)?;
-        let mut profile = source.details;
+        let mut profile = source.details.for_export();
         // Every visible slot is embedded. The receiving installation needs no preset.
         profile.avatar_preset = None;
         let manifest = Manifest {

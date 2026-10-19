@@ -44,6 +44,59 @@ pub struct Companion {
 }
 
 impl Companion {
+    pub fn voice_service_config(&self) -> crate::model::VoiceServiceConfig {
+        self.settings.voice_service.clone().unwrap_or_default()
+    }
+    fn apply_voice_service(&self, p: &mut Profile) {
+        let config = self.voice_service_config();
+        p.details.connections.voice_studio_url = config.url;
+        p.details.connections.stt_model = config.stt_model;
+    }
+    pub fn profile(&self, id: Uuid) -> Result<Profile> {
+        let mut p = self.store.profile(id)?;
+        self.apply_voice_service(&mut p);
+        Ok(p)
+    }
+    pub fn set_voice_service(&mut self, config: crate::model::VoiceServiceConfig) -> Result<()> {
+        let config = config.validated()?;
+        self.pause_voice()?;
+        let mut next = self.settings.clone();
+        next.voice_service = Some(config);
+        self.store.save_settings(&next)?;
+        self.settings = next;
+        Ok(())
+    }
+    pub fn save_widget_cell(
+        &mut self,
+        id: Uuid,
+        image: Option<crate::model::ImagePlacement>,
+        text_height: Option<f64>,
+    ) -> Result<()> {
+        if self.session.snapshot().profile_id != id {
+            return Err(Error::StaleOperation);
+        }
+        if image.is_some_and(|p| {
+            !p.x.is_finite()
+                || !p.y.is_finite()
+                || !p.size.is_finite()
+                || !(-800.0..=900.0).contains(&p.x)
+                || !(-600.0..=800.0).contains(&p.y)
+                || !(140.0..=600.0).contains(&p.size)
+        }) || text_height.is_some_and(|h| !h.is_finite() || !(32.0..=600.0).contains(&h))
+        {
+            return Err(Error::Validation(
+                "La taille du widget est invalide.".into(),
+            ));
+        }
+        let mut next = self.settings.clone();
+        let layout = next.desktop_layouts.entry(id).or_default();
+        layout.image = image;
+        layout.text_height = text_height;
+        self.store.save_settings(&next)?;
+        self.settings = next;
+        Ok(())
+    }
+
     pub fn comfy_startup_config(&self) -> crate::model::ComfyStartupConfig {
         self.settings.comfyui_startup.clone()
     }
@@ -117,11 +170,31 @@ impl Companion {
             }
             settings.companion_pack_initialized = true;
         }
+        settings
+            .desktop_layouts
+            .retain(|id, _| profiles.iter().any(|p| p.id == *id));
         let active = settings
             .active_profile
             .filter(|id| profiles.iter().any(|p| p.id == *id))
             .unwrap_or(profiles[0].id);
         settings.active_profile = Some(active);
+        if settings.voice_service.is_none() {
+            let connections = &store.profile(active)?.details.connections;
+            settings.voice_service = Some(crate::model::VoiceServiceConfig {
+                url: connections.voice_studio_url.clone(),
+                stt_model: connections.stt_model.clone(),
+                ..Default::default()
+            });
+        }
+        let layout =
+            settings
+                .desktop_layouts
+                .entry(active)
+                .or_insert_with(|| crate::model::DesktopLayout {
+                    bounds: settings.widget_bounds,
+                    ..Default::default()
+                });
+        settings.widget_bounds = layout.bounds;
         store.save_settings(&settings)?;
         let mut companion = Self {
             store,
@@ -151,7 +224,15 @@ impl Companion {
                 local_memory: local,
                 local_emotions: local,
             },
-            profiles: self.store.list()?,
+            profiles: self
+                .store
+                .list()?
+                .into_iter()
+                .map(|mut p| {
+                    self.apply_voice_service(&mut p);
+                    p
+                })
+                .collect(),
             settings: self.settings.clone(),
             session: self.session.snapshot(),
             data_directory: self.store.root().display().to_string(),
@@ -168,6 +249,7 @@ impl Companion {
         }
         let mut next = self.settings.clone();
         next.active_profile = Some(id);
+        next.widget_bounds = next.desktop_layouts.get(&id).and_then(|v| v.bounds);
         self.store.save_settings(&next)?;
         self.stop_response()?;
         self.session.switch_profile(id);
@@ -263,6 +345,10 @@ impl Companion {
         }
         let mut next = self.settings.clone();
         next.widget_bounds = Some(bounds);
+        next.desktop_layouts
+            .entry(self.session.snapshot().profile_id)
+            .or_default()
+            .bounds = Some(bounds);
         self.store.save_settings(&next)?;
         self.settings = next;
         Ok(())

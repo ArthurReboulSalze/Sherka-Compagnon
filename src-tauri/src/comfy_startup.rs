@@ -1,6 +1,7 @@
 //! Optional device-local ComfyUI startup. Imported companions never supply a
 //! command. Only Python/portable installations explicitly selected on this PC
 //! can start, bound to the configured loopback address and port.
+use crate::owned_process::Process as Child;
 use reqwest::Client;
 use serde::Serialize;
 use sherka_core::model::ComfyStartupConfig;
@@ -8,7 +9,7 @@ use std::{
     collections::HashMap,
     fs::OpenOptions,
     path::{Path, PathBuf},
-    process::{Child, Command, Stdio},
+    process::{Command, Stdio},
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -99,6 +100,14 @@ impl ComfyStartup {
     pub fn status(&self) -> Status {
         self.0.status.borrow().clone()
     }
+    pub fn shutdown(&self) {
+        self.cancel();
+        let mut children = self.0.processes.lock().unwrap_or_else(|e| e.into_inner());
+        for child in children.values_mut() {
+            child.stop();
+        }
+        children.clear();
+    }
     pub fn cancel(&self) {
         self.0.cancel.cancel();
         self.disable();
@@ -138,6 +147,9 @@ impl ComfyStartup {
         recheck: bool,
     ) -> Result<u64, String> {
         if config.directory.trim().is_empty() || local_url(base).is_none() {
+            return Ok(0);
+        }
+        if config.disabled {
             return Ok(0);
         }
         if self.0.cancel.is_cancelled() {
@@ -287,7 +299,12 @@ impl ComfyStartup {
                             return Err("Démarrage de ComfyUI annulé.".into());
                         }
                         if let Some(child) = (service.0.launch)(&config, &url, &token)? {
-                            processes.insert(key, child);
+                            let mut child = child;
+                            if token.is_cancelled() || service.0.cancel.is_cancelled() {
+                                child.stop();
+                            } else {
+                                processes.insert(key, child);
+                            }
                         }
                         Ok(())
                     })
@@ -406,8 +423,7 @@ fn launch(
     if cancel.is_cancelled() {
         return Err("Démarrage de ComfyUI annulé.".into());
     }
-    command
-        .spawn()
+    Child::spawn(&mut command)
         .map(Some)
         .map_err(|e| format!("Impossible de démarrer ComfyUI : {e}"))
 }
@@ -449,13 +465,14 @@ pub fn synchronize(app: &tauri::AppHandle, shared: &crate::Shared) {
     let Ok(core) = shared.0.lock() else {
         return;
     };
-    let Ok(profile) = core.store.profile(core.session.snapshot().profile_id) else {
+    let Ok(profile) = core.profile(core.session.snapshot().profile_id) else {
         return;
     };
     let config = core.comfy_startup_config();
     drop(core);
     if profile.details.illustration.enabled
         && !profile.details.connections.llm_provider.is_agent()
+        && !config.disabled
         && !config.directory.is_empty()
         && local_url(&profile.details.illustration.server_url).is_some()
     {

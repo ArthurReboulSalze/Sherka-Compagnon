@@ -20,13 +20,13 @@ Turbo mode automatically resolves `PAseer-SDXL-LCM+Turbo.safetensors` from Comfy
 
 ## Optional local startup
 
-In **Companions → Conversation illustrations → Local ComfyUI startup**, select the folder containing `main.py`, or the root of a portable installation, and save. You can also select the Python executable from your ComfyUI environment, such as Conda. Sherka detects `.venv`/`venv` and portable embedded Python when available; otherwise it uses Python from the system PATH. No Python packages or models are installed automatically. Leave the folder empty to disable this feature.
+In **Settings → Local ComfyUI startup**, select the folder containing `main.py`, or the root of a portable installation, and save. You can also select the Python executable from your ComfyUI environment, such as Conda. Sherka detects `.venv`/`venv` and portable embedded Python when available; otherwise it uses Python from the system PATH. No Python packages or models are installed automatically. Enable **Start with Sherka** to use it; disable the switch or leave the folder empty for manual startup.
 
-These are device settings, shared between companions and excluded from companion exports. Automatic startup applies only to plain HTTP loopback addresses (`localhost`, `127.x.x.x` or `::1`). Remote servers and HTTPS proxies are contacted normally, without starting a local process; the path options are disabled for them.
+These are device settings, shared between companions and excluded from companion exports. Automatic startup applies only to plain HTTP loopback addresses (`localhost`, `127.x.x.x` or `::1`). Remote servers and HTTPS proxies are contacted normally, without starting a local process; the local startup paths do not apply to them.
 
 With illustrations enabled, Sherka reuses an existing compatible server or starts the selected installation with `--listen` bound to the configured loopback address, `--port` matching the server URL and `--disable-auto-launch`. It waits for the ComfyUI API before preparing a generation, with a bounded five-minute startup attempt. To configure an offline local server, first save its paths, check **Images during conversation**, then refresh the model list before selecting a checkpoint and saving the illustration settings.
 
-The panel and image cell show a startup notice: the first images may take longer while ComfyUI starts and loads its models. Concurrent requests share the startup attempt. Switching off illustrations cancels Sherka’s wait; ComfyUI stays running, including when Sherka quits. Launch output is appended to `logs/comfyui.log` in Sherka’s data directory. This launcher supports Python and portable installations, not the ComfyUI Desktop application executable.
+The panel and image cell show a startup notice: the first images may take longer while ComfyUI starts and loads its models. Concurrent requests share the startup attempt. Switching off illustrations cancels Sherka’s wait; ComfyUI stays available until Sherka quits. On exit, Sherka closes the server and its children only if it launched them; a pre-existing or remote server remains independent. Launch output is appended to `logs/comfyui.log` in Sherka’s data directory. This launcher supports Python and portable installations, not the ComfyUI Desktop application executable.
 
 ## Advanced sampling and live mode
 

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-initiative-activity"
+description = "Enables the initiative_activity command without any pre-configured scope."
+commands.allow = ["initiative_activity"]
+
+[[permission]]
+identifier = "deny-initiative-activity"
+description = "Denies the initiative_activity command without any pre-configured scope."
+commands.deny = ["initiative_activity"]

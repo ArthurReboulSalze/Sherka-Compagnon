@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 — 2026-10-20
+
+- Add optional per-companion spontaneous conversation with random idle intervals, activity/voice guards and one invitation until a real reply; exclude Hermes.
+- Move VoiceStudio connection/transcription and VoiceStudio/ComfyUI startup paths into global Settings, retaining companion-specific voices and speech delivery.
+- Start VoiceStudio's prepared Python backend without Electron, with automatic runtime detection and configurable runtime/Python paths.
+- Use one Start with Sherka option per service and close only locally owned process trees on exit, preserving pre-existing and remote servers.
+- Persist avatar and image-cell geometry per companion across switching and restart; render overlapping illustrations behind the avatar.
+- Keep machine speech settings, startup paths and desktop geometry out of companion exports; migrate the active companion's legacy speech connection once.
+- Update all seven interfaces, documentation and Windows/Debian distributions, including signed Windows update assets.
+
 ## 1.0.0 — 2026-10-19
 
 - Add optional per-companion persistent moods with bounded scores, turn-based decay, de-escalation, restart persistence and an independent reset. Exclude Hermes, copies and exports from accumulated mood state; advance the profile database to schema 9.

@@ -481,3 +481,13 @@ html { background:var(--app-bg); }
 #comfy-path-error { color:#f2bba4; }
 
 .widget .hermes-stop-button { background:var(--widget-surface); border-color:var(--widget-line); color:var(--accent); }
+
+/* Image cells sit behind the companion; controls and text remain interactive. */
+#widget-canvas .widget { pointer-events:none; }
+#widget-canvas .widget-portrait { z-index:2; pointer-events:auto; }
+#widget-canvas .widget-chrome { z-index:4; }
+#widget-canvas .widget-companions { z-index:6; pointer-events:auto; }
+#widget-canvas .hermes-stop-button { z-index:5; pointer-events:auto; }
+#widget-image-cell { z-index:0; }
+#widget-text-cell { z-index:3; }
+#voice-global-settings form { display:grid; gap:16px; }

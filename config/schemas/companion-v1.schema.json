@@ -20,6 +20,7 @@
         "accent": {"enum": ["amber", "teal", "violet", "coral"]},
         "avatar_preset": {"enum": [null, "sherka", "botsy", "candis", "alba", "kit", "minerva"]},
         "web_search": {"enum": [null, "off", "on_request", "auto"]},
+        "initiative": {"type":"object","properties":{"enabled":{"type":"boolean","default":false},"min_minutes":{"type":"integer","minimum":1,"maximum":1440},"max_minutes":{"type":"integer","minimum":1,"maximum":1440}},"additionalProperties":false},
         "mood_persistence": {"type": "boolean", "default": false},
         "connections": {"type": "object"},
         "illustration": {"type": "object"},

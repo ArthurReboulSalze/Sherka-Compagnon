@@ -3,7 +3,9 @@ mod comfy_startup;
 mod conversation;
 mod desktop_tools;
 mod illustrations;
+mod initiative;
 mod memory_ops;
+mod owned_process;
 pub mod portable_update;
 mod service_process;
 mod speech_input;
@@ -34,6 +36,14 @@ struct Shared(Arc<Mutex<Companion>>);
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Mutation {
+    VoiceService {
+        config: sherka_core::model::VoiceServiceConfig,
+    },
+    Initiative {
+        id: Uuid,
+        revision: i64,
+        config: sherka_core::model::InitiativeConfig,
+    },
     Theme {
         theme: sherka_core::model::Theme,
     },
@@ -194,16 +204,22 @@ async fn apply_mutation(
         Mutation::InterfaceLanguage { language } => Some(*language),
         _ => None,
     };
+    if matches!(&mutation, Mutation::SwitchProfile { .. }) {
+        windows::save_geometry_now(&app);
+    }
+    let voice_changed = matches!(&mutation, Mutation::VoiceService { .. });
     let preferences_changed = matches!(&mutation, Mutation::Preferences { .. });
     let stop_audio = matches!(
         &mutation,
-        Mutation::PauseVoice | Mutation::AudioSettings { .. } | Mutation::InterfaceLanguage { .. }
+        Mutation::PauseVoice
+            | Mutation::AudioSettings { .. }
+            | Mutation::VoiceService { .. }
+            | Mutation::InterfaceLanguage { .. }
     );
     let previous = with_core(shared.inner().clone(), |c| {
         Ok((
             c.session.snapshot().profile_id,
-            c.store
-                .profile(c.session.snapshot().profile_id)?
+            c.profile(c.session.snapshot().profile_id)?
                 .details
                 .connections,
         ))
@@ -211,6 +227,19 @@ async fn apply_mutation(
     .await?;
     let snapshot = with_core(shared.inner().clone(), move |core| {
         match mutation {
+            Mutation::VoiceService { config } => core.set_voice_service(config)?,
+            Mutation::Initiative {
+                id,
+                revision,
+                config,
+            } => {
+                let mut draft = core.profile(id)?.details;
+                draft.initiative = config;
+                core.update_profile(id, revision, draft)?;
+                if config.enabled {
+                    core.session.resume_initiative();
+                }
+            }
             Mutation::Theme { theme } => core.set_theme(theme)?,
             Mutation::ComfyuiStartup { config } => core.set_comfy_startup_config(config)?,
             Mutation::MoodPersistence {
@@ -218,7 +247,7 @@ async fn apply_mutation(
                 revision,
                 enabled,
             } => {
-                let mut draft = core.store.profile(id)?.details;
+                let mut draft = core.profile(id)?.details;
                 draft.mood_persistence = enabled;
                 core.update_profile(id, revision, draft)?;
             }
@@ -228,7 +257,7 @@ async fn apply_mutation(
                 revision,
                 config,
             } => {
-                let mut draft = core.store.profile(id)?.details;
+                let mut draft = core.profile(id)?.details;
                 draft.illustration = config;
                 core.update_profile(id, revision, draft)?;
             }
@@ -240,7 +269,7 @@ async fn apply_mutation(
             } => {
                 if let (Some(id), Some(revision)) = (id, revision) {
                     if let Some(config) = config {
-                        let mut draft = core.store.profile(id)?.details;
+                        let mut draft = core.profile(id)?.details;
                         draft.web_search = Some(mode);
                         draft.search = config;
                         core.update_profile(id, revision, draft)?;
@@ -308,7 +337,7 @@ async fn apply_mutation(
                 revision,
                 connections,
             } => {
-                let mut draft = core.store.profile(id)?.details;
+                let mut draft = core.profile(id)?.details;
                 draft.connections = connections;
                 core.update_profile(id, revision, draft)?;
             }
@@ -319,11 +348,18 @@ async fn apply_mutation(
         core.snapshot()
     })
     .await?;
+    if previous.0 != snapshot.session.profile_id {
+        desktop_tools::activate_profile(&app, &snapshot).map_err(|e| e.to_string())?;
+    }
+    if voice_changed {
+        app.state::<voice_startup::VoiceStartup>().reset();
+    }
     if let Some(active) = snapshot
         .profiles
         .iter()
         .find(|p| p.id == snapshot.session.profile_id)
-        && previous.1.voice_studio_url != active.details.connections.voice_studio_url
+        && (voice_changed
+            || previous.1.voice_studio_url != active.details.connections.voice_studio_url)
     {
         app.state::<voice_startup::VoiceStartup>()
             .start(&active.details.connections.voice_studio_url, false)?;
@@ -406,7 +442,7 @@ async fn get_attachment_support(
         if c.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
-        Ok(c.store.profile(profile_id)?.details.connections)
+        Ok(c.profile(profile_id)?.details.connections)
     })
     .await?;
     sherka_core::providers::Providers::new(connections)
@@ -775,7 +811,7 @@ async fn answer_hermes_approval(
         {
             return Err(Error::StaleOperation);
         }
-        let config = c.store.profile(tag.profile_id)?.details.connections;
+        let config = c.profile(tag.profile_id)?.details.connections;
         c.live.hermes_approval = None;
         Ok((tag, approval, config))
     })
@@ -946,6 +982,8 @@ pub fn run() {
             illustrations::refresh_illustration,
             desktop_tools::desktop_tool,
             desktop_tools::widget_surface,
+            desktop_tools::save_widget_cell,
+            initiative::initiative_activity,
             get_widget_visibility,
             get_voice_service,
             retry_voice_service,
@@ -1015,6 +1053,7 @@ pub fn run() {
             app.manage(shared.clone());
             app.manage(illustrations::Illustrations::new());
             app.manage(desktop_tools::Canvas::default());
+            app.manage(initiative::Initiative::default());
             illustrations::synchronize(app.handle(), &shared);
             app.manage(Voice::setup(app.handle().clone(), shared, &directory));
             // Build webviews only after registering the engine. Config-created
@@ -1023,9 +1062,10 @@ pub fn run() {
                 tauri::WebviewWindowBuilder::from_config(app, config)?.build()?;
             }
             windows::setup_tray(app)?;
+            initiative::start(app.handle().clone());
             windows::set_language(app.handle(), snapshot.settings.ui_language)?;
             windows::apply_preferences(app.handle(), &snapshot.settings)?;
-            windows::recover_widget(app.handle(), snapshot.settings.widget_bounds)?;
+            desktop_tools::activate_profile(app.handle(), &snapshot)?;
             // Only debug builds accept hidden startup for native WebView2
             // integration tests. Release builds always show the application.
             let hidden_test =

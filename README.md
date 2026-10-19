@@ -35,7 +35,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**Sherka 1.0 is here:** optional **persistent moods**, a widget that follows your theme, **live ComfyUI scenes** with advanced sampling, remembered model catalogs and optional local startup. More control over your companion, with conversation always first. [What's new](docs/releases/1.0.0.md).
+**Sherka 1.1 is here:** optional **spontaneous conversation**, a remembered desktop layout for each companion, and shared voice/service settings. VoiceStudio runs in the background; services launched by Sherka close with it. [What's new](docs/releases/1.1.0.md).
 
 ## Meet your companions
 
@@ -79,7 +79,7 @@ The **Image** button reveals a movable, resizable cell that follows your compani
 
 **Live scenes, with conversation first.** Enable live mode for continuous variations that follow the latest exchange. Sherka pauses its image work for speech recognition, text generation and speech synthesis, then resumes automatically. Advanced settings let you choose the square output size, set each sampler’s steps and CFG independently and choose a shared sampler; your values stay in place when you toggle Turbo. Export the API workflow from the same settings to use it as a starting point in ComfyUI.
 
-**Ready when you are.** Model, LoRA and sampler lists are remembered on this device; the highlighted refresh button rescans the whole catalog. For a local Python or portable ComfyUI installation, save its folder and optional Python path: Sherka can start it when illustrations are enabled. The first images take longer while the server and models load. Remote servers remain manually managed.
+**Ready when you are.** Model, LoRA and sampler lists are remembered on this device; the highlighted refresh button rescans the whole catalog. For a local Python or portable ComfyUI installation, save its folder and optional Python path in **Settings**: Sherka can start it when illustrations are enabled. The first images take longer while the server and models load. Remote servers remain manually managed.
 
 These scenes illustrate the conversation; the avatar's seven expressions remain separate. Hermes uses its own tools and stays outside local scene generation.
 
@@ -91,7 +91,7 @@ The [open archive format](docs/COMPANION_PACKS.md) uses ordinary ZIP, JSON and P
 
 ## Local voice. Your choice of intelligence.
 
-**[VoiceStudio](https://github.com/debpalash/VoiceStudio) powers speech recognition, synthesis and voices.** Install it and your preferred speech models separately; Sherka starts the installed Windows application when needed.
+**[VoiceStudio](https://github.com/debpalash/VoiceStudio) powers speech recognition, synthesis and voices.** Install it and your preferred speech models separately. Sherka can start its prepared Python server in the background, without opening the VoiceStudio window. Configure the connection, transcription model and local paths once in **Settings**; choose each companion's voice in **Avatar & voice**.
 
 | How you want to talk | What you connect |
 | --- | --- |
@@ -99,9 +99,15 @@ The [open archive format](docs/COMPANION_PACKS.md) uses ordinary ZIP, JSON and P
 | **Choose a hosted model** | OpenRouter, Z.ai API or Coding Plan, OpenAI, Anthropic, or a compatible API. [Provider setup](docs/PROVIDERS.md). |
 | **Talk to your Hermes agent** | Your Hermes server and profile. Hermes keeps its personality, memory and tools; Sherka handles the avatar and voice. [Hermes setup](docs/HERMES.md). |
 
-Voice processing stays local. Hosted model APIs receive conversation context and may charge for usage; Hermes follows your server's configuration. API keys use Windows Credential Manager or Linux Secret Service and are excluded from exported profiles.
+With VoiceStudio on your PC, voice processing stays local. Hosted model APIs receive conversation context and may charge for usage; Hermes follows your server's configuration. API keys use Windows Credential Manager or Linux Secret Service and are excluded from exported profiles.
 
 Sherka manages context budgets and offers reasoning controls where supported. Switching companions also handles local model loading and unloading.
+
+## Shared services, personal layouts
+
+Configure VoiceStudio transcription and local service startup once in Settings. VoiceStudio can run in the background without its desktop window; VoiceStudio and ComfyUI each have a **Start with Sherka** switch. Servers started by Sherka close with it; servers already running remain independent.
+
+Each companion remembers its desktop size, position and image-cell layout, even after restarting. Overlapping illustrations stay behind the avatar. Enable **Spontaneous conversation** per classic companion and choose a minimum and maximum idle delay: a short invitation breaks the silence, then your companion waits for a real reply. Typing, ongoing speech, voice pause and a hidden widget postpone it. Hermes keeps its own behavior. [Setup details](docs/GETTING_STARTED.md#spontaneous-conversation).
 
 ## Responsive without a huge setup
 
@@ -112,12 +118,12 @@ Development and real-service testing used an **NVIDIA RTX 3090**. You do not nee
 ## From download to your first conversation
 
 1. **Pick your download:** the [Windows x64 installer, no-install ZIP or Debian x64 package](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest).
-2. **Connect voice and intelligence:** set up VoiceStudio, then choose LM Studio, an API provider or Hermes in Companions.
+2. **Connect voice and intelligence:** set up VoiceStudio in Settings, then choose LM Studio, an API provider or Hermes in Companions.
 3. **Choose your companion and voice, turn on the microphone, and talk.** The avatar appears at startup; the control panel is there whenever you need it.
 
 Follow the [getting-started guide](docs/GETTING_STARTED.md) for Windows or the [Linux guide](docs/LINUX.md) for Debian. Windows requires WebView2 and the Visual C++ x64 runtime. Models and voices are separate downloads. Headphones are recommended for voice interruption; the microphone is off at startup.
 
-Check for signed Windows updates directly from **Settings**. Installed and no-install copies share your Windows user data. Linux uses its own user data folder and manual package updates; start external voice/model services separately. The Debian port has compilation and headless startup validation; physical audio and desktop behavior need broader testing.
+Check for signed Windows updates directly from **Settings**. Installed and no-install copies share your Windows user data. Linux uses its own user data folder and manual package updates; external services require their own installation. The Debian port has compilation and headless startup validation; physical audio and desktop behavior need broader testing.
 
 ## What's next
 

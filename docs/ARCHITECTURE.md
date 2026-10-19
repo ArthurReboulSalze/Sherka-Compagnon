@@ -26,7 +26,7 @@ Streaming ASR combines confirmed segment finals with partial/cumulative summarie
 
 Companions serialize provider, full API base, model and budget preferences without keys. Windows Credential Manager owns provider/base-scoped credentials; only the panel can query key presence, replace a key or remove it. Remote requests use HTTPS except loopback, do not follow redirects and never forward provider credentials to VoiceStudio. Context discovery precedes local model retirement, and remote adapters never call local model load/unload endpoints.
 
-Linux uses the same credential scope through the desktop Secret Service's `secret-tool`, sending secrets on stdin rather than command arguments. It reports a missing or locked service without falling back to plaintext. External source links use `xdg-open` without shell interpolation. VoiceStudio process startup remains Windows-only; the Linux updater offers manual downloads rather than Windows replacement helpers.
+Linux uses the same credential scope through the desktop Secret Service's `secret-tool`, sending secrets on stdin rather than command arguments. It reports a missing or locked service without falling back to plaintext. External source links use `xdg-open` without shell interpolation. VoiceStudio startup can use an explicitly configured Python runtime; the Linux updater offers manual downloads rather than Windows replacement helpers.
 
 VoiceStudio synthesizes a passage before returning audio, so synthesis can exceed the available buffer. No token-level speech generation or zero-latency guarantee is claimed.
 
@@ -42,7 +42,7 @@ Optional web search runs before final generation, within the same cancellable pr
 
 `ModelManager` serializes loading, resolves aliases before deletion, rejects ambiguity and preserves foreign instances. Shutdown waits for loads, stops audio, saves geometry, unloads its instance and verifies the catalog. Failure offers retry/stay/explicit exit.
 
-`voice_startup` shares a cancellable readiness attempt; root cancellation prevents late launch during exit. `service_process` locates installed VoiceStudio and minimizes only a new window. No additional Python runtime or model download manager is added. LM Studio startup is independent.
+`voice_startup` shares a cancellable readiness attempt; root cancellation prevents late launch during exit. `service_process` resolves the prepared VoiceStudio Python runtime and starts its API without Electron. Shared speech settings override legacy per-profile connection fields at runtime. Owned process groups/jobs allow ownership-based cleanup without terminating pre-existing servers. No additional Python runtime or model download manager is added. LM Studio startup is independent.
 
 ## Updates and boundaries
 

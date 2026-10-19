@@ -55,7 +55,7 @@ The shared gateway serves eligible profiles; Hermes profiles configured as stand
 4. Choose a saved **Hermes profile**, or type its exact name. Use `default` for the main profile.
 5. Paste that profile's key and click **Save key**.
 6. Click **Test and refresh**, then **Save these choices**.
-7. Choose your VoiceStudio transcription model in Companions, then choose the speech engine and voice in the companion’s **Avatar & voice** editor.
+7. Choose your shared VoiceStudio transcription model in Settings, then choose the speech engine and voice in the companion’s **Avatar & voice** editor.
 
 Sherka remembers successfully connected server/profile pairs. The conversation API does not advertise a global profile directory, so a new profile must first be entered by name. Switching the server or profile switches the key scope; keys are protected by Windows Credential Manager and excluded from exports.
 

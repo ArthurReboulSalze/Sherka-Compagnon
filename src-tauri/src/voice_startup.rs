@@ -41,8 +41,16 @@ pub struct VoiceStartup(Arc<Inner>);
 
 impl VoiceStartup {
     pub fn new(app: tauri::AppHandle) -> Result<Self, String> {
+        let owner = app.clone();
         Self::build(
-            Arc::new(crate::service_process::launch),
+            Arc::new(move |port, token| {
+                let shared = owner.state::<crate::Shared>();
+                let core = shared.0.lock().map_err(|_| "Démarrage indisponible.")?;
+                let config = core.voice_service_config();
+                let logs = core.store.root().join("logs");
+                drop(core);
+                crate::service_process::launch(port, token, config, logs)
+            }),
             Arc::new(move |status| {
                 let _ = app.emit("sherka:voice-service", status);
             }),
@@ -91,6 +99,17 @@ impl VoiceStartup {
     pub fn status(&self) -> Status {
         self.0.state.borrow().clone()
     }
+    pub fn reset(&self) {
+        let mut attempt = self.0.attempt.lock().unwrap_or_else(|e| e.into_inner());
+        attempt.cancel.cancel();
+        attempt.id += 1;
+        self.publish(Status {
+            attempt: attempt.id,
+            url: String::new(),
+            phase: "disabled",
+            message: String::new(),
+        });
+    }
     pub fn cancel(&self) {
         self.0.cancel.cancel();
     }
@@ -134,7 +153,7 @@ impl VoiceStartup {
                 biased;
                 _ = cancel.cancelled() => return,
                 result = tokio::time::timeout(service.0.budget, service.prepare(id, &url, cancel.clone())) =>
-                    result.unwrap_or_else(|_| Err("VoiceStudio n’est pas prêt après 5 minutes. Vérifie sa fenêtre, puis réessaie.".into())),
+                    result.unwrap_or_else(|_| Err("VoiceStudio n’est pas prêt après 5 minutes. Vérifie son chemin et son journal, puis réessaie.".into())),
             };
             match result {
                 Ok(()) => service.update(id, "ready", "VoiceStudio est prêt.".into()),
@@ -297,8 +316,7 @@ async fn probe(client: &Client, base: &str) -> Result<Probe, String> {
 pub async fn start_active(app: &tauri::AppHandle, recheck: bool) -> Result<(), String> {
     crate::windows::ensure_running()?;
     let url = crate::with_core(app.state::<crate::Shared>().inner().clone(), |c| {
-        Ok(c.store
-            .profile(c.session.snapshot().profile_id)?
+        Ok(c.profile(c.session.snapshot().profile_id)?
             .details
             .connections
             .voice_studio_url)

@@ -12,6 +12,8 @@ pub struct ProfileDraft {
     #[serde(default)]
     pub mood_persistence: bool,
     #[serde(default)]
+    pub initiative: InitiativeConfig,
+    #[serde(default)]
     pub avatar_preset: Option<crate::avatar::AvatarPreset>,
     #[serde(default)]
     pub web_search: Option<crate::web::SearchMode>,
@@ -30,7 +32,17 @@ impl Default for ProfileDraft {
 }
 
 impl ProfileDraft {
+    pub fn for_export(mut self) -> Self {
+        // Legacy fields remain readable for older packs, but device services
+        // are configured by the receiving installation, never by an avatar.
+        self.connections.voice_studio_url =
+            crate::connections::Connections::default().voice_studio_url;
+        self.connections.stt_model = None;
+        self
+    }
+
     pub fn validated(mut self) -> Result<Self> {
+        self.initiative.validate()?;
         self.connections = self.connections.validated()?;
         self.illustration = self.illustration.validated()?;
         self.search = self.search.validated()?;
@@ -82,6 +94,8 @@ pub struct Profile {
 pub struct Settings {
     pub theme: Theme,
     pub comfyui_startup: ComfyStartupConfig,
+    pub voice_service: Option<VoiceServiceConfig>,
+    pub desktop_layouts: std::collections::BTreeMap<Uuid, DesktopLayout>,
     pub companion_pack_initialized: bool,
     pub web_search: crate::web::SearchMode,
     pub ui_language: crate::i18n::Language,
@@ -99,6 +113,8 @@ impl Default for Settings {
         Self {
             theme: Theme::default(),
             comfyui_startup: Default::default(),
+            voice_service: None,
+            desktop_layouts: Default::default(),
             companion_pack_initialized: false,
             web_search: Default::default(),
             ui_language: Default::default(),
@@ -116,6 +132,7 @@ impl Default for Settings {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]
 pub struct ComfyStartupConfig {
+    pub disabled: bool,
     pub directory: String,
     pub python: String,
 }
@@ -175,4 +192,88 @@ pub struct ProfileExport {
     #[serde(default)]
     pub emotion_avatars_png_base64:
         std::collections::BTreeMap<crate::avatar::Emotion, Option<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(default, deny_unknown_fields)]
+pub struct VoiceServiceConfig {
+    pub url: String,
+    pub stt_model: Option<String>,
+    pub autostart: bool,
+    pub directory: String,
+    pub python: String,
+}
+impl Default for VoiceServiceConfig {
+    fn default() -> Self {
+        Self {
+            url: "http://127.0.0.1:3900".into(),
+            stt_model: None,
+            autostart: true,
+            directory: String::new(),
+            python: String::new(),
+        }
+    }
+}
+impl VoiceServiceConfig {
+    pub fn validated(mut self) -> Result<Self> {
+        self.url = crate::connections::base_url(&self.url)?;
+        let paths = ComfyStartupConfig {
+            directory: self.directory,
+            python: self.python,
+            ..Default::default()
+        }
+        .validated()?;
+        self.directory = paths.directory;
+        self.python = paths.python;
+        if self
+            .stt_model
+            .as_ref()
+            .is_some_and(|s| s.len() > 512 || s.chars().any(char::is_control))
+        {
+            return Err(Error::Validation(
+                "Modèle de transcription invalide.".into(),
+            ));
+        }
+        self.stt_model = self.stt_model.filter(|s| !s.trim().is_empty());
+        Ok(self)
+    }
+}
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
+#[serde(default, deny_unknown_fields)]
+pub struct DesktopLayout {
+    pub bounds: Option<crate::window::Bounds>,
+    pub image: Option<ImagePlacement>,
+    pub text_height: Option<f64>,
+}
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ImagePlacement {
+    pub x: f64,
+    pub y: f64,
+    pub size: f64,
+    pub moved: bool,
+}
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default, deny_unknown_fields)]
+pub struct InitiativeConfig {
+    pub enabled: bool,
+    pub min_minutes: u16,
+    pub max_minutes: u16,
+}
+impl Default for InitiativeConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            min_minutes: 5,
+            max_minutes: 15,
+        }
+    }
+}
+impl InitiativeConfig {
+    pub fn validate(&self) -> Result<()> {
+        if self.min_minutes < 1 || self.min_minutes > self.max_minutes || self.max_minutes > 1440 {
+            return Err(Error::Validation("Choisis un délai de 1 à 1440 minutes, avec un maximum supérieur ou égal au minimum.".into()));
+        }
+        Ok(())
+    }
 }

@@ -2,7 +2,7 @@
 
 Sherka's desktop shell, profiles, conversation providers, audio pipeline and optional ComfyUI connector have Linux implementations. API credentials use the desktop Secret Service through `secret-tool` (KWallet/compatible service). Windows continues to use Windows Credential Manager. Missing or locked credential services produce an explicit error; keys are never written to SQLite or plaintext files.
 
-VoiceStudio and LM Studio are separate services. The Linux build does not install either application or download their models. VoiceStudio automatic application startup is Windows-only; start your speech service yourself before enabling voice. ComfyUI can optionally start from an explicitly configured local Python installation when illustrations are enabled; remote ComfyUI servers remain manually managed. See [local ComfyUI startup](COMFYUI.md#optional-local-startup). Windows installers are never offered to the Linux updater: update Linux manually with the release's Debian package.
+VoiceStudio and LM Studio are separate services. The Linux build does not install either application or download their models. The prepared VoiceStudio Python backend can start without its desktop window: configure its runtime folder and Python in Settings, or start your speech service separately. No service is installed by Sherka. ComfyUI can optionally start from an explicitly configured local Python installation when illustrations are enabled; remote ComfyUI servers remain manually managed. Servers started by Sherka close with it; pre-existing services stay running. See [local ComfyUI startup](COMFYUI.md#optional-local-startup). Windows installers are never offered to the Linux updater: update Linux manually with the release's Debian package.
 
 ## Debian development
 

@@ -259,7 +259,7 @@ pub async fn toggle(
         return pause(&app, shared, &voice, true).await;
     }
     let connections=with_core(shared.clone(),|c| {
-        let p=c.store.profile(c.session.snapshot().profile_id)?;
+        let p=c.profile(c.session.snapshot().profile_id)?;
         if (!p.details.connections.llm_provider.is_agent() && p.details.connections.llm_model.is_none()) || p.details.connections.stt_model.is_none() || p.details.connections.tts_engine.is_none() || p.details.connections.tts_voice.is_none() {
             return Err(Error::Validation("Choisis le modèle de conversation, le moteur de transcription et la voix dans les réglages avant d'activer le micro.".into()));
         }
@@ -326,6 +326,48 @@ pub async fn send(
     speak: bool,
     attachments: Vec<sherka_core::attachments::Input>,
 ) -> std::result::Result<(), String> {
+    crate::initiative::user_activity(&app, profile_id);
+    send_inner(
+        app,
+        shared,
+        voice,
+        profile_id,
+        text,
+        speak,
+        attachments,
+        false,
+    )
+    .await
+}
+pub async fn speak_spontaneously(
+    app: AppHandle,
+    shared: Shared,
+    voice: Voice,
+    profile_id: Uuid,
+) -> std::result::Result<(), String> {
+    send_inner(
+        app,
+        shared,
+        voice,
+        profile_id,
+        "Idle invitation".into(),
+        true,
+        vec![],
+        true,
+    )
+    .await
+}
+#[allow(clippy::too_many_arguments)]
+async fn send_inner(
+    app: AppHandle,
+    shared: Shared,
+    voice: Voice,
+    profile_id: Uuid,
+    text: String,
+    speak: bool,
+    attachments: Vec<sherka_core::attachments::Input>,
+    spontaneous: bool,
+) -> std::result::Result<(), String> {
     crate::windows::ensure_running()?;
     let gate = voice.gate.lock().await;
     crate::windows::ensure_running()?;
@@ -335,8 +377,7 @@ pub async fn send(
     if text.trim().eq_ignore_ascii_case("/stop") {
         let agent = with_core(shared.clone(), move |c| {
             Ok(c.session.snapshot().profile_id == profile_id
-                && c.store
-                    .profile(profile_id)?
+                && c.profile(profile_id)?
                     .details
                     .connections
                     .llm_provider
@@ -352,8 +393,11 @@ pub async fn send(
         if core.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
-        let profile = core.store.profile(profile_id)?;
-        let maintenance = (!profile.details.connections.llm_provider.is_agent())
+        let profile = core.profile(profile_id)?;
+        if spontaneous {
+            check_spontaneous(core, &profile)?;
+        }
+        let maintenance = (!spontaneous && !profile.details.connections.llm_provider.is_agent())
             .then(|| {
                 sherka_core::privacy::contextual_command(
                     &command,
@@ -429,8 +473,22 @@ pub async fn send(
     if pending.is_cancelled() {
         return Err("Demande vocale annulée.".into());
     }
+    if spontaneous {
+        if !app
+            .state::<crate::initiative::Initiative>()
+            .invitation_current(profile_id)
+        {
+            return Err(Error::StaleOperation.to_string());
+        }
+        with_core(shared.clone(), move |c| {
+            check_spontaneous(c, &c.profile(profile_id)?)
+        })
+        .await?;
+    }
     voice.playback.interrupt();
-    with_core(shared.clone(), |c| c.stop_response()).await?;
+    if !spontaneous {
+        with_core(shared.clone(), |c| c.stop_response()).await?;
+    }
     if speak {
         voice.ensure_audio(&shared, false).await?;
     }
@@ -440,9 +498,14 @@ pub async fn send(
         if c.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
+        if spontaneous {
+            check_spontaneous(c, &c.profile(profile_id)?)?;
+        }
         let tag = c.session.begin_text_turn();
         c.reset_live(tag);
-        c.record_message(tag, MessageRole::User, &recorded, Delivery::TextOnly)?;
+        if !spontaneous {
+            c.record_message(tag, MessageRole::User, &recorded, Delivery::TextOnly)?;
+        }
         Ok((tag, c.session.cancellation()))
     })
     .await?;
@@ -463,6 +526,7 @@ pub async fn send(
         user,
         speak,
         priority,
+        spontaneous,
     ));
     Ok(())
 }
@@ -512,12 +576,12 @@ async fn audio_events(
                     c.stop_response()?;
                     let tag = c.session.begin_utterance()?;
                     c.reset_live(tag);
-                    let provider =
-                        Providers::new(c.store.profile(tag.profile_id)?.details.connections)?;
+                    let provider = Providers::new(c.profile(tag.profile_id)?.details.connections)?;
                     Ok((tag, c.session.cancellation(), provider, previous))
                 })
                 .await;
                 if let Ok((tag, token, provider, previous)) = prepared {
+                    crate::initiative::user_activity(&app, tag.profile_id);
                     let pcm = voice
                         .speech_input
                         .lock()
@@ -695,7 +759,7 @@ async fn recognize(
                     emit(&app, &shared);
                     let _ = app.emit("sherka:history", tag.profile_id);
                     run_turn(
-                        app, shared, voice, tag, token, provider, messages, true, priority,
+                        app, shared, voice, tag, token, provider, messages, true, priority, false,
                     )
                     .await;
                 }
@@ -815,7 +879,7 @@ async fn maintenance_command(
                 return Err(Error::StaleOperation);
             }
             Ok((
-                c.store.profile(profile_id)?.details.connections,
+                c.profile(profile_id)?.details.connections,
                 c.session.snapshot().session_id,
                 c.live.notice.clone().unwrap_or_default(),
             ))
@@ -856,8 +920,7 @@ pub async fn clear(
             return Err(Error::StaleOperation);
         }
         Ok((
-            c.store
-                .profile(profile_id)?
+            c.profile(profile_id)?
                 .details
                 .connections
                 .llm_provider
@@ -985,6 +1048,7 @@ async fn speak_receipt(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn prepare_turn(
     app: &AppHandle,
     shared: &Shared,
@@ -992,6 +1056,7 @@ async fn prepare_turn(
     tag: OperationTag,
     provider: &mut Providers,
     user: &str,
+    spontaneous: bool,
 ) -> std::result::Result<sherka_core::conversation::PreparedChat, String> {
     let models = voice.models.clone();
     let config = provider.connections.clone();
@@ -1021,12 +1086,29 @@ async fn prepare_turn(
         .connections
         .validate_reasoning(&model)
         .map_err(|e| e.to_string())?;
+    if spontaneous {
+        return with_core(shared.clone(),move |c| {
+            if !c.session.accepts(tag) { return Err(Error::StaleOperation); }
+            let mut profile=c.profile(tag.profile_id)?;
+            profile.details.connections.response_tokens=256;
+            let budget=sherka_core::conversation::budget(&profile.details,&model)?;
+            let history=c.store.context_history(tag.profile_id)?;
+            let recall=c.store.recall(tag.profile_id, "")?;
+            let mut chat=sherka_core::conversation::prepare_context_with_avatar(&profile.details,&history,
+                "[Application idle event, not a user message] Take the initiative with one brief, natural invitation to chat in your character's language. At most two short sentences and one question. You may refer to an established topic, but do not invent recent events, user activity or new facts. Do not mention this timer or repeat your identity. No tools, web search or memory changes. Wait for a reply afterwards.",
+                &recall,budget,None,None,!profile.emotion_avatars.is_empty()||profile.details.mood_persistence)?;
+            // A bounded invitation uses the normal cancellable TTS pipeline.
+            chat.budget.response_tokens=chat.budget.response_tokens.min(256);
+            c.live.budget=Some(chat.budget.clone());
+            Ok(chat)
+        }).await;
+    }
     let text = user.to_owned();
     let (profile, source, guard, visible) = with_core(shared.clone(), move |c| {
         if !c.session.accepts(tag) {
             return Err(Error::StaleOperation);
         }
-        let profile = c.store.profile(tag.profile_id)?;
+        let profile = c.profile(tag.profile_id)?;
         let source = c.store.source_for_turn(tag.profile_id, tag.turn_id)?;
         let guard = c.store.memory_guard(tag.profile_id)?;
         let recall = c.store.recall(tag.profile_id, &text)?;
@@ -1192,7 +1274,7 @@ async fn search_web(
                 if !c.session.accepts(tag) {
                     return Err(Error::StaleOperation);
                 }
-                Ok(c.store.profile(tag.profile_id)?.details.search)
+                Ok(c.profile(tag.profile_id)?.details.search)
             })
             .await?;
             sherka_core::search_provider::search(&config, &query, language).await
@@ -1292,7 +1374,7 @@ pub fn switch_model(
 ) {
     let models = voice.models.clone();
     let (profile, revision, next) = match shared.0.lock() {
-        Ok(c) => match c.store.profile(c.session.snapshot().profile_id) {
+        Ok(c) => match c.profile(c.session.snapshot().profile_id) {
             Ok(p) => (p.id, p.revision, p.details.connections),
             Err(_) => return,
         },
@@ -1306,17 +1388,13 @@ pub fn switch_model(
         let valid = || {
             shared.0.lock().is_ok_and(|c| {
                 c.session.snapshot().profile_id == profile
-                    && c.store
-                        .profile(profile)
-                        .is_ok_and(|p| p.revision == revision)
+                    && c.profile(profile).is_ok_and(|p| p.revision == revision)
             })
         };
         let result = models.activate(&next, Some(&previous), valid).await;
         if let Ok(mut c) = shared.0.lock()
             && c.session.snapshot().profile_id == profile
-            && c.store
-                .profile(profile)
-                .is_ok_and(|p| p.revision == revision)
+            && c.profile(profile).is_ok_and(|p| p.revision == revision)
         {
             match result {
                 Ok(Some(model)) => {
@@ -1360,14 +1438,15 @@ async fn run_turn(
     user: String,
     speak: bool,
     priority: crate::illustrations::Priority,
+    spontaneous: bool,
 ) {
     tokio::select! {biased;_=token.cancelled()=>return,_=priority.ready()=>{}}
     let agent = provider.connections.llm_provider.is_agent();
-    let maintenance = if agent {
+    let maintenance = if agent || spontaneous {
         None
     } else {
         shared.0.lock().ok().and_then(|mut c| {
-            let command = c.store.profile(tag.profile_id).ok().and_then(|p| {
+            let command = c.profile(tag.profile_id).ok().and_then(|p| {
                 sherka_core::privacy::contextual_command(
                     &user,
                     &p.details.name,
@@ -1445,9 +1524,17 @@ async fn run_turn(
             );
             Ok(None)
         } else {
-            prepare_turn(&app, &shared, &voice, tag, &mut provider, &user)
-                .await
-                .map(Some)
+            prepare_turn(
+                &app,
+                &shared,
+                &voice,
+                tag,
+                &mut provider,
+                &user,
+                spontaneous,
+            )
+            .await
+            .map(Some)
         }
     };
     let prepared = tokio::select! {
@@ -1633,7 +1720,7 @@ async fn run_turn(
                     let complete=update(&app,&shared,tag,|c|{
                         c.live.text_complete=true;
                         if !agent && !unavailable { c.complete_mood(tag, &user)?; }
-                        if !agent && !unavailable && c.store.profile(tag.profile_id)?.details.illustration.enabled {
+                        if !agent && !unavailable && c.profile(tag.profile_id)?.details.illustration.enabled {
                             c.store.save_response(tag,&c.live.reply,&c.live.heard,if speak {Delivery::Uncertain}else{Delivery::TextOnly})?;
                         }
                         Ok(())
@@ -1691,7 +1778,7 @@ async fn run_turn(
                 c.live.usage=if unavailable {None} else {Some(outcome)};
                 c.finish_response(tag, delivery)
             }).await;
-            if !unavailable && !agent {
+            if !unavailable && !agent && !spontaneous {
                 schedule_memory(
                     app.clone(),
                     shared.clone(),
@@ -1783,6 +1870,22 @@ async fn play_prepared(
             }
             else => break,
         }
+    }
+    Ok(())
+}
+
+fn check_spontaneous(
+    core: &sherka_core::Companion,
+    profile: &sherka_core::model::Profile,
+) -> sherka_core::Result<()> {
+    let session = core.session.snapshot();
+    if !profile.details.initiative.enabled
+        || profile.details.connections.llm_provider.is_agent()
+        || core.session.initiative_paused()
+        || session.response != sherka_core::session::ResponseState::Idle
+        || session.transcription != sherka_core::session::TranscriptionState::Idle
+    {
+        return Err(Error::StaleOperation);
     }
     Ok(())
 }

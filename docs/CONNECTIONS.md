@@ -41,11 +41,13 @@ VoiceStudio 0.5.6 synthesizes a passage before returning PCM. Sherka prepares th
 
 ### Automatic startup
 
-Sherka reuses a ready instance or launches installed `VoiceStudio.exe` from standard Windows locations or the registry. The selected port passes through `OMNIVOICE_PORT`. An already-starting instance is not duplicated. New windows are minimized; existing ones retain their state.
+VoiceStudio's server address and transcription model are configured once in **Settings → VoiceStudio and transcription**. Each companion keeps its own TTS engine, voice, language, speaking speed and volume. Existing installations migrate the active companion's speech connection into these global settings once.
 
-Only local root HTTP URLs trigger launch. Remote/HTTPS services must be running. Maximum wait: five minutes; probes: five seconds and 64 KiB. Access/protocol errors do not launch a second process. The panel offers **Réessayer VoiceStudio**.
+**Start with Sherka** launches the prepared VoiceStudio Python server without opening Electron. Leave the paths empty for automatic detection, or select a custom installation/runtime folder and Python executable. Open VoiceStudio once to complete its initial setup and install engines and voices. Sherka does not install packages or models. Startup logs are stored in Sherka's local `logs/voicestudio.log`.
 
-The API and protocol must be ready, not all preloaded models. Voice waits are cancellable. The microphone is off at startup; VoiceStudio remains open after exit.
+Sherka reuses a ready service. Only local root HTTP addresses may start a process; remote and HTTPS endpoints must already be running. Startup waits for the health endpoint and speech protocol, for up to five minutes. The microphone remains off until you enable it.
+
+On exit, Sherka closes only server processes started by this session, including their child processes. Servers that were already running, and remote services, are left alone.
 
 References: [VoiceStudio](https://github.com/debpalash/VoiceStudio), [speech platform](https://github.com/debpalash/VoiceStudio/blob/main/docs/speech-platform.md), [router](https://github.com/debpalash/VoiceStudio/blob/main/backend/api/routers/openai_compat.py).
 

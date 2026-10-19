@@ -8014,5 +8014,229 @@
     "Entfernter Server: Automatischer Start wird nicht angewendet.",
     "远程服务器：不适用自动启动。",
     "リモートサーバーでは自動起動は適用されません。"
+  ],
+  "Démarrer automatiquement": [
+    "Start automatically",
+    "Iniciar automáticamente",
+    "Avvia automaticamente",
+    "Automatisch starten",
+    "自动启动",
+    "自動起動"
+  ],
+  "Dossier VoiceStudio": [
+    "VoiceStudio folder",
+    "Carpeta de VoiceStudio",
+    "Cartella di VoiceStudio",
+    "VoiceStudio-Ordner",
+    "VoiceStudio 文件夹",
+    "VoiceStudio フォルダー"
+  ],
+  "Python de VoiceStudio": [
+    "VoiceStudio Python",
+    "Python de VoiceStudio",
+    "Python di VoiceStudio",
+    "Python für VoiceStudio",
+    "VoiceStudio 的 Python",
+    "VoiceStudio の Python"
+  ],
+  "VoiceStudio et transcription": [
+    "VoiceStudio and transcription",
+    "VoiceStudio y transcripción",
+    "VoiceStudio e trascrizione",
+    "VoiceStudio und Transkription",
+    "VoiceStudio 与转写",
+    "VoiceStudio と文字起こし"
+  ],
+  "Enregistrer VoiceStudio": [
+    "Save VoiceStudio settings",
+    "Guardar ajustes de VoiceStudio",
+    "Salva impostazioni VoiceStudio",
+    "VoiceStudio-Einstellungen speichern",
+    "保存 VoiceStudio 设置",
+    "VoiceStudio の設定を保存"
+  ],
+  "Réglages VoiceStudio enregistrés.": [
+    "VoiceStudio settings saved.",
+    "Ajustes de VoiceStudio guardados.",
+    "Impostazioni VoiceStudio salvate.",
+    "VoiceStudio-Einstellungen gespeichert.",
+    "VoiceStudio 设置已保存。",
+    "VoiceStudio の設定を保存しました。"
+  ],
+  "Modèle de transcription invalide.": [
+    "Invalid transcription model.",
+    "Modelo de transcripción no válido.",
+    "Modello di trascrizione non valido.",
+    "Ungültiges Transkriptionsmodell.",
+    "转写模型无效。",
+    "文字起こしモデルが無効です。"
+  ],
+  "Compagnon modifié.": [
+    "Companion changed.",
+    "Compañero cambiado.",
+    "Compagno cambiato.",
+    "Begleiter gewechselt.",
+    "伙伴已切换。",
+    "コンパニオンを切り替えました。"
+  ],
+  "Prise de parole spontanée": [
+    "Spontaneous conversation",
+    "Conversación espontánea",
+    "Conversazione spontanea",
+    "Spontane Gesprächsinitiative",
+    "主动交谈",
+    "自発的な会話"
+  ],
+  "Prise de parole spontanée enregistrée.": [
+    "Spontaneous conversation saved.",
+    "Conversación espontánea guardada.",
+    "Conversazione spontanea salvata.",
+    "Gesprächsinitiative gespeichert.",
+    "主动交谈设置已保存。",
+    "自発的な会話の設定を保存しました。"
+  ],
+  "Enregistrer la prise de parole": [
+    "Save conversation initiative",
+    "Guardar iniciativa de conversación",
+    "Salva iniziativa di conversazione",
+    "Gesprächsinitiative speichern",
+    "保存主动交谈设置",
+    "会話の開始設定を保存"
+  ],
+  "Engager la conversation après un silence": [
+    "Start a conversation after a quiet period",
+    "Iniciar una conversación tras un silencio",
+    "Avvia una conversazione dopo un silenzio",
+    "Nach einer Ruhephase ein Gespräch beginnen",
+    "安静一段时间后主动交谈",
+    "静かな時間が続いたら話しかける"
+  ],
+  "Délai minimum (minutes)": [
+    "Minimum delay (minutes)",
+    "Espera mínima (minutos)",
+    "Attesa minima (minuti)",
+    "Mindestwartezeit (Minuten)",
+    "最短等待时间（分钟）",
+    "最短待ち時間（分）"
+  ],
+  "Délai maximum (minutes)": [
+    "Maximum delay (minutes)",
+    "Espera máxima (minutos)",
+    "Attesa massima (minuti)",
+    "Maximale Wartezeit (Minuten)",
+    "最长等待时间（分钟）",
+    "最長待ち時間（分）"
+  ],
+  "Choisis un délai de 1 à 1440 minutes, avec un maximum supérieur ou égal au minimum.": [
+    "Choose 1 to 1440 minutes, with the maximum at least equal to the minimum.",
+    "Elige de 1 a 1440 minutos, con un máximo igual o superior al mínimo.",
+    "Scegli da 1 a 1440 minuti, con un massimo non inferiore al minimo.",
+    "Wähle 1 bis 1440 Minuten; das Maximum muss mindestens dem Minimum entsprechen.",
+    "请选择 1 至 1440 分钟，最长时间不得小于最短时间。",
+    "1～1440 分で、最長時間が最短時間以上になるように設定してください。"
+  ],
+  "Connexion et reconnaissance vocale communes à tous les compagnons. La voix et sa vitesse restent propres à chaque compagnon.": [
+    "Connection and speech recognition are shared by all companions. Voice and speaking speed remain specific to each companion.",
+    "La conexión y el reconocimiento de voz son comunes a todos los compañeros. Cada compañero conserva su voz y velocidad.",
+    "Connessione e riconoscimento vocale sono comuni a tutti i compagni. Voce e velocità restano specifiche per ciascuno.",
+    "Verbindung und Spracherkennung gelten für alle Begleiter. Stimme und Sprechgeschwindigkeit bleiben pro Begleiter einstellbar.",
+    "连接和语音识别由所有伙伴共用。声音和语速仍按伙伴分别设置。",
+    "接続と音声認識は全コンパニオンで共通です。声と読み上げ速度は個別に設定します。"
+  ],
+  "Laisse les chemins vides pour la détection automatique. Pour une installation personnalisée, choisis son dossier ou le dossier du serveur contenant backend/main.py, et son Python si nécessaire.": [
+    "Leave paths empty for automatic detection. For a custom installation, select its folder or the server folder containing backend/main.py, and its Python if needed.",
+    "Deja las rutas vacías para la detección automática. Para una instalación personalizada, elige su carpeta o la del servidor con backend/main.py, y su Python si es necesario.",
+    "Lascia i percorsi vuoti per il rilevamento automatico. Per installazioni personalizzate, scegli la cartella di installazione o del server con backend/main.py e, se necessario, il suo Python.",
+    "Leere Pfade aktivieren die automatische Erkennung. Für eigene Installationen wähle den Installations- oder Serverordner mit backend/main.py und bei Bedarf dessen Python.",
+    "路径留空可自动检测。自定义安装请指定安装文件夹或包含 backend/main.py 的服务器文件夹，必要时指定其 Python。",
+    "空欄にすると自動検出します。独自のインストールではインストール先または backend/main.py を含むサーバーフォルダーと、必要に応じて Python を指定してください。"
+  ],
+  "Le serveur vocal démarre sans interface. Ouvre VoiceStudio une première fois pour installer ses moteurs et ses voix. Le premier démarrage peut prendre quelques instants.": [
+    "The speech server starts without a window. Open VoiceStudio once to install engines and voices. The first startup may take a little time.",
+    "El servidor de voz se inicia sin ventana. Abre VoiceStudio una vez para instalar motores y voces. El primer inicio puede tardar un poco.",
+    "Il server vocale si avvia senza finestre. Apri VoiceStudio una prima volta per installare motori e voci. Il primo avvio può richiedere tempo.",
+    "Der Sprachserver startet ohne Fenster. Öffne VoiceStudio einmal, um Engines und Stimmen zu installieren. Der erste Start kann etwas dauern.",
+    "语音服务器在无界面模式下启动。请先打开一次 VoiceStudio 安装引擎和声音。首次启动可能需要一些时间。",
+    "音声サーバーはウィンドウなしで起動します。まず VoiceStudio を開いてエンジンと音声をインストールしてください。初回起動には時間がかかる場合があります。"
+  ],
+  "Le compagnon choisit un délai au hasard dans cette fourchette. L’activité dans Sherka et la conversation repoussent son intervention.": [
+    "The companion picks a random delay in this range. Activity in Sherka and conversation postpone the invitation.",
+    "El compañero elige una espera aleatoria dentro del intervalo. La actividad en Sherka y la conversación retrasan su intervención.",
+    "Il compagno sceglie un intervallo casuale in questa fascia. L’attività in Sherka e la conversazione rimandano il suo intervento.",
+    "Der Begleiter wählt eine zufällige Wartezeit in diesem Bereich. Aktivitäten in Sherka und Gespräche verschieben seine Initiative.",
+    "伙伴会在此范围内随机选择等待时间。Sherka 中的操作和交谈会推迟主动发言。",
+    "この範囲からランダムに待ち時間を選びます。Sherka 内での操作や会話があると、話しかける時刻を延期します。"
+  ],
+  "Une courte invitation, puis il attend ta réponse. Aucun déclenchement pendant la dictée, une réponse, une pause vocale ou lorsque le widget est masqué. Les fournisseurs distants peuvent facturer cette réponse.": [
+    "One brief invitation, then it waits for your reply. Disabled during dictation, replies, voice pause or while the widget is hidden. Remote providers may charge for this reply.",
+    "Una invitación breve y después espera tu respuesta. No se activa durante el dictado, las respuestas, una pausa de voz o con el widget oculto. Los proveedores remotos pueden cobrar esta respuesta.",
+    "Un breve invito, poi attende la tua risposta. Non si attiva durante dettatura, risposte, pausa vocale o con il widget nascosto. I fornitori remoti possono addebitare questa risposta.",
+    "Eine kurze Einladung, dann wartet er auf deine Antwort. Kein Start während Diktat, Antworten, Sprachpause oder bei ausgeblendetem Widget. Entfernte Anbieter können diese Antwort berechnen.",
+    "简短邀请后等待你回复。听写、回答、语音暂停或挂件隐藏时不会触发。远程提供商可能对此回答收费。",
+    "短く話しかけた後は返信を待ちます。音声入力中、回答中、音声一時停止中、ウィジェット非表示中は開始しません。外部プロバイダーでは料金が発生する場合があります。"
+  ],
+  "Les premières générations peuvent prendre plus de temps : ComfyUI doit démarrer et charger ses modèles.": [
+    "The first generations may take longer while ComfyUI starts and loads its models.",
+    "Las primeras generaciones pueden tardar más mientras ComfyUI inicia y carga sus modelos.",
+    "Le prime generazioni possono richiedere più tempo mentre ComfyUI si avvia e carica i modelli.",
+    "Die ersten Generierungen können länger dauern, während ComfyUI startet und Modelle lädt.",
+    "首次生成可能较慢，因为 ComfyUI 需要启动并加载模型。",
+    "ComfyUI の起動とモデル読み込みのため、最初の生成には時間がかかる場合があります。"
+  ],
+  "VoiceStudio n’est pas prêt après 5 minutes. Vérifie son chemin et son journal, puis réessaie.": [
+    "VoiceStudio is not ready after 5 minutes. Check its path and log, then retry.",
+    "VoiceStudio no está listo tras 5 minutos. Revisa su ruta y registro e inténtalo de nuevo.",
+    "VoiceStudio non è pronto dopo 5 minuti. Controlla percorso e registro, poi riprova.",
+    "VoiceStudio ist nach 5 Minuten nicht bereit. Prüfe Pfad und Protokoll und versuche es erneut.",
+    "VoiceStudio 在 5 分钟后仍未就绪。请检查路径和日志后重试。",
+    "5 分経っても VoiceStudio が準備できません。パスとログを確認して再試行してください。"
+  ],
+  "Démarrer avec Sherka": [
+    "Start with Sherka",
+    "Iniciar con Sherka",
+    "Avvia con Sherka",
+    "Mit Sherka starten",
+    "随 Sherka 启动",
+    "Sherka と一緒に起動"
+  ],
+  "Les serveurs locaux lancés par Sherka se ferment avec elle. Un serveur déjà ouvert ou distant reste indépendant.": [
+    "Local servers started by Sherka close when Sherka quits. Existing or remote servers remain independent.",
+    "Los servidores locales iniciados por Sherka se cierran al salir de Sherka. Los servidores ya abiertos o remotos siguen siendo independientes.",
+    "I server locali avviati da Sherka si chiudono quando esci da Sherka. Quelli già aperti o remoti restano indipendenti.",
+    "Von Sherka gestartete lokale Server werden beim Beenden von Sherka geschlossen. Bereits laufende oder entfernte Server bleiben unabhängig.",
+    "由 Sherka 启动的本地服务器会随 Sherka 关闭。已运行或远程服务器保持独立。",
+    "Sherka が起動したローカルサーバーは Sherka と一緒に終了します。既存やリモートのサーバーは対象外です。"
+  ],
+  "Chemin VoiceStudio invalide. Choisis son installation ou le dossier du serveur Python.": [
+    "Invalid VoiceStudio path. Select its installation or Python server folder.",
+    "Ruta de VoiceStudio no válida. Elige su instalación o la carpeta del servidor Python.",
+    "Percorso VoiceStudio non valido. Scegli la sua installazione o la cartella del server Python.",
+    "Ungültiger VoiceStudio-Pfad. Wähle die Installation oder den Python-Serverordner.",
+    "VoiceStudio 路径无效。请选择安装目录或 Python 服务器文件夹。",
+    "VoiceStudio のパスが無効です。インストール先か Python サーバーのフォルダーを選択してください。"
+  ],
+  "Serveur VoiceStudio introuvable. Ouvre VoiceStudio une première fois pour préparer son environnement, ou indique son dossier et son Python dans Réglages.": [
+    "VoiceStudio server not found. Open VoiceStudio once to prepare its environment, or specify its folder and Python in Settings.",
+    "No se encontró el servidor VoiceStudio. Abre VoiceStudio una vez para preparar su entorno o indica su carpeta y Python en Ajustes.",
+    "Server VoiceStudio non trovato. Apri VoiceStudio una prima volta per preparare il suo ambiente, oppure indica cartella e Python nelle Impostazioni.",
+    "VoiceStudio-Server nicht gefunden. Öffne VoiceStudio einmal, um die Umgebung vorzubereiten, oder gib Ordner und Python in den Einstellungen an.",
+    "找不到 VoiceStudio 服务器。请先打开一次 VoiceStudio 准备环境，或在设置中指定其文件夹和 Python。",
+    "VoiceStudio サーバーが見つかりません。VoiceStudio を一度開いて環境を準備するか、設定でフォルダーと Python を指定してください。"
+  ],
+  "VoiceStudio est arrêté. Démarre-le ou active son démarrage automatique dans Réglages.": [
+    "VoiceStudio is stopped. Start it or enable automatic startup in Settings.",
+    "VoiceStudio está detenido. Inícialo o activa el inicio automático en Ajustes.",
+    "VoiceStudio è fermo. Avvialo o attiva l’avvio automatico nelle Impostazioni.",
+    "VoiceStudio ist beendet. Starte es oder aktiviere den automatischen Start in den Einstellungen.",
+    "VoiceStudio 已停止。请启动它或在设置中启用自动启动。",
+    "VoiceStudio は停止しています。起動するか、設定で自動起動を有効にしてください。"
+  ],
+  "Impossible de suivre le serveur : {0}": [
+    "Unable to track the server: {0}",
+    "No se puede supervisar el servidor: {0}",
+    "Impossibile monitorare il server: {0}",
+    "Server kann nicht überwacht werden: {0}",
+    "无法跟踪服务器：{0}",
+    "サーバーを追跡できません：{0}"
   ]
 }

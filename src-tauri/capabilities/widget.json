@@ -21,6 +21,8 @@
     "allow-widget-surface",
     "allow-send-message",
     "allow-get-attachment-support",
-    "allow-refresh-illustration"
+    "allow-refresh-illustration",
+    "allow-initiative-activity",
+    "allow-save-widget-cell"
   ]
 }

@@ -50,6 +50,8 @@ fn zip_roundtrip_preserves_appearance_and_settings_without_private_state() {
     let id = app.session.snapshot().profile_id;
     let mut p = app.store.profile(id).unwrap();
     p.details.connections.tts_voice = Some("voice-reference".into());
+    p.details.connections.voice_studio_url = "http://private-voice-server:3900".into();
+    p.details.connections.stt_model = Some("device-transcription".into());
     p.details.illustration.positive_prompt_suffix = "(golden light:1.3)".into();
     app.update_profile(id, p.revision, p.details).unwrap();
     p = app.store.profile(id).unwrap();
@@ -96,6 +98,8 @@ fn zip_roundtrip_preserves_appearance_and_settings_without_private_state() {
     assert_ne!(packed["images/joy.png"], packed["images/neutral.png"]);
     let json = String::from_utf8(packed["companion.json"].clone()).unwrap();
     for forbidden in [
+        "private-voice-server",
+        "device-transcription",
         "PRIVATE_CONVERSATION",
         "PRIVATE_SAVED_FACT",
         "api_key",
@@ -111,7 +115,10 @@ fn zip_roundtrip_preserves_appearance_and_settings_without_private_state() {
     assert_ne!(imported.id, id);
     assert_eq!(app.store.settings().unwrap().active_profile, Some(id));
     assert_eq!((imported.message_count, imported.memory_count), (0, 0));
-    assert_eq!(imported.details.connections, p.details.connections);
+    assert_eq!(
+        imported.details.connections,
+        p.details.clone().for_export().connections
+    );
     assert_eq!(imported.details.illustration, p.details.illustration);
     assert_eq!(imported.details.personality, p.details.personality);
     assert!(imported.details.avatar_preset.is_none());

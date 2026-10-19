@@ -49,6 +49,7 @@ pub struct SessionSnapshot {
 /// tokens are advisory; every consumer must also call accepts before applying
 /// a late STT/LLM/TTS result, an audio chunk or a UI update.
 pub struct Session {
+    initiative_paused: bool,
     state: SessionSnapshot,
     current: Option<OperationTag>,
     cancellation: CancellationToken,
@@ -58,6 +59,7 @@ pub struct Session {
 impl Session {
     pub fn new(profile_id: Uuid) -> Self {
         Self {
+            initiative_paused: false,
             state: SessionSnapshot {
                 profile_id,
                 session_id: Uuid::new_v4(),
@@ -101,7 +103,15 @@ impl Session {
         // Global microphone consent is never changed by a profile switch.
     }
 
+    pub fn initiative_paused(&self) -> bool {
+        self.initiative_paused
+    }
+    pub fn resume_initiative(&mut self) {
+        self.initiative_paused = false;
+    }
+
     pub fn pause_voice(&mut self) {
+        self.initiative_paused = true;
         self.cancel();
         self.state.microphone = MicrophoneState::Off;
         self.state.voice_paused = true;
@@ -113,6 +123,7 @@ impl Session {
 
     /// Called only after a real backend has started capture with consent.
     pub fn capture_started(&mut self) {
+        self.initiative_paused = false;
         self.state.microphone = MicrophoneState::Listening;
         self.state.voice_paused = false;
     }

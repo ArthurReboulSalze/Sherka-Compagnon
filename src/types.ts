@@ -1,5 +1,9 @@
 export type Emotion = 'neutral' | 'joy' | 'sadness' | 'anger' | 'surprise' | 'reflection' | 'tenderness';
-export interface ComfyStartupConfig {directory:string;python:string}
+export interface ComfyStartupConfig {directory:string;python:string;disabled:boolean}
+export interface VoiceServiceConfig {url:string;stt_model:string|null;autostart:boolean;directory:string;python:string}
+export interface ImagePlacement {x:number;y:number;size:number;moved:boolean}
+export interface DesktopLayout {bounds:Snapshot["settings"]["widget_bounds"];image:ImagePlacement|null;text_height:number|null}
+export interface InitiativeConfig {enabled:boolean;min_minutes:number;max_minutes:number}
 export interface ComfyServiceStatus {attempt:number;url:string;phase:'disabled'|'connecting'|'starting'|'ready'|'error';message:string}
 export type Theme = 'gold' | 'sage' | 'ocean' | 'iris' | 'rose' | 'mono';
 export interface IllustrationConfig { enabled:boolean; server_url:string; checkpoint:string|null; model_family:'illustrious'|'sdxl'; checkpoint_folder:string; lora_folder:string; negative_prompt:string; positive_prompt_suffix:string; physical_description:string; loras:{name:string;strength:number}[]; turbo:boolean; live:boolean; advanced:{enabled:boolean;size:number;steps_first:number;steps_second:number;cfg_first:number;cfg_second:number;sampler_name:string}; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
@@ -20,6 +24,7 @@ export interface ProfileDraft {
   instructions: string;
   accent: 'amber' | 'teal' | 'violet' | 'coral';
   mood_persistence?: boolean;
+  initiative?: InitiativeConfig;
   connections: Connections;
 }
 
@@ -40,6 +45,8 @@ export interface Snapshot {
   settings: {
     theme: Theme;
     comfyui_startup: ComfyStartupConfig;
+    voice_service: VoiceServiceConfig;
+    desktop_layouts: Record<string,DesktopLayout>;
     web_search: SearchMode;
     ui_language: import('./i18n').Language;
     default_companion: string | null;
@@ -74,6 +81,8 @@ export interface Message {
 }
 
 export type Mutation =
+  | { kind: 'voice_service'; config: VoiceServiceConfig }
+  | { kind: 'initiative'; id:string;revision:number;config:InitiativeConfig }
   | { kind: 'theme'; theme: Theme }
   | { kind: 'comfyui_startup'; config: ComfyStartupConfig }
   | { kind: 'mood_persistence'; id:string; revision:number; enabled:boolean }
