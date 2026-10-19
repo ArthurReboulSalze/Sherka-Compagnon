@@ -1,6 +1,6 @@
 export type Emotion = 'neutral' | 'joy' | 'sadness' | 'anger' | 'surprise' | 'reflection' | 'tenderness';
 export type Theme = 'gold' | 'sage' | 'ocean' | 'iris' | 'rose' | 'mono';
-export interface IllustrationConfig { enabled:boolean; server_url:string; checkpoint:string|null; model_family:'illustrious'|'sdxl'; checkpoint_folder:string; lora_folder:string; negative_prompt:string; physical_description:string; loras:{name:string;strength:number}[]; turbo:boolean; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
+export interface IllustrationConfig { enabled:boolean; server_url:string; checkpoint:string|null; model_family:'illustrious'|'sdxl'; checkpoint_folder:string; lora_folder:string; negative_prompt:string; positive_prompt_suffix:string; physical_description:string; loras:{name:string;strength:number}[]; turbo:boolean; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
 export interface IllustrationCatalog { checkpoints:string[]; loras:string[]; turbo_available:boolean; missing_nodes:string[] }
 export interface IllustrationStatus { profile_id:string|null; phase:'disabled'|'idle'|'planning'|'generating'|'ready'|'error'; image:string|null; images:string[]; message:string|null }
 export interface Attachment {name:string;data:string}
@@ -79,6 +79,7 @@ export type Mutation =
   | { kind: 'switch_profile' | 'duplicate_profile' | 'delete_profile'; id: string }
   | { kind: 'set_avatar'; id: string; revision: number; emotion?: Emotion; base64: string | null }
   | { kind: 'import_profile'; json: string }
+  | { kind: 'import_companion_archive'; base64: string }
   | { kind: 'preferences'; preferences: { always_on_top: boolean; widget_scale: number } }
   | { kind: 'connections'; id: string; revision: number; connections: Connections }
   | { kind: 'audio_settings'; audio: AudioSettings }

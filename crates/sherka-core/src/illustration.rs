@@ -31,6 +31,7 @@ pub struct Config {
     pub checkpoint_folder: String,
     pub lora_folder: String,
     pub negative_prompt: String,
+    pub positive_prompt_suffix: String,
     pub physical_description: String,
     pub loras: Vec<Lora>,
     pub turbo: bool,
@@ -49,6 +50,7 @@ impl Default for Config {
             lora_folder: String::new(),
             negative_prompt:
                 "worst quality, low quality, blurry, bad anatomy, bad hands, text, watermark".into(),
+            positive_prompt_suffix: String::new(),
             physical_description: String::new(),
             loras: vec![],
             turbo: true,
@@ -107,6 +109,7 @@ impl Config {
             .into();
         self.physical_description = self.physical_description.trim().into();
         self.negative_prompt = self.negative_prompt.trim().into();
+        self.positive_prompt_suffix = self.positive_prompt_suffix.trim().into();
         for folder in [&mut self.checkpoint_folder, &mut self.lora_folder] {
             *folder = folder
                 .trim()
@@ -119,6 +122,7 @@ impl Config {
         }
         if self.physical_description.chars().count() > 2400
             || self.negative_prompt.chars().count() > 4000
+            || self.positive_prompt_suffix.chars().count() > 4000
             || !(1..=8).contains(&self.image_count)
             || !(1..=60).contains(&self.slide_seconds)
             || self.loras.len() > 8
@@ -573,6 +577,15 @@ pub fn workflow(config: &Config, scene: Scene, info: &Value, seed: u64) -> Resul
     // The editable negative prompt is authoritative, including an intentional
     // empty prompt. Model output must never replace the user's settings.
     scene.negative = config.negative_prompt.clone();
+    // Append after model-output validation, once per graph. User syntax and
+    // weights survive unchanged; the planner cannot rewrite this suffix.
+    if !config.positive_prompt_suffix.is_empty() {
+        scene.positive.push_str(match config.model_family {
+            ModelFamily::Illustrious => ", ",
+            ModelFamily::Sdxl => "\n",
+        });
+        scene.positive.push_str(&config.positive_prompt_suffix);
+    }
     let checkpoint = config.checkpoint.as_deref().ok_or_else(invalid)?;
     let list = |node: &str, field: &str| {
         info[node]["input"]["required"][field][0]

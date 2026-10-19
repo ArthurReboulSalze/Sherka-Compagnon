@@ -4,7 +4,7 @@
 
 <h1 align="center">Sherka Companion</h1>
 <p align="center"><strong>A voice. A personality. A place on your desktop.</strong></p>
-<p align="center">Five personalities. Seven expressions. Voice and imagination on your desktop.</p>
+<p align="center">Talk naturally. Interrupt freely. Give your AI a place on your desktop.</p>
 <p align="center"><em>Your models. Your voices. Your companion.</em></p>
 
 <p align="center">
@@ -26,11 +26,16 @@
 <p align="center"><em>Conversation illustrations are available now. ComfyUI avatar-pack generation is planned.</em></p>
 
 <p align="center">
-  <img src="docs/images/sherka-0.11.0.png" alt="Sherka 0.11.0 control panel: golden app logo, five companions and avatar settings" width="1000">
+  <img src="docs/images/desktop-companion.png" alt="Independent Sherka desktop companion with inline text input and a movable ComfyUI conversation illustration" width="900">
+</p>
+<p align="center"><em>A companion that lives on your desktop — with text and image cells right beside it.</em></p>
+
+<p align="center">
+  <img src="docs/images/sherka-0.12.0.png" alt="Sherka 0.12.0 control panel: golden app logo, five companions and avatar settings" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**New in 0.11.0:** illustrate conversations with **Illustrious or SDXL**, shape each scene with your own negative prompt, and let landscapes stand on their own. Keep memory concise with a proposal you review before applying. Available for **Windows and Debian x64**.
+**New in 0.12.0:** duplicate and share complete companions as **.sherka.zip** packs, including their seven expressions. Add your own style to every generated image with a **positive prompt addition**. Companions now come first in the control panel. [Release notes](docs/releases/0.12.0.md).
 
 ## Meet your companions
 
@@ -58,19 +63,25 @@ Sherka gives your AI a presence beyond a chat window: a transparent companion th
 
 | 🎙️ Talk naturally | ✨ Make it personal | 🪟 Keep it close |
 | --- | --- | --- |
-| Streamed replies, speech prepared ahead, and voice interruption. Keep the conversation flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click. |
+| Interrupt a spoken reply, pause while talking, then continue. Streaming and speech prepared ahead keep the exchange flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click. |
 | **🧠 Memories you control** | **🌐 A little help from the web** | **💬 Seven interface languages** |
-| Review, edit or delete saved facts. Preview an optimized memory before applying it. Clear a conversation with confirmation while keeping saved facts. | [Web search with sources](docs/WEB_SEARCH.md): DuckDuckGo without an account, or your Brave, Tavily or SearXNG connection. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
+| Persistent memory for each companion. Review, edit or delete facts; preview built-in memory optimization before applying it. Clear a conversation with confirmation while keeping saved facts. | [Search the web with sources](docs/WEB_SEARCH.md). Use DuckDuckGo without an account, or Brave, Tavily or SearXNG. Drop text files and, with a vision-capable model, images onto your companion. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
 
 The built-in Sherka is ready in every interface language. Custom companions keep the language you choose for them.
 
 ## Turn conversations into scenes
 
-Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its model family, folders, editable negative prompt and LoRAs. Landscapes can stand alone; the avatar appears when it belongs in the scene. Images start preparing as soon as the reply text is ready, while the voice continues.
+Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its model family, folders, editable negative prompt and LoRAs. A **positive prompt addition** appends your style, lighting or composition preferences to every generated scene, exactly as written. Landscapes can stand alone; the avatar appears when it belongs in the scene. Images start preparing as soon as the reply text is ready, while the voice continues.
 
 The **Image** button reveals a movable, resizable cell that follows your companion. Generate up to eight variations and let them loop with gentle crossfades at your chosen pace. The **Text** button reveals a transparent input just beneath the controls: type, paste or drop text, and attach images when your model supports vision.
 
 These scenes illustrate the conversation; the avatar's seven expressions remain separate. Hermes uses its own tools and stays outside local scene generation.
+
+## Create, duplicate, share
+
+Make a copy of a companion to try a new personality, model or voice with an empty history. Export it as a **.sherka.zip** pack: personality, instructions, settings and all seven expression images travel together. Importing creates an independent companion; conversations, memories and API keys stay private.
+
+The [open archive format](docs/COMPANION_PACKS.md) uses ordinary ZIP, JSON and PNG files. Older Sherka JSON profiles still import. Model and voice references are included; their weights and audio files are separate downloads. Check connection settings on the receiving machine.
 
 ## Local voice. Your choice of intelligence.
 
@@ -86,6 +97,12 @@ Voice processing stays local. Hosted model APIs receive conversation context and
 
 Sherka manages context budgets and offers reasoning controls where supported. Switching companions also handles local model loading and unloading.
 
+## Responsive without a huge setup
+
+With suitable local language and speech models, Sherka can feel very responsive: text streams in, speech is prepared ahead, and new image scenes start while the voice is still speaking. There is no fixed latency promise — model size, context, voice engine and concurrent image generation all matter.
+
+Development and real-service testing used an **NVIDIA RTX 3090**. You do not need that much VRAM to start: **8 GB, and potentially less with small quantized models**, can suit a voice-companion setup. Running a large language model, speech and ComfyUI together needs more headroom; hosted conversation providers are also available.
+
 ## From download to your first conversation
 
 1. **Pick your download:** the [Windows x64 installer, no-install ZIP or Debian x64 package](https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest).
@@ -98,7 +115,7 @@ Check for signed Windows updates directly from **Settings**. Installed and no-in
 
 ## What's next
 
-Next come speaking/listening animations, easier character sharing and consistent avatar packs through **ComfyUI**. Conversation illustrations are available now; generating the avatar's seven expressions is a separate future step. Hermes remains outside the emotion and illustration systems.
+Next come speaking/listening animations, richer character customization and consistent avatar packs through **ComfyUI**. Conversation illustrations are available now; generating the avatar's seven expressions is a separate future step. Hermes remains outside the emotion and illustration systems.
 
 Sherka is an early project. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
 

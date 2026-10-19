@@ -1,6 +1,14 @@
 # Project status
 
-Release version: **0.11.0**, October 19, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **0.12.0**, October 19, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+
+## 0.12.0 — companion packs and image style
+
+The navigation order is Companions, Conversation, Memory & history, Settings. Duplication is more prominent and uses a localized copy suffix; it preserves images and configuration with fresh history and memory. ComfyUI receives an optional per-companion positive prompt addition, appended verbatim after the generated prompt is validated, once per graph. Existing profiles default to an empty suffix.
+
+The default export is now Sherka Companion Archive v1 (`.sherka.zip`): a JSON manifest and seven normalized PNGs, with bundled art resolved from application assets and missing expressions represented by neutral. Import validates size, fixed paths, format/version, images and settings before creating a new identity. It reads in memory without extraction and never activates the new profile. No conversations, memories, credentials or Hermes sessions are exported. Service addresses and authored prompts are included and documented. Legacy JSON import accepts versions 1–5; the internal JSON export is version 5, database schema remains 8.
+
+Validation before packaging: 121 Rust tests passed, with one opt-in public-search test skipped. Ten focused archive/illustration tests passed again after the archive path-rejection fixture was strengthened. TypeScript, formatting, Clippy and three localization tests passed; all 872 authored messages have seven languages. Native tests passed legacy JSON import/permissions, ZIP import and duplication with restart, SDXL positive-prompt concatenation and desktop cells, and a fresh English documentation capture. An initial full-size-image fixture exceeded the short UI wait; the suite uses a small PNG and allows longer imports. Two native workers failed to initialize their WebView debugging endpoint; both scenarios passed on rerun. Service contracts were simulated; no new physical microphone or billed model test was performed.
 
 ## 0.11.0 — scene planning and memory controls
 
@@ -8,7 +16,7 @@ Companions now select an explicit Illustrious or SDXL image-model family, with t
 
 Auxiliary JSON requests use a bounded output budget, optional reasoning disabled when supported, final-answer parsing and a single validated fallback for incompatible local JSON grammars. System instructions are consolidated at the beginning: real NeoHorse testing identified its template rejecting a system message after user data. Expressions now have short examples, recognized aliases and a conservative visible-answer fallback that ignores private thinking. These changes help small models without guaranteeing that every tone is classified correctly.
 
-Memory optimization is available in Settings, Memory and explicit conversation commands. It proposes shorter facts/notes for review, then applies only after confirmation. Existing ids, source links, approval state, session and memory epochs are validated; omitted facts and conversation history survive. Semantic fidelity still needs the user's review. Conversation clearing now requires `/clear` followed by `/confirm-clear` (or recognized localized phrases), expires after three minutes and preserves saved facts. Selecting a companion card also activates that companion in the widget. The README begins with the supplied ecosystem diagram.
+Memory optimization is available in Settings, Memory and explicit conversation commands. It proposes shorter facts/notes for review, then applies only after confirmation. Existing ids, source links, approval state, session and memory epochs are validated; omitted facts and conversation history survive. Semantic fidelity still needs the user's review. Conversation clearing now requires `/clear` followed by `/confirm-clear` (or recognized localized phrases), expires after three minutes and preserves saved facts. Selecting a companion card also activates that companion in the widget. The README includes the supplied ecosystem diagram.
 
 Validation: 118 Rust tests and three localization tests passed; TypeScript, formatting and Clippy passed, with all 868 authored UI messages covered in seven languages. Across native runs, all 32 default scenarios passed; 12 opt-in scenarios were skipped. Eight focused scenarios also passed on the optimized Windows executable. Three older UI fixtures were updated for visible-widget startup, card activation and read-only catalog discovery. Two native workers exited before their scenarios began; both scenarios passed on rerun.
 

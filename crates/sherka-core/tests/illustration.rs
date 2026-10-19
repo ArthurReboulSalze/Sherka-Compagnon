@@ -274,7 +274,7 @@ fn per_character_config_and_global_theme_survive_import_copy_and_old_profile_mig
     let exported = app.store.export_profile(id).unwrap();
     assert_eq!(
         serde_json::from_str::<Value>(&exported).unwrap()["version"],
-        4
+        5
     );
     let imported = app.store.import_profile(&exported).unwrap();
     assert_eq!(imported.details.illustration, config());
@@ -294,4 +294,44 @@ fn per_character_config_and_global_theme_survive_import_copy_and_old_profile_mig
     let app = Companion::open(dir.path()).unwrap();
     assert!(!app.store.profile(id).unwrap().details.illustration.enabled);
     assert_eq!(app.snapshot().unwrap().settings.theme, Theme::Ocean);
+}
+
+#[test]
+fn positive_suffix_is_appended_once_verbatim_in_both_families() {
+    for family in [
+        illustration::ModelFamily::Illustrious,
+        illustration::ModelFamily::Sdxl,
+    ] {
+        let mut c = config();
+        c.model_family = family;
+        c.positive_prompt_suffix = "(warm light:1.3), watercolor\nsoft shadows".into();
+        let scene = Scene {
+            positive: "mountain lake, wide view".into(),
+            negative: "blur".into(),
+        };
+        for seed in 1..=2 {
+            let graph = illustration::workflow(&c, scene.clone(), &info(), seed).unwrap();
+            let texts: Vec<&str> = graph
+                .as_object()
+                .unwrap()
+                .values()
+                .filter_map(|node| node["inputs"]["text"].as_str())
+                .collect();
+            let positive = texts
+                .iter()
+                .find(|text| text.starts_with("mountain lake"))
+                .unwrap();
+            assert!(positive.ends_with(&c.positive_prompt_suffix));
+            assert_eq!(positive.matches("warm light").count(), 1);
+            assert!(texts.contains(&c.negative_prompt.as_str()));
+        }
+        c.positive_prompt_suffix = "x".repeat(4001);
+        assert!(c.validated().is_err());
+    }
+    let mut old = serde_json::to_value(config()).unwrap();
+    old.as_object_mut()
+        .unwrap()
+        .remove("positive_prompt_suffix");
+    let upgraded: Config = serde_json::from_value(old).unwrap();
+    assert!(upgraded.positive_prompt_suffix.is_empty());
 }

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/ArthurReboulSalze/Sherka-Compagnon/main/config/schemas/companion-v1.schema.json",
+  "title": "Sherka Companion Archive v1 manifest",
+  "description": "Envelope schema. Nested settings must additionally pass Sherka's validators. All seven referenced PNGs must exist in the ZIP.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "profile", "images"],
+  "properties": {
+    "format": {"const": "sherka-companion"},
+    "version": {"const": 1},
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "personality", "instructions", "accent"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 60},
+        "personality": {"type": "string", "maxLength": 12000},
+        "instructions": {"type": "string", "maxLength": 12000},
+        "accent": {"enum": ["amber", "teal", "violet", "coral"]},
+        "avatar_preset": {"enum": [null, "sherka", "botsy", "candis", "alba", "kit", "minerva"]},
+        "web_search": {"enum": [null, "off", "on_request", "auto"]},
+        "connections": {"type": "object"},
+        "illustration": {"type": "object"},
+        "search": {"type": "object"}
+      }
+    },
+    "images": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["neutral", "joy", "sadness", "anger", "surprise", "reflection", "tenderness"],
+      "properties": {
+        "neutral": {"const": "images/neutral.png"},
+        "joy": {"const": "images/joy.png"},
+        "sadness": {"const": "images/sadness.png"},
+        "anger": {"const": "images/anger.png"},
+        "surprise": {"const": "images/surprise.png"},
+        "reflection": {"const": "images/reflection.png"},
+        "tenderness": {"const": "images/tenderness.png"}
+      }
+    }
+  }
+}

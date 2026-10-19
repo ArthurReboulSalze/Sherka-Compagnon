@@ -16,11 +16,13 @@ The built-in workflow is derived from the supplied Sherka graph. It requires the
 
 Turbo mode automatically resolves `PAseer-SDXL-LCM+Turbo.safetensors` from ComfyUI's LoRA catalog. Its filename is not exposed as an editable LoRA slot; optional character/style LoRAs are separate. Disabling Turbo removes it, sets **both samplers to 16 steps**, and doubles each sampler’s original CFG. The supplied graph therefore uses **3.8 and 7.0**, with `euler_ancestral` and the normal scheduler. Custom workflows double their own CFG values; their saved values are not overwritten. Compatibility and image quality depend on the checkpoint and LoRAs you choose; no model files are bundled or downloaded by Sherka.
 
-## Model paths and negative prompt
+## Model paths and image prompts
 
 The folder fields use **relative catalog paths** such as `My collection/Landscapes` or `Styles/Watercolor`. Checkpoints and LoRAs can be organized under any names. To add folders outside ComfyUI’s usual model directories, register them on the server in [`extra_model_paths.yaml`](https://docs.comfy.org/basic-concepts/models#adding-extra-model-paths), then refresh the catalog. Sherka does not silently rewrite a remote server’s filesystem configuration. The checkpoint must still be compatible with the selected workflow family; listing a Flux or SD1.5 file does not make it SDXL-compatible.
 
-**Negative prompt** is editable per companion and is sent to the negative CLIP encoder exactly as saved, including an intentionally empty field. The language model cannot overwrite it. Add unwanted traits there when useful—for Minerva, for example, `human face, human skin`. Model family, folder filters, negative prompt and LoRAs are saved with the companion.
+**Negative prompt** is editable per companion and is sent to the negative CLIP encoder exactly as saved, including an intentionally empty field. The language model cannot overwrite it. Add unwanted traits there when useful—for Minerva, for example, `human face, human skin`. **Positive prompt addition** is appended after the generated scene prompt, without model rewriting. Use tags such as `(warm light:1.2), watercolor` for Illustrious or a short visual description for SDXL. An empty field adds nothing. Leading/trailing whitespace is trimmed; internal line breaks and weighting syntax are preserved. The suffix is added once per image, after the generated text is validated, and is not sent back to the scene planner. It can intentionally add subjects or styles even to a landscape, so leave character-specific tags out if you only want them when the companion appears.
+
+Model family, folder filters, both prompt fields and LoRAs are saved, duplicated and exported with the companion.
 
 ## How a scene is composed
 

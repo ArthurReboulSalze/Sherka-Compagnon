@@ -461,7 +461,7 @@ impl Store {
         self.create_with_avatars(draft, avatar, BTreeMap::new())
     }
 
-    fn create_with_avatars(
+    pub(crate) fn create_with_avatars(
         &self,
         draft: ProfileDraft,
         avatar: Option<&[u8]>,
@@ -585,8 +585,9 @@ impl Store {
         let source = self.profile(id)?;
         let mut details = source.details;
         details.name = format!(
-            "{} · copie",
-            details.name.chars().take(50).collect::<String>()
+            "{} · {}",
+            details.name.chars().take(40).collect::<String>(),
+            crate::i18n::text("copie")
         );
         let avatar = self.avatar_bytes(id)?;
         self.create_with_avatars(details, avatar.as_deref(), self.emotion_avatar_bytes(id)?)
@@ -641,7 +642,7 @@ impl Store {
         let profile = self.profile(id)?;
         let export = ProfileExport {
             format: "sherka-profile".into(),
-            version: 4,
+            version: 5,
             profile: profile.details,
             avatar_png_base64: self.avatar_bytes(id)?.map(|bytes| STANDARD.encode(bytes)),
             emotion_avatars_png_base64: self
@@ -661,7 +662,7 @@ impl Store {
         }
         let export: ProfileExport = serde_json::from_str(json)?;
         if export.format != "sherka-profile"
-            || ![1, 2, 3, 4].contains(&export.version)
+            || ![1, 2, 3, 4, 5].contains(&export.version)
             || (export.version == 1 && !export.emotion_avatars_png_base64.is_empty())
         {
             return Err(Error::Validation(

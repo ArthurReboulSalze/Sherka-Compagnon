@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.0 — 2026-10-19
+
+- Put Companions first in the control-panel navigation and make duplication more visible, with localized copy names.
+- Add a per-companion positive prompt suffix, appended once without rewriting for Illustrious and SDXL scenes.
+- Export self-contained `.sherka.zip` archives with a versioned JSON manifest and seven PNG expressions, including built-in images and neutral fallbacks.
+- Import archives into new empty profiles, with bounded in-memory ZIP/image validation and no filesystem extraction. Continue accepting legacy JSON versions 1–5.
+- Document the archive format and update the README with the desktop screenshot, voice flow, memory, web/file capabilities and hardware guidance.
+
+
 ## 0.11.0 — 2026-10-19
 
 - Choose Illustrious or SDXL per companion, with image prompts adapted to each family and an editable negative prompt sent exactly as saved.

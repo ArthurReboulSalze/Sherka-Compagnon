@@ -7438,5 +7438,61 @@
     "API-JSON-Workflow für Illustrious oder SDXL mit Power LoRA Loader. Sherka liefert Modell, LoRAs, Prompts und Seeds. Bilder entstehen in temporären ComfyUI-Dateien.",
     "用于 Illustrious 或 SDXL 的 API JSON 工作流，使用 Power LoRA Loader。Sherka 提供模型、LoRA、提示词和种子。图像生成在 ComfyUI 临时文件中。",
     "Power LoRA Loader を使用する Illustrious / SDXL 用 API JSON ワークフローです。Sherka がモデル、LoRA、プロンプト、シードを渡します。画像は ComfyUI の一時ファイルに生成されます。"
+  ],
+  "copie": [
+    "copy",
+    "copia",
+    "copia",
+    "Kopie",
+    "副本",
+    "コピー"
+  ],
+  "Dupliquer ce compagnon": [
+    "Duplicate this companion",
+    "Duplicar este compañero",
+    "Duplica questo compagno",
+    "Diesen Begleiter duplizieren",
+    "复制此伙伴",
+    "このコンパニオンを複製"
+  ],
+  "Ajout au prompt positif": [
+    "Positive prompt addition",
+    "Texto adicional del prompt positivo",
+    "Aggiunta al prompt positivo",
+    "Ergänzung zum positiven Prompt",
+    "正向提示词补充",
+    "ポジティブプロンプトへの追加"
+  ],
+  "Ajouté à la fin de chaque prompt généré, sans réécriture. Utilise des tags pour Illustrious ou une description pour SDXL. Laisse vide pour ne rien ajouter.": [
+    "Appended to every generated prompt without rewriting. Use tags for Illustrious or a description for SDXL. Leave empty to add nothing.",
+    "Se añade al final de cada prompt generado sin reescribirlo. Usa etiquetas para Illustrious o una descripción para SDXL. Déjalo vacío para no añadir nada.",
+    "Aggiunto alla fine di ogni prompt generato senza riscriverlo. Usa tag per Illustrious o una descrizione per SDXL. Lascia vuoto per non aggiungere nulla.",
+    "Wird unverändert an jeden generierten Prompt angehängt. Verwende Tags für Illustrious oder eine Beschreibung für SDXL. Leer lassen, um nichts hinzuzufügen.",
+    "原样附加到每个生成的提示词末尾。Illustrious 使用标签，SDXL 使用描述。留空则不添加内容。",
+    "生成された各プロンプトの末尾に、書き換えずに追加します。Illustrious にはタグ、SDXL には説明文を使ってください。空欄なら何も追加しません。"
+  ],
+  "Partage un compagnon au format .sherka.zip : personnalité, réglages et sept images. Sans historique, souvenirs ni clés API. Les anciens profils JSON restent acceptés.": [
+    "Share a companion as .sherka.zip: personality, settings and seven images. No history, memories or API keys. Older JSON profiles are still supported.",
+    "Comparte un compañero como .sherka.zip: personalidad, ajustes y siete imágenes. Sin historial, recuerdos ni claves API. Los perfiles JSON antiguos siguen siendo compatibles.",
+    "Condividi un compagno in formato .sherka.zip: personalità, impostazioni e sette immagini. Senza cronologia, ricordi o chiavi API. I vecchi profili JSON sono ancora supportati.",
+    "Teile einen Begleiter als .sherka.zip: Persönlichkeit, Einstellungen und sieben Bilder. Ohne Verlauf, Erinnerungen oder API-Schlüssel. Ältere JSON-Profile werden weiterhin unterstützt.",
+    "以 .sherka.zip 格式分享伙伴：包含性格、设置和七张图片，不包含聊天记录、记忆或 API 密钥。仍支持旧版 JSON 配置文件。",
+    ".sherka.zip 形式でコンパニオンを共有できます。性格、設定、7枚の画像が含まれます。履歴、記憶、API キーは含みません。従来の JSON プロファイルにも対応しています。"
+  ],
+  "Archive de compagnon invalide ou version non prise en charge.": [
+    "Invalid companion archive or unsupported version.",
+    "Archivo de compañero no válido o versión no compatible.",
+    "Archivio del compagno non valido o versione non supportata.",
+    "Ungültiges Begleiterarchiv oder nicht unterstützte Version.",
+    "伙伴压缩包无效或版本不受支持。",
+    "コンパニオンのアーカイブが無効、または未対応のバージョンです。"
+  ],
+  "{0} Dupliquer ce compagnon": [
+    "{0} Duplicate this companion",
+    "{0} Duplicar este compañero",
+    "{0} Duplica questo compagno",
+    "{0} Diesen Begleiter duplizieren",
+    "{0} 复制此伙伴",
+    "{0} このコンパニオンを複製"
   ]
 }

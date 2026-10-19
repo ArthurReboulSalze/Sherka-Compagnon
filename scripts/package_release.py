@@ -42,7 +42,9 @@ Clear a companion's conversation from Conversation, or request /clear and confir
 with /confirm-clear. Saved facts remain; individual facts can be deleted from Memory.
 Preview memory optimization from Settings or Memory before applying it.
 Optional ComfyUI scenes support Illustrious and SDXL, with a per-companion
-negative prompt, model/LoRA folder filters and Turbo or normal sampling.
+negative prompt, positive prompt addition, model/LoRA folder filters and Turbo or normal sampling.
+Duplicate companions or share a .sherka.zip pack with all seven expression images.
+Packs contain no conversations, memories or API keys. Recheck service connections after import.
 For Hermes, clearing in Sherka affects local history only.
 
 Documentation: https://github.com/ArthurReboulSalze/Sherka-Compagnon

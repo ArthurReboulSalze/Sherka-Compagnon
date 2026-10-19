@@ -136,8 +136,8 @@ function render(): void {
       <a class="brand" href="#" aria-label="Sherka, accueil"><span class="brand-symbol"><img src="/branding/sherka-logo-v2.png" alt="" /></span><span>SHERKA<small>COMPAGNON DE BUREAU</small></span></a>
       <div class="nav-caption">POSTE DE BORD</div>
       <nav aria-label="Navigation principale">
-        ${navItem('conversation', 'chat', t('Conversation'))}
         ${navItem('profiles', 'profiles', t('Compagnons'))}
+        ${navItem('conversation', 'chat', t('Conversation'))}
         ${navItem('memory', 'memory', t('Mémoire & histoire'))}
         ${navItem('settings', 'settings', t('Réglages'))}
       </nav>
@@ -175,10 +175,11 @@ function navItem(id: typeof view, symbol: string, title: string): string {
 function profilesView(profile: Profile): string {
   const isActive = profile.id === state!.settings.active_profile;
   return html`<div class="page-heading"><div><p class="eyebrow">UNE PRÉSENCE, À TA FAÇON</p><h1>Tes compagnons<span>.</span></h1><p>Une personnalité. Une voix. Une histoire qui lui appartient.</p></div><button class="button primary" id="new-profile">${icon('plus')} Nouveau compagnon</button></div>
+    <p class="connection-note">Partage un compagnon au format .sherka.zip : personnalité, réglages et sept images. Sans historique, souvenirs ni clés API. Les anciens profils JSON restent acceptés.</p>
     <div class="profile-gallery" aria-label="Galerie des compagnons">${state!.profiles.map((p) => html`<button class="profile-card ${profile.id === p.id ? 'chosen' : ''}" data-profile="${p.id}" aria-pressed="${profile.id === p.id}"><span class="mini-portrait accent-${p.accent}"><img src="${portrait(p)}" alt="" /></span><span class="card-text"><strong>${escape(p.name)}</strong><small>${p.id === state!.settings.active_profile ? html`<i class="status-dot"></i> Compagnon actif` : t('Espace indépendant')}</small></span>${profile.id === p.id ? html`<span class="card-check">${icon('check')}</span>` : ''}</button>`).join('')}<button class="import-card" id="import-profile">${icon('upload')}<span>Importer<br><small>un profil Sherka</small></span></button></div>
     <article class="companion-detail accent-${profile.accent}">
       <div class="portrait-stage"><div class="stage-label"><span class="tiny-cross">+</span> IDENTITÉ DU COMPAGNON <span class="tiny-cross">+</span></div><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><img class="hero-portrait" src="${portrait(profile)}" alt="Apparence de ${escape(profile.name)}" /><div class="portrait-controls"><button class="button glass small" id="change-avatar">${icon('image')} Avatar et voix</button><span id="profile-voice-label"></span><button class="text-button" id="choose-profile-voice">Choisir sa voix →</button></div><span class="stage-coordinate">01 / PRÉSENCE</span></div>
-      <div class="companion-copy"><div class="identity-line"><span class="tag ${isActive ? 'live' : ''}">${isActive ? html`<i class="status-dot"></i> ACTIF SUR TON BUREAU` : t('PRÊT À ÊTRE ACTIVÉ')}</span><button class="icon-button" id="edit-profile" aria-label="Modifier le compagnon" title="Modifier">${icon('edit')}</button></div><h2>${escape(profile.name)}</h2><p class="personality-preview">${escape(profile.personality || t('Sa personnalité reste à écrire. Donne-lui une façon bien à lui de t’accompagner.'))}</p><div class="profile-stats"><div><strong>${profile.message_count}</strong><span>messages</span></div><div><strong>${profile.memory_count}</strong><span>souvenirs</span></div><div><strong class="text-value">Indépendant</strong><span>son propre espace</span></div></div><div class="detail-actions">${isActive ? html`<button class="button primary" data-action="show_widget">${icon('eye')} Retrouver ${escape(profile.name)}</button>` : html`<button class="button primary" id="activate-profile">${icon('spark')} Activer ce compagnon</button>`}<button class="button secondary" id="personality-button">Personnalité ${icon('arrow')}</button></div><div class="profile-tools"><button class="text-button" id="duplicate-profile">${icon('copy')} Dupliquer</button><button class="text-button" id="export-profile">${icon('download')} Exporter</button><button class="text-button danger" id="delete-profile" ${isActive ? html`disabled title="Active un autre compagnon avant de supprimer celui-ci."` : ''}>${icon('trash')} Supprimer</button></div></div>
+      <div class="companion-copy"><div class="identity-line"><span class="tag ${isActive ? 'live' : ''}">${isActive ? html`<i class="status-dot"></i> ACTIF SUR TON BUREAU` : t('PRÊT À ÊTRE ACTIVÉ')}</span><button class="icon-button" id="edit-profile" aria-label="Modifier le compagnon" title="Modifier">${icon('edit')}</button></div><h2>${escape(profile.name)}</h2><p class="personality-preview">${escape(profile.personality || t('Sa personnalité reste à écrire. Donne-lui une façon bien à lui de t’accompagner.'))}</p><div class="profile-stats"><div><strong>${profile.message_count}</strong><span>messages</span></div><div><strong>${profile.memory_count}</strong><span>souvenirs</span></div><div><strong class="text-value">Indépendant</strong><span>son propre espace</span></div></div><div class="detail-actions">${isActive ? html`<button class="button primary" data-action="show_widget">${icon('eye')} Retrouver ${escape(profile.name)}</button>` : html`<button class="button primary" id="activate-profile">${icon('spark')} Activer ce compagnon</button>`}<button class="button secondary" id="personality-button">Personnalité ${icon('arrow')}</button></div><div class="profile-tools"><button class="button secondary small" id="duplicate-profile">${icon('copy')} Dupliquer ce compagnon</button><button class="text-button" id="export-profile">${icon('download')} Exporter</button><button class="text-button danger" id="delete-profile" ${isActive ? html`disabled title="Active un autre compagnon avant de supprimer celui-ci."` : ''}>${icon('trash')} Supprimer</button></div></div>
     </article>
     ${illustrationSettings(profile)}<div id="connections-root"></div>${profile.connections.llm_provider === 'hermes' ? '' : webSettings(profile.web_search ?? state!.settings.web_search,profile)}
     <div class="bottom-grid"><section class="info-card"><div class="card-icon">${icon('shield')}</div><div><h3>Son histoire reste la sienne.</h3><p>Changer de compagnon change de mémoire. Une copie reprend sa personnalité et son apparence, avec une histoire vierge.</p></div></section><section class="info-card"><div class="card-icon">${icon('image')}</div><div><h3>Sept émotions, ton avatar.</h3><p>Ajoute tes images dans « Avatar et voix ». L’expression suit le ton de la réponse.</p></div></section></div>`;
@@ -237,9 +238,19 @@ function bindPanel(): void {
   document.querySelector('#duplicate-profile')?.addEventListener('click', () => void change({ kind: 'duplicate_profile', id: profile.id }, t('Compagnon dupliqué avec une histoire vierge.'), true));
   document.querySelector('#delete-profile')?.addEventListener('click', () => confirmDelete(profile));
   document.querySelector('#change-avatar')?.addEventListener('click', () => openAvatar(profile));
-  document.querySelector('#import-profile')?.addEventListener('click', () => chooseFile('.json', async (file) => {
+  document.querySelector('#import-profile')?.addEventListener('click', () => chooseFile('.sherka.zip,.zip,.json', async (file) => {
     if (file.size > 48 * 1024 * 1024) throw new Error(t('Ce fichier dépasse la limite de 48 Mio.'));
-    await change({ kind: 'import_profile', json: await file.text() }, t('Compagnon importé dans un nouvel espace.'), true);
+    if (file.name.toLowerCase().endsWith('.zip')) {
+      const encoded = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1]!);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      await change({ kind: 'import_companion_archive', base64: encoded }, t('Compagnon importé dans un nouvel espace.'), true);
+    } else {
+      await change({ kind: 'import_profile', json: await file.text() }, t('Compagnon importé dans un nouvel espace.'), true);
+    }
   }));
   document.querySelector('#export-profile')?.addEventListener('click', async () => {
     try { if (await api.exportProfile(profile.id)) toast(t('Profil exporté sans historique, souvenirs ni clés.')); } catch (error) { report(error); }

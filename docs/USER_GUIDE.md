@@ -56,7 +56,7 @@ Both distributions use `%LOCALAPPDATA%\fr.sherka.compagnon`: a settings database
 
 Transient audio stays in memory; Sherka does not save microphone recordings. Interrupted turns distinguish generated text from completed spoken passages. External applications have their own privacy settings.
 
-For a full backup, exit normally and copy the data folder. Profile JSON exports (version 4, up to 48 MiB) contain custom expression images, the bundled preset reference, personality, connection references, illustration and search preferences, **without history, memories or keys**. Legacy versions 1, 2 and 3 can still be imported. Duplicating a character also keeps its images, voice, illustration and search settings. Memory exports are separate and may contain personal information.
+For a full backup, exit normally and copy the data folder. **Export** now creates a [`.sherka.zip` companion pack](COMPANION_PACKS.md): personality, instructions, connection references, illustration/search settings and all seven expression images, including bundled artwork. History, memories and API keys are excluded. **Import** accepts these archives and legacy JSON profiles (versions 1–5), creating a new independent companion. Review service addresses and authored text before sharing. Duplicating also keeps the character settings and images, with an empty history and memory. Memory exports are separate and may contain personal information.
 
 ## Updating
 

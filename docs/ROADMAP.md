@@ -5,7 +5,7 @@ Sherka 0.11.0 adds SDXL scenes, editable negative prompts and reviewable memory 
 ## Bring companions to life
 
 - Generate consistent seven-expression avatar packs through ComfyUI, using the same image slots. Not integrated yet.
-- A community character gallery and easier sharing, building on the five bundled companions.
+- A community character gallery and pack previews, building on the five bundled companions and the documented ZIP sharing format.
 - Idle, listening, thinking and speaking animations.
 - Refine model-selected expressions, transitions and reactions beyond the seven static image slots. Hermes remote-agent mode remains excluded: neutral avatar, with listening/speaking indicators only.
 - Voice-driven mouth or portrait animation beyond the existing half-second image crossfades.

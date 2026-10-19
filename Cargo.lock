@@ -4044,7 +4044,7 @@ dependencies = [
 
 [[package]]
 name = "sherka-compagnon"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -4069,7 +4069,7 @@ dependencies = [
 
 [[package]]
 name = "sherka-core"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "base64 0.22.1",
  "cpal",
@@ -4092,6 +4092,7 @@ dependencies = [
  "uuid",
  "webrtc-vad",
  "windows-sys 0.61.2",
+ "zip",
 ]
 
 [[package]]
@@ -6363,6 +6364,7 @@ checksum = "caa8cd6af31c3b31c6631b8f483848b91589021b28fffe50adada48d4f4d2ed1"
 dependencies = [
  "arbitrary",
  "crc32fast",
+ "flate2",
  "indexmap 2.14.2",
  "memchr",
 ]

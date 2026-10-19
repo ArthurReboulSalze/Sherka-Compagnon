@@ -74,6 +74,9 @@ enum Mutation {
         emotion: sherka_core::avatar::Emotion,
         base64: Option<String>,
     },
+    ImportCompanionArchive {
+        base64: String,
+    },
     ImportProfile {
         json: String,
     },
@@ -255,6 +258,19 @@ async fn apply_mutation(
                     .transpose()?;
                 core.store
                     .set_emotion_avatar(id, revision, emotion, bytes.as_deref())?;
+            }
+            Mutation::ImportCompanionArchive { base64 } => {
+                if base64.len() > 64 * 1024 * 1024 {
+                    return Err(Error::Validation(
+                        "Ce fichier dépasse la limite de 48 Mio.".into(),
+                    ));
+                }
+                let bytes = STANDARD.decode(base64).map_err(|_| {
+                    Error::Validation(
+                        "Archive de compagnon invalide ou version non prise en charge.".into(),
+                    )
+                })?;
+                core.store.import_companion_archive(&bytes)?;
             }
             Mutation::ImportProfile { json } => {
                 core.store.import_profile(&json)?;
@@ -744,8 +760,11 @@ async fn export_profile(
     shared: State<'_, Shared>,
     profile_id: Uuid,
 ) -> Result<bool, String> {
-    let json = with_core(shared.inner().clone(), move |core| {
-        core.store.export_profile(profile_id)
+    let resolver = app.asset_resolver();
+    let archive = with_core(shared.inner().clone(), move |core| {
+        core.store.export_companion_archive(profile_id, |path| {
+            resolver.get(path.to_owned()).map(|asset| asset.bytes)
+        })
     })
     .await?;
     tauri::async_runtime::spawn_blocking(move || {
@@ -755,14 +774,14 @@ async fn export_profile(
             .set_title(sherka_core::i18n::text(
                 "Exporter le compagnon sans souvenirs",
             ))
-            .add_filter(sherka_core::i18n::text("Profil Sherka"), &["json"])
-            .set_file_name("compagnon.sherka.json")
+            .add_filter(sherka_core::i18n::text("Profil Sherka"), &["zip"])
+            .set_file_name("companion.sherka.zip")
             .blocking_save_file();
         if let Some(file) = selection {
             let path = file
                 .into_path()
                 .map_err(|_| "Le chemin choisi est invalide.".to_string())?;
-            std::fs::write(path, json).map_err(|e| e.to_string())?;
+            std::fs::write(path, archive).map_err(|e| e.to_string())?;
             Ok(true)
         } else {
             Ok(false)

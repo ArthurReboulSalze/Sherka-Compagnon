@@ -600,6 +600,43 @@ test('imports validés, texte non exécutable et permissions distinctes des fen�
 });
 
 
+test('companion archives: ZIP images, duplicate settings, empty histories and restart', async () => {
+  test.setTimeout(150_000);
+  expect(await panel.locator('nav [data-nav]').evaluateAll(nodes => nodes.map(n => n.getAttribute('data-nav'))))
+    .toEqual(['profiles','conversation','memory','settings']);
+  await panel.locator('[name="image_positive_suffix"]').fill('(warm light:1.3), watercolor');
+  await panel.locator('#illustration-form [type="submit"]').click();
+  await expect(panel.locator('body')).not.toHaveClass(/working/);
+  const before = await native<any>('get_snapshot');
+  const source = before.profiles.find((p:any) => p.id === before.session.profile_id);
+  expect(source.illustration.positive_prompt_suffix).toBe('(warm light:1.3), watercolor');
+  await panel.locator('#duplicate-profile').click();
+  await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.length).toBe(before.profiles.length+1);
+  const copied = (await native<any>('get_snapshot')).profiles.find((p:any)=>!before.profiles.some((old:any)=>old.id===p.id));
+  expect(copied.message_count).toBe(0); expect(copied.memory_count).toBe(0);
+  expect(copied.illustration).toEqual(source.illustration);
+  expect(copied.connections).toEqual(source.connections);
+  expect(copied.emotion_avatars).toEqual(source.emotion_avatars);
+  await expect(panel.getByRole('heading',{name:copied.name,exact:true})).toBeVisible();
+  const emotionNames=['neutral','joy','sadness','anger','surprise','reflection','tenderness'];
+  const manifest={format:'sherka-companion',version:1,profile:{name:'ZIP fixture',personality:'Curious and thoughtful.',instructions:'Speak English.',accent:'teal',illustration:source.illustration},images:Object.fromEntries(emotionNames.map(e=>[e,`images/${e}.png`]))};
+  const manifestPath=resolve(dataDirectory,'companion.json'),pack=resolve(dataDirectory,'fixture.sherka.zip');
+  writeFileSync(manifestPath,JSON.stringify(manifest));
+  execFileSync('python',['-c',`import sys,json,zipfile\nm=json.load(open(sys.argv[1]))\nwith zipfile.ZipFile(sys.argv[2],'w',zipfile.ZIP_DEFLATED) as z:\n z.writestr('companion.json',json.dumps(m))\n for p in m['images'].values(): z.write(sys.argv[3],p)`,manifestPath,pack,resolve(process.env.SHERKA_LARGE_PACK_TEST==='1'?'public/assets/sherka.png':'src-tauri/icons/32x32.png')],{windowsHide:true});
+  const chooser=panel.waitForEvent('filechooser'); await panel.locator('#import-profile').click(); await (await chooser).setFiles(pack);
+  await expect(panel.getByRole('heading',{name:'ZIP fixture',exact:true})).toBeVisible({timeout:60_000});
+  const imported=(await native<any>('get_snapshot')).profiles.find((p:any)=>p.name==='ZIP fixture');
+  expect(imported.avatar_preset).toBeNull(); expect(imported.avatar).toMatch(/^data:image\/png;base64,/);
+  expect(Object.keys(imported.emotion_avatars)).toHaveLength(6);
+  expect(imported.illustration.positive_prompt_suffix).toBe('(warm light:1.3), watercolor');
+  expect((await native<any>('get_snapshot')).session.profile_id).toBe(source.id);
+  await stopApplication(); await startApplication();
+  const restored=(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===imported.id);
+  expect(restored.emotion_avatars).toEqual(imported.emotion_avatars);
+  expect(restored.illustration).toEqual(imported.illustration);
+  expect(consoleErrors).toEqual([]);
+});
+
 test('providers: API controls, protected keys, Anthropic streaming, cancellation and restart', async () => {
   const fixture = JSON.parse(readFileSync(resolve('tests/fixtures/services.json'), 'utf8'));
   const requests: {path:string; body:any; auth:string|undefined}[] = [];
@@ -2332,7 +2369,7 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await panel.locator('#add-image-lora').click();await panel.locator('[data-lora="0"]').selectOption('Style/scene.safetensors');
     expect(await panel.locator('[data-lora="0"] option').allTextContents()).not.toContain('Models/Turbo/PAseer-SDXL-LCM+Turbo.safetensors');
     await panel.locator('[data-strength="0"]').evaluate((input:HTMLInputElement)=>{input.value='0.65';input.dispatchEvent(new Event('input',{bubbles:true}));});
-    await panel.locator('[name="image_family"]').selectOption('sdxl');await panel.locator('[name="image_negative"]').fill('no people, no watermark');await panel.locator('[name="image_turbo"]').uncheck();await panel.locator('[name="lora_folder"]').fill('Style');
+    await panel.locator('[name="image_positive_suffix"]').fill('(warm light:1.3), watercolor');await panel.locator('[name="image_family"]').selectOption('sdxl');await panel.locator('[name="image_negative"]').fill('no people, no watermark');await panel.locator('[name="image_turbo"]').uncheck();await panel.locator('[name="lora_folder"]').fill('Style');
     await panel.locator('[name="image_count"]').fill('2');await panel.locator('[name="slide_seconds"]').fill('1');
     await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();
     await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).illustration.loras[0]?.strength??-1).toBeCloseTo(0.65);
@@ -2366,6 +2403,11 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await expect.poll(async()=>{const status=await native<any>('get_illustration');if(status.phase==='error')throw new Error(status.message+' · planned='+plans.length+' rendered='+graphs.length);return status.phase;}).toBe('ready');
     await expect(scene.locator('#cell-image-layers img:not(.leaving)')).toBeVisible();await expect.poll(()=>scene.locator('#cell-image-layers img:not(.leaving)').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
     expect((await native<any>('get_illustration')).images).toHaveLength(2);
+    for(const graph of graphs.slice(0,2)) {
+      const positive=Object.values(graph).map((node:any)=>node.inputs?.text).find((value:any)=>typeof value==='string'&&value.includes('warm light')) as string;
+      expect(positive.endsWith('(warm light:1.3), watercolor')).toBe(true);
+      expect(positive.match(/warm light/g)).toHaveLength(1);
+    }
     await expect(widget.locator('#cell-image-count')).toHaveText('2/2');
     await expect.poll(()=>widget.evaluate(()=>(window as any).__sceneFade)).toEqual({opacities:[0.5,0.5],loaded:true});
     await widget.evaluate(()=>(window as any).__resumeSceneFade());await expect(widget.locator('#cell-image-layers .leaving')).toHaveCount(0);

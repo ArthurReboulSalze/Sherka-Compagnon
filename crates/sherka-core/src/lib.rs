@@ -30,3 +30,4 @@ pub mod window;
 
 pub use error::{Error, Result};
 pub use runtime::Companion;
+pub mod companion_archive;
