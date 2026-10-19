@@ -230,7 +230,8 @@ test('languages: seven interfaces, opaque content, fixed profiles and restart', 
   if(!address||typeof address==='string')throw new Error('No fixture port');
   const url='http://127.0.0.1:'+address.port;
   try {
-    const original=(await native<any>('get_snapshot')).profiles[0];
+    const originalState=await native<any>('get_snapshot'),original=originalState.profiles[0];
+    await native('apply_mutation',{mutation:{kind:'voice_service',config:{...originalState.settings.voice_service,url,stt_model:'faster-whisper',autostart:false}}});
     await native('apply_mutation',{mutation:{kind:'update_profile',id:original.id,revision:original.revision,draft:{
       name:'Réglages',accent:original.accent,personality:'Réglages 中文 日本語 <script>opaque</script>',
       instructions:'Réponds en français.',connections:{
@@ -2833,15 +2834,17 @@ test('device settings: global speech, per-companion desktop geometry and image s
   await expect(widget.locator('#widget-image-cell')).toBeVisible();
   await expect.poll(()=>widget.locator('#widget-image-cell').evaluate(el=>parseFloat((el as HTMLElement).style.left))).toBe(20);
   expect(await widget.locator('#drag-region').evaluate(el=>{const r=el.getBoundingClientRect();return Boolean(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest('#drag-region'));})).toBe(true);
-  await widget.locator('#drag-region').hover();const handle=await widget.locator('#resize-widget').boundingBox();expect(handle).not.toBeNull();
-  await widget.mouse.move(handle!.x+8,handle!.y+8);await widget.mouse.down();await widget.mouse.move(handle!.x+65,handle!.y+55,{steps:8});await widget.mouse.up();
+  // Exercise the real size preference without depending on a hosted desktop's pointer capture.
+  await native('apply_mutation',{mutation:{kind:'preferences',preferences:{always_on_top:true,widget_scale:125}}});
   await expect.poll(async()=>(await native<any>('get_snapshot')).settings.desktop_layouts[a.id].bounds?.width).toBeGreaterThan(320);
   const savedA=(await native<any>('get_snapshot')).settings.desktop_layouts[a.id];
   await native('apply_mutation',{mutation:{kind:'switch_profile',id:b.id}});
   await expect(widget.locator('.widget-name')).toContainText(b.name);
   await expect(widget.locator('#widget-image-cell')).toBeHidden();
   await expect.poll(async()=>Math.round((await native<any>('widget_surface')).base_width)).toBe(290);
+  await expect.poll(async()=>(await native<any>('get_snapshot')).settings.desktop_layouts[b.id]?.image).toBeTruthy();
   await native('save_widget_cell',{profileId:b.id,image:{x:-40,y:180,size:180,moved:true},textHeight:80});
+  await widget.reload();await expect(widget.locator('#widget-canvas')).toBeVisible();
   await expect(native('save_widget_cell',{profileId:a.id,image:null,textHeight:null})).rejects.toBeTruthy();
   await native('apply_mutation',{mutation:{kind:'switch_profile',id:a.id}});
   await expect(widget.locator('.widget-name')).toContainText(a.name);

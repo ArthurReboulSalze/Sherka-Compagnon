@@ -25,7 +25,7 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
         with:
-          cache-on-failure: true
+          cache-on-failure: false
       - run: npm ci
       - run: python scripts/audit_publication.py
       - run: npm run check
