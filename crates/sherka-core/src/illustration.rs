@@ -62,6 +62,8 @@ pub struct Config {
     pub loras: Vec<Lora>,
     pub turbo: bool,
     pub advanced: AdvancedSampling,
+    pub resolution: Option<crate::image_pipeline::Resolution>,
+    pub reference: crate::image_pipeline::Reference,
     pub live: bool,
     pub image_count: u8,
     pub slide_seconds: u32,
@@ -84,6 +86,8 @@ impl Default for Config {
             loras: vec![],
             turbo: true,
             advanced: AdvancedSampling::default(),
+            resolution: None,
+            reference: Default::default(),
             live: false,
             image_count: 1,
             slide_seconds: 6,
@@ -149,6 +153,10 @@ impl Config {
     }
 
     pub fn validated(mut self) -> Result<Self> {
+        self.reference.validate()?;
+        if let Some(resolution) = &self.resolution {
+            resolution.validate()?;
+        }
         self.server_url = server_url(&self.server_url)?
             .as_str()
             .trim_end_matches('/')
@@ -472,6 +480,19 @@ pub fn validate_workflow(value: &Value) -> Result<()> {
         "LatentUpscaleBy",
         "SaveImage",
         "PreviewImage",
+        "LoadImage",
+        "IPAdapterModelLoader",
+        "CLIPVisionLoader",
+        "IPAdapterAdvanced",
+        "LayeredDiffusionApply",
+        "LayeredDiffusionDecodeRGBA",
+        "UpscaleModelLoader",
+        "ImageUpscaleWithModel",
+        "ImageScale",
+        "SplitImageWithAlpha",
+        "JoinImageWithAlpha",
+        "MaskToImage",
+        "ImageToMask",
     ];
     let classes: Vec<_> = nodes
         .values()
@@ -501,6 +522,13 @@ pub fn validate_workflow(value: &Value) -> Result<()> {
         if id.is_empty() || id.len() > 60 || !node["inputs"].is_object() {
             return Err(invalid());
         }
+        if node["class_type"] == "LoadImage"
+            && !node["inputs"]["image"]
+                .as_str()
+                .is_some_and(crate::image_pipeline::reference_path)
+        {
+            return Err(invalid());
+        }
         for input in node["inputs"].as_object().unwrap().values() {
             if let Some(link) = input.as_array()
                 && (link.len() != 2
@@ -521,6 +549,11 @@ pub struct Catalog {
     pub turbo_available: bool,
     pub missing_nodes: Vec<String>,
     pub samplers: Vec<String>,
+    pub ipadapters: Vec<String>,
+    pub clip_visions: Vec<String>,
+    pub upscalers: Vec<String>,
+    pub reference_available: bool,
+    pub transparency_available: bool,
 }
 #[derive(Clone)]
 pub struct Client {
@@ -529,6 +562,57 @@ pub struct Client {
     interruptible: std::sync::Arc<tokio::sync::OnceCell<bool>>,
 }
 impl Client {
+    pub async fn upload_reference(&self, bytes: &[u8]) -> Result<String> {
+        let normalized = crate::storage::normalize_image(bytes)?;
+        let image = image::load_from_memory(&normalized)
+            .map_err(|_| invalid())?
+            .thumbnail(768, 768)
+            .to_rgba8();
+        // CLIP sees a centered opaque image; transparency remains intact in
+        // the stored avatar and is only flattened in this temporary reference.
+        let mut canvas = image::RgbaImage::from_pixel(768, 768, image::Rgba([224, 224, 224, 255]));
+        image::imageops::overlay(
+            &mut canvas,
+            &image,
+            ((768 - image.width()) / 2) as i64,
+            ((768 - image.height()) / 2) as i64,
+        );
+        let mut png = Cursor::new(Vec::new());
+        image::DynamicImage::ImageRgba8(canvas)
+            .write_to(&mut png, image::ImageFormat::Png)
+            .map_err(|_| invalid())?;
+        self.upload_png(png.into_inner()).await
+    }
+    /// Preserve dimensions and alpha for image editing and background removal.
+    pub async fn upload_image(&self, bytes: &[u8]) -> Result<String> {
+        self.upload_png(crate::storage::normalize_image(bytes)?)
+            .await
+    }
+    async fn upload_png(&self, png: Vec<u8>) -> Result<String> {
+        let name = format!("reference-{}.png", uuid::Uuid::new_v4());
+        let part = reqwest::multipart::Part::bytes(png)
+            .file_name(name.clone())
+            .mime_str("image/png")
+            .map_err(|_| invalid())?;
+        let form = reqwest::multipart::Form::new()
+            .part("image", part)
+            .text("type", "temp")
+            .text("subfolder", "sherka")
+            .text("overwrite", "false");
+        let response = self
+            .http
+            .post(self.base.join("upload/image").unwrap())
+            .multipart(form)
+            .send()
+            .await
+            .map_err(|_| invalid())?;
+        let result: Value = serde_json::from_slice(&self.response(response, 4096).await?)?;
+        if result["name"] != name || result["subfolder"] != "sherka" || result["type"] != "temp" {
+            return Err(invalid());
+        }
+        Ok(format!("sherka/{name} [temp]"))
+    }
+
     pub fn new(server: &str) -> Result<Self> {
         Ok(Self {
             base: server_url(server)?,
@@ -575,6 +659,26 @@ impl Client {
             &self.response(response, MAX_RESPONSE).await?,
         )?)
     }
+    pub async fn node_info(&self, classes: &[String]) -> Result<Value> {
+        let records = futures_util::future::try_join_all(classes.iter().map(|class| async move {
+            let mut path = self.base.clone();
+            path.path_segments_mut()
+                .map_err(|_| invalid())?
+                .push("object_info")
+                .push(class);
+            self.get(path.path()).await
+        }))
+        .await?;
+        let mut info = json!({});
+        for record in records {
+            if let Some(map) = record.as_object() {
+                for (key, value) in map {
+                    info[key] = value.clone();
+                }
+            }
+        }
+        Ok(info)
+    }
     pub async fn catalog(&self, config: &Config) -> Result<(Catalog, Value)> {
         let graph = config.workflow.clone().unwrap_or_else(default_workflow);
         validate_workflow(&graph)?;
@@ -590,37 +694,19 @@ impl Client {
             "LoraLoader".into(),
             "PreviewImage".into(),
         ]);
+        classes.extend(
+            crate::image_pipeline::NODE_CLASSES
+                .iter()
+                .map(|s| (*s).to_owned()),
+        );
         classes.sort();
         classes.dedup();
         // A full object_info can be tens of megabytes on a large installation.
         // Query only our graph's classes, concurrently, without enumerating the
         // rest of the user's custom nodes on every conversation turn.
-        let records = futures_util::future::try_join_all(classes.iter().map(|class| async move {
-            let mut path = self.base.clone();
-            path.path_segments_mut()
-                .map_err(|_| invalid())?
-                .push("object_info")
-                .push(class);
-            self.get(path.path()).await
-        }))
-        .await?;
-        let mut info = json!({});
-        for record in records {
-            if let Some(map) = record.as_object() {
-                for (key, value) in map {
-                    info[&key] = value.clone();
-                }
-            }
-        }
+        let info = self.node_info(&classes).await?;
         let names = |node: &str, field: &str| -> Vec<String> {
-            info[node]["input"]["required"][field][0]
-                .as_array()
-                .map(|a| {
-                    a.iter()
-                        .filter_map(|s| s.as_str().map(str::to_owned))
-                        .collect()
-                })
-                .unwrap_or_default()
+            crate::image_pipeline::catalog_names(&info, node, field)
         };
         let checkpoints = names("CheckpointLoaderSimple", "ckpt_name")
             .into_iter()
@@ -649,6 +735,23 @@ impl Client {
                 turbo_available,
                 missing_nodes,
                 samplers: names("KSampler", "sampler_name"),
+                ipadapters: names("IPAdapterModelLoader", "ipadapter_file")
+                    .into_iter()
+                    .filter(|s| crate::image_pipeline::supported_adapter(s))
+                    .collect(),
+                clip_visions: names("CLIPVisionLoader", "clip_name"),
+                upscalers: names("UpscaleModelLoader", "model_name"),
+                reference_available: [
+                    "IPAdapterModelLoader",
+                    "CLIPVisionLoader",
+                    "IPAdapterAdvanced",
+                    "LoadImage",
+                ]
+                .iter()
+                .all(|c| info.get(*c).is_some()),
+                transparency_available: ["LayeredDiffusionApply", "LayeredDiffusionDecodeRGBA"]
+                    .iter()
+                    .all(|c| info.get(*c).is_some()),
             },
             info,
         ))
@@ -830,10 +933,8 @@ impl Client {
         limits.max_alloc = Some(96 * 1024 * 1024);
         reader.limits(limits);
         let image = reader.decode().map_err(|_| invalid())?;
-        if image.width() != image.height() {
-            return Err(invalid());
-        }
-        let image = image.thumbnail(1024, 1024);
+        // Keep the promised output dimensions, including optional 2x upscale.
+        // The decoder above already bounds dimensions and allocation.
         let mut out = Cursor::new(Vec::new());
         image
             .write_to(&mut out, image::ImageFormat::Png)
@@ -850,7 +951,7 @@ pub fn default_workflow() -> Value {
         .expect("validated illustration workflow")
 }
 
-fn ordered_samplers(graph: &Value) -> Result<[String; 2]> {
+pub(crate) fn ordered_samplers(graph: &Value) -> Result<[String; 2]> {
     let nodes = graph.as_object().ok_or_else(invalid)?;
     let ids: Vec<_> = nodes
         .iter()
@@ -903,11 +1004,33 @@ pub fn workflow_for_subject(
     seed: u64,
     include_companion: bool,
 ) -> Result<Value> {
+    crate::image_pipeline::workflow(config, scene, info, seed, include_companion, None, false)
+}
+
+pub(crate) fn base_workflow(
+    config: &Config,
+    scene: Scene,
+    info: &Value,
+    seed: u64,
+    include_companion: bool,
+    negative_suffix: Option<&str>,
+) -> Result<Value> {
     let config = config.clone().validated()?;
     let mut scene = scene.validated_for(config.model_family)?;
     // The editable negative prompt is authoritative, including an intentional
     // empty prompt. Model output must never replace the user's settings.
     scene.negative = config.scene_negative(include_companion);
+    // Rendering constraints belong to this job, not the saved companion.
+    // Append after validating settings to keep all user negative text intact.
+    if let Some(suffix) = negative_suffix {
+        if !scene.negative.is_empty() {
+            scene.negative.push_str(match config.model_family {
+                ModelFamily::Illustrious => ", ",
+                ModelFamily::Sdxl => "\n",
+            });
+        }
+        scene.negative.push_str(suffix);
+    }
     // Append after model-output validation, once per graph. User syntax and
     // weights survive unchanged; the planner cannot rewrite this suffix.
     if !config.positive_prompt_suffix.is_empty() {
@@ -1039,8 +1162,14 @@ pub fn workflow_for_subject(
                 } else {
                     768
                 };
-                inputs.insert("width".into(), json!(size));
-                inputs.insert("height".into(), json!(size));
+                inputs.insert(
+                    "width".into(),
+                    json!(config.resolution.as_ref().map_or(size, |r| r.width)),
+                );
+                inputs.insert(
+                    "height".into(),
+                    json!(config.resolution.as_ref().map_or(size, |r| r.height)),
+                );
                 inputs.insert("batch_size".into(), json!(1));
             }
             "KSampler" => {

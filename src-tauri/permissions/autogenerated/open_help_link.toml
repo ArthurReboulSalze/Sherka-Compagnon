@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-open-help-link"
+description = "Enables the open_help_link command without any pre-configured scope."
+commands.allow = ["open_help_link"]
+
+[[permission]]
+identifier = "deny-open-help-link"
+description = "Denies the open_help_link command without any pre-configured scope."
+commands.deny = ["open_help_link"]

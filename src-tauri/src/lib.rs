@@ -1,4 +1,5 @@
 mod audio_diagnostics;
+mod character_studio;
 mod comfy_startup;
 mod conversation;
 mod desktop_tools;
@@ -37,6 +38,9 @@ struct Shared(Arc<Mutex<Companion>>);
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Mutation {
+    SearchConfig {
+        config: sherka_core::search_provider::Config,
+    },
     VoiceService {
         config: sherka_core::model::VoiceServiceConfig,
     },
@@ -140,6 +144,22 @@ async fn get_snapshot(shared: State<'_, Shared>) -> Result<Snapshot, String> {
 }
 
 #[tauri::command]
+async fn open_help_link(page: String) -> Result<(), String> {
+    let url = match page.as_str() {
+        "project" => "https://github.com/ArthurReboulSalze/Sherka-Compagnon",
+        "comfy" => "https://docs.comfy.org/",
+        "ipadapter" => "https://github.com/cubiq/ComfyUI_IPAdapter_plus",
+        "layerdiffuse" => "https://github.com/huchenlei/ComfyUI-layerdiffuse",
+        "rmbg" => "https://github.com/1038lab/ComfyUI-RMBG",
+        _ => return Err("Lien d’aide inconnu.".into()),
+    };
+    tauri::async_runtime::spawn_blocking(move || windows::open_web_url(url))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn get_widget_visibility(app: AppHandle) -> Result<bool, String> {
     windows::widget_visible(&app).map_err(|e| e.to_string())
 }
@@ -194,6 +214,7 @@ async fn apply_mutation(
     if !matches!(
         &mutation,
         Mutation::Theme { .. }
+            | Mutation::SearchConfig { .. }
             | Mutation::Illustration { .. }
             | Mutation::MoodPersistence { .. }
             | Mutation::ResetMood { .. }
@@ -228,6 +249,7 @@ async fn apply_mutation(
     .await?;
     let snapshot = with_core(shared.inner().clone(), move |core| {
         match mutation {
+            Mutation::SearchConfig { config } => core.set_search_config(config)?,
             Mutation::VoiceService { config } => core.set_voice_service(config)?,
             Mutation::Initiative {
                 id,
@@ -270,10 +292,8 @@ async fn apply_mutation(
             } => {
                 if let (Some(id), Some(revision)) = (id, revision) {
                     if let Some(config) = config {
-                        let mut draft = core.profile(id)?.details;
-                        draft.web_search = Some(mode);
-                        draft.search = config;
-                        core.update_profile(id, revision, draft)?;
+                        core.set_profile_web_search(id, revision, mode)?;
+                        core.set_search_config(config)?;
                     } else {
                         core.set_profile_web_search(id, revision, mode)?;
                     }
@@ -979,6 +999,16 @@ pub fn run() {
             comfy_startup::get_comfy_service,
             comfy_startup::select_comfyui_path,
             illustrations::get_illustration,
+            character_studio::get_character_studio,
+            character_studio::discover_character_models,
+            character_studio::get_character_workflow,
+            character_studio::process_character_transparency,
+            open_help_link,
+            character_studio::plan_character,
+            character_studio::generate_character,
+            character_studio::validate_character_neutral,
+            character_studio::finish_character,
+            character_studio::cancel_character_studio,
             illustrations::discover_illustration,
             illustrations::refresh_illustration,
             desktop_tools::desktop_tool,
@@ -1013,6 +1043,7 @@ pub fn run() {
             set_search_key,
             test_search_config,
             illustrations::export_illustration_workflow,
+            illustrations::get_illustration_workflow,
             set_provider_key,
             discover_voices,
             widget_action,
@@ -1055,6 +1086,7 @@ pub fn run() {
             );
             app.manage(shared.clone());
             app.manage(illustrations::Illustrations::new());
+            app.manage(character_studio::Studio::default());
             app.manage(desktop_tools::Canvas::default());
             app.manage(image_viewer::Viewer::default());
             app.manage(initiative::Initiative::default());

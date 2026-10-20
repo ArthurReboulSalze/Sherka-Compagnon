@@ -56,6 +56,10 @@ Widget controls follow the selected theme; the active halo keeps the character a
 ComfyUI adds advanced sampling/output size, live scenes with conversation priority,
 remembered catalogs and optional startup of a configured local Python/portable install.
 The first images may take longer while ComfyUI and models load. See docs/COMFYUI.md.
+Create with AI prepares an editable personality and appearance, then guides a neutral
+portrait, six Klein emotions and automatic background removal. Review the seven
+transparent images before adding the companion and choosing its voice. Required
+ComfyUI nodes and model weights are separate installations; creation settings are fixed.
 Avatar and image-cell position/size are remembered per companion across restarts.
 Overlapping images sit behind the avatar. Enlarge image cells or double-click an image
 for full screen; the companion stays movable/resizable in front. Esc returns to the cell.

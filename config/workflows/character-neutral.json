@@ -1,0 +1,252 @@
+{
+  "1": {
+    "inputs": {
+      "ckpt_name": "%checkpoint%"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "2": {
+    "inputs": {
+      "PowerLoraLoaderHeaderWidget": {
+        "type": "PowerLoraLoaderHeaderWidget"
+      },
+      "➕ Add Lora": "",
+      "model": [
+        "1",
+        0
+      ],
+      "clip": [
+        "1",
+        1
+      ]
+    },
+    "class_type": "Power Lora Loader (rgthree)",
+    "_meta": {
+      "title": "Power Lora Loader (rgthree)"
+    }
+  },
+  "4": {
+    "inputs": {
+      "text": "%prompt%"
+    },
+    "class_type": "ttN text",
+    "_meta": {
+      "title": "Prompt Alternative"
+    }
+  },
+  "5": {
+    "inputs": {
+      "text": "%negative_prompt%\nfull body, full-length view, wide shot, distant character, cropped head, head out of frame, extreme close-up, profile, side view, three-quarter view, from behind, turned head, multiple views, scenery, complex background, gradient background, patterned background, checkerboard",
+      "clip": [
+        "34",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative prompt"
+    }
+  },
+  "18": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "19": {
+    "inputs": {
+      "text": [
+        "34",
+        2
+      ],
+      "clip": [
+        "34",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive prompt"
+    }
+  },
+  "34": {
+    "inputs": {
+      "MODEL": [
+        "2",
+        0
+      ],
+      "CLIP": [
+        "2",
+        1
+      ],
+      "STRING": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "MNeMiC_LoraTagLoader",
+    "_meta": {
+      "title": "🏷️ LoRA Loader Prompt Tags"
+    }
+  },
+  "55": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 0,
+      "steps": 20,
+      "cfg": 8,
+      "sampler_name": "ddim",
+      "scheduler": "ddim_uniform",
+      "start_at_step": 0,
+      "end_at_step": 15,
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "34",
+        0
+      ],
+      "positive": [
+        "19",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "latent_image": [
+        "18",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced) - BASE"
+    }
+  },
+  "56": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": 0,
+      "steps": 20,
+      "cfg": 8,
+      "sampler_name": "ddim",
+      "scheduler": "ddim_uniform",
+      "start_at_step": 15,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "34",
+        0
+      ],
+      "positive": [
+        "19",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "latent_image": [
+        "55",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced) - REFINER"
+    }
+  },
+  "66": {
+    "inputs": {
+      "seed": 0,
+      "steps": 25,
+      "cfg": 6,
+      "sampler_name": "ddim",
+      "scheduler": "ddim_uniform",
+      "denoise": 0.55,
+      "model": [
+        "34",
+        0
+      ],
+      "positive": [
+        "19",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "latent_image": [
+        "67",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "67": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "scale_by": 1.5,
+      "samples": [
+        "56",
+        0
+      ]
+    },
+    "class_type": "LatentUpscaleBy",
+    "_meta": {
+      "title": "Upscale Latent By"
+    }
+  },
+  "69": {
+    "inputs": {
+      "samples": [
+        "66",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "72": {
+    "inputs": {
+      "images": [
+        "79",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "79": {
+    "inputs": {
+      "size": 1024,
+      "mode": true,
+      "images": [
+        "69",
+        0
+      ]
+    },
+    "class_type": "easy imageScaleDownToSize",
+    "_meta": {
+      "title": "Image Scale Down To Size"
+    }
+  }
+}

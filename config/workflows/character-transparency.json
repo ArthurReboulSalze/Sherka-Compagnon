@@ -1,0 +1,86 @@
+{
+  "1": {
+    "inputs": {
+      "images": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "2": {
+    "inputs": {
+      "model": "RMBG-2.0",
+      "sensitivity": 1,
+      "process_res": 1024,
+      "mask_blur": 0,
+      "mask_offset": -2,
+      "invert_output": false,
+      "refine_foreground": true,
+      "unload_model": false,
+      "background": "Color",
+      "background_color": [
+        "5",
+        0
+      ],
+      "image": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "RMBG",
+    "_meta": {
+      "title": "Remove Background (RMBG)"
+    }
+  },
+  "3": {
+    "inputs": {
+      "mask": [
+        "2",
+        1
+      ]
+    },
+    "class_type": "InvertMask",
+    "_meta": {
+      "title": "Invert Mask"
+    }
+  },
+  "4": {
+    "inputs": {
+      "image": [
+        "6",
+        0
+      ],
+      "alpha": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "JoinImageWithAlpha",
+    "_meta": {
+      "title": "Join Image with Alpha"
+    }
+  },
+  "5": {
+    "inputs": {
+      "preset": "gray",
+      "color": ""
+    },
+    "class_type": "AILab_ColorInput",
+    "_meta": {
+      "title": "Color Input (RMBG) 🎨"
+    }
+  },
+  "6": {
+    "inputs": {
+      "image": "%source_image%"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  }
+}

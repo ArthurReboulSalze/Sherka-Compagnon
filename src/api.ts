@@ -16,9 +16,19 @@ export const onComfyService=(callback:(value:import('./types').ComfyServiceStatu
 export const selectComfyPath=(python:boolean)=>invoke<string|null>('select_comfyui_path',{python});
 export const illustration = () => invoke<IllustrationStatus>('get_illustration');
 // Discovery depends only on the server and graph, not unfinished form values.
-export const discoverIllustration = (config:IllustrationConfig) => invoke<IllustrationCatalog>('discover_illustration',{config:{server_url:config.server_url,workflow:config.workflow},startIfNeeded:config.enabled});
+export const discoverIllustration = (config:IllustrationConfig,startIfNeeded=config.enabled) => invoke<IllustrationCatalog>('discover_illustration',{config:{server_url:config.server_url,workflow:config.workflow},startIfNeeded});
 export const refreshIllustration = () => invoke<void>('refresh_illustration');
 export const onIllustration = (callback:(status:IllustrationStatus)=>void) => listen<IllustrationStatus>('sherka:illustration',e=>callback(e.payload));
+export const characterStudio=()=>invoke<import('./types').CharacterStudioStatus>('get_character_studio');
+export const onCharacterStudio=(callback:(status:import('./types').CharacterStudioStatus)=>void)=>listen<import('./types').CharacterStudioStatus>('sherka:character-studio',e=>callback(e.payload));
+export const planCharacter=(sourceProfile:string,concept:string,language:import('./i18n').Language,config:import('./types').CharacterStudioConfig)=>invoke<void>('plan_character',{sourceProfile,concept,language,config});
+export const generateCharacter=(draft:import('./types').CharacterDraft,config:import('./types').CharacterStudioConfig,emotion:import('./types').Emotion|null)=>invoke<void>('generate_character',{draft,config,emotion});
+export const validateCharacterNeutral=(revision:number)=>invoke<void>('validate_character_neutral',{revision});
+export const finishCharacter=(revision:number,draft:import('./types').CharacterDraft,config:import('./types').CharacterStudioConfig)=>invoke<string>('finish_character',{revision,draft,config});
+export const discoverCharacterModels=(serverUrl:string)=>invoke<import('./types').CharacterStudioCatalog>('discover_character_models',{serverUrl});
+export const characterWorkflow=(stage:import('./types').CharacterStage)=>invoke<Record<string,unknown>>('get_character_workflow',{stage});
+export const processCharacterTransparency=(draft:import('./types').CharacterDraft,config:import('./types').CharacterStudioConfig)=>invoke<void>('process_character_transparency',{draft,config});
+export const cancelCharacterStudio=()=>invoke<void>('cancel_character_studio');
 import type { Message, Mutation, Snapshot, WidgetAction, LanguageCatalog, VoiceCatalog, AudioDevices, LiveState, Connections } from './types';
 import type { MemoryState, MemoryEdit, MemorySource } from './types';
 
@@ -75,8 +85,10 @@ export const onUpdate = (callback: (value: UpdateStatus) => void) => listen<Upda
 
 export const newHermesConversation = (profileId: string) => invoke<Snapshot>('new_hermes_conversation', { profileId });
 
-export const exportIllustrationWorkflow=(config:import('./types').IllustrationConfig)=>invoke<boolean>('export_illustration_workflow',{config});
+export const exportIllustrationWorkflow=(config:IllustrationConfig,transparent=false)=>invoke<boolean>('export_illustration_workflow',{config,transparent});
 
 export const saveWidgetCell=(profileId:string,image:import('./types').ImagePlacement|null,textHeight:number|null)=>invoke<void>('save_widget_cell',{profileId,image,textHeight});
 
 export const initiativeActivity=()=>invoke<void>('initiative_activity');
+
+export const getIllustrationWorkflow=(config:IllustrationConfig,transparent=false)=>invoke<Record<string,unknown>>('get_illustration_workflow',{config,transparent});

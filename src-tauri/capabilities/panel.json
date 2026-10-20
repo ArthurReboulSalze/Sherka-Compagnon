@@ -52,6 +52,17 @@
     "allow-refresh-illustration",
     "allow-export-illustration-workflow",
     "allow-desktop-tool",
-    "allow-initiative-activity"
+    "allow-initiative-activity",
+    "allow-get-character-studio",
+    "allow-discover-character-models",
+    "allow-get-character-workflow",
+    "allow-process-character-transparency",
+    "allow-plan-character",
+    "allow-generate-character",
+    "allow-validate-character-neutral",
+    "allow-finish-character",
+    "allow-cancel-character-studio",
+    "allow-get-illustration-workflow",
+    "allow-open-help-link"
   ]
 }

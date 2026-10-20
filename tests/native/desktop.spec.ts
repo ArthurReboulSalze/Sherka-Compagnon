@@ -8,6 +8,143 @@ import { randomUUID } from 'node:crypto';
 const currentVersion=JSON.parse(readFileSync('package.json','utf8')).version as string;
 const nextVersion=currentVersion.replace(/(\d+)$/,part=>String(Number(part)+1));
 
+test('character studio: three fixed workflows, individual emotions, large previews, transparency and fresh companion',async()=>{
+  test.setTimeout(180000);
+  const model=modelRoutes(['studio-chat'],64000);
+  const draft={name:'Vega Studio',personality:'Curieuse, calme et précise.',instructions:'Réponds naturellement.',accent:'teal',language:'fr',
+    physical_description:'A silver mechanical robot with green optical eyes.',appearance_negative_prompt:'human face, hair',portrait_prompt:'full body, entire silhouette inside the frame, side profile',
+    emotion_prompts:Object.fromEntries(['joy','sadness','anger','surprise','reflection','tenderness'].map(e=>[e,e+' through mechanical eye shapes']))};
+  const info:any={};
+  for(const stage of ['neutral','mood','transparency']){
+    const template=JSON.parse(readFileSync('config/workflows/character-'+stage+'.json','utf8'));
+    for(const node of Object.values(template) as any[])info[node.class_type]={input:{required:{}}};
+  }
+  for(const [node,field,name] of [
+    ['CheckpointLoaderSimple','ckpt_name','studio.safetensors'],
+    ['UNETLoader','unet_name','klein.safetensors'],
+    ['CLIPLoader','clip_name','qwen.safetensors'],
+    ['VAELoader','vae_name','flux2.safetensors'],
+    ['RMBG','model','RMBG-2.0']
+  ])info[node!]={input:{required:{[field!]:[[name]]}}};
+  const png=readFileSync('public/assets/botsy/neutral.png'),graphs:any[]=[],requests:any[]=[],deleted:string[]=[];
+  let held=false,uploads=0;
+  const server=createServer((req,res)=>{
+    if(model(req,res))return;
+    const path=new URL(req.url??'/','http://localhost').pathname;
+    const json=(v:any)=>{res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(v));};
+    if(path==='/system_stats'){json({system:{comfyui_version:'0.39.0'},devices:[]});return;}
+    if(path.startsWith('/object_info/')){const name=decodeURIComponent(path.slice(13));json(info[name]?{[name]:info[name]}:{});return;}
+    if(path.startsWith('/history/')){const id=path.slice(9);json(held?{}:{[id]:{status:{completed:true,status_str:'success'},outputs:{'1':{images:[{filename:'portrait.png',subfolder:'',type:'temp'}]}}}});return;}
+    if(path==='/view'){res.writeHead(200,{'Content-Type':'image/png'});res.end(png);return;}
+    if(path==='/queue'&&req.method==='GET'){json({queue_running:[],queue_pending:held?[[1,'studio_'+graphs.length]]:[]});return;}
+    let raw='';req.on('data',d=>raw+=d.toString('latin1'));req.on('end',()=>{
+      if(path==='/upload/image'){uploads++;json({name:/filename="([^"]+)"/.exec(raw)![1],subfolder:'sherka',type:'temp'});return;}
+      const body=raw?JSON.parse(raw):{};
+      if(path==='/v1/chat/completions'){requests.push(body);json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(draft)}}]});return;}
+      if(path==='/prompt'){graphs.push(body.prompt);json({prompt_id:'studio_'+graphs.length});return;}
+      if(path==='/queue'){deleted.push(...body.delete??[]);json({});return;}
+      if(path==='/free'){json({});return;}
+      res.writeHead(404);res.end('{}');
+    });
+  });
+  await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+(server.address() as {port:number}).port;
+  try{
+    let state=await native<any>('get_snapshot'),source=state.profiles.find((p:any)=>p.id===state.session.profile_id);
+    await native('apply_mutation',{mutation:{kind:'connections',id:source.id,revision:source.revision,connections:{...source.connections,lm_studio_url:url,llm_model:'studio-chat',reasoning:'on'}}});
+    expect(await panel.locator('nav [data-nav]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-nav')))).toEqual(['profiles','conversation','memory','studio','settings','help']);
+    await panel.locator('[data-nav="profiles"]').click();await panel.locator('#create-character').click();
+    await expect(panel.locator('#studio-concept')).toBeVisible();
+    await expect(panel.locator('[name="steps_first"],[name="image_ipadapter"],[name="image_turbo"],[name="background_model"]')).toHaveCount(0);
+    await panel.locator('#studio-models [name="server_url"]').fill(url);await panel.locator('#studio-refresh').click();
+    await expect(panel.locator('#studio-catalog-note')).toContainText('mémorisé');
+    for(const [field,value] of [['checkpoint','studio.safetensors'],['model_family','sdxl'],['mood_model','klein.safetensors'],['text_encoder','qwen.safetensors'],['vae','flux2.safetensors']])
+      await panel.locator('#studio-models [name="'+field+'"]').selectOption(value!);
+    await panel.locator('[data-workflow="transparency"]').click();
+    await expect(panel.locator('.studio-dialog textarea')).toHaveValue(/RMBG-2.0/);
+    await expect(panel.locator('.studio-dialog textarea')).toHaveAttribute('readonly','');
+    await panel.locator('.studio-dialog [data-close]').click();
+    await panel.locator('[name="concept"]').fill('Un robot explorateur curieux, avec un visage en métal.');await panel.locator('#studio-plan').click();
+    await expect(panel.locator('#studio-sheet [name="name"]')).toHaveValue('Vega Studio');
+    expect(requests).toHaveLength(1);expect(requests[0].stream).toBe(false);expect(requests[0].max_tokens).toBeGreaterThan(2000);
+    expect(requests[0].messages[0].content).toContain('solid dark gray background');
+    expect(requests[0].messages[0].content).toContain('Flux Klein');
+    await expect(panel.locator('#studio-emotions')).toBeDisabled();
+    await expect.poll(async()=>(await native<any>('get_character_studio')).busy).toBe(false);
+    const resizeNode=info['easy imageScaleDownToSize'];delete info['easy imageScaleDownToSize'];
+    await panel.locator('#studio-neutral').click();await expect(panel.locator('#studio-error')).toContainText('easy imageScaleDownToSize');
+    info['easy imageScaleDownToSize']=resizeNode;
+    await panel.locator('#studio-neutral').click();await expect(panel.locator('#studio-validate')).toBeEnabled({timeout:30000});
+    await expect(panel.locator('#studio-error')).toBeEmpty();
+    expect(graphs).toHaveLength(1);
+    expect(graphs[0]['4'].inputs.text).toContain('solid dark gray background');
+    expect(graphs[0]['4'].inputs.text).toContain('front view');
+    expect(graphs[0]['4'].inputs.text).not.toContain('side profile');
+    expect(graphs[0]['55'].inputs.steps).toBe(20);expect(graphs[0]['66'].inputs.steps).toBe(25);
+    await panel.locator('[data-emotion="neutral"][data-transparent="false"] .studio-preview').click();
+    await expect(panel.locator('.studio-large-preview img')).toBeVisible();
+    await panel.locator('.studio-dialog').press('Escape');await expect(panel.locator('.studio-dialog')).toHaveCount(0);
+    await panel.locator('#studio-validate').click();await expect(panel.locator('#studio-emotions')).toBeEnabled();
+    await panel.locator('#studio-sheet [name="personality"]').fill('Curieuse, calme, précise et malicieuse.');
+    let sheetNavigated=false;const onSheetNavigation=()=>{sheetNavigated=true;};
+    panel.on('framenavigated',onSheetNavigation);await panel.locator('#studio-sheet [name="name"]').press('Enter');
+    await expect(panel.locator('#studio-sheet [name="personality"]')).toHaveValue('Curieuse, calme, précise et malicieuse.');
+    panel.off('framenavigated',onSheetNavigation);expect(sheetNavigated).toBe(false);
+    await expect(panel.locator('#studio-emotions')).toBeEnabled(); // Personality edits keep the approved visual identity.
+    await panel.locator('[data-regenerate="joy"]').click();
+    await expect(panel.locator('[data-emotion="joy"][data-transparent="false"] img')).toBeVisible();
+    await expect(panel.locator('#studio-emotions')).toBeEnabled();
+    expect(graphs).toHaveLength(2);expect(graphs[1]['129'].inputs.type).toBe('flux2');
+    expect(graphs[1]['130'].inputs.text).toContain('solid dark gray background');
+    expect(graphs[1]['76'].inputs.image).toMatch(/sherka\/reference-.* \[temp\]/);
+    await panel.locator('#studio-emotions').click();
+    await expect(panel.locator('#studio-transparency')).toBeEnabled({timeout:60000});
+    expect(graphs).toHaveLength(7);expect(uploads).toBe(2);
+    await expect(panel.locator('[data-transparent="false"] img:visible')).toHaveCount(7);
+    await expect(panel.locator('#studio-finish')).toBeDisabled();
+    const beforeAlpha=await native<any>('get_character_studio');
+    await expect(native('finish_character',{revision:beforeAlpha.revision,draft:beforeAlpha.draft,config:beforeAlpha.config})).rejects.toThrow('détourage');
+    await panel.locator('#studio-transparency').click();
+    await expect(panel.locator('#studio-finish')).toBeEnabled({timeout:60000});
+    expect(graphs).toHaveLength(14);expect(uploads).toBe(9);
+    for(const g of graphs.slice(7)){
+      expect(g['2'].inputs.mask_offset).toBe(-2);expect(g['2'].inputs.model).toBe('RMBG-2.0');
+      expect(g['5'].inputs.preset).toBe('gray');expect(g['4'].inputs.image).toEqual(['6',0]);
+    }
+    await panel.locator('[data-emotion="joy"][data-transparent="true"] .studio-preview').click();
+    await expect(panel.locator('.studio-large-preview img')).toBeVisible();await panel.locator('.studio-dialog [data-close]').click();
+    await panel.locator('[data-regenerate="anger"]').click();
+    await expect(panel.locator('#studio-transparency')).toBeEnabled({timeout:30000});
+    await expect(panel.locator('#studio-finish')).toBeDisabled();
+    expect(Object.keys((await native<any>('get_character_studio')).transparent_images)).toHaveLength(6);
+    await panel.locator('#studio-transparency').click();await expect(panel.locator('#studio-finish')).toBeEnabled({timeout:30000});
+    expect(graphs).toHaveLength(16);expect(uploads).toBe(11);
+    expect(graphs.every(g=>!JSON.stringify(g).includes('IPAdapter'))).toBe(true);
+    await panel.locator('#studio-transparency').scrollIntoViewIfNeeded();await panel.screenshot({path:'artifacts/character-studio-three-stages-native.png'});
+    await panel.locator('#studio-finish').click();await expect(panel.locator('.companion-copy h2')).toHaveText('Vega Studio',{timeout:60000});
+    state=await native<any>('get_snapshot');const created=state.profiles.find((p:any)=>p.name==='Vega Studio');
+    expect(Object.keys(created.emotion_avatars)).toHaveLength(6);expect(created.avatar).toMatch(/^data:image\/png/);
+    expect(created.connections.tts_voice).toBeNull();expect(created.message_count).toBe(0);expect(created.memory_count).toBe(0);
+    expect(created.personality).toBe('Curieuse, calme, précise et malicieuse.');
+    expect(created.illustration.reference.enabled).toBe(false);
+    await expect(panel.locator('[name="image_reference"]')).toBeVisible();await expect(panel.locator('[name="image_reference"]')).not.toBeChecked();
+    await expect(panel.locator('#search-provider')).toHaveCount(0);
+    await panel.locator('[data-nav="settings"]').click();await panel.locator('#search-provider').selectOption('brave');await panel.locator('#save-search-config').click();
+    await expect.poll(async()=>(await native<any>('get_snapshot')).settings.search.provider).toBe('brave');
+    await panel.locator('[data-nav="help"]').click();await expect(panel.locator('h1')).toContainText('Aide et à propos');
+    await expect(panel.locator('.content')).toContainText('RMBG-2.0');await expect(panel.locator('.content')).toContainText('Un casque et un environnement calme');
+    await panel.locator('[data-nav="studio"]').click();await panel.locator('#studio-plan').click();await expect(panel.locator('#studio-neutral')).toBeEnabled();
+    held=true;await panel.locator('#studio-neutral').click();await expect.poll(()=>graphs.length).toBe(17);await panel.locator('#studio-stop').click();
+    await expect.poll(()=>deleted).toContain('studio_17');await expect(panel.locator('#studio-phase')).toContainText('interrompue');
+    await stopApplication();await startApplication();state=await native<any>('get_snapshot');
+    expect(state.settings.search.provider).toBe('brave');expect(state.profiles.find((p:any)=>p.id===created.id).emotion_avatars.anger).toMatch(/^data:image\/png/);
+    await panel.locator('[data-nav="studio"]').click();
+    await expect(panel.locator('#studio-models [name="mood_model"]')).toHaveValue('klein.safetensors');
+    await expect(panel.locator('#studio-catalog-note')).toContainText('mémorisé');
+    expect(consoleErrors).toEqual([]);
+  }finally{server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+});
+
+
 let executable = resolve(process.env.SHERKA_TEST_EXECUTABLE ?? 'target/debug/sherka-compagnon.exe');
 let child: ChildProcess;
 let browser: Browser;
@@ -721,7 +858,7 @@ test('imports validés, texte non exécutable et permissions distinctes des fen�
 test('companion archives: ZIP images, duplicate settings, empty histories and restart', async () => {
   test.setTimeout(150_000);
   expect(await panel.locator('nav [data-nav]').evaluateAll(nodes => nodes.map(n => n.getAttribute('data-nav'))))
-    .toEqual(['profiles','conversation','memory','settings']);
+    .toEqual(['profiles','conversation','memory','studio','settings','help']);
   await panel.locator('[name="image_positive_suffix"]').fill('(warm light:1.3), watercolor');
   await panel.locator('#illustration-form [type="submit"]').click();
   await expect(panel.locator('body')).not.toHaveClass(/working/);
@@ -2809,11 +2946,13 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
     await native('desktop_tool',{tool:'image',open:false});
     await expect(panel.locator('[name="image_enabled"]')).not.toBeChecked();
+    await panel.locator('[data-nav="settings"]').click();
     await panel.locator('#search-provider').selectOption('brave');await expect(panel.locator('#search-api-key')).toBeVisible();
     await panel.locator('#search-provider').selectOption('searxng');await panel.locator('#search-endpoint').fill(url);
     await expect(panel.locator('#search-provider')).toHaveValue('searxng');await expect(panel.locator('body')).not.toHaveClass(/working/);await panel.locator('#save-search-config').click();
-    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).search.provider).toBe('searxng');
+    await expect.poll(async()=>(await native<any>('get_snapshot')).settings.search.provider).toBe('searxng');
     await panel.locator('#test-search-config').click();await expect(panel.locator('#search-test-status')).toContainText('Moteur accessible');
+    await panel.locator('[data-nav="profiles"]').click();
     await panel.locator('#web-search-mode').selectOption('on_request');
     await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).web_search).toBe('on_request');
     await native('send_message',{profileId:p.id,text:'/web Rust documentation',speak:false});
@@ -2908,7 +3047,7 @@ test('live scenes: advanced settings, targeted interruption and text/TTS priorit
     await panel.locator('[name="image_checkpoint"]').selectOption('scene.safetensors');
     await panel.locator('[name="image_advanced"]').check();
     await expect(panel.locator('#image-advanced-fields')).toBeVisible();
-    await expect(panel.locator('[name="image_size"]')).toHaveValue('768');await panel.locator('[name="image_size"]').fill('1024');
+    await expect(panel.locator('[name="image_resolution"]')).toHaveValue('768x768');await panel.locator('[name="image_resolution"]').selectOption('1024x1024');
     await panel.locator('[name="steps_first"]').fill('26');await panel.locator('[name="steps_second"]').fill('9');
     await panel.locator('[name="cfg_first"]').fill('4.1');await panel.locator('[name="cfg_second"]').fill('5.7');
     await panel.locator('[name="image_sampler"]').selectOption('dpmpp_2m');

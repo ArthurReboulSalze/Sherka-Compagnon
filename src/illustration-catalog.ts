@@ -21,7 +21,7 @@ export function catalogKey(config:IllustrationConfig):string|undefined {
 function validCatalog(value:unknown):value is IllustrationCatalog {
   if(!value||typeof value!=='object')return false;
   const c=value as IllustrationCatalog;
-  return typeof c.turbo_available==='boolean'&&[c.checkpoints,c.loras,c.samplers,c.missing_nodes].every(list=>Array.isArray(list)&&list.length<=20_000&&list.every(name=>typeof name==='string'&&name.length<=512&&!/[\u0000-\u001f]/.test(name)));
+  return typeof c.turbo_available==='boolean'&&[c.checkpoints,c.loras,c.samplers,c.missing_nodes,c.ipadapters??[],c.clip_visions??[],c.upscalers??[]].every(list=>Array.isArray(list)&&list.length<=20_000&&list.every(name=>typeof name==='string'&&name.length<=512&&!/[\u0000-\u001f]/.test(name)));
 }
 function load():void {
   if(loaded)return;loaded=true;

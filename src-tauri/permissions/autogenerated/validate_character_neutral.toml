@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-validate-character-neutral"
+description = "Enables the validate_character_neutral command without any pre-configured scope."
+commands.allow = ["validate_character_neutral"]
+
+[[permission]]
+identifier = "deny-validate-character-neutral"
+description = "Denies the validate_character_neutral command without any pre-configured scope."
+commands.deny = ["validate_character_neutral"]

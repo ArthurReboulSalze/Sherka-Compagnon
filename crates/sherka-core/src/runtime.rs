@@ -44,6 +44,16 @@ pub struct Companion {
 }
 
 impl Companion {
+    pub fn search_config(&self) -> crate::search_provider::Config {
+        self.settings.search.clone().unwrap_or_default()
+    }
+    pub fn set_search_config(&mut self, config: crate::search_provider::Config) -> Result<()> {
+        let mut next = self.settings.clone();
+        next.search = Some(config.validated()?);
+        self.store.save_settings(&next)?;
+        self.settings = next;
+        Ok(())
+    }
     pub fn voice_service_config(&self) -> crate::model::VoiceServiceConfig {
         self.settings.voice_service.clone().unwrap_or_default()
     }
@@ -178,6 +188,21 @@ impl Companion {
             .filter(|id| profiles.iter().any(|p| p.id == *id))
             .unwrap_or(profiles[0].id);
         settings.active_profile = Some(active);
+        if settings.search.is_none() {
+            // Migrate once. Preserve the active companion's configured service,
+            // or another configured service if the active one was still default.
+            let active_search = store.profile(active)?.details.search;
+            let config = if active_search != Default::default() {
+                active_search
+            } else {
+                profiles
+                    .iter()
+                    .find(|p| p.details.search != Default::default())
+                    .map(|p| p.details.search.clone())
+                    .unwrap_or_default()
+            };
+            settings.search = Some(config.validated()?);
+        }
         if settings.voice_service.is_none() {
             let connections = &store.profile(active)?.details.connections;
             settings.voice_service = Some(crate::model::VoiceServiceConfig {

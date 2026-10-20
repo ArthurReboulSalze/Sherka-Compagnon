@@ -13,6 +13,33 @@ use tokio::sync::Mutex as AsyncMutex;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
+fn avatar_reference(
+    app: &AppHandle,
+    profile: &sherka_core::model::Profile,
+) -> sherka_core::Result<Vec<u8>> {
+    use base64::Engine;
+    if let Some(data) = profile
+        .avatar
+        .as_deref()
+        .and_then(|s| s.strip_prefix("data:image/png;base64,"))
+    {
+        return base64::engine::general_purpose::STANDARD
+            .decode(data)
+            .map_err(|_| Error::Validation("Le portrait neutre est invalide.".into()));
+    }
+    let path = profile
+        .details
+        .avatar_preset
+        .map(|p| p.neutral())
+        .unwrap_or("/assets/sherka.png");
+    app.asset_resolver()
+        .get(path.to_owned())
+        .map(|a| a.bytes)
+        .ok_or_else(|| {
+            Error::Validation("Choisis un portrait neutre pour utiliser IP-Adapter.".into())
+        })
+}
+
 #[derive(Clone, Serialize)]
 pub struct Status {
     pub profile_id: Option<Uuid>,
@@ -105,6 +132,15 @@ impl Illustrations {
         let _ = app.emit("sherka:illustration", self.status());
     }
     pub fn priority(&self, app: AppHandle, shared: Shared) -> Priority {
+        if let Some(studio) = app.try_state::<crate::character_studio::Studio>() {
+            studio.cancel(&app);
+        }
+        self.studio_priority(app, shared)
+    }
+    pub async fn exclusive(&self) -> tokio::sync::OwnedMutexGuard<()> {
+        self.gate.clone().lock_owned().await
+    }
+    pub fn studio_priority(&self, app: AppHandle, shared: Shared) -> Priority {
         let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         inner.priority += 1;
         inner.token.cancel();
@@ -325,6 +361,10 @@ impl Illustrations {
                 let client=Client::new(&config.server_url)?;
                 if config.live {client.require_live_support().await?;}
                 let (_,info)=client.catalog(&config).await?;
+                let reference=if subject.include_companion && config.reference.enabled {
+                    let bytes=avatar_reference(&app,&profile)?;
+                    Some(client.upload_reference(&bytes).await?)
+                }else{None};
                 manager.publish(&app,sequence,"generating",None,None);
                 let mut images=vec![];
                 // One latent image per job avoids multiplying VRAM use. A batch
@@ -332,7 +372,7 @@ impl Illustrations {
                 let mut count=0;
                 loop {
                     if !valid(){return Err(Error::StaleOperation);}
-                    let graph=sherka_core::illustration::workflow_for_subject(&config,scene.clone(),&info,(Uuid::new_v4().as_u128() as u64)&0x7fff_ffff_ffff_ffff,subject.include_companion)?;
+                    let graph=sherka_core::image_pipeline::workflow(&config,scene.clone(),&info,(Uuid::new_v4().as_u128() as u64)&0x7fff_ffff_ffff_ffff,subject.include_companion,reference.as_deref(),false)?;
                     let image=client.render(graph,token.clone()).await?;
                     if config.live {images.clear();}
                     images.push(image);
@@ -360,11 +400,14 @@ impl Illustrations {
 }
 
 #[tauri::command]
-pub async fn export_illustration_workflow(app: AppHandle, config: Config) -> Result<bool, String> {
+pub async fn export_illustration_workflow(
+    app: AppHandle,
+    config: Config,
+    transparent: Option<bool>,
+) -> Result<bool, String> {
     let config = config.validated().map_err(|e| e.to_string())?;
-    let graph = config
-        .workflow
-        .unwrap_or_else(sherka_core::illustration::default_workflow);
+    let graph = sherka_core::image_pipeline::template(&config, transparent.unwrap_or(false))
+        .map_err(|e| e.to_string())?;
     sherka_core::illustration::validate_workflow(&graph).map_err(|e| e.to_string())?;
     let text = serde_json::to_string_pretty(&graph).map_err(|e| e.to_string())?;
     tauri::async_runtime::spawn_blocking(move || {
@@ -386,6 +429,15 @@ pub async fn export_illustration_workflow(app: AppHandle, config: Config) -> Res
     })
     .await
     .map_err(|_| "L’export du workflow a échoué.".to_string())?
+}
+
+#[tauri::command]
+pub fn get_illustration_workflow(
+    config: Config,
+    transparent: Option<bool>,
+) -> Result<serde_json::Value, String> {
+    sherka_core::image_pipeline::template(&config, transparent.unwrap_or(false))
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

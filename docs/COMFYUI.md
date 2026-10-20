@@ -1,12 +1,12 @@
 # Conversation illustrations
 
-Sherka can show a square illustration beside the desktop companion. Choose **Illustrious** or **SDXL** as the checkpoint family; Sherka adapts the image prompt accordingly. Illustrations are independent of avatar expressions and are unavailable in Hermes mode.
+Sherka can show an illustration beside the desktop companion. Choose **Illustrious** or **SDXL** as the checkpoint family; Sherka adapts the image prompt accordingly. Illustrations are independent of avatar expressions and are unavailable in Hermes mode.
 
 ## Setup
 
 1. Start ComfyUI in server mode on your computer or private network.
 2. Open **Companions → Conversation illustrations**, enter its address and refresh the catalog.
-3. Select an installed checkpoint and its **Model family**. The catalog is not filtered by filename. Use **Model folder** and **LoRA folder** to narrow it to any relative folder exposed by your server. Choose the correct family yourself: filenames do not reliably identify a model. Describe the companion's physical appearance: silhouette, colors, clothing, mechanical parts or vehicle bodywork. Built-in companions provide editable starting descriptions. There is no reference-image conditioning in this version.
+3. Select an installed checkpoint and its **Model family**. The catalog is not filtered by filename. Use **Model folder** and **LoRA folder** to narrow it to any relative folder exposed by your server. Choose the correct family yourself: filenames do not reliably identify a model. Describe the companion's physical appearance: silhouette, colors, clothing, mechanical parts or vehicle bodywork. Built-in companions provide editable starting descriptions. Optionally enable **Use the neutral portrait with IP-Adapter** to guide scenes that include the companion. Switch it off to use text descriptions alone; this per-companion choice is independent of character creation.
 4. Add optional LoRAs and adjust each strength from 0 to 2. Choose compatible LoRAs and include any useful trigger words in the physical description.
 5. Choose **1–8 images per exchange** and **1–60 seconds per slide**, then save. The widget's **Image** button toggles a transparent image cell attached to the avatar. Switching it off also disables subsequent generations. Its refresh button regenerates the latest completed exchange.
 
@@ -34,7 +34,11 @@ The panel and image cell show a startup notice: the first images may take longer
 
 ## Advanced sampling and live mode
 
-Enable **Advanced mode** to choose the square **Output size**, from 256 to 2048 pixels in multiples of 64, defaulting to **768 × 768**. Larger images require more time and GPU memory. Standard mode always uses 768 × 768; your advanced size stays saved when you switch modes. You can also set steps (1–200) and CFG (0–100) independently for the first and second sampling pass. The **Shared sampler** list comes from your ComfyUI server and applies to both passes. These values override the standard Turbo defaults: toggling Turbo only changes its accelerator LoRA and does not overwrite your advanced steps or CFG. A custom graph must contain exactly two connected KSampler nodes; their dependency order determines the first and second pass.
+Choose a recommended **starting resolution** with its aspect ratio, then select **×1 or ×1.5 latent scaling between the two samplers** and an optional **final ×2 image upscale**. Sherka shows all three dimensions. For example: 768 × 1024 → 1152 × 1536 → 2304 × 3072. Legacy configurations keep their saved size until edited. The default conversation format remains 768 × 768.
+
+The old bundled graph contained a disconnected ×1.5 node. The explicit latent control now wires the selected scale into the second sampler. Final upscale models come from `models/upscale_models` or configured external paths. A lightweight ×2 image model is the most direct option. ×4 image models are also usable, with their result resized to the promised ×2 dimensions. Unsupported model architectures may still be rejected by ComfyUI. Output is limited to 4096 pixels per side; larger sizes require more VRAM and time. The image cell preserves the output aspect ratio.
+
+Enable **Advanced mode** to set steps (1–200) and CFG (0–100) independently for each pass. The shared sampler comes from the ComfyUI catalog. These settings override Turbo's standard sampling defaults. A custom graph must contain exactly two connected KSampler nodes; dependency order determines first and second pass.
 
 **Live mode** keeps producing one fresh image at a time from the latest completed exchange. It keeps only the newest preview, with a crossfade and no image counter; batch size and slideshow duration apply to standard mode. The scene prompt is reused until a new exchange or settings change, so each variation does not call the language model again. Switching off the Image button, switching companions or quitting cancels the loop. An error stops it instead of repeatedly submitting failing jobs.
 
@@ -58,7 +62,7 @@ The companion appears **once by default**. “Show me yourself” calls for a si
 
 As soon as the reply's **text generation finishes**, a short decision using **only the latest user message and companion reply** determines whether the companion belongs in the illustration. A landscape or unrelated topic does not automatically include a foreground character. The physical description is supplied to the scene planner only when the companion belongs in the scene. It starts while VoiceStudio finishes speaking; speech completion is not a prerequisite. For **Illustrious**, the model composes English Danbooru-style tags and concise descriptive phrases. For **SDXL**, it writes visual prose describing the subject, environment, composition and lighting. It can invent useful descriptions and combinations; there is no fixed dictionary. When the companion is depicted, its appearance description guides the result; consistency still depends on the checkpoint and prompt. Pony score tags and embedded LoRA instructions are excluded. These auxiliary requests use their own short generation budget and disable optional reasoning when the provider supports it, independently of conversation thinking. They may incur API usage with a hosted provider.
 
-The scene prompt is separate from the companion's dialogue and memory. It does not replace the reply or reach speech synthesis. The supplied graph's text/CLIP connections are repaired before use. Each image uses one square latent at the configured size (768×768 in standard mode) and a fresh seed. Widget previews are reduced to at most 1024×1024; ComfyUI retains its temporary image at the generated resolution. A batch renders sequentially, so choosing more images does not multiply the latent batch in VRAM. Completed previews appear while the remaining variants render. Sherka validates the square images, removes file metadata by re-encoding them, and keeps the previews in memory.
+The scene prompt is separate from the companion's dialogue and memory. It does not replace the reply or reach speech synthesis. The supplied graph's text/CLIP connections are repaired before use. Each image uses one latent at the configured dimensions and a fresh seed. A batch renders sequentially, so choosing more images does not multiply the latent batch in VRAM. Completed previews appear while the remaining variants render. Sherka validates the output dimensions, removes file metadata by re-encoding images, and keeps previews in memory at the generated resolution. ComfyUI also retains its temporary output files.
 
 Only the newest eligible exchange is allowed to publish an image. New input, a profile/configuration change, conversation clearing or shutdown invalidates older work. Pending owned prompts are deleted by ID. On ComfyUI 0.3.57 or newer, a running owned task is interrupted by its prompt ID. Older or unrecognized servers drain running tasks and cannot enable live mode. Sherka never sends a global interrupt that could stop another client's generation. ComfyUI may retain temporary images and workflow history on its server. Clearing Sherka's conversation removes its in-memory preview, not those server files.
 
@@ -68,6 +72,46 @@ In **Companions → Conversation illustrations → ComfyUI workflow**, click **E
 
 Import **API-format JSON**, not ComfyUI's visual editor JSON. This first contract supports the same Illustrious/SDXL graph family as the bundled template: one checkpoint loader, one rgthree Power LoRA Loader, optional tinyterra/MNeMiC prompt nodes, CLIP encoders, latent sampling/decoding and an image output. The graph is bounded and rejects unrelated execution, download, file-loading and external-resource nodes. Images use ComfyUI's temporary preview output even when the imported graph contains SaveImage.
 
-Sherka supplies the checkpoint, selected LoRAs, prompt text, square canvas and fresh seed. A negative encoder is identified by `%negative_prompt%` or a title containing `negative`; other text encoders receive the positive prompt. The default graph demonstrates this wiring. Keep the workflow file and any earlier exported images yourself if you need a persistent archive.
+Sherka supplies the checkpoint, selected LoRAs, prompt text, canvas dimensions and fresh seed. A negative encoder is identified by `%negative_prompt%` or a title containing `negative`; other text encoders receive the positive prompt. The default graph demonstrates this wiring. Keep the workflow file and any earlier exported images yourself if you need a persistent archive.
 
 References: [ComfyUI targeted interrupt](https://github.com/Comfy-Org/ComfyUI/commit/464ba1d6140eda6a0173703ac00c69f7fddab6ba), [ComfyUI server routes](https://docs.comfy.org/development/comfyui-server/comms_routes), [Illustrious author's model card](https://huggingface.co/OnomaAIResearch/Illustrious-XL-v1.0).
+
+## IP-Adapter reference
+
+Enable **Use neutral portrait with IP-Adapter** on a companion and select an SDXL adapter and its matching CLIP Vision encoder. Sherka uses the neutral image only when the scene planner includes the companion; unrelated landscapes do not receive it. The portrait is normalized, flattened onto a neutral background for CLIP, and uploaded to ComfyUI's temporary directory. The saved avatar retains its transparency.
+
+Disable the same switch for text-only image guidance. The model selections and strength stay saved for later, while Sherka stops uploading the portrait and removes its IP-Adapter conditioning from the generated workflow. Character creation uses a separate Klein image-editing workflow without IP-Adapter.
+
+Install [ComfyUI_IPAdapter_plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus). Put adapters in `models/ipadapter` and vision weights in `models/clip_vision`. Standard `ip-adapter_sdxl.safetensors` uses CLIP ViT-bigG; use ViT-H for adapters designed for ViT-H. Sherka excludes FaceID and SD1.5 adapters from this SDXL workflow. Refresh the catalog after adding files. Model filenames and strength are saved per companion. Lower strength allows larger pose/expression changes; higher values favor similarity. Identity remains probabilistic, especially with stylized checkpoints or unusual anatomy.
+
+## Character creation
+
+Open **Companions → Create with AI**, or **Character creation** in the sidebar. Select a classic companion whose connected LLM will prepare the character. Only your design concept is sent; existing conversations and memories are not included. The generated name, personality and instructions use the chosen character language. Image descriptions use English tags for Illustrious or visual prose for SDXL, and remain editable.
+
+Creation runs three bundled API workflows with **fixed settings and no Turbo or IP-Adapter**. Select the portrait checkpoint and family, then the Klein diffusion model, compatible text encoder and VAE. Conversation illustration settings remain independent.
+
+Portraits use a **straight-on front view of the head and shoulders / upper chest**, or a head-only portrait when specified, with the entire head visible. Neutral and emotional portraits share this framing to make expressions easier to read. Legacy full-body and side-view clauses in the portrait field are ignored during generation; physical traits remain intact. Creation adds framing exclusions to the negative prompt, including full-body, cropped-head, profile and three-quarter views. Regenerate and approve the neutral portrait before recreating its emotions. These constraints do not restrict conversation illustrations.
+
+1. Generate the profile and refine personality, physical traits, unwanted traits, framing and expression descriptions.
+2. **Neutral portrait:** the [neutral workflow](../config/workflows/character-neutral.json) renders on solid dark gray at 1024², runs the supplied 20-step base/refiner split (15 + 5), enlarges the latent by ×1.5, performs the 25-step detail pass, then resizes to 1024². The checkpoint supplies its text encoder and VAE. Explicitly approve this image before proceeding.
+3. **Emotions:** the [Klein workflow](../config/workflows/character-mood.json) edits the approved neutral with reference latents, 20 steps, Euler and CFG 5. Generate or retry each emotion separately, or fill in missing emotions together. English editing instructions preserve the character, materials, clothing, front view, framing and gray background. Every edit starts from the neutral portrait, avoiding cumulative alterations.
+4. **Transparency:** once all seven portraits look right, apply the [fixed RMBG workflow](../config/workflows/character-transparency.json). It uses RMBG-2.0 at 1024 processing resolution, sensitivity 1, no mask blur, mask offset −2, foreground refinement and the gray color preset. The resulting mask supplies the alpha channel of the original image; no diffusion regeneration takes place here. There are no settings for this stage.
+5. Click any original or transparent portrait to inspect it in a large preview. Review all seven transparent images and choose **Add to companions**. The character starts with an empty conversation and memory; select its own VoiceStudio voice in Companions. Conversation illustrations and IP-Adapter start disabled.
+
+Changing the neutral model, physical description, unwanted traits or framing requires a new portrait and approval. Editing the name or personality does not. Changing Klein models invalidates dependent emotions; changing one expression or regenerating it invalidates only that expression's transparent result. Background removal retries only missing images after a partial failure. Regenerating the neutral resets all dependent images.
+
+The draft survives navigation during the current app session. It is not a saved companion until the final step. **Stop** cancels Sherka's job; a conversation also preempts creation. Completed draft images remain available to review. This does not stop ComfyUI or unrelated clients' work.
+
+Required nodes and models:
+
+- Neutral: **rgthree**, **tinyterraNodes**, **ComfyUI-MNeMiC-Nodes**, **ComfyUI-Easy-Use**, and an SDXL-family checkpoint.
+- Emotions: a ComfyUI version with **Flux 2 Klein** support, including `ReferenceLatent` and `Flux2Scheduler`. Place diffusion weights in `models/diffusion_models`, the text encoder in `models/text_encoders`, and the VAE in `models/vae`. The supplied setup uses `flux-2-klein-4b-fp8.safetensors`, `qwen3vl_4b_fp8_scaled.safetensors` and `flux2-vae.safetensors`; choose compatible files from your own catalog.
+- Transparency: **[ComfyUI-RMBG](https://github.com/1038lab/ComfyUI-RMBG)** and its **RMBG-2.0** weights. The node manages these weights and may download them on first use if absent. There is no model picker for this stage.
+
+The model scan reports missing node classes. Model choices and the scanned catalog are cached locally across restarts; refresh to discover additions. Sherka does not install custom nodes or model weights itself.
+
+**View workflow** shows each built-in API graph read-only, with model/prompt/image placeholders. Creation currently exposes model choices and editable descriptions only, with no sampler, size or mask controls. Conversation illustrations retain their separate custom-workflow import/export tools.
+
+Intermediate portraits may be opaque. Final avatars require usable alpha; an opaque or empty result is rejected. A uniform background helps removal but does not guarantee perfect extraction. Image quality, alpha edges and expression fidelity still require visual review.
+
+**Help & about**, at the bottom of the sidebar, summarizes requirements and links to upstream installation instructions.

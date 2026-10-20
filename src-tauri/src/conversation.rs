@@ -1274,7 +1274,7 @@ async fn search_web(
                 if !c.session.accepts(tag) {
                     return Err(Error::StaleOperation);
                 }
-                Ok(c.profile(tag.profile_id)?.details.search)
+                Ok(c.search_config())
             })
             .await?;
             sherka_core::search_provider::search(&config, &query, language).await

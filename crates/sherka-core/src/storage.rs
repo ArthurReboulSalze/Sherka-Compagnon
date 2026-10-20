@@ -47,6 +47,7 @@ pub struct Message {
     pub created_at: i64,
 }
 
+#[derive(Clone)]
 pub struct Store {
     root: PathBuf,
 }
@@ -464,7 +465,7 @@ impl Store {
         self.create_with_avatars(draft, avatar, BTreeMap::new())
     }
 
-    pub(crate) fn create_with_avatars(
+    pub fn create_with_avatars(
         &self,
         draft: ProfileDraft,
         avatar: Option<&[u8]>,

@@ -23,7 +23,7 @@
 <p align="center">
   <img src="docs/images/sherka-ecosystem-en.png" alt="Sherka ecosystem: local or hosted language models, VoiceStudio speech, and ComfyUI visuals" width="1200">
 </p>
-<p align="center"><em>Conversation illustrations are available now. ComfyUI avatar-pack generation is planned.</em></p>
+<p align="center"><em>Voice, conversation scenes and companion creation — connected to your own models.</em></p>
 
 <p align="center">
   <img src="docs/images/desktop-companion.png" alt="Independent Sherka desktop companion with inline text input and a movable ComfyUI conversation illustration" width="900">
@@ -31,11 +31,11 @@
 <p align="center"><em>A companion that lives on your desktop — with text and image cells right beside it.</em></p>
 
 <p align="center">
-  <img src="docs/images/sherka-0.12.0.png" alt="Sherka 0.12.0 control panel: golden app logo, five companions and avatar settings" width="1000">
+  <img src="docs/images/sherka-1.3.0.png" alt="Sherka 1.3 control panel with companions, character creation and help" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**Sherka 1.2 is here:** give conversation scenes more room with **full-screen illustrations**, keep your companion movable in front, and refine its appearance with a dedicated negative prompt. This release also fixes a reproduced desktop freeze and explains ComfyUI's first-image loading. [What's new](docs/releases/1.2.0.md).
+**Sherka 1.3 is here: create your own companion from an idea.** Shape its personality, approve its portrait, generate six emotions and give it a transparent place on your desktop. The new **Character creation** studio connects your LLM and ComfyUI in one guided flow. [What's new](docs/releases/1.3.0.md).
 
 ## Meet your companions
 
@@ -69,6 +69,16 @@ Sherka gives your AI a presence beyond a chat window: a transparent companion th
 
 The built-in Sherka is ready in every interface language. Custom companions keep the language you choose for them.
 
+## Bring your own companion to life
+
+Open **Companions → Create with AI**. Your connected LLM proposes an editable personality and appearance, then ComfyUI brings the character to life:
+
+1. **Approve its portrait.** Generate a front-facing head-and-bust portrait with SDXL or Illustrious on a solid gray background.
+2. **Give it six emotions.** Flux Klein 4B edits the approved portrait. Generate or retry each expression individually, and click any image to inspect it in a large preview.
+3. **Make it transparent.** Apply automatic background removal to the seven portraits, review the cutouts, then add the companion and choose its VoiceStudio voice.
+
+Choose the models; the three workflows use fixed settings focused on quality. Your model selections are remembered. A new companion starts with its own empty conversation and memory. The required ComfyUI nodes and models are separate installations; the in-app **Help & about** and [creation guide](docs/COMFYUI.md#character-creation) explain the setup.
+
 ## Turn conversations into scenes
 
 Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its model family, folders, editable negative prompt and LoRAs. A **positive prompt addition** appends your style, lighting or composition preferences to every generated scene, exactly as written. A separate **character negative prompt** excludes unwanted features only when the companion appears. Landscapes can stand alone; the avatar appears when it belongs in the scene. Images start preparing as soon as the reply text is ready, while the voice continues.
@@ -77,9 +87,11 @@ Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, des
 
 The **Image** button reveals a movable, resizable cell that follows your companion. Generate up to eight variations and let them loop with gentle crossfades at your chosen pace. The **Text** button reveals a transparent input just beneath the controls: type, paste or drop text, and attach images when your model supports vision.
 
-**Live scenes, with conversation first.** Enable live mode for continuous variations that follow the latest exchange. Sherka pauses its image work for speech recognition, text generation and speech synthesis, then resumes automatically. Advanced settings let you choose the square output size, set each sampler’s steps and CFG independently and choose a shared sampler; your values stay in place when you toggle Turbo. Export the API workflow from the same settings to use it as a starting point in ComfyUI.
+**Live scenes, with conversation first.** Enable live mode for continuous variations that follow the latest exchange. Sherka pauses its image work for speech recognition, text generation and speech synthesis, then resumes automatically. Choose portrait, landscape or square formats, latent scaling and an optional final ×2 upscale. Set each sampler’s steps and CFG independently. Open, edit, import or export the API workflow from the same settings.
 
 **Ready when you are.** Model, LoRA and sampler lists are remembered on this device; the highlighted refresh button rescans the whole catalog. For a local Python or portable ComfyUI installation, save its folder and optional Python path in **Settings**: Sherka can start it when illustrations are enabled. The first images take longer while the server and models load. Remote servers remain manually managed.
+
+Each companion can independently enable or disable its neutral portrait as an **IP-Adapter reference** for conversation illustrations. Keep it on for likeness, or off for more freedom from the reference image. See the [ComfyUI guide](docs/COMFYUI.md) for required nodes and models.
 
 These scenes illustrate the conversation; the avatar's seven expressions remain separate. Hermes uses its own tools and stays outside local scene generation.
 
@@ -105,7 +117,7 @@ Sherka manages context budgets and offers reasoning controls where supported. Sw
 
 ## Shared services, personal layouts
 
-Configure VoiceStudio transcription and local service startup once in Settings. VoiceStudio can run in the background without its desktop window; VoiceStudio and ComfyUI each have a **Start with Sherka** switch. Servers started by Sherka close with it; servers already running remain independent.
+Configure web-search providers and API keys, VoiceStudio transcription and local service startup once in Settings. VoiceStudio can run in the background without its desktop window; VoiceStudio and ComfyUI each have a **Start with Sherka** switch. Servers started by Sherka close with it; servers already running remain independent. **Help & about** provides a compact setup guide; a headset and a quiet environment give the best voice results.
 
 Each companion remembers its desktop size, position and image-cell layout, even after restarting. Overlapping illustrations stay behind the avatar. **Double-click an illustration for full screen**, with the companion still movable and resizable in front; press Esc to return. Enable **Spontaneous conversation** per classic companion and choose a minimum and maximum idle delay: a short invitation breaks the silence, then your companion waits for a real reply. Typing, ongoing speech, voice pause and a hidden widget postpone it. Hermes keeps its own behavior. [Setup details](docs/GETTING_STARTED.md#spontaneous-conversation).
 
@@ -127,9 +139,9 @@ Check for signed Windows updates directly from **Settings**. Installed and no-in
 
 ## What's next
 
-Next come speaking/listening animations, richer character customization and consistent avatar packs through **ComfyUI**. Conversation illustrations are available now; generating the avatar's seven expressions is a separate future step. Hermes remains outside the emotion and illustration systems.
+Next come speaking/listening animations, richer character customization and further improvements to generated character consistency. Hermes remains outside the emotion and illustration systems.
 
-Sherka 1.0 is the first major release, with plenty still to explore. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
+There is plenty still to explore. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
 
 ## Open source, made to grow
 

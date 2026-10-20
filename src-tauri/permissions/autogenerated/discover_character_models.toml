@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-discover-character-models"
+description = "Enables the discover_character_models command without any pre-configured scope."
+commands.allow = ["discover_character_models"]
+
+[[permission]]
+identifier = "deny-discover-character-models"
+description = "Denies the discover_character_models command without any pre-configured scope."
+commands.deny = ["discover_character_models"]

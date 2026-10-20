@@ -125,6 +125,7 @@ pub async fn prepare_shutdown(app: &AppHandle) -> Result<(), String> {
         QUIT_STATE.store(2, Ordering::SeqCst);
         return Ok(());
     }
+    app.state::<crate::character_studio::Studio>().cancel(app);
     app.state::<crate::voice_startup::VoiceStartup>().cancel();
     app.state::<crate::comfy_startup::ComfyStartup>().cancel();
     app.state::<crate::illustrations::Illustrations>()

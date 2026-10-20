@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-generate-character"
+description = "Enables the generate_character command without any pre-configured scope."
+commands.allow = ["generate_character"]
+
+[[permission]]
+identifier = "deny-generate-character"
+description = "Denies the generate_character command without any pre-configured scope."
+commands.deny = ["generate_character"]

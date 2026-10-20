@@ -1,10 +1,10 @@
 # Web search
 
-Sherka offers optional web search through **DuckDuckGo, Brave Search, Tavily or SearXNG**. Search planning uses the companion's conversation model; speech stays in VoiceStudio. Each companion has its own engine and search mode. Hermes always bypasses Sherka's search controls and uses its server's tools.
+Sherka offers optional web search through **DuckDuckGo, Brave Search, Tavily or SearXNG**. Search planning uses the companion's conversation model; speech stays in VoiceStudio. The engine and API keys are global; each companion keeps its own search mode. Hermes always bypasses Sherka's search controls and uses its server's tools.
 
 ## Choose an engine
 
-Open **Companions → Web search**. Choose the engine, maximum result count (1–10) and save. The default is DuckDuckGo without an account.
+Open **Settings → Web search**. Choose the engine, maximum result count (1–10) and save once for all companions. The default is DuckDuckGo without an account. Upgrading preserves an existing engine configuration, preferring the active companion's configuration when available.
 
 | Engine | Setup | Notes |
 | --- | --- | --- |
@@ -13,11 +13,13 @@ Open **Companions → Web search**. Choose the engine, maximum result count (1�
 | Tavily | Your Tavily API key | Basic general search, without a generated answer or full raw-page payload. |
 | SearXNG | Your instance URL | Enable JSON output in the instance settings; no Sherka API key is required. |
 
-Enter Brave/Tavily keys in this section. They are stored in Windows Credential Manager or Linux Secret Service, separately from profiles and exports. A key is shared by companions using that search service. Removing a key does not erase the companion's engine choice. Keys are sent only to the service's fixed HTTPS endpoint. An external API account may incur usage charges.
+Enter Brave/Tavily keys in this section. They are stored in Windows Credential Manager or Linux Secret Service, separately from profiles and exports. Removing a key does not erase the global engine choice. Keys are sent only to the service's fixed HTTPS endpoint. An external API account may incur usage charges.
 
 SearXNG accepts HTTPS addresses, or HTTP on loopback/private IP addresses. Addresses cannot contain credentials, a query or a fragment. Sherka calls the instance's `/search` endpoint with `format=json`. If it refuses JSON, enable that format in SearXNG rather than supplying an unrelated API key.
 
 ## Choose when to search
+
+Open the desired character in **Companions → Web search**.
 
 - **Disabled** is the default. No search query is sent.
 - **On request** searches when you check **Search the web for this message** in Conversation, type `/web your question`, or explicitly ask to search the web. Voice requests use the same path.

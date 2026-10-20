@@ -4,7 +4,7 @@ Sherka 1.0 includes optional persistent moods, live ComfyUI scenes, advanced sam
 
 ## Bring companions to life
 
-- Generate consistent seven-expression avatar packs through ComfyUI, using the same image slots. Not integrated yet.
+- Improve identity, framing and expression fidelity in the ComfyUI character creator, building on the three-stage portrait, Klein emotion editing and RMBG transparency workflow.
 - A community character gallery and pack previews, building on the five bundled companions and the documented ZIP sharing format.
 - Idle, listening, thinking and speaking animations.
 - Refine model-selected expressions, transitions and reactions beyond the seven static image slots. Hermes remote-agent mode remains excluded: neutral avatar, with listening/speaking indicators only.

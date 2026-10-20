@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-process-character-transparency"
+description = "Enables the process_character_transparency command without any pre-configured scope."
+commands.allow = ["process_character_transparency"]
+
+[[permission]]
+identifier = "deny-process-character-transparency"
+description = "Denies the process_character_transparency command without any pre-configured scope."
+commands.deny = ["process_character_transparency"]

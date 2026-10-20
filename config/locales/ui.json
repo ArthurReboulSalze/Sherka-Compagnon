@@ -8326,5 +8326,1277 @@
     "Das erste Bild kann länger dauern: ComfyUI startet bei Bedarf und lädt anschließend das gewählte Modell und die LoRAs.",
     "第一张图像可能需要更长时间：ComfyUI 会在需要时启动，然后加载所选模型和 LoRA。",
     "最初の画像は時間がかかる場合があります。必要に応じてComfyUIが起動し、選択したモデルとLoRAを読み込みます。"
+  ],
+  "×1": [
+    "×1",
+    "×1",
+    "×1",
+    "×1",
+    "×1",
+    "×1"
+  ],
+  "×1,5": [
+    "×1.5",
+    "×1,5",
+    "×1,5",
+    "×1,5",
+    "×1.5",
+    "×1.5"
+  ],
+  "1. Imagine ton personnage": [
+    "1. Imagine your character",
+    "1. Imagina tu personaje",
+    "1. Immagina il tuo personaggio",
+    "1. Stell dir deinen Charakter vor",
+    "1. 构思角色",
+    "1. キャラクターを考える"
+  ],
+  "2. Affine sa fiche": [
+    "2. Refine the profile",
+    "2. Perfecciona su ficha",
+    "2. Perfeziona la scheda",
+    "2. Verfeinere das Profil",
+    "2. 完善角色资料",
+    "2. プロフィールを調整する"
+  ],
+  "3. Valide son apparence": [
+    "3. Approve the appearance",
+    "3. Valida su aspecto",
+    "3. Approva il suo aspetto",
+    "3. Bestätige das Aussehen",
+    "3. 确认外观",
+    "3. 外見を確認する"
+  ],
+  "À générer": [
+    "Not generated yet",
+    "Por generar",
+    "Da generare",
+    "Noch nicht generiert",
+    "尚未生成",
+    "未生成"
+  ],
+  "Accès Internet enregistré.": [
+    "Internet access saved.",
+    "Acceso a Internet guardado.",
+    "Accesso a Internet salvato.",
+    "Internetzugriff gespeichert.",
+    "联网权限已保存。",
+    "インターネット設定を保存しました。"
+  ],
+  "Agrandissement entre les samplers": [
+    "Upscale between samplers",
+    "Ampliación entre samplers",
+    "Ingrandimento tra i sampler",
+    "Vergrößerung zwischen den Samplern",
+    "采样器之间的放大",
+    "サンプラー間の拡大"
+  ],
+  "Aide et à propos": [
+    "Help & about",
+    "Ayuda y acerca de",
+    "Aiuto e informazioni",
+    "Hilfe und Info",
+    "帮助与关于",
+    "ヘルプ・このアプリについて"
+  ],
+  "Ajout du compagnon…": [
+    "Adding companion…",
+    "Añadiendo compañero…",
+    "Aggiunta del compagno…",
+    "Begleiter wird hinzugefügt…",
+    "正在添加伙伴…",
+    "コンパニオンを追加中…"
+  ],
+  "Ajouter aux compagnons": [
+    "Add to companions",
+    "Añadir a compañeros",
+    "Aggiungi ai compagni",
+    "Zu Begleitern hinzufügen",
+    "添加到伙伴列表",
+    "コンパニオンに追加"
+  ],
+  "Appliquer ce workflow": [
+    "Apply this workflow",
+    "Aplicar este workflow",
+    "Applica questo workflow",
+    "Diesen Workflow anwenden",
+    "应用此工作流",
+    "このワークフローを適用"
+  ],
+  "Arrêter": [
+    "Stop",
+    "Detener",
+    "Interrompi",
+    "Stoppen",
+    "停止",
+    "停止"
+  ],
+  "Ce workflow nécessite une seule sortie d’image finale.": [
+    "This workflow requires a single final image output.",
+    "Este workflow necesita una única salida de imagen final.",
+    "Questo workflow richiede una sola uscita immagine finale.",
+    "Dieser Workflow benötigt genau eine finale Bildausgabe.",
+    "此工作流需要且只能有一个最终图像输出。",
+    "このワークフローには最終画像の出力が1つ必要です。"
+  ],
+  "Choisis un compagnon classique avec un modèle connecté pour créer un personnage.": [
+    "Choose a classic companion with a connected model to create a character.",
+    "Elige un compañero clásico con un modelo conectado para crear un personaje.",
+    "Scegli un compagno classico con un modello collegato per creare un personaggio.",
+    "Wähle einen klassischen Begleiter mit verbundenem Modell, um einen Charakter zu erstellen.",
+    "请选择已连接模型的普通伙伴来创建角色。",
+    "キャラクターを作成するには、モデルに接続した通常のコンパニオンを選んでください。"
+  ],
+  "Choisis un IP-Adapter SDXL, son CLIP Vision et un portrait neutre avant de générer.": [
+    "Choose an SDXL IP-Adapter, its CLIP Vision and a neutral portrait before generating.",
+    "Elige un IP-Adapter SDXL, su CLIP Vision y un retrato neutro antes de generar.",
+    "Scegli un IP-Adapter SDXL, il suo CLIP Vision e un ritratto neutro prima di generare.",
+    "Wähle vor der Generierung einen SDXL-IP-Adapter, das passende CLIP Vision und ein neutrales Porträt.",
+    "生成前请选择 SDXL IP-Adapter、匹配的 CLIP Vision 和中性肖像。",
+    "生成前にSDXL用IP-Adapter、対応するCLIP Vision、ニュートラルなポートレートを選んでください。"
+  ],
+  "Choisis un portrait neutre pour utiliser IP-Adapter.": [
+    "Choose a neutral portrait to use IP-Adapter.",
+    "Elige un retrato neutro para usar IP-Adapter.",
+    "Scegli un ritratto neutro per usare IP-Adapter.",
+    "Wähle ein neutrales Porträt für IP-Adapter.",
+    "请选择用于 IP-Adapter 的中性肖像。",
+    "IP-Adapter用のニュートラルなポートレートを選んでください。"
+  ],
+  "CLIP Vision": [
+    "CLIP Vision",
+    "CLIP Vision",
+    "CLIP Vision",
+    "CLIP Vision",
+    "CLIP Vision",
+    "CLIP Vision"
+  ],
+  "ComfyUI : les bases": [
+    "ComfyUI: the basics",
+    "ComfyUI: lo esencial",
+    "ComfyUI: le basi",
+    "ComfyUI: Grundlagen",
+    "ComfyUI：基础知识",
+    "ComfyUIの基本"
+  ],
+  "ComfyUI génère le portrait. Le premier chargement peut prendre du temps…": [
+    "ComfyUI is generating the portrait. The first model load may take a while…",
+    "ComfyUI está generando el retrato. La primera carga puede tardar…",
+    "ComfyUI sta generando il ritratto. Il primo caricamento può richiedere tempo…",
+    "ComfyUI generiert das Porträt. Das erste Laden kann etwas dauern…",
+    "ComfyUI 正在生成肖像。首次加载可能需要一些时间…",
+    "ComfyUIがポートレートを生成中です。初回の読み込みには時間がかかる場合があります…"
+  ],
+  "Compagnon ajouté.": [
+    "Companion added.",
+    "Compañero añadido.",
+    "Compagno aggiunto.",
+    "Begleiter hinzugefügt.",
+    "伙伴已添加。",
+    "コンパニオンを追加しました。"
+  ],
+  "Couleur": [
+    "Color",
+    "Color",
+    "Colore",
+    "Farbe",
+    "颜色",
+    "色"
+  ],
+  "Création de personnage": [
+    "Character creation",
+    "Creación de personajes",
+    "Creazione personaggio",
+    "Charakter erstellen",
+    "角色创建",
+    "キャラクター作成"
+  ],
+  "Création interrompue.": [
+    "Creation interrupted.",
+    "Creación interrumpida.",
+    "Creazione interrotta.",
+    "Erstellung unterbrochen.",
+    "创建已中断。",
+    "作成を中断しました。"
+  ],
+  "DE L’IDÉE AU COMPAGNON": [
+    "FROM IDEA TO COMPANION",
+    "DE LA IDEA AL COMPAÑERO",
+    "DALL’IDEA AL COMPAGNO",
+    "VON DER IDEE ZUM BEGLEITER",
+    "从构想到伙伴",
+    "アイデアからコンパニオンへ"
+  ],
+  "Départ {0} × {1} → seconde passe {2} × {3} → sortie {4} × {5} px": [
+    "Start {0} × {1} → second pass {2} × {3} → output {4} × {5} px",
+    "Inicio {0} × {1} → segunda pasada {2} × {3} → salida {4} × {5} px",
+    "Inizio {0} × {1} → seconda passata {2} × {3} → uscita {4} × {5} px",
+    "Start {0} × {1} → zweiter Durchlauf {2} × {3} → Ausgabe {4} × {5} px",
+    "起始 {0} × {1} → 第二轮 {2} × {3} → 输出 {4} × {5} 像素",
+    "開始 {0} × {1} → 2回目 {2} × {3} → 出力 {4} × {5} px"
+  ],
+  "Documentation ComfyUI": [
+    "ComfyUI documentation",
+    "Documentación de ComfyUI",
+    "Documentazione ComfyUI",
+    "ComfyUI-Dokumentation",
+    "ComfyUI 文档",
+    "ComfyUIのドキュメント"
+  ],
+  "Écris son caractère, valide son portrait, puis donne-lui ses sept expressions.": [
+    "Write their personality, approve their portrait, then give them seven expressions.",
+    "Define su carácter, valida su retrato y dale sus siete expresiones.",
+    "Scrivi il suo carattere, approva il ritratto e crea le sue sette espressioni.",
+    "Beschreibe die Persönlichkeit, bestätige das Porträt und erstelle die sieben Gesichtsausdrücke.",
+    "定义性格，确认肖像，然后生成七种表情。",
+    "性格を決め、ポートレートを確認し、7つの表情を作成します。"
+  ],
+  "Exporte ce JSON pour l’ouvrir dans ComfyUI. Tu peux aussi le modifier ici ou importer ton propre fichier API.": [
+    "Export this JSON to open it in ComfyUI. You can also edit it here or import your own API file.",
+    "Exporta este JSON para abrirlo en ComfyUI. También puedes editarlo aquí o importar tu archivo API.",
+    "Esporta questo JSON per aprirlo in ComfyUI. Puoi anche modificarlo qui o importare un file API.",
+    "Exportiere dieses JSON, um es in ComfyUI zu öffnen. Du kannst es auch hier bearbeiten oder eine eigene API-Datei importieren.",
+    "导出此 JSON 可在 ComfyUI 中打开。也可以在此编辑或导入自己的 API 文件。",
+    "このJSONをエクスポートするとComfyUIで開けます。ここで編集したり、独自のAPIファイルを読み込んだりすることもできます。"
+  ],
+  "Expressions à générer": [
+    "Expressions to generate",
+    "Expresiones por generar",
+    "Espressioni da generare",
+    "Zu generierende Ausdrücke",
+    "待生成的表情",
+    "生成する表情"
+  ],
+  "Fidélité au portrait": [
+    "Portrait fidelity",
+    "Fidelidad al retrato",
+    "Fedeltà al ritratto",
+    "Porträttreue",
+    "肖像保真度",
+    "ポートレートへの忠実度"
+  ],
+  "Format et qualité": [
+    "Format and quality",
+    "Formato y calidad",
+    "Formato e qualità",
+    "Format und Qualität",
+    "格式与质量",
+    "形式と品質"
+  ],
+  "Format, upscale et workflows": [
+    "Format, upscale and workflows",
+    "Formato, ampliación y workflows",
+    "Formato, upscale e workflow",
+    "Format, Upscaling und Workflows",
+    "尺寸、放大与工作流",
+    "形式・アップスケール・ワークフロー"
+  ],
+  "Formats carré, portrait ou paysage, avec un prompt adapté à Illustrious ou SDXL.": [
+    "Square, portrait or landscape formats, with prompts adapted to Illustrious or SDXL.",
+    "Formatos cuadrados, verticales u horizontales, con prompts adaptados a Illustrious o SDXL.",
+    "Formati quadrati, verticali o orizzontali, con prompt adatti a Illustrious o SDXL.",
+    "Quadratische, Hoch- oder Querformate mit Prompts für Illustrious oder SDXL.",
+    "支持正方形、竖版和横版，并使用适合 Illustrious 或 SDXL 的提示词。",
+    "正方形・縦長・横長に対応し、IllustriousまたはSDXLに合ったプロンプトを使います。"
+  ],
+  "Générer le portrait neutre": [
+    "Generate neutral portrait",
+    "Generar retrato neutro",
+    "Genera ritratto neutro",
+    "Neutrales Porträt generieren",
+    "生成中性肖像",
+    "ニュートラルなポートレートを生成"
+  ],
+  "Générer les six émotions": [
+    "Generate the six emotions",
+    "Generar las seis emociones",
+    "Genera le sei emozioni",
+    "Sechs Emotionen generieren",
+    "生成六种情绪",
+    "6つの感情を生成"
+  ],
+  "Instructions": [
+    "Instructions",
+    "Instrucciones",
+    "Istruzioni",
+    "Anweisungen",
+    "指令",
+    "指示"
+  ],
+  "IP-Adapter : installation et modèles": [
+    "IP-Adapter: setup and models",
+    "IP-Adapter: instalación y modelos",
+    "IP-Adapter: installazione e modelli",
+    "IP-Adapter: Installation und Modelle",
+    "IP-Adapter：安装与模型",
+    "IP-Adapter：セットアップとモデル"
+  ],
+  "IP-Adapter SDXL": [
+    "SDXL IP-Adapter",
+    "IP-Adapter SDXL",
+    "IP-Adapter SDXL",
+    "SDXL-IP-Adapter",
+    "SDXL IP-Adapter",
+    "SDXL用IP-Adapter"
+  ],
+  "La configuration IP-Adapter SDXL est invalide.": [
+    "The SDXL IP-Adapter configuration is invalid.",
+    "La configuración de IP-Adapter SDXL no es válida.",
+    "La configurazione IP-Adapter SDXL non è valida.",
+    "Die SDXL-IP-Adapter-Konfiguration ist ungültig.",
+    "SDXL IP-Adapter 配置无效。",
+    "SDXL用IP-Adapterの設定が無効です。"
+  ],
+  "La fiche du personnage est incomplète. Vérifie son nom, son caractère, son apparence et les six émotions.": [
+    "The character profile is incomplete. Check the name, personality, appearance and six emotions.",
+    "La ficha está incompleta. Revisa el nombre, carácter, aspecto y las seis emociones.",
+    "La scheda è incompleta. Controlla nome, carattere, aspetto e le sei emozioni.",
+    "Das Charakterprofil ist unvollständig. Prüfe Name, Persönlichkeit, Aussehen und die sechs Emotionen.",
+    "角色资料不完整。请检查名称、性格、外观和六种情绪。",
+    "プロフィールが不完全です。名前、性格、外見、6つの感情を確認してください。"
+  ],
+  "La fiche ou les réglages ont changé. Régénère et valide le portrait neutre avant de continuer.": [
+    "The profile or settings have changed. Regenerate and approve the neutral portrait before continuing.",
+    "La ficha o los ajustes han cambiado. Regenera y valida el retrato neutro antes de continuar.",
+    "La scheda o le impostazioni sono cambiate. Rigenera e approva il ritratto neutro prima di continuare.",
+    "Profil oder Einstellungen wurden geändert. Generiere und bestätige das neutrale Porträt erneut.",
+    "资料或设置已更改。请重新生成并确认中性肖像后再继续。",
+    "プロフィールまたは設定が変わりました。続行前にポートレートを再生成して確認してください。"
+  ],
+  "La langue de la fiche générée est invalide.": [
+    "The generated profile language is invalid.",
+    "El idioma de la ficha generada no es válido.",
+    "La lingua della scheda generata non è valida.",
+    "Die Sprache des generierten Profils ist ungültig.",
+    "生成的资料语言无效。",
+    "生成したプロフィールの言語が無効です。"
+  ],
+  "La résolution finale doit rester entre 256 et 4096 pixels par côté. Réduis le format ou l’agrandissement.": [
+    "Final dimensions must stay between 256 and 4096 pixels per side. Reduce the size or upscale factor.",
+    "La salida debe tener entre 256 y 4096 píxeles por lado. Reduce el tamaño o la ampliación.",
+    "Le dimensioni finali devono essere tra 256 e 4096 pixel per lato. Riduci il formato o l’ingrandimento.",
+    "Die Ausgabe muss zwischen 256 und 4096 Pixeln pro Seite bleiben. Verringere Format oder Vergrößerung.",
+    "最终每边必须为 256 至 4096 像素。请减小尺寸或放大倍数。",
+    "最終サイズは各辺256～4096ピクセルです。サイズまたは拡大率を下げてください。"
+  ],
+  "La voix et les connexions se règlent ensuite dans Compagnons.": [
+    "Set up the voice and connections afterwards in Companions.",
+    "Configura después la voz y las conexiones en Compañeros.",
+    "Configura poi la voce e le connessioni in Compagni.",
+    "Stimme und Verbindungen richtest du anschließend unter Begleiter ein.",
+    "随后可在伙伴页面设置语音和连接。",
+    "音声と接続は、追加後にコンパニオン画面で設定できます。"
+  ],
+  "Langue du personnage": [
+    "Character language",
+    "Idioma del personaje",
+    "Lingua del personaggio",
+    "Sprache des Charakters",
+    "角色语言",
+    "キャラクターの言語"
+  ],
+  "LayerDiffuse : installation et modèles": [
+    "LayerDiffuse: setup and models",
+    "LayerDiffuse: instalación y modelos",
+    "LayerDiffuse: installazione e modelli",
+    "LayerDiffuse: Installation und Modelle",
+    "LayerDiffuse：安装与模型",
+    "LayerDiffuse：セットアップとモデル"
+  ],
+  "LayerDiffuse nécessite des dimensions intermédiaires divisibles par 64. Choisis un format recommandé ou désactive le latent ×1,5.": [
+    "LayerDiffuse needs intermediate dimensions divisible by 64. Choose a recommended format or disable latent ×1.5.",
+    "LayerDiffuse necesita dimensiones intermedias divisibles por 64. Elige un formato recomendado o desactiva el latente ×1,5.",
+    "LayerDiffuse richiede dimensioni intermedie divisibili per 64. Scegli un formato consigliato o disattiva il latente ×1,5.",
+    "LayerDiffuse benötigt durch 64 teilbare Zwischengrößen. Wähle ein empfohlenes Format oder deaktiviere die latente Vergrößerung ×1,5.",
+    "LayerDiffuse 的中间尺寸必须能被 64 整除。请选择推荐尺寸或关闭潜空间 ×1.5 放大。",
+    "LayerDiffuseの中間サイズは64の倍数が必要です。推奨サイズを選ぶか、潜在画像の×1.5拡大を無効にしてください。"
+  ],
+  "Le modèle d’upscale choisi est absent du serveur ComfyUI.": [
+    "The selected upscale model is missing from the ComfyUI server.",
+    "El modelo de ampliación seleccionado no está en el servidor ComfyUI.",
+    "Il modello di upscale scelto non è presente sul server ComfyUI.",
+    "Das gewählte Upscaling-Modell fehlt auf dem ComfyUI-Server.",
+    "ComfyUI 服务器上没有所选的放大模型。",
+    "選択したアップスケールモデルがComfyUIサーバーにありません。"
+  ],
+  "Le modèle du compagnon choisi prépare une fiche modifiable, sans utiliser sa conversation ni ses souvenirs.": [
+    "The selected companion’s model prepares an editable profile without using its conversations or memories.",
+    "El modelo del compañero elegido prepara una ficha editable sin usar sus conversaciones ni recuerdos.",
+    "Il modello del compagno scelto prepara una scheda modificabile senza usare conversazioni o ricordi.",
+    "Das Modell des gewählten Begleiters erstellt ein bearbeitbares Profil ohne dessen Gespräche oder Erinnerungen.",
+    "所选伙伴的模型会生成可编辑资料，不使用其对话或记忆。",
+    "選んだコンパニオンのモデルが、会話や記憶を使わずに編集可能なプロフィールを作成します。"
+  ],
+  "Le modèle prépare la fiche…": [
+    "The model is preparing the profile…",
+    "El modelo prepara la ficha…",
+    "Il modello prepara la scheda…",
+    "Das Modell erstellt das Profil…",
+    "模型正在准备资料…",
+    "モデルがプロフィールを作成中…"
+  ],
+  "Le moteur de recherche et les clés API se configurent dans les réglages du logiciel.": [
+    "Configure the search engine and API keys in the application settings.",
+    "Configura el buscador y las claves API en los ajustes del programa.",
+    "Configura il motore di ricerca e le chiavi API nelle impostazioni dell’app.",
+    "Suchmaschine und API-Schlüssel werden in den Programmeinstellungen eingerichtet.",
+    "请在应用设置中配置搜索引擎和 API 密钥。",
+    "検索エンジンとAPIキーはアプリの設定で指定します。"
+  ],
+  "Le moteur et les clés API sont communs à tous les compagnons. Hermès utilise ses propres outils.": [
+    "The search engine and API keys are shared by all companions. Hermes uses its own tools.",
+    "El buscador y las claves API son comunes a todos los compañeros. Hermes usa sus propias herramientas.",
+    "Il motore di ricerca e le chiavi API sono comuni a tutti i compagni. Hermes usa i propri strumenti.",
+    "Suchmaschine und API-Schlüssel gelten für alle Begleiter. Hermes verwendet seine eigenen Werkzeuge.",
+    "搜索引擎和 API 密钥由所有伙伴共用。Hermes 使用自己的工具。",
+    "検索エンジンとAPIキーは全コンパニオンで共通です。Hermesは自身のツールを使います。"
+  ],
+  "Le portrait généré est invalide.": [
+    "The generated portrait is invalid.",
+    "El retrato generado no es válido.",
+    "Il ritratto generato non è valido.",
+    "Das generierte Porträt ist ungültig.",
+    "生成的肖像无效。",
+    "生成したポートレートが無効です。"
+  ],
+  "Le portrait généré est trop volumineux.": [
+    "The generated portrait is too large.",
+    "El retrato generado es demasiado grande.",
+    "Il ritratto generato è troppo grande.",
+    "Das generierte Porträt ist zu groß.",
+    "生成的肖像文件过大。",
+    "生成したポートレートが大きすぎます。"
+  ],
+  "Le portrait ne contient pas de transparence exploitable. Vérifie LayerDiffuse et régénère l’image.": [
+    "The portrait has no usable transparency. Check LayerDiffuse and regenerate the image.",
+    "El retrato no tiene transparencia utilizable. Revisa LayerDiffuse y regenera la imagen.",
+    "Il ritratto non ha una trasparenza utilizzabile. Controlla LayerDiffuse e rigenera l’immagine.",
+    "Das Porträt enthält keine nutzbare Transparenz. Prüfe LayerDiffuse und generiere es erneut.",
+    "肖像没有可用的透明通道。请检查 LayerDiffuse 并重新生成。",
+    "ポートレートに有効な透明部分がありません。LayerDiffuseを確認して再生成してください。"
+  ],
+  "Le portrait neutre est invalide.": [
+    "The neutral portrait is invalid.",
+    "El retrato neutro no es válido.",
+    "Il ritratto neutro non è valido.",
+    "Das neutrale Porträt ist ungültig.",
+    "中性肖像无效。",
+    "ニュートラルなポートレートが無効です。"
+  ],
+  "Le portrait transparent nécessite un décodage VAE du second sampler.": [
+    "A transparent portrait requires VAE decoding of the second sampler.",
+    "El retrato transparente requiere decodificar con VAE la salida del segundo sampler.",
+    "Il ritratto trasparente richiede la decodifica VAE del secondo sampler.",
+    "Ein transparentes Porträt benötigt die VAE-Dekodierung des zweiten Samplers.",
+    "透明肖像需要对第二个采样器的输出进行 VAE 解码。",
+    "透明なポートレートには2番目のサンプラー出力のVAEデコードが必要です。"
+  ],
+  "Les descriptions d’image sont en anglais, avec des tags pour Illustrious ou des phrases pour SDXL. Tu peux les modifier avant de générer.": [
+    "Image descriptions are in English: tags for Illustrious or sentences for SDXL. You can edit them before generating.",
+    "Las descripciones están en inglés: tags para Illustrious o frases para SDXL. Puedes editarlas antes de generar.",
+    "Le descrizioni sono in inglese: tag per Illustrious o frasi per SDXL. Puoi modificarle prima di generare.",
+    "Bildbeschreibungen sind auf Englisch: Tags für Illustrious oder Sätze für SDXL. Du kannst sie vor der Generierung bearbeiten.",
+    "图像描述采用英文：Illustrious 使用标签，SDXL 使用句子。生成前可以修改。",
+    "画像の説明は英語です。Illustriousにはタグ、SDXLには文章を使います。生成前に編集できます。"
+  ],
+  "Les essentiels pour profiter de ton compagnon.": [
+    "The essentials for enjoying your companion.",
+    "Lo esencial para disfrutar de tu compañero.",
+    "L’essenziale per goderti il tuo compagno.",
+    "Das Wichtigste für deinen Begleiter.",
+    "使用伙伴所需的基本信息。",
+    "コンパニオンを楽しむための基本情報。"
+  ],
+  "Les modèles ×2 sont les plus directs. Un modèle ×4 est ramené à la taille ×2 annoncée. La vitesse dépend du modèle choisi.": [
+    "×2 models are the most direct. A ×4 model is resized to the stated ×2 output. Speed depends on the model.",
+    "Los modelos ×2 son los más directos. Un modelo ×4 se reduce a la salida ×2 indicada. La velocidad depende del modelo.",
+    "I modelli ×2 sono i più diretti. Un modello ×4 viene ridimensionato all’uscita ×2 indicata. La velocità dipende dal modello.",
+    "×2-Modelle sind der direkteste Weg. Ein ×4-Modell wird auf die angegebene ×2-Ausgabe verkleinert. Die Geschwindigkeit hängt vom Modell ab.",
+    "×2 模型最直接。×4 模型的结果会缩回标明的 ×2 尺寸。速度取决于模型。",
+    "×2モデルが最も直接的です。×4モデルの出力は表示された×2サイズに縮小されます。速度はモデルにより異なります。"
+  ],
+  "Modèle connecté via": [
+    "Model connected through",
+    "Modelo conectado mediante",
+    "Modello collegato tramite",
+    "Modell verbunden über",
+    "模型来源伙伴",
+    "モデルの接続元"
+  ],
+  "Nom": [
+    "Name",
+    "Nombre",
+    "Nome",
+    "Name",
+    "名称",
+    "名前"
+  ],
+  "Ouvrir le workflow API": [
+    "Open API workflow",
+    "Abrir workflow API",
+    "Apri workflow API",
+    "API-Workflow öffnen",
+    "打开 API 工作流",
+    "APIワークフローを開く"
+  ],
+  "Portrait neutre validé.": [
+    "Neutral portrait approved.",
+    "Retrato neutro validado.",
+    "Ritratto neutro approvato.",
+    "Neutrales Porträt bestätigt.",
+    "中性肖像已确认。",
+    "ニュートラルなポートレートを承認しました。"
+  ],
+  "Portraits et émotions": [
+    "Portraits and emotions",
+    "Retratos y emociones",
+    "Ritratti ed emozioni",
+    "Porträts und Emotionen",
+    "肖像与情绪",
+    "ポートレートと感情"
+  ],
+  "Pose et cadrage du portrait": [
+    "Portrait pose and framing",
+    "Pose y encuadre del retrato",
+    "Posa e inquadratura del ritratto",
+    "Pose und Bildausschnitt",
+    "肖像姿态与构图",
+    "ポーズと構図"
+  ],
+  "Prépare une nouvelle fiche avant de générer le personnage.": [
+    "Prepare a new profile before generating the character.",
+    "Prepara una ficha nueva antes de generar el personaje.",
+    "Prepara una nuova scheda prima di generare il personaggio.",
+    "Erstelle ein neues Profil, bevor du den Charakter generierst.",
+    "生成角色前请先准备新资料。",
+    "キャラクターを生成する前に新しいプロフィールを準備してください。"
+  ],
+  "Projet, documentation et retours": [
+    "Project, documentation and feedback",
+    "Proyecto, documentación y comentarios",
+    "Progetto, documentazione e feedback",
+    "Projekt, Dokumentation und Feedback",
+    "项目、文档与反馈",
+    "プロジェクト・ドキュメント・フィードバック"
+  ],
+  "Proposer une fiche": [
+    "Suggest a profile",
+    "Proponer una ficha",
+    "Proponi una scheda",
+    "Profil vorschlagen",
+    "生成资料建议",
+    "プロフィールを提案"
+  ],
+  "QUELQUES REPÈRES": [
+    "QUICK GUIDE",
+    "GUÍA RÁPIDA",
+    "GUIDA RAPIDA",
+    "KURZANLEITUNG",
+    "快速指南",
+    "クイックガイド"
+  ],
+  "Recherche et données": [
+    "Search and data",
+    "Búsqueda y datos",
+    "Ricerca e dati",
+    "Suche und Daten",
+    "搜索与数据",
+    "検索とデータ"
+  ],
+  "Référence visuelle du compagnon": [
+    "Companion visual reference",
+    "Referencia visual del compañero",
+    "Riferimento visivo del compagno",
+    "Visuelle Referenz des Begleiters",
+    "伙伴视觉参考",
+    "コンパニオンの画像参照"
+  ],
+  "Régénérer": [
+    "Regenerate",
+    "Regenerar",
+    "Rigenera",
+    "Erneut generieren",
+    "重新生成",
+    "再生成"
+  ],
+  "Réglages absents.": [
+    "Settings missing.",
+    "Faltan los ajustes.",
+    "Impostazioni mancanti.",
+    "Einstellungen fehlen.",
+    "缺少设置。",
+    "設定がありません。"
+  ],
+  "Réglages de génération": [
+    "Generation settings",
+    "Ajustes de generación",
+    "Impostazioni di generazione",
+    "Generierungseinstellungen",
+    "生成设置",
+    "生成設定"
+  ],
+  "Résolution de départ": [
+    "Starting resolution",
+    "Resolución inicial",
+    "Risoluzione iniziale",
+    "Ausgangsauflösung",
+    "起始分辨率",
+    "開始解像度"
+  ],
+  "Sherka {0} · GPL-3.0-only": [
+    "Sherka {0} · GPL-3.0-only",
+    "Sherka {0} · GPL-3.0-only",
+    "Sherka {0} · GPL-3.0-only",
+    "Sherka {0} · GPL-3.0-only",
+    "Sherka {0} · GPL-3.0-only",
+    "Sherka {0} · GPL-3.0-only"
+  ],
+  "Sherka Compagnon": [
+    "Sherka Compagnon",
+    "Sherka Compagnon",
+    "Sherka Compagnon",
+    "Sherka Compagnon",
+    "Sherka Compagnon",
+    "Sherka Compagnon"
+  ],
+  "Ton idée": [
+    "Your idea",
+    "Tu idea",
+    "La tua idea",
+    "Deine Idee",
+    "你的构想",
+    "アイデア"
+  ],
+  "Turquoise": [
+    "Teal",
+    "Turquesa",
+    "Turchese",
+    "Türkis",
+    "青绿色",
+    "ターコイズ"
+  ],
+  "Un compagnon de bureau avec une personnalité, une voix, des émotions et une mémoire persistante.": [
+    "A desktop companion with personality, voice, emotions and persistent memory.",
+    "Un compañero de escritorio con personalidad, voz, emociones y memoria persistente.",
+    "Un compagno sul desktop con personalità, voce, emozioni e memoria persistente.",
+    "Ein Desktop-Begleiter mit Persönlichkeit, Stimme, Emotionen und dauerhaftem Gedächtnis.",
+    "拥有性格、语音、情绪与持久记忆的桌面伙伴。",
+    "性格、声、感情、永続的な記憶を持つデスクトップのコンパニオン。"
+  ],
+  "Une conversation fluide": [
+    "A fluid conversation",
+    "Una conversación fluida",
+    "Una conversazione fluida",
+    "Ein flüssiges Gespräch",
+    "流畅对话",
+    "スムーズな会話"
+  ],
+  "Une exploratrice robotique au visage de métal, curieuse et sarcastique…": [
+    "A curious, sarcastic robot explorer with a metal face…",
+    "Una exploradora robótica con rostro metálico, curiosa y sarcástica…",
+    "Un’esploratrice robotica dal volto metallico, curiosa e sarcastica…",
+    "Eine neugierige, sarkastische Roboterforscherin mit Metallgesicht…",
+    "好奇又毒舌、拥有金属面孔的机器人探险家…",
+    "金属の顔を持つ、好奇心旺盛で皮肉屋なロボット探検家…"
+  ],
+  "Une génération est déjà en cours.": [
+    "A generation is already running.",
+    "Ya hay una generación en curso.",
+    "È già in corso una generazione.",
+    "Es läuft bereits eine Generierung.",
+    "已有生成任务正在运行。",
+    "すでに生成中です。"
+  ],
+  "Upscale final ×2": [
+    "Final ×2 upscale",
+    "Ampliación final ×2",
+    "Upscale finale ×2",
+    "Finales ×2-Upscaling",
+    "最终 ×2 放大",
+    "最終×2アップスケール"
+  ],
+  "Utiliser le portrait neutre avec IP-Adapter": [
+    "Use the neutral portrait with IP-Adapter",
+    "Usar el retrato neutro con IP-Adapter",
+    "Usa il ritratto neutro con IP-Adapter",
+    "Neutrales Porträt mit IP-Adapter verwenden",
+    "通过 IP-Adapter 使用中性肖像",
+    "IP-Adapterでニュートラルなポートレートを使用"
+  ],
+  "Valide le portrait neutre correspondant à cette fiche et à ces réglages avant de générer les émotions.": [
+    "Approve the neutral portrait matching this profile and settings before generating emotions.",
+    "Valida el retrato neutro correspondiente a esta ficha y ajustes antes de generar las emociones.",
+    "Approva il ritratto neutro corrispondente a questa scheda e impostazioni prima di generare le emozioni.",
+    "Bestätige vor den Emotionen das neutrale Porträt für dieses Profil und diese Einstellungen.",
+    "生成情绪前，请确认与当前资料及设置一致的中性肖像。",
+    "感情を生成する前に、このプロフィールと設定に対応するポートレートを承認してください。"
+  ],
+  "Valide le portrait neutre et génère les six émotions avant d’ajouter le compagnon.": [
+    "Approve the neutral portrait and generate the six emotions before adding the companion.",
+    "Valida el retrato neutro y genera las seis emociones antes de añadir el compañero.",
+    "Approva il ritratto neutro e genera le sei emozioni prima di aggiungere il compagno.",
+    "Bestätige das neutrale Porträt und generiere die sechs Emotionen, bevor du den Begleiter hinzufügst.",
+    "添加伙伴前，请确认中性肖像并生成六种情绪。",
+    "コンパニオンを追加する前に、ニュートラルなポートレートを承認し、6つの感情を生成してください。"
+  ],
+  "Valider ce portrait": [
+    "Approve this portrait",
+    "Validar este retrato",
+    "Approva questo ritratto",
+    "Dieses Porträt bestätigen",
+    "确认此肖像",
+    "このポートレートを承認"
+  ],
+  "Vérifie les images avant de les valider.": [
+    "Check the images before approving them.",
+    "Revisa las imágenes antes de validarlas.",
+    "Controlla le immagini prima di approvarle.",
+    "Prüfe die Bilder vor der Bestätigung.",
+    "确认前请检查图像。",
+    "承認前に画像を確認してください。"
+  ],
+  "Violet": [
+    "Purple",
+    "Violeta",
+    "Viola",
+    "Violett",
+    "紫色",
+    "パープル"
+  ],
+  "Workflow API JSON": [
+    "API workflow JSON",
+    "JSON del workflow API",
+    "JSON del workflow API",
+    "API-Workflow-JSON",
+    "API 工作流 JSON",
+    "APIワークフローJSON"
+  ],
+  "Workflow ComfyUI API": [
+    "ComfyUI API workflow",
+    "Workflow API de ComfyUI",
+    "Workflow API ComfyUI",
+    "ComfyUI-API-Workflow",
+    "ComfyUI API 工作流",
+    "ComfyUI APIワークフロー"
+  ],
+  "Actualise les modèles et LoRA après un ajout. Pour un dossier externe, configure extra_model_paths.yaml dans ComfyUI. La première génération charge les modèles et peut prendre plus de temps.": [
+    "Refresh models and LoRAs after adding files. For an external folder, configure extra_model_paths.yaml in ComfyUI. The first generation loads the models and can take longer.",
+    "Actualiza los modelos y LoRA tras añadir archivos. Para carpetas externas, configura extra_model_paths.yaml en ComfyUI. La primera generación carga los modelos y puede tardar más.",
+    "Aggiorna modelli e LoRA dopo aver aggiunto file. Per cartelle esterne, configura extra_model_paths.yaml in ComfyUI. La prima generazione carica i modelli e può richiedere più tempo.",
+    "Aktualisiere Modelle und LoRAs nach dem Hinzufügen. Für externe Ordner konfiguriere extra_model_paths.yaml in ComfyUI. Die erste Generierung lädt die Modelle und kann länger dauern.",
+    "添加文件后请刷新模型和 LoRA。使用外部文件夹时，请在 ComfyUI 中配置 extra_model_paths.yaml。首次生成需要加载模型，可能耗时较长。",
+    "ファイルの追加後はモデルとLoRAを更新してください。外部フォルダーはComfyUIのextra_model_paths.yamlで設定します。初回生成ではモデルを読み込むため、時間がかかる場合があります。"
+  ],
+  "Associe le bon encodeur : IP-Adapter SDXL standard utilise CLIP ViT-bigG ; les variantes ViT-H utilisent CLIP ViT-H. FaceID est exclu pour préserver aussi les robots et les objets.": [
+    "Match the encoder: standard SDXL IP-Adapter uses CLIP ViT-bigG; ViT-H variants use CLIP ViT-H. FaceID is excluded so robots and objects are also supported.",
+    "Usa el codificador adecuado: IP-Adapter SDXL estándar usa CLIP ViT-bigG; las variantes ViT-H usan CLIP ViT-H. Se excluye FaceID para admitir también robots y objetos.",
+    "Abbina l’encoder corretto: IP-Adapter SDXL standard usa CLIP ViT-bigG; le varianti ViT-H usano CLIP ViT-H. FaceID è escluso per supportare anche robot e oggetti.",
+    "Wähle den passenden Encoder: Standard-SDXL-IP-Adapter nutzt CLIP ViT-bigG, ViT-H-Varianten nutzen CLIP ViT-H. FaceID ist ausgeschlossen, damit auch Roboter und Objekte unterstützt werden.",
+    "请匹配编码器：标准 SDXL IP-Adapter 使用 CLIP ViT-bigG，ViT-H 变体使用 CLIP ViT-H。为兼容机器人和物体，不提供 FaceID。",
+    "対応するエンコーダーを選んでください。標準SDXL IP-AdapterはCLIP ViT-bigG、ViT-H版はCLIP ViT-Hを使用します。ロボットや物体にも対応するため、FaceIDは対象外です。"
+  ],
+  "Choisis dans Voice Studio un modèle de transcription qui comprend ta langue. La voix et le modèle TTS se choisissent par compagnon ; la connexion et la transcription se règlent globalement.": [
+    "In Voice Studio, choose a transcription model that supports your language. Voice and TTS model are set per companion; connection and transcription settings are global.",
+    "En Voice Studio, elige un modelo de transcripción compatible con tu idioma. La voz y el modelo TTS se eligen por compañero; la conexión y la transcripción se configuran globalmente.",
+    "In Voice Studio scegli un modello di trascrizione che supporti la tua lingua. Voce e modello TTS si impostano per compagno; connessione e trascrizione sono globali.",
+    "Wähle in Voice Studio ein Transkriptionsmodell für deine Sprache. Stimme und TTS-Modell werden pro Begleiter gewählt; Verbindung und Transkription sind globale Einstellungen.",
+    "请在 Voice Studio 中选择支持所用语言的转写模型。语音和 TTS 模型按伙伴设置，连接和转写设置则全局共用。",
+    "Voice Studioで自分の言語に対応する文字起こしモデルを選んでください。声とTTSモデルはコンパニオンごとに、接続と文字起こしは全体設定で指定します。"
+  ],
+  "Choisis un checkpoint SDXL ou Illustrious et sa vraie famille. Sherka utilise des descriptions visuelles pour SDXL et des tags pour Illustrious. Les LoRA doivent être compatibles avec le checkpoint.": [
+    "Choose an SDXL or Illustrious checkpoint and its actual family. Sherka uses visual descriptions for SDXL and tags for Illustrious. LoRAs must match the checkpoint.",
+    "Elige un checkpoint SDXL o Illustrious y su familia real. Sherka usa descripciones visuales para SDXL y tags para Illustrious. Los LoRA deben ser compatibles con el checkpoint.",
+    "Scegli un checkpoint SDXL o Illustrious e la sua famiglia reale. Sherka usa descrizioni visive per SDXL e tag per Illustrious. I LoRA devono essere compatibili con il checkpoint.",
+    "Wähle einen SDXL- oder Illustrious-Checkpoint und seine tatsächliche Modellfamilie. Sherka nutzt Bildbeschreibungen für SDXL und Tags für Illustrious. LoRAs müssen zum Checkpoint passen.",
+    "选择 SDXL 或 Illustrious checkpoint，并指定其实际模型系列。Sherka 对 SDXL 使用视觉描述，对 Illustrious 使用标签。LoRA 必须与 checkpoint 兼容。",
+    "SDXLまたはIllustriousのチェックポイントと、正しいモデル系列を選んでください。SDXLには視覚的な説明、Illustriousにはタグを使います。LoRAはチェックポイントと互換性が必要です。"
+  ],
+  "Dans Workflow ComfyUI, ouvre ou exporte le JSON fourni comme point de départ. Tu peux importer ton propre fichier au format API. Conserve la chaîne à deux samplers et les entrées attendues ; Sherka injecte les prompts et les réglages. Les nodes non pris en charge sont signalés.": [
+    "Under ComfyUI workflow, open or export the supplied JSON as a starting point, or import your own API file. Keep the two samplers and expected inputs; Sherka inserts prompts and settings. Unsupported nodes are reported.",
+    "En Workflow ComfyUI, abre o exporta el JSON incluido como punto de partida, o importa tu archivo API. Conserva los dos samplers y las entradas esperadas; Sherka inserta prompts y ajustes. Los nodes no admitidos se indican.",
+    "In Workflow ComfyUI apri o esporta il JSON fornito come base, oppure importa il tuo file API. Mantieni i due sampler e gli ingressi previsti; Sherka inserisce prompt e impostazioni. I nodi non supportati vengono segnalati.",
+    "Öffne oder exportiere unter ComfyUI-Workflow die JSON-Vorlage oder importiere eine eigene API-Datei. Behalte beide Sampler und die erwarteten Eingänge bei; Sherka setzt Prompts und Einstellungen ein. Nicht unterstützte Nodes werden gemeldet.",
+    "在 ComfyUI 工作流中打开或导出附带的 JSON 作为起点，也可以导入自己的 API 文件。保留两个采样器和所需输入；Sherka 会注入提示词及设置，并提示不支持的节点。",
+    "ComfyUIワークフローから付属JSONを開くかエクスポートして使えます。独自のAPIファイルも読み込めます。2つのサンプラーと必要な入力を維持してください。Sherkaがプロンプトと設定を挿入し、未対応ノードは通知します。"
+  ],
+  "Installe les nodes IP-Adapter Plus et LayerDiffuse ainsi que leurs modèles sur ComfyUI. Une référence améliore la cohérence, sans garantir des expressions identiques au pixel près.": [
+    "Install IP-Adapter Plus and LayerDiffuse nodes and their models in ComfyUI. A reference improves consistency but does not guarantee pixel-identical expressions.",
+    "Instala los nodes IP-Adapter Plus y LayerDiffuse y sus modelos en ComfyUI. Una referencia mejora la coherencia, sin garantizar expresiones idénticas al píxel.",
+    "Installa i nodi IP-Adapter Plus e LayerDiffuse e i loro modelli in ComfyUI. Un riferimento migliora la coerenza, senza garantire espressioni identiche al pixel.",
+    "Installiere die Nodes IP-Adapter Plus und LayerDiffuse sowie ihre Modelle in ComfyUI. Eine Referenz verbessert die Konsistenz, garantiert aber keine pixelgenau gleichen Ausdrücke.",
+    "请在 ComfyUI 中安装 IP-Adapter Plus、LayerDiffuse 节点及对应模型。参考图能改善一致性，但无法保证表情图像逐像素一致。",
+    "ComfyUIにIP-Adapter PlusとLayerDiffuseのノードおよびモデルを導入してください。参照画像は一貫性を改善しますが、ピクセル単位で同一の表情を保証するものではありません。"
+  ],
+  "La création transparente utilise ComfyUI-layerdiffuse et deux fichiers dans models/layer_model : layer_xl_transparent_conv.safetensors et vae_transparent_decoder.safetensors. Les dimensions des deux passes doivent être divisibles par 64.": [
+    "Transparent creation uses ComfyUI-layerdiffuse with two files in models/layer_model: layer_xl_transparent_conv.safetensors and vae_transparent_decoder.safetensors. Both passes need dimensions divisible by 64.",
+    "La creación transparente usa ComfyUI-layerdiffuse con dos archivos en models/layer_model: layer_xl_transparent_conv.safetensors y vae_transparent_decoder.safetensors. Las dimensiones de ambas pasadas deben ser divisibles por 64.",
+    "La creazione trasparente usa ComfyUI-layerdiffuse con due file in models/layer_model: layer_xl_transparent_conv.safetensors e vae_transparent_decoder.safetensors. Le dimensioni delle due passate devono essere divisibili per 64.",
+    "Für transparente Bilder benötigt ComfyUI-layerdiffuse zwei Dateien in models/layer_model: layer_xl_transparent_conv.safetensors und vae_transparent_decoder.safetensors. Beide Durchläufe brauchen durch 64 teilbare Abmessungen.",
+    "透明图像使用 ComfyUI-layerdiffuse，需要将 layer_xl_transparent_conv.safetensors 和 vae_transparent_decoder.safetensors 放入 models/layer_model。两轮采样的尺寸都必须能被 64 整除。",
+    "透明画像の作成にはComfyUI-layerdiffuseを使用し、models/layer_modelにlayer_xl_transparent_conv.safetensorsとvae_transparent_decoder.safetensorsが必要です。両方のパスのサイズは64の倍数にしてください。"
+  ],
+  "La taille de départ, l’agrandissement latent entre les samplers et l’upscale final se cumulent. Les dimensions de sortie sont affichées avant la génération. Un format plus grand demande davantage de mémoire et de temps.": [
+    "Starting size, latent scaling between samplers and final upscaling combine. Output dimensions are shown before generation. Larger formats use more memory and time.",
+    "El tamaño inicial, la ampliación latente y la final se acumulan. Las dimensiones de salida se muestran antes de generar. Un formato mayor requiere más memoria y tiempo.",
+    "Dimensione iniziale, ingrandimento latente e upscale finale si combinano. Le dimensioni di uscita sono mostrate prima della generazione. Un formato più grande richiede più memoria e tempo.",
+    "Ausgangsgröße, latente Vergrößerung und finales Upscaling wirken zusammen. Die Ausgabegröße wird vorher angezeigt. Größere Formate benötigen mehr Speicher und Zeit.",
+    "起始尺寸、采样器之间的潜空间放大及最终放大会叠加。生成前会显示输出尺寸。尺寸越大，所需显存和时间越多。",
+    "開始サイズ、サンプラー間の潜在画像の拡大、最終アップスケールは累積します。生成前に出力サイズを表示します。大きい画像ほどメモリと時間が必要です。"
+  ],
+  "Le fournisseur de recherche et ses clés API se règlent une seule fois dans Réglages. Chaque compagnon choisit quand utiliser Internet. Hermès conserve ses propres outils et sa mémoire.": [
+    "Set the search provider and its API keys once in Settings. Each companion chooses when to use the Internet. Hermes keeps its own tools and memory.",
+    "Configura una vez el proveedor de búsqueda y sus claves API en Ajustes. Cada compañero elige cuándo usar Internet. Hermes conserva sus herramientas y memoria.",
+    "Imposta una volta il fornitore di ricerca e le chiavi API in Impostazioni. Ogni compagno sceglie quando usare Internet. Hermes mantiene strumenti e memoria propri.",
+    "Suchanbieter und API-Schlüssel richtest du einmal unter Einstellungen ein. Jeder Begleiter wählt, wann er das Internet nutzt. Hermes behält seine eigenen Werkzeuge und Erinnerungen.",
+    "在设置中统一配置搜索服务和 API 密钥。每个伙伴单独选择何时使用网络。Hermes 保留自己的工具和记忆。",
+    "検索プロバイダーとAPIキーは設定画面で一度指定します。インターネットを使うタイミングはコンパニオンごとに選べます。Hermesは自身のツールと記憶を使います。"
+  ],
+  "Le portrait neutre est généré avec un vrai canal alpha grâce à LayerDiffuse SDXL. Une fois validé, il sert de référence IP-Adapter pour les six émotions.": [
+    "The neutral portrait uses a real alpha channel through LayerDiffuse SDXL. Once approved, it becomes the IP-Adapter reference for the six emotions.",
+    "El retrato neutro usa un canal alfa real gracias a LayerDiffuse SDXL. Una vez validado, sirve como referencia IP-Adapter para las seis emociones.",
+    "Il ritratto neutro usa un vero canale alpha grazie a LayerDiffuse SDXL. Dopo l’approvazione diventa il riferimento IP-Adapter per le sei emozioni.",
+    "Das neutrale Porträt erhält durch LayerDiffuse SDXL einen echten Alphakanal. Nach der Bestätigung dient es als IP-Adapter-Referenz für die sechs Emotionen.",
+    "LayerDiffuse SDXL 为中性肖像生成真正的 Alpha 透明通道。确认后，该肖像将作为六种情绪的 IP-Adapter 参考图。",
+    "LayerDiffuse SDXLで実際のアルファチャンネルを持つポートレートを生成します。承認後は、6つの感情を生成するためのIP-Adapter参照画像になります。"
+  ],
+  "Le workflow fourni utilise Power LoRA Loader (rgthree), tinyterraNodes et LoraTagLoader (ComfyUI-MNeMiC-Nodes). Le catalogue signale les nodes absents. Le mode Turbo nécessite PAseer-SDXL-LCM+Turbo ; désactive-le si ce LoRA n’est pas installé.": [
+    "The supplied workflow uses Power LoRA Loader (rgthree), tinyterraNodes and LoraTagLoader (ComfyUI-MNeMiC-Nodes). The catalog reports missing nodes. Turbo needs PAseer-SDXL-LCM+Turbo; disable it if this LoRA is not installed.",
+    "El workflow incluido usa Power LoRA Loader (rgthree), tinyterraNodes y LoraTagLoader (ComfyUI-MNeMiC-Nodes). El catálogo indica los nodes ausentes. Turbo requiere PAseer-SDXL-LCM+Turbo; desactívalo si falta ese LoRA.",
+    "Il workflow fornito usa Power LoRA Loader (rgthree), tinyterraNodes e LoraTagLoader (ComfyUI-MNeMiC-Nodes). Il catalogo segnala i nodi mancanti. Turbo richiede PAseer-SDXL-LCM+Turbo; disattivalo se quel LoRA non è installato.",
+    "Der mitgelieferte Workflow nutzt Power LoRA Loader (rgthree), tinyterraNodes und LoraTagLoader (ComfyUI-MNeMiC-Nodes). Der Katalog zeigt fehlende Nodes an. Turbo braucht PAseer-SDXL-LCM+Turbo; deaktiviere Turbo, wenn dieser LoRA fehlt.",
+    "附带的工作流使用 Power LoRA Loader（rgthree）、tinyterraNodes 和 LoraTagLoader（ComfyUI-MNeMiC-Nodes）。目录会提示缺失节点。Turbo 需要 PAseer-SDXL-LCM+Turbo；未安装该 LoRA 时请关闭 Turbo。",
+    "付属ワークフローにはPower LoRA Loader（rgthree）、tinyterraNodes、LoraTagLoader（ComfyUI-MNeMiC-Nodes）が必要です。不足ノードは一覧に表示されます。TurboにはPAseer-SDXL-LCM+Turboが必要です。未導入なら無効にしてください。"
+  ],
+  "Les conversations et souvenirs restent dans les données locales de Sherka. Les services distants reçoivent les informations nécessaires à leur utilisation. Les exports de compagnons ne contiennent ni historique, ni souvenirs, ni clés API.": [
+    "Conversations and memories stay in Sherka’s local data. Remote services receive the information needed for their use. Companion exports contain no history, memories or API keys.",
+    "Las conversaciones y los recuerdos quedan en los datos locales de Sherka. Los servicios remotos reciben lo necesario para funcionar. Las exportaciones no contienen historial, recuerdos ni claves API.",
+    "Conversazioni e ricordi restano nei dati locali di Sherka. I servizi remoti ricevono le informazioni necessarie al loro uso. Le esportazioni non contengono cronologia, ricordi o chiavi API.",
+    "Gespräche und Erinnerungen bleiben in Sherkas lokalen Daten. Externe Dienste erhalten die für ihre Nutzung nötigen Informationen. Begleiter-Exporte enthalten weder Verlauf noch Erinnerungen oder API-Schlüssel.",
+    "对话和记忆保存在 Sherka 的本地数据中。远程服务会收到运行所需的信息。伙伴导出文件不包含历史、记忆或 API 密钥。",
+    "会話と記憶はSherkaのローカルデータに保存されます。外部サービスには利用に必要な情報が送られます。コンパニオンのエクスポートには履歴、記憶、APIキーは含まれません。"
+  ],
+  "Pour IP-Adapter, installe ComfyUI_IPAdapter_plus, un adaptateur SDXL dans models/ipadapter et son encodeur dans models/clip_vision. Le modèle standard ip-adapter_sdxl utilise CLIP ViT-bigG ; les variantes ViT-H demandent CLIP ViT-H. Les modèles FaceID ne conviennent pas aux robots et objets.": [
+    "For IP-Adapter, install ComfyUI_IPAdapter_plus, an SDXL adapter in models/ipadapter and its encoder in models/clip_vision. Standard ip-adapter_sdxl uses CLIP ViT-bigG; ViT-H variants need CLIP ViT-H. FaceID models do not suit robots and objects.",
+    "Para IP-Adapter, instala ComfyUI_IPAdapter_plus, un adaptador SDXL en models/ipadapter y su codificador en models/clip_vision. ip-adapter_sdxl estándar usa CLIP ViT-bigG; las variantes ViT-H necesitan CLIP ViT-H. FaceID no es adecuado para robots y objetos.",
+    "Per IP-Adapter installa ComfyUI_IPAdapter_plus, un adattatore SDXL in models/ipadapter e il suo encoder in models/clip_vision. ip-adapter_sdxl standard usa CLIP ViT-bigG; le varianti ViT-H richiedono CLIP ViT-H. FaceID non è adatto a robot e oggetti.",
+    "Installiere für IP-Adapter ComfyUI_IPAdapter_plus, einen SDXL-Adapter in models/ipadapter und den Encoder in models/clip_vision. Standard-ip-adapter_sdxl nutzt CLIP ViT-bigG, ViT-H-Varianten benötigen CLIP ViT-H. FaceID eignet sich nicht für Roboter und Objekte.",
+    "使用 IP-Adapter 时，请安装 ComfyUI_IPAdapter_plus，将 SDXL 适配器放入 models/ipadapter，编码器放入 models/clip_vision。标准 ip-adapter_sdxl 使用 CLIP ViT-bigG；ViT-H 变体需要 CLIP ViT-H。FaceID 不适合机器人和物体。",
+    "IP-AdapterにはComfyUI_IPAdapter_plusを導入し、SDXLアダプターをmodels/ipadapter、対応エンコーダーをmodels/clip_visionに置きます。標準ip-adapter_sdxlはCLIP ViT-bigG、ViT-H版はCLIP ViT-Hが必要です。FaceIDはロボットや物体には適しません。"
+  ],
+  "Pour l’upscale ×2, ajoute un modèle d’image compatible ComfyUI dans models/upscale_models, puis actualise le catalogue. Un modèle ×2 léger est généralement le plus rapide ; les modèles ×4 sont ramenés à la sortie ×2 annoncée.": [
+    "For ×2 upscaling, add a ComfyUI-compatible image model to models/upscale_models, then refresh the catalog. A lightweight ×2 model is usually faster; ×4 models are resized to the stated ×2 output.",
+    "Para ampliar ×2, añade un modelo de imagen compatible con ComfyUI en models/upscale_models y actualiza el catálogo. Un modelo ×2 ligero suele ser más rápido; los modelos ×4 se reducen a la salida ×2 indicada.",
+    "Per l’upscale ×2 aggiungi un modello immagine compatibile con ComfyUI in models/upscale_models e aggiorna il catalogo. Un modello ×2 leggero è di solito più rapido; quelli ×4 vengono ridotti all’uscita ×2 indicata.",
+    "Lege für ×2-Upscaling ein kompatibles Bildmodell in models/upscale_models ab und aktualisiere den Katalog. Ein kleines ×2-Modell ist meist schneller; ×4-Modelle werden auf die angegebene ×2-Ausgabe verkleinert.",
+    "要使用 ×2 放大，请将 ComfyUI 兼容的图像模型放入 models/upscale_models，再刷新目录。轻量 ×2 模型通常更快；×4 模型的结果会缩回所标明的 ×2 尺寸。",
+    "×2アップスケールには、ComfyUI対応の画像モデルをmodels/upscale_modelsに追加し、一覧を更新してください。軽量な×2モデルは一般的に高速です。×4モデルの出力は表示された×2サイズに縮小されます。"
+  ],
+  "Si un bruit devient du texte, ajuste la détection de la parole. Si tes pauses coupent les phrases, augmente le silence avant la réponse dans Microphone & écoute.": [
+    "If noise becomes text, adjust speech detection. If pauses split your sentences, increase the silence before reply in Microphone & listening.",
+    "Si un ruido se convierte en texto, ajusta la detección de voz. Si las pausas cortan las frases, aumenta el silencio antes de responder en Micrófono y escucha.",
+    "Se un rumore diventa testo, regola il rilevamento vocale. Se le pause spezzano le frasi, aumenta il silenzio prima della risposta in Microfono e ascolto.",
+    "Wird ein Geräusch zu Text, passe die Spracherkennung an. Werden Sätze bei Pausen getrennt, erhöhe unter Mikrofon und Zuhören die Stille vor der Antwort.",
+    "如果噪音被识别成文字，请调整语音检测。若短暂停顿导致句子被切断，请在麦克风与聆听设置中增加回复前的静默时间。",
+    "雑音が文字になったら音声検出を調整してください。間を置くと文が切れる場合は、マイク・リスニング設定で返答前の無音時間を長くしてください。"
+  ],
+  "Un casque et un environnement calme donnent les meilleurs résultats, même si Sherka gère les interruptions et la reprise de parole. Avec des haut-parleurs, sélectionne ce mode dans les réglages audio.": [
+    "Headphones and a quiet environment give the best results, even though Sherka handles interruptions and resumed speech. With speakers, select speaker mode in audio settings.",
+    "Unos auriculares y un entorno tranquilo dan mejores resultados, aunque Sherka gestiona interrupciones y la reanudación del habla. Con altavoces, selecciona ese modo en los ajustes de audio.",
+    "Cuffie e un ambiente tranquillo danno i risultati migliori, anche se Sherka gestisce interruzioni e ripresa del parlato. Con gli altoparlanti seleziona quella modalità nelle impostazioni audio.",
+    "Ein Headset und eine ruhige Umgebung liefern die besten Ergebnisse, auch wenn Sherka Unterbrechungen und fortgesetztes Sprechen verarbeitet. Wähle bei Lautsprechern den entsprechenden Audiomodus.",
+    "虽然 Sherka 支持打断和继续说话，但耳机和安静环境仍能获得最佳效果。使用扬声器时，请在音频设置中选择对应模式。",
+    "Sherkaは割り込みや発話の再開に対応していますが、ヘッドホンと静かな環境で最良の結果が得られます。スピーカー使用時は音声設定でそのモードを選んでください。"
+  ],
+  "Valide d’abord le portrait neutre : il guide les six émotions avec IP-Adapter. Une référence aide à conserver le personnage, mais chaque résultat reste à vérifier. Baisse sa fidélité si l’expression change trop peu.": [
+    "Approve the neutral portrait first: it guides the six emotions through IP-Adapter. A reference helps retain identity, but check every result. Lower fidelity if expressions barely change.",
+    "Valida primero el retrato neutro: guía las seis emociones con IP-Adapter. La referencia ayuda a conservar la identidad, pero revisa cada resultado. Baja la fidelidad si la expresión cambia poco.",
+    "Approva prima il ritratto neutro: guiderà le sei emozioni con IP-Adapter. Il riferimento aiuta a mantenere l’identità, ma controlla ogni risultato. Riduci la fedeltà se l’espressione cambia poco.",
+    "Bestätige zuerst das neutrale Porträt: Es führt die sechs Emotionen über IP-Adapter. Die Referenz hilft, die Identität zu erhalten; prüfe dennoch jedes Bild. Verringere die Treue, wenn sich Ausdrücke kaum ändern.",
+    "先确认中性肖像，再通过 IP-Adapter 引导六种情绪。参考图有助于保持角色一致性，但仍需逐张检查。若表情变化太小，可降低保真度。",
+    "まずニュートラルなポートレートを承認します。それがIP-Adapterで6つの感情を導きます。参照画像は同一性の維持に役立ちますが、各結果を確認してください。表情が変わりにくい場合は忠実度を下げてください。"
+  ],
+  "Créer avec l’IA": [
+    "Create with AI",
+    "Crear con IA",
+    "Crea con l’IA",
+    "Mit KI erstellen",
+    "使用 AI 创建",
+    "AIで作成"
+  ],
+  "Création en qualité : sans Turbo, 1024 pixels et deux passes de 32 et 20 étapes par défaut. Tu peux ajuster ces valeurs.": [
+    "Quality creation: no Turbo, 1024 pixels and two passes of 32 and 20 steps by default. You can adjust these values.",
+    "Creación de calidad: sin Turbo, 1024 píxeles y dos pasadas de 32 y 20 pasos por defecto. Puedes ajustar estos valores.",
+    "Creazione di qualità: senza Turbo, 1024 pixel e due passate di 32 e 20 step predefiniti. Puoi regolare questi valori.",
+    "Qualitätsmodus: ohne Turbo, standardmäßig 1024 Pixel und zwei Durchläufe mit 32 und 20 Schritten. Diese Werte sind anpassbar.",
+    "优先质量：默认关闭 Turbo、使用 1024 像素，以及 32 步和 20 步两轮采样。可自行调整。",
+    "品質優先：Turboなし、初期値は1024ピクセル、32ステップと20ステップの2パスです。値は調整できます。"
+  ],
+  "Décris ton personnage en 1 à 6000 caractères.": [
+    "Describe your character in 1 to 6000 characters.",
+    "Describe tu personaje en 1 a 6000 caracteres.",
+    "Descrivi il personaggio in 1–6000 caratteri.",
+    "Beschreibe deinen Charakter mit 1 bis 6000 Zeichen.",
+    "请用 1 至 6000 个字符描述角色。",
+    "1～6000文字でキャラクターを説明してください。"
+  ],
+  "Lien d’aide inconnu.": [
+    "Unknown help link.",
+    "Enlace de ayuda desconocido.",
+    "Link di aiuto sconosciuto.",
+    "Unbekannter Hilfelink.",
+    "未知帮助链接。",
+    "不明なヘルプリンクです。"
+  ],
+  "Studio indisponible.": [
+    "Studio unavailable.",
+    "Estudio no disponible.",
+    "Studio non disponibile.",
+    "Studio nicht verfügbar.",
+    "工作室不可用。",
+    "スタジオを利用できません。"
+  ],
+  "Fiche absente.": [
+    "Profile missing.",
+    "Falta la ficha.",
+    "Scheda mancante.",
+    "Profil fehlt.",
+    "缺少资料。",
+    "プロフィールがありません。"
+  ],
+  "Portrait absent.": [
+    "Portrait missing.",
+    "Falta el retrato.",
+    "Ritratto mancante.",
+    "Porträt fehlt.",
+    "缺少肖像。",
+    "ポートレートがありません。"
+  ],
+  "{0} Créer avec l’IA": [
+    "{0} Create with AI",
+    "{0} Crear con IA",
+    "{0} Crea con l’IA",
+    "{0} Mit KI erstellen",
+    "{0} 使用 AI 创建",
+    "{0} AIで作成"
+  ],
+  "Activé : le portrait guide les scènes avec le compagnon. Désactivé : seuls les textes guident l’image. Ce choix ne change pas la création des portraits.": [
+    "On: the portrait guides scenes featuring the companion. Off: only text guides the image. This does not change portrait creation.",
+    "Activado: el retrato guía las escenas con el compañero. Desactivado: solo los textos guían la imagen. Esta opción no cambia la creación de retratos.",
+    "Attivo: il ritratto guida le scene con il compagno. Disattivo: solo i testi guidano l’immagine. Questa scelta non modifica la creazione dei ritratti.",
+    "Aktiviert: Das Porträt leitet Szenen mit dem Begleiter. Deaktiviert: Nur Texte bestimmen das Bild. Die Porträterstellung bleibt davon unabhängig.",
+    "启用时，肖像用于引导包含伙伴的场景；关闭时，仅根据文本生成图像。此选项不影响角色肖像的创建。",
+    "有効時はコンパニオンが登場する場面をポートレートで誘導します。無効時はテキストのみを使います。この設定はポートレート作成には影響しません。"
+  ],
+  "Portrait de face : tête et buste, ou tête seule, avec la tête entièrement visible. Les six émotions gardent ce cadrage de face.": [
+    "Front-facing portrait: head and bust, or head only, with the entire head visible. All six emotions keep this frontal framing.",
+    "Retrato de frente: cabeza y busto, o solo la cabeza, totalmente visible. Las seis emociones mantienen este encuadre frontal.",
+    "Ritratto frontale: testa e busto, o solo la testa, interamente visibile. Le sei emozioni mantengono questa inquadratura frontale.",
+    "Frontales Porträt: Kopf und Oberkörper oder nur der Kopf, vollständig sichtbar. Alle sechs Emotionen behalten diese frontale Ansicht.",
+    "正面肖像：头部与上半身，或仅头部，完整显示头部。六种情绪均保持此正面构图。",
+    "正面ポートレート：頭と胸元、または頭のみ。頭全体が見える構図です。6つの感情でも同じ正面の構図を保ちます。"
+  ],
+  "Attends la fin de l’échange avant de lancer la création.": [
+    "Wait for the exchange to finish before starting character creation.",
+    "Espera a que termine el intercambio antes de iniciar la creación.",
+    "Attendi la fine dello scambio prima di avviare la creazione.",
+    "Warte, bis der Austausch beendet ist, bevor du die Erstellung startest.",
+    "请等本轮对话结束后再开始创建。",
+    "会話が終わってから作成を開始してください。"
+  ],
+  "1. Portrait neutre": [
+    "1. Neutral portrait",
+    "1. Retrato neutro",
+    "1. Ritratto neutro",
+    "1. Neutrales Porträt",
+    "1. 中性表情肖像",
+    "1. 通常の表情"
+  ],
+  "2. Émotions avec Klein": [
+    "2. Emotions with Klein",
+    "2. Emociones con Klein",
+    "2. Emozioni con Klein",
+    "2. Emotionen mit Klein",
+    "2. 使用 Klein 生成表情",
+    "2. Klein で感情を生成"
+  ],
+  "3. Transparence": [
+    "3. Transparency",
+    "3. Transparencia",
+    "3. Trasparenza",
+    "3. Transparenz",
+    "3. 透明背景",
+    "3. 背景の透過"
+  ],
+  "Actualiser les modèles": [
+    "Refresh models",
+    "Actualizar modelos",
+    "Aggiorna modelli",
+    "Modelle aktualisieren",
+    "刷新模型",
+    "モデルを更新"
+  ],
+  "Affine sa fiche": [
+    "Refine the character sheet",
+    "Ajusta su ficha",
+    "Perfeziona la scheda",
+    "Charakterprofil verfeinern",
+    "完善角色资料",
+    "キャラクター設定を調整"
+  ],
+  "Appliquer la transparence": [
+    "Apply transparency",
+    "Aplicar transparencia",
+    "Applica trasparenza",
+    "Transparenz anwenden",
+    "应用透明背景",
+    "背景を透過する"
+  ],
+  "Catalogue mémorisé.": [
+    "Catalog cached.",
+    "Catálogo guardado.",
+    "Catalogo memorizzato.",
+    "Katalog gespeichert.",
+    "目录已缓存。",
+    "カタログを保存しました。"
+  ],
+  "Choisir…": [
+    "Choose…",
+    "Elegir…",
+    "Scegli…",
+    "Auswählen…",
+    "选择…",
+    "選択…"
+  ],
+  "Choisis les modèles requis pour cette étape de création.": [
+    "Choose the models required for this creation stage.",
+    "Elige los modelos necesarios para esta etapa de creación.",
+    "Scegli i modelli necessari per questa fase di creazione.",
+    "Wähle die für diesen Erstellungsschritt benötigten Modelle.",
+    "请选择此创建阶段所需的模型。",
+    "この作成ステップに必要なモデルを選択してください。"
+  ],
+  "De face, tête et buste sur un fond gris foncé uni. Klein conserve le personnage, le cadrage et ce fond pour chaque émotion.": [
+    "Front view, head and bust on a solid dark gray background. Klein preserves the character, framing and background for each emotion.",
+    "De frente, cabeza y busto sobre un fondo gris oscuro uniforme. Klein conserva el personaje, el encuadre y el fondo en cada emoción.",
+    "Vista frontale, testa e busto su sfondo grigio scuro uniforme. Klein mantiene personaggio, inquadratura e sfondo per ogni emozione.",
+    "Frontalansicht, Kopf und Oberkörper vor einfarbig dunkelgrauem Hintergrund. Klein behält Figur, Bildausschnitt und Hintergrund für jede Emotion bei.",
+    "正面头部和胸像，背景为纯深灰色。Klein 为每种表情保留角色、构图和背景。",
+    "正面の頭部と胸像を無地の濃いグレー背景で生成します。Klein は各表情でキャラクター、構図、背景を維持します。"
+  ],
+  "Descriptions en anglais : tags pour Illustrious, phrases pour SDXL et instructions de modification pour Klein.": [
+    "English descriptions: tags for Illustrious, sentences for SDXL and editing instructions for Klein.",
+    "Descripciones en inglés: etiquetas para Illustrious, frases para SDXL e instrucciones de edición para Klein.",
+    "Descrizioni in inglese: tag per Illustrious, frasi per SDXL e istruzioni di modifica per Klein.",
+    "Beschreibungen auf Englisch: Tags für Illustrious, Sätze für SDXL und Bearbeitungsanweisungen für Klein.",
+    "请用英文描述：Illustrious 使用标签，SDXL 使用句子，Klein 使用编辑指令。",
+    "説明は英語で記述します。Illustrious はタグ、SDXL は文章、Klein は編集指示を使用します。"
+  ],
+  "Détourage des portraits…": [
+    "Removing portrait backgrounds…",
+    "Eliminando fondos de los retratos…",
+    "Rimozione degli sfondi dei ritratti…",
+    "Porträthintergründe werden entfernt…",
+    "正在移除肖像背景…",
+    "肖像の背景を除去中…"
+  ],
+  "Encodeur de texte Klein": [
+    "Klein text encoder",
+    "Codificador de texto Klein",
+    "Codificatore di testo Klein",
+    "Klein-Textencoder",
+    "Klein 文本编码器",
+    "Klein テキストエンコーダー"
+  ],
+  "Génère le portrait HD sur fond gris, ramené à 1024 pixels. Valide son apparence avant de passer aux émotions.": [
+    "Generate the HD portrait on gray, resized to 1024 pixels. Approve its appearance before creating emotions.",
+    "Genera el retrato HD sobre gris, reducido a 1024 píxeles. Valida su aspecto antes de crear las emociones.",
+    "Genera il ritratto HD su sfondo grigio, ridimensionato a 1024 pixel. Approva l'aspetto prima di creare le emozioni.",
+    "Erstelle das HD-Porträt auf Grau, auf 1024 Pixel verkleinert. Bestätige das Aussehen vor den Emotionen.",
+    "生成灰色背景高清肖像，并缩放至 1024 像素。请先确认外观，再生成表情。",
+    "グレー背景の HD 肖像を生成し、1024 ピクセルに縮小します。外観を承認してから表情を作成してください。"
+  ],
+  "Génère ou recommence chaque expression séparément. Clique sur une image pour la voir en grand.": [
+    "Generate or retry each expression individually. Click an image to enlarge it.",
+    "Genera o repite cada expresión por separado. Haz clic en una imagen para ampliarla.",
+    "Genera o ripeti ogni espressione singolarmente. Fai clic su un'immagine per ingrandirla.",
+    "Erstelle oder wiederhole jeden Ausdruck einzeln. Klicke auf ein Bild, um es zu vergrößern.",
+    "可单独生成或重新生成每种表情。点击图片可放大查看。",
+    "各表情を個別に生成・再生成できます。画像をクリックすると拡大表示します。"
+  ],
+  "Générer": [
+    "Generate",
+    "Generar",
+    "Genera",
+    "Generieren",
+    "生成",
+    "生成"
+  ],
+  "Générer les émotions manquantes": [
+    "Generate missing emotions",
+    "Generar emociones que faltan",
+    "Genera emozioni mancanti",
+    "Fehlende Emotionen generieren",
+    "生成缺失的表情",
+    "未生成の表情を生成"
+  ],
+  "Imagine ton personnage": [
+    "Imagine your character",
+    "Imagina tu personaje",
+    "Immagina il tuo personaggio",
+    "Entwirf deinen Charakter",
+    "构思你的角色",
+    "キャラクターを考える"
+  ],
+  "La création suit trois étapes : portrait SDXL ou Illustrious sur fond gris uni, émotions avec Flux Klein 4B, puis détourage automatique avec RMBG-2.0. Valide le portrait neutre avant les émotions. Clique sur les images pour les examiner en grand.": [
+    "Creation has three stages: an SDXL or Illustrious portrait on solid gray, emotions with Flux Klein 4B, then automatic background removal with RMBG-2.0. Approve the neutral portrait first. Click images to inspect them at a larger size.",
+    "La creación tiene tres etapas: retrato SDXL o Illustrious sobre gris uniforme, emociones con Flux Klein 4B y eliminación automática del fondo con RMBG-2.0. Valida primero el retrato neutro. Haz clic para ampliar las imágenes.",
+    "La creazione ha tre fasi: ritratto SDXL o Illustrious su grigio uniforme, emozioni con Flux Klein 4B e rimozione automatica dello sfondo con RMBG-2.0. Approva prima il ritratto neutro. Fai clic sulle immagini per ingrandirle.",
+    "Drei Schritte: Porträt mit SDXL oder Illustrious auf einfarbigem Grau, Emotionen mit Flux Klein 4B, dann automatische Freistellung mit RMBG-2.0. Bestätige zuerst das neutrale Porträt. Bilder lassen sich per Klick vergrößern.",
+    "创建分三步：用 SDXL 或 Illustrious 生成纯灰背景肖像，用 Flux Klein 4B 生成表情，再用 RMBG-2.0 自动抠图。先确认中性表情肖像，点击图片可放大检查。",
+    "作成は3段階です。SDXL または Illustrious で無地のグレー背景の肖像を生成し、Flux Klein 4B で表情を作成、RMBG-2.0 で背景を除去します。まず通常の表情を承認してください。画像はクリックで拡大できます。"
+  ],
+  "Le checkpoint du portrait contient son encodeur de texte et son VAE. Les émotions utilisent les trois modèles Klein ci-dessous.": [
+    "The portrait checkpoint includes its text encoder and VAE. Emotions use the three Klein models below.",
+    "El checkpoint del retrato incluye su codificador de texto y VAE. Las emociones usan los tres modelos Klein de abajo.",
+    "Il checkpoint del ritratto include codificatore di testo e VAE. Le emozioni usano i tre modelli Klein qui sotto.",
+    "Der Porträt-Checkpoint enthält Textencoder und VAE. Die Emotionen nutzen die drei Klein-Modelle unten.",
+    "肖像检查点已包含文本编码器和 VAE。表情生成使用下方三个 Klein 模型。",
+    "肖像用チェックポイントにはテキストエンコーダーと VAE が含まれます。表情には以下の3つの Klein モデルを使用します。"
+  ],
+  "Le détourage ne contient pas de transparence exploitable. Vérifie le modèle RMBG et réessaie.": [
+    "Background removal produced no usable transparency. Check the RMBG model and try again.",
+    "El recorte no produjo transparencia utilizable. Revisa el modelo RMBG y vuelve a intentarlo.",
+    "La rimozione dello sfondo non ha prodotto trasparenza utilizzabile. Verifica il modello RMBG e riprova.",
+    "Die Freistellung hat keine nutzbare Transparenz erzeugt. Prüfe das RMBG-Modell und versuche es erneut.",
+    "抠图未生成可用的透明区域。请检查 RMBG 模型后重试。",
+    "背景除去で有効な透過結果が得られませんでした。RMBG モデルを確認し、再試行してください。"
+  ],
+  "Le portrait utilise rgthree, tinyterraNodes, ComfyUI-MNeMiC-Nodes et ComfyUI-Easy-Use. Le détourage requiert ComfyUI-RMBG et ses poids RMBG-2.0. Le catalogue signale les nodes absents ; les réglages de génération et de détourage restent fixes.": [
+    "Portraits use rgthree, tinyterraNodes, ComfyUI-MNeMiC-Nodes and ComfyUI-Easy-Use. Background removal requires ComfyUI-RMBG and its RMBG-2.0 weights. The catalog reports missing nodes; generation and background-removal settings are fixed.",
+    "Los retratos usan rgthree, tinyterraNodes, ComfyUI-MNeMiC-Nodes y ComfyUI-Easy-Use. El recorte requiere ComfyUI-RMBG y los pesos RMBG-2.0. El catálogo indica los nodos ausentes; los ajustes son fijos.",
+    "I ritratti usano rgthree, tinyterraNodes, ComfyUI-MNeMiC-Nodes e ComfyUI-Easy-Use. Il ritaglio richiede ComfyUI-RMBG e i pesi RMBG-2.0. Il catalogo segnala i nodi mancanti; le impostazioni sono fisse.",
+    "Porträts nutzen rgthree, tinyterraNodes, ComfyUI-MNeMiC-Nodes und ComfyUI-Easy-Use. Die Freistellung benötigt ComfyUI-RMBG und RMBG-2.0-Gewichte. Fehlende Nodes werden angezeigt; die Einstellungen bleiben fest.",
+    "肖像需要 rgthree、tinyterraNodes、ComfyUI-MNeMiC-Nodes 和 ComfyUI-Easy-Use。抠图需要 ComfyUI-RMBG 及 RMBG-2.0 权重。目录会提示缺失节点；生成及抠图参数固定。",
+    "肖像には rgthree、tinyterraNodes、ComfyUI-MNeMiC-Nodes、ComfyUI-Easy-Use を使用します。背景除去には ComfyUI-RMBG と RMBG-2.0 の重みが必要です。不足ノードはカタログに表示され、生成と背景除去の設定は固定です。"
+  ],
+  "Les réglages des trois workflows sont fixes. Le détourage utilise RMBG-2.0, sans réglage à choisir.": [
+    "All three workflows use fixed settings. Background removal uses RMBG-2.0 with no settings to choose.",
+    "Los tres workflows tienen ajustes fijos. El recorte usa RMBG-2.0 sin ajustes que elegir.",
+    "I tre workflow hanno impostazioni fisse. Il ritaglio usa RMBG-2.0 senza impostazioni da scegliere.",
+    "Alle drei Workflows haben feste Einstellungen. Die Freistellung nutzt RMBG-2.0 ohne weitere Auswahl.",
+    "三个工作流的参数固定。抠图使用 RMBG-2.0，无需选择设置。",
+    "3つのワークフローは固定設定です。背景除去は RMBG-2.0 を使用し、設定の選択は不要です。"
+  ],
+  "Modèle du portrait": [
+    "Portrait model",
+    "Modelo del retrato",
+    "Modello del ritratto",
+    "Porträtmodell",
+    "肖像模型",
+    "肖像モデル"
+  ],
+  "Modèle Klein 4B": [
+    "Klein 4B model",
+    "Modelo Klein 4B",
+    "Modello Klein 4B",
+    "Klein-4B-Modell",
+    "Klein 4B 模型",
+    "Klein 4B モデル"
+  ],
+  "Modèles de création": [
+    "Creation models",
+    "Modelos de creación",
+    "Modelli di creazione",
+    "Modelle für die Erstellung",
+    "创建模型",
+    "作成用モデル"
+  ],
+  "Nodes ComfyUI manquants : {0}": [
+    "Missing ComfyUI nodes: {0}",
+    "Nodos ComfyUI ausentes: {0}",
+    "Nodi ComfyUI mancanti: {0}",
+    "Fehlende ComfyUI-Nodes: {0}",
+    "缺少 ComfyUI 节点：{0}",
+    "不足している ComfyUI ノード：{0}"
+  ],
+  "Pour Klein, installe un modèle Flux 2 Klein 4B dans models/diffusion_models, un encodeur compatible Qwen dans models/text_encoders et le VAE Flux 2 dans models/vae. Choisis ces trois fichiers dans Création de personnage.": [
+    "For Klein, install a Flux 2 Klein 4B model in models/diffusion_models, a compatible Qwen encoder in models/text_encoders and the Flux 2 VAE in models/vae. Select those three files in Character creation.",
+    "Para Klein, instala Flux 2 Klein 4B en models/diffusion_models, un codificador Qwen compatible en models/text_encoders y el VAE Flux 2 en models/vae. Selecciona los tres archivos en Creación de personajes.",
+    "Per Klein, installa Flux 2 Klein 4B in models/diffusion_models, un codificatore Qwen compatibile in models/text_encoders e il VAE Flux 2 in models/vae. Seleziona i tre file in Creazione personaggio.",
+    "Installiere Flux 2 Klein 4B in models/diffusion_models, einen kompatiblen Qwen-Encoder in models/text_encoders und das Flux-2-VAE in models/vae. Wähle diese drei Dateien in der Charaktererstellung.",
+    "将 Flux 2 Klein 4B 放入 models/diffusion_models，兼容的 Qwen 编码器放入 models/text_encoders，Flux 2 VAE 放入 models/vae。在角色创建中选择这三个文件。",
+    "Flux 2 Klein 4B を models/diffusion_models、互換 Qwen エンコーダーを models/text_encoders、Flux 2 VAE を models/vae に配置します。キャラクター作成画面でこの3ファイルを選択してください。"
+  ],
+  "Pour les illustrations de conversation, IP-Adapter reste facultatif : ComfyUI_IPAdapter_plus, un adaptateur SDXL dans models/ipadapter et son encodeur compatible dans models/clip_vision. Il n’est pas utilisé pour créer les compagnons.": [
+    "IP-Adapter remains optional for conversation illustrations: ComfyUI_IPAdapter_plus, an SDXL adapter in models/ipadapter and a compatible encoder in models/clip_vision. It is not used for character creation.",
+    "IP-Adapter sigue siendo opcional para ilustrar conversaciones: ComfyUI_IPAdapter_plus, adaptador SDXL en models/ipadapter y codificador compatible en models/clip_vision. No se usa para crear compañeros.",
+    "IP-Adapter resta facoltativo per illustrare conversazioni: ComfyUI_IPAdapter_plus, adattatore SDXL in models/ipadapter e codificatore compatibile in models/clip_vision. Non serve per creare compagni.",
+    "IP-Adapter bleibt für Gesprächsbilder optional: ComfyUI_IPAdapter_plus, SDXL-Adapter in models/ipadapter und kompatibler Encoder in models/clip_vision. Zur Charaktererstellung wird er nicht verwendet.",
+    "对话插图仍可选用 IP-Adapter：安装 ComfyUI_IPAdapter_plus，将 SDXL 适配器放入 models/ipadapter，兼容编码器放入 models/clip_vision。创建伙伴不使用它。",
+    "会話のイラストには任意で IP-Adapter を使用できます。ComfyUI_IPAdapter_plus、models/ipadapter の SDXL アダプター、models/clip_vision の互換エンコーダーが必要です。キャラクター作成には使用しません。"
+  ],
+  "Prépare sa fiche, valide son portrait et ses émotions, puis applique la transparence.": [
+    "Prepare the character sheet, approve the portrait and emotions, then apply transparency.",
+    "Prepara la ficha, valida el retrato y las emociones y aplica la transparencia.",
+    "Prepara la scheda, approva ritratto ed emozioni, poi applica la trasparenza.",
+    "Erstelle das Profil, bestätige Porträt und Emotionen und wende dann Transparenz an.",
+    "编写角色资料，确认肖像与表情，再应用透明背景。",
+    "設定を作成し、肖像と表情を承認してから背景を透過します。"
+  ],
+  "Quand les sept portraits te conviennent, applique le détourage. Les images d’origine restent disponibles pour recommencer une émotion.": [
+    "When all seven portraits look right, remove their backgrounds. Original images remain available to retry an emotion.",
+    "Cuando los siete retratos te gusten, elimina sus fondos. Los originales se conservan para repetir una emoción.",
+    "Quando i sette ritratti ti soddisfano, rimuovi gli sfondi. Gli originali restano disponibili per ripetere un'emozione.",
+    "Wenn alle sieben Porträts passen, entferne ihre Hintergründe. Die Originale bleiben für neue Versuche einzelner Emotionen verfügbar.",
+    "满意全部七张肖像后，可移除背景。原图会保留，以便重新生成某种表情。",
+    "7枚すべての肖像に満足したら背景を除去します。元画像は保持されるため、表情を再生成できます。"
+  ],
+  "RMBG : installation et modèles": [
+    "RMBG: installation and models",
+    "RMBG: instalación y modelos",
+    "RMBG: installazione e modelli",
+    "RMBG: Installation und Modelle",
+    "RMBG：安装与模型",
+    "RMBG：インストールとモデル"
+  ],
+  "Termine le détourage des sept images avant d’ajouter le compagnon.": [
+    "Finish removing the backgrounds of all seven images before adding the companion.",
+    "Termina de recortar las siete imágenes antes de añadir el compañero.",
+    "Completa il ritaglio delle sette immagini prima di aggiungere il compagno.",
+    "Stelle alle sieben Bilder frei, bevor du den Begleiter hinzufügst.",
+    "添加伙伴前，请先完成七张图片的背景移除。",
+    "7枚すべての背景除去を完了してからキャラクターを追加してください。"
+  ],
+  "VAE Klein": [
+    "Klein VAE",
+    "VAE Klein",
+    "VAE Klein",
+    "Klein-VAE",
+    "Klein VAE",
+    "Klein VAE"
+  ],
+  "Valide le portrait neutre et génère les six émotions avant le détourage.": [
+    "Approve the neutral portrait and generate all six emotions before removing backgrounds.",
+    "Valida el retrato neutro y genera las seis emociones antes de recortar.",
+    "Approva il ritratto neutro e genera le sei emozioni prima del ritaglio.",
+    "Bestätige das neutrale Porträt und erzeuge die sechs Emotionen vor der Freistellung.",
+    "抠图前，请确认中性表情肖像并生成其他六种表情。",
+    "通常の表情を承認し、6つの表情を生成してから背景を除去してください。"
+  ],
+  "Voir le workflow": [
+    "View workflow",
+    "Ver workflow",
+    "Visualizza workflow",
+    "Workflow anzeigen",
+    "查看工作流",
+    "ワークフローを表示"
+  ],
+  "Workflow intégré, en lecture seule. Les modèles et les images sont injectés à chaque étape.": [
+    "Built-in workflow, read-only. Models and images are supplied at each stage.",
+    "Workflow integrado, de solo lectura. Los modelos e imágenes se insertan en cada etapa.",
+    "Workflow integrato, in sola lettura. Modelli e immagini vengono inseriti in ogni fase.",
+    "Integrierter Workflow, schreibgeschützt. Modelle und Bilder werden in jedem Schritt eingesetzt.",
+    "内置只读工作流。模型和图片会在各阶段自动填入。",
+    "組み込みの読み取り専用ワークフローです。各ステップでモデルと画像が設定されます。"
   ]
 }

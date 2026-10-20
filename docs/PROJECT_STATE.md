@@ -1,6 +1,22 @@
 # Project status
 
-Release version: **1.2.0**, October 20, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.3.0**, October 21, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+
+## 1.3.0 — three-stage character creation
+
+Character creation is in the sidebar between Memory and Settings, accessible through **Companions → Create with AI**. A connected classic companion's LLM proposes an editable sheet. Three supplied API workflows replace the previous creation path: an HD neutral portrait on uniform dark gray, Klein 4B editing for six emotions, then fixed RMBG-2.0 transparency. No IP-Adapter or Turbo is used for creation. The third stage has no settings.
+
+The studio exposes the neutral checkpoint/family and Klein diffusion model, text encoder and VAE. The original base/refiner/detail sampling, 1024 output, Klein reference-latent editing and RMBG mask settings remain fixed. Model choices and catalog lists are cached. All three graphs are viewable read-only. Large image previews support review before approval. Frontal head/bust framing and a uniform gray background are requested in both the LLM sheet and rendering prompts.
+
+Raw and transparent images are tracked separately. Neutral regeneration resets all dependents; an individual emotion retry invalidates its own alpha only. A model change invalidates affected stages, while personality edits retain images. Finished alpha images survive partial failures and only missing transparency jobs are retried. Publishing requires seven valid transparent images and creates a profile with empty history/memory and no inherited voice. Drafts remain in memory during the app session.
+
+Conversation illustrations retain a separate per-companion IP-Adapter switch, recommended aspect ratios, explicit inter-pass latent scaling and selectable final ×2 upscaling. The bundled graph's formerly disconnected ×1.5 node is wired when selected. Desktop previews preserve aspect ratio. API workflow import/export remains in conversation illustration settings; creation uses its three fixed graphs. Export metadata keeps sampling changes reversible on reimport.
+
+Search engines and API keys are configured globally in Settings; search access mode remains per companion. An existing provider configuration migrates once. Help & about sits below Settings and summarizes audio guidance, ComfyUI nodes/models and workflow requirements. All authored interface messages have translations in the seven supported languages.
+
+Development checks include 26 focused core tests, TypeScript, formatting, Clippy and localization/catalog checks. Live local ComfyUI testing rendered a 1024² neutral robot, a Klein joy edit and both transparent versions using the exact RMBG settings. Both final PNGs have roughly 60.7% transparent pixels, transparent corners and an opaque face. The user subsequently created a companion from beginning to end and confirmed that the complete flow works. Artistic quality and emotional fidelity still depend on the selected models.
+
+Creation keeps conversation priority, cancellation tokens and targeted ComfyUI cleanup. It never globally interrupts the server. Image processing during final creation runs outside the shared conversation lock. The optimized Windows executable passed the native scenario in 17.8 seconds with isolated data and local service fixtures: all three stages, individual retries, preview dialogs, cached models, missing-node recovery, creation and restart. These fixture checks are separate from live rendering. Release validation includes Windows/Linux CI, signed Windows assets and an extracted Debian package startup check. Physical Linux audio and compositor behavior remain separate validation work.
 
 ## 1.2.0 — full-screen scenes and desktop responsiveness
 

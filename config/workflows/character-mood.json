@@ -1,0 +1,271 @@
+{
+  "9": {
+    "inputs": {
+      "images": [
+        "126",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "76": {
+    "inputs": {
+      "image": "%source_image%"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "122": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "123": {
+    "inputs": {
+      "steps": 20,
+      "width": [
+        "136",
+        0
+      ],
+      "height": [
+        "136",
+        1
+      ]
+    },
+    "class_type": "Flux2Scheduler",
+    "_meta": {
+      "title": "Flux2Scheduler"
+    }
+  },
+  "124": {
+    "inputs": {
+      "cfg": 5,
+      "model": [
+        "128",
+        0
+      ],
+      "positive": [
+        "139",
+        0
+      ],
+      "negative": [
+        "137",
+        0
+      ]
+    },
+    "class_type": "CFGGuider",
+    "_meta": {
+      "title": "CFG Guider"
+    }
+  },
+  "125": {
+    "inputs": {
+      "noise": [
+        "127",
+        0
+      ],
+      "guider": [
+        "124",
+        0
+      ],
+      "sampler": [
+        "122",
+        0
+      ],
+      "sigmas": [
+        "123",
+        0
+      ],
+      "latent_image": [
+        "133",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "126": {
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "132",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "127": {
+    "inputs": {
+      "noise_seed": 0
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "128": {
+    "inputs": {
+      "unet_name": "%mood_model%",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "129": {
+    "inputs": {
+      "clip_name": "%text_encoder%",
+      "type": "flux2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "130": {
+    "inputs": {
+      "text": "%prompt%\n",
+      "clip": [
+        "129",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive Prompt)"
+    }
+  },
+  "131": {
+    "inputs": {
+      "text": "%negative_prompt%",
+      "clip": [
+        "129",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Negative Prompt)"
+    }
+  },
+  "132": {
+    "inputs": {
+      "vae_name": "%vae%"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "133": {
+    "inputs": {
+      "width": [
+        "136",
+        0
+      ],
+      "height": [
+        "136",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "Empty Flux 2 Latent"
+    }
+  },
+  "134": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "megapixels": 1,
+      "resolution_steps": 1,
+      "image": [
+        "76",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "Scale Image to Total Pixels"
+    }
+  },
+  "136": {
+    "inputs": {
+      "image": [
+        "134",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "Get Image Size"
+    }
+  },
+  "137": {
+    "inputs": {
+      "conditioning": [
+        "131",
+        0
+      ],
+      "latent": [
+        "138",
+        0
+      ]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": {
+      "title": "Set Reference Latent"
+    }
+  },
+  "138": {
+    "inputs": {
+      "pixels": [
+        "134",
+        0
+      ],
+      "vae": [
+        "132",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "139": {
+    "inputs": {
+      "conditioning": [
+        "130",
+        0
+      ],
+      "latent": [
+        "138",
+        0
+      ]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": {
+      "title": "Set Reference Latent"
+    }
+  }
+}

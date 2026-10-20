@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0 — 2026-10-21
+
+- Create a companion from an idea with an editable LLM-generated personality and appearance, without using existing conversations or memories.
+- Generate a front-facing portrait with SDXL or Illustrious, edit six emotions with Flux Klein 4B, then apply fixed RMBG-2.0 background removal to all seven images.
+- Approve the neutral portrait, generate or retry emotions individually, inspect images in a large preview and add the finished companion with fresh history, memory and voice selection.
+- Preserve completed stage outputs when retrying, invalidate only affected images and remember selected models and scanned catalogs.
+- Add optional IP-Adapter guidance, recommended image formats, explicit latent scaling and selectable final ×2 upscaling for conversation illustrations.
+- Move the web-search provider and API configuration into global Settings, while keeping each companion's Internet access choice.
+- Add Help & about with ComfyUI requirements, voice guidance and privacy information, translated with the new controls into all seven interface languages.
+- Publish Windows installer/portable and Debian packages with signed Windows update assets.
+
 ## 1.2.0 — 2026-10-20
 
 - Fix desktop freezes caused by native window queries waiting on locks held by the activity scheduler or geometry saver; handle activity notifications off the UI thread.

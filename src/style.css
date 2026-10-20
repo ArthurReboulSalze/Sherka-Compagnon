@@ -286,7 +286,7 @@ html:has(.widget-body) { background: transparent; }
 .cell-text-actions .icon-button { width:26px; height:23px; padding:3px; }
 .widget-image-cell { overflow:hidden; }
 .cell-image-layers { width:100%; aspect-ratio:1; position:relative; cursor:move; touch-action:none; }
-.cell-image-layers img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; }
+.cell-image-layers img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .cell-image-layers .leaving { z-index:1; }
 #cell-image-placeholder { position:absolute; inset:0 0 27px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; padding:18px; text-align:center; pointer-events:none; color:var(--accent); }
 #cell-image-placeholder p { margin:0; font-size:12px; line-height:1.5; color:var(--muted); }
@@ -499,3 +499,23 @@ html { background:var(--app-bg); }
 #close-image-fullscreen { position:absolute;top:16px;right:16px;z-index:2;opacity:0.65;transition:opacity .15s; }
 #close-image-fullscreen:hover,#close-image-fullscreen:focus-visible { opacity:1; }
 .fullscreen-illustration [role="alert"] { position:absolute;bottom:16px;left:16px; }
+.studio-gallery {display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin:24px 0}
+.studio-gallery article {border:1px solid var(--border);border-radius:12px;padding:12px;min-width:0}
+.studio-gallery h3 {margin:0 0 10px}
+.studio-preview {aspect-ratio:1;display:grid;place-items:center;width:100%;padding:0;border:1px solid #ffffff16;color:inherit;cursor:zoom-in;border-radius:8px;margin-bottom:12px;overflow:hidden;background:repeating-conic-gradient(#24292e 0% 25%,#30363c 0% 50%) 50% / 20px 20px}
+.studio-preview:disabled {cursor:default}
+.studio-preview:focus-visible {outline:2px solid var(--accent);outline-offset:3px}
+.studio-neutral-gallery {max-width:360px}
+.studio-dialog {width:1000px}
+.studio-large-preview {display:grid;place-items:center;background:repeating-conic-gradient(#24292e 0% 25%,#30363c 0% 50%) 50% / 24px 24px;border-radius:8px;overflow:hidden}
+.studio-large-preview img {display:block;max-width:100%;max-height:76vh;object-fit:contain}
+.studio-dialog .studio-workflow {width:100%;font-family:monospace;font-size:12px}
+.studio-progress .section-heading {align-items:center;margin-bottom:0}
+.studio-progress p:empty {display:none}
+.studio-preview img {max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain}
+.studio-preview span {background:#161a20b0;padding:8px;border-radius:6px}
+#character-studio textarea {width:100%}
+#character-studio [inert] {opacity:.65}
+.workflow-editor {width:min(960px,90vw);max-width:90vw}
+.workflow-editor textarea {font-family:monospace;width:100%;height:55vh;white-space:pre;overflow:auto}
+.image-output-options,.image-reference-options {border:1px solid var(--border);border-radius:12px;padding:16px;margin:20px 0}

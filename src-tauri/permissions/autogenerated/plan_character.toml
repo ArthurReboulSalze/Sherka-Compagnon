@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-plan-character"
+description = "Enables the plan_character command without any pre-configured scope."
+commands.allow = ["plan_character"]
+
+[[permission]]
+identifier = "deny-plan-character"
+description = "Denies the plan_character command without any pre-configured scope."
+commands.deny = ["plan_character"]
