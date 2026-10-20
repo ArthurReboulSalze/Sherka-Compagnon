@@ -460,9 +460,22 @@ test('widget discret : commandes accessibles à travers les espaces transparents
   const minerva=state.profiles.find((p:any)=>p.name==='Minerva');
   await native('apply_mutation',{mutation:{kind:'switch_profile',id:minerva.id}});
   await expect(widget.locator('.widget-name')).toHaveText('Minerva');
-  // Restore the same native/base dimensions reached by dragging to the limit.
-  await native('widget_surface',{profileId:minerva.id,surface:{left:0,top:0,width:600,height:720,base_width:600,base_height:720}});
-  await widget.reload();
+  // Start from persisted maximum geometry. Overriding the native surface while
+  // the old page is alive races its pending layout writes before a reload.
+  const scale=await widget.evaluate(()=>devicePixelRatio);
+  await stopApplication();
+  execFileSync('python',['-c',`
+import json,sqlite3,sys
+from pathlib import Path
+root=Path(sys.argv[1]); profile=sys.argv[2]; scale=float(sys.argv[3])
+with sqlite3.connect(root/'settings.sqlite3') as db:
+    settings=json.loads(db.execute('SELECT value FROM settings WHERE id=1').fetchone()[0])
+    bounds={'x':0,'y':0,'width':round(600*scale),'height':round(720*scale)}
+    settings['desktop_layouts'].setdefault(profile,{})['bounds']=bounds
+    settings['widget_bounds']=bounds
+    db.execute('UPDATE settings SET value=? WHERE id=1',(json.dumps(settings),))
+`,dataDirectory,minerva.id,String(scale)],{windowsHide:true,stdio:'pipe'});
+  await startApplication();
   await expect.poll(()=>widget.locator('.widget').evaluate(el=>el.clientHeight)).toBe(720);
   await native('widget_action',{action:'show_widget'});
   const portrait=widget.locator('#drag-region'),toolbar=widget.locator('.widget-toolbar');
