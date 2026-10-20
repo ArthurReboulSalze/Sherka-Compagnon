@@ -455,6 +455,56 @@ test('profils réels, synchronisation du widget, mémoire isolée et redémarrag
   expect(consoleErrors).toEqual([]);
 });
 
+test('widget discret : commandes accessibles à travers les espaces transparents au format maximal', async () => {
+  const state=await native<any>('get_snapshot');
+  const minerva=state.profiles.find((p:any)=>p.name==='Minerva');
+  await native('apply_mutation',{mutation:{kind:'switch_profile',id:minerva.id}});
+  await expect(widget.locator('.widget-name')).toHaveText('Minerva');
+  // Restore the same native/base dimensions reached by dragging to the limit.
+  await native('widget_surface',{profileId:minerva.id,surface:{left:0,top:0,width:600,height:720,base_width:600,base_height:720}});
+  await widget.reload();
+  await expect.poll(()=>widget.locator('.widget').evaluate(el=>el.clientHeight)).toBe(720);
+  await native('widget_action',{action:'show_widget'});
+  const portrait=widget.locator('#drag-region'),toolbar=widget.locator('.widget-toolbar');
+  await portrait.hover();
+  await expect(toolbar).toBeVisible();
+  const rects=await widget.evaluate(()=>{
+    const box=(selector:string)=>{const r=document.querySelector(selector)!.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,right:r.right};};
+    return {portrait:box('#drag-region'),status:box('.widget-status'),toolbar:box('.widget-toolbar'),resize:box('#resize-widget'),width:innerWidth,height:innerHeight};
+  });
+  for(const r of [rects.toolbar,rects.resize]){
+    expect(r.x).toBeGreaterThanOrEqual(0);expect(r.y).toBeGreaterThanOrEqual(0);
+    expect(r.right).toBeLessThanOrEqual(rects.width);expect(r.bottom).toBeLessThanOrEqual(rects.height);
+  }
+  // Pause in the transparent gap: a direct Playwright click would jump over it.
+  await widget.mouse.move(rects.width/2,(rects.status.bottom+rects.toolbar.y)/2,{steps:20});
+  await expect(widget.locator('.widget')).toHaveClass(/controls-visible/);
+  await expect(toolbar).toBeVisible();
+  await widget.locator('#widget-image').click({trial:true});
+  await widget.locator('#widget-text').click();
+  await expect(widget.locator('#widget-text-cell')).toBeVisible();
+  await portrait.hover();
+  const handle=await widget.locator('#resize-widget').boundingBox();
+  await widget.mouse.move(handle!.x+handle!.width/2,handle!.y+handle!.height/2,{steps:20});
+  await expect(widget.locator('#resize-widget')).toBeVisible();
+  expect(await widget.evaluate(({x,y})=>document.elementFromPoint(x,y)?.closest('button')?.id,{x:handle!.x+handle!.width/2,y:handle!.y+handle!.height/2})).toBe('resize-widget');
+  await widget.mouse.down();
+  await widget.mouse.move(handle!.x+handle!.width/2-50,handle!.y+handle!.height/2-50,{steps:10});
+  await widget.mouse.up();
+  await expect.poll(async()=>(await native<any>('widget_surface')).base_width).toBeLessThan(600);
+  await portrait.hover();
+  // Moving past the avatar must still dismiss controls, even when the open
+  // text cell keeps the native window larger than the avatar itself.
+  const outside=await widget.locator('.widget').boundingBox();
+  await widget.mouse.move(outside!.x+outside!.width/2,outside!.y+outside!.height+8);
+  await expect(toolbar).toBeHidden();
+  await portrait.hover();
+  await expect(toolbar).toBeVisible();
+  await widget.mouse.move(-20,-20);
+  await expect(toolbar).toBeHidden();
+  expect(consoleErrors).toEqual([]);
+});
+
 test('widget discret : survol, clic, perte de focus, clavier et retour à l’image seule', async () => {
   const portrait = widget.locator('#drag-region');
   const controls = widget.locator('.widget-toolbar');
@@ -2302,7 +2352,7 @@ test('widget text resize: canvas follows text height without moving the image an
   // Native CSS textarea resizing changes its height without dispatching input.
   await widget.locator('#cell-text').evaluate((element:HTMLTextAreaElement)=>element.style.height='100px');
   await expect.poll(()=>widget.evaluate(()=>document.querySelector('#widget-text-cell')!.getBoundingClientRect().bottom<=innerHeight+1)).toBe(true);
-  expect(await widget.evaluate(()=>innerHeight)).toBeGreaterThan(original+30);
+  await expect.poll(()=>widget.evaluate(()=>innerHeight)).toBeGreaterThan(original+30);
   await native('apply_mutation',{mutation:{kind:'theme',theme:'sage'}});
   await expect(widget.locator('html')).toHaveAttribute('data-theme','sage');
   await expect.poll(()=>widget.locator('#cell-text').evaluate(element=>element.getBoundingClientRect().height)).toBe(100);

@@ -38,6 +38,7 @@ let widgetControlsPinned = false;
 let widgetPointerInside = false;
 let widgetKeyboardControls = false;
 let dismissWidgetControls: (() => void) | undefined;
+let trackWidgetPointer: ((event: PointerEvent) => void) | undefined;
 let widgetVisible = false;
 const notifications = document.createElement('div');
 notifications.className = 'notifications';
@@ -378,10 +379,20 @@ function renderWidget(): void {
   };
   // Native dragging and window changes can leave CSS :hover / :focus-visible stale.
   // Show controls only while a current pointer or keyboard interaction owns them.
-  for (const event of ['pointerenter', 'pointermove']) surface.addEventListener(event, () => {
-    if (!widgetPointerInside) { widgetPointerInside = true; updateControls(); }
-  });
-  surface.addEventListener('pointerleave', () => dismissWidgetControls?.());
+  trackWidgetPointer = event => {
+    // The surface passes clicks through to the image cell behind it. Its DOM
+    // pointerleave also fires in the transparent gaps between portrait/buttons;
+    // use the avatar rectangle instead, without blocking the image underneath.
+    const bounds = surface.getBoundingClientRect();
+    const captured = event.target instanceof Element && surface.contains(event.target)
+      && event.target.hasPointerCapture(event.pointerId);
+    const inside = captured || (event.clientX >= bounds.left && event.clientX < bounds.right
+      && event.clientY >= bounds.top && event.clientY < bounds.bottom);
+    if (!inside) {
+      if (widgetPointerInside || widgetControlsPinned || widgetKeyboardControls) dismissWidgetControls?.();
+    } else if (!widgetPointerInside) { widgetPointerInside = true; updateControls(); }
+  };
+  surface.addEventListener('pointerenter', event => trackWidgetPointer?.(event));
   surface.addEventListener('focusin', event => {
     if ((event.target as Element).matches(':focus-visible')) { widgetKeyboardControls = true; updateControls(); }
   });
@@ -457,6 +468,8 @@ async function start(): Promise<void> {
     setInterval(()=>{const active=document.activeElement;if(document.hasFocus()&&active instanceof HTMLTextAreaElement&&active.value.trim())activity();},2000);
     await api.onChanged(() => void refresh());
     if (widget) {
+      document.addEventListener('pointermove', event => trackWidgetPointer?.(event));
+      document.addEventListener('pointerleave', () => dismissWidgetControls?.());
       window.addEventListener('blur', () => dismissWidgetControls?.());
       document.addEventListener('visibilitychange', () => { if (document.hidden) dismissWidgetControls?.(); });
       await getCurrentWindow().onFocusChanged(({ payload }) => { if (!payload) dismissWidgetControls?.(); });

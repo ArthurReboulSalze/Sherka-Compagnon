@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1 — 2026-10-20
+
+- Keep desktop widget controls visible when the pointer crosses transparent gaps between the avatar, toolbar and resize handle, including maximum-size Minerva.
+- Preserve automatic hiding when leaving the avatar region and keep overlapping image cells interactive.
+- Add a native regression covering maximum-size controls and real pointer resizing; wait for native window resizing in the text-cell test.
+
 ## 1.1.0 — 2026-10-20
 
 - Add optional per-companion spontaneous conversation with random idle intervals, activity/voice guards and one invitation until a real reply; exclude Hermes.

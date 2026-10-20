@@ -35,7 +35,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**Sherka 1.1 is here:** optional **spontaneous conversation**, a remembered desktop layout for each companion, and shared voice/service settings. VoiceStudio runs in the background; services launched by Sherka close with it. [What's new](docs/releases/1.1.0.md).
+**Sherka 1.1.1 is here:** desktop controls stay accessible as you move from the avatar to its buttons, even at maximum size. Enjoy 1.1's **spontaneous conversation**, remembered companion layouts and shared voice/service settings. [What's new](docs/releases/1.1.1.md).
 
 ## Meet your companions
 
