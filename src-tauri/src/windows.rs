@@ -182,6 +182,7 @@ fn emit_widget_visibility(app: &AppHandle) -> tauri::Result<()> {
 }
 
 pub fn hide_widget(app: &AppHandle) -> tauri::Result<()> {
+    let _ = crate::image_viewer::close(app);
     if let Some(window) = app.get_webview_window("widget") {
         window.hide()?;
     }
@@ -216,8 +217,9 @@ pub fn restore_widget(app: &AppHandle) -> tauri::Result<()> {
 }
 
 pub fn apply_preferences(app: &AppHandle, settings: &Settings) -> tauri::Result<()> {
+    crate::image_viewer::set_top_preference(app, settings.always_on_top);
     if let Some(window) = app.get_webview_window("widget") {
-        window.set_always_on_top(settings.always_on_top)?;
+        window.set_always_on_top(settings.always_on_top || crate::image_viewer::active(app))?;
         let factor = f64::from(settings.widget_scale) / 100.0;
         if !crate::desktop_tools::resize_avatar(app, 290.0 * factor, 350.0 * factor) {
             window.set_size(tauri::LogicalSize::new(290.0 * factor, 350.0 * factor))?;
@@ -363,6 +365,10 @@ fn paint_microphone(app: &AppHandle, listening: bool) {
 
 pub fn on_window_event(window: &tauri::Window, event: &WindowEvent) {
     match event {
+        WindowEvent::CloseRequested { api, .. } if window.label() == "image-viewer" => {
+            api.prevent_close();
+            let _ = crate::image_viewer::close(window.app_handle());
+        }
         WindowEvent::CloseRequested { api, .. } => {
             if window.app_handle().tray_by_id("sherka").is_some() {
                 api.prevent_close();
@@ -408,13 +414,8 @@ pub fn on_window_event(window: &tauri::Window, event: &WindowEvent) {
 }
 
 pub fn save_geometry_now(app: &AppHandle) {
-    let Some(window) = app.get_webview_window("widget") else {
-        return;
-    };
-    let Ok(position) = window.outer_position() else {
-        return;
-    };
-    let Ok(size) = window.outer_size() else {
+    // Finish all native window queries before acquiring the core lock.
+    let Some((owner, bounds)) = crate::desktop_tools::avatar_bounds(app) else {
         return;
     };
     let Some(shared) = app.try_state::<Shared>() else {
@@ -423,18 +424,10 @@ pub fn save_geometry_now(app: &AppHandle) {
     let Ok(mut core) = shared.0.lock() else {
         return;
     };
-    if !crate::desktop_tools::is_owner(app, core.session.snapshot().profile_id) {
+    if core.session.snapshot().profile_id != owner || !crate::desktop_tools::is_owner(app, owner) {
         return;
     }
-    if core
-        .save_bounds(crate::desktop_tools::avatar_bounds(app).unwrap_or(Bounds {
-            x: position.x,
-            y: position.y,
-            width: size.width,
-            height: size.height,
-        }))
-        .is_err()
-    {
+    if core.save_bounds(bounds).is_err() {
         eprintln!("La position du widget n'a pas été enregistrée.");
     }
 }

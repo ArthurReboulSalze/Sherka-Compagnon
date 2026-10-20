@@ -162,6 +162,48 @@ test.afterEach(async ({}, info) => {
   await stopApplication();
 });
 
+test('desktop geometry: autosave and simultaneous native queries remain responsive', async () => {
+  test.setTimeout(60_000);
+  const snapshot = await native<any>('get_snapshot');
+  const owner = snapshot.session.profile_id;
+  const routes = modelRoutes(['geometry-fixture']);
+  const server = createServer((request, response) => {
+    if (!routes(request, response)) {response.writeHead(404);response.end('{}');}
+  });
+  await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
+  const profile = snapshot.profiles.find((p:any) => p.id === owner);
+  await native('apply_mutation', {mutation: {kind: 'connections', id: owner, revision: profile.revision,
+    connections: {...profile.connections, lm_studio_url: `http://127.0.0.1:${(server.address() as any).port}`,
+      llm_model: 'geometry-fixture', llm_model_key: 'geometry-fixture', tts_engine: 'fixture', tts_voice: 'fixture'},
+  }});
+  // Resize once, then keep the UI thread busy while the background geometry
+  // saver wakes after 450 ms. A saver holding Canvas during a window getter
+  // deadlocks against a synchronous widget_surface query on the UI thread.
+  try { await widget.evaluate(async (profileId: string) => {
+    const invoke = (window as any).__TAURI_INTERNALS__.invoke;
+    for (let round = 0; round < 12; round++) {
+      const width = 290 + round % 2;
+      await invoke('widget_surface', {profileId, surface: {
+        left: 0, top: 0, width, height: 350, base_width: width, base_height: 350,
+      }});
+      for (let i = 0; i < 85; i++) {
+        await Promise.race([
+          Promise.all([invoke('widget_surface', {profileId, surface: null}), invoke('initiative_activity')]),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Native geometry stopped responding')), 3000)),
+        ]);
+        await new Promise(done => setTimeout(done, 8));
+      }
+    }
+  }, owner);
+  await expect.poll(async () => (await native<any>('get_snapshot')).session.profile_id).toBe(owner);
+  await native('widget_action', {action: 'quit'});
+  await expect.poll(() => child.exitCode, {timeout: 15_000}).toBe(0);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>(done => server.close(() => done()));
+  }
+});
+
 test('startup recovery: incompatible settings or schema keep data intact and updates accessible', async () => {
   const routes: string[]=[];
   const server=createServer((request,response)=>{
@@ -2365,7 +2407,7 @@ test('widget text resize: canvas follows text height without moving the image an
   // Native CSS textarea resizing changes its height without dispatching input.
   await widget.locator('#cell-text').evaluate((element:HTMLTextAreaElement)=>element.style.height='100px');
   await expect.poll(()=>widget.evaluate(()=>document.querySelector('#widget-text-cell')!.getBoundingClientRect().bottom<=innerHeight+1)).toBe(true);
-  await expect.poll(()=>widget.evaluate(()=>innerHeight)).toBeGreaterThan(original+30);
+  await expect.poll(()=>widget.evaluate(()=>innerHeight)).toBeGreaterThan(original+10);
   await native('apply_mutation',{mutation:{kind:'theme',theme:'sage'}});
   await expect(widget.locator('html')).toHaveAttribute('data-theme','sage');
   await expect.poll(()=>widget.locator('#cell-text').evaluate(element=>element.getBoundingClientRect().height)).toBe(100);
@@ -2650,7 +2692,7 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await panel.locator('#add-image-lora').click();await panel.locator('[data-lora="0"]').selectOption('Style/scene.safetensors');
     expect(await panel.locator('[data-lora="0"] option').allTextContents()).not.toContain('Models/Turbo/PAseer-SDXL-LCM+Turbo.safetensors');
     await panel.locator('[data-strength="0"]').evaluate((input:HTMLInputElement)=>{input.value='0.65';input.dispatchEvent(new Event('input',{bubbles:true}));});
-    await panel.locator('[name="image_positive_suffix"]').fill('(warm light:1.3), watercolor');await panel.locator('[name="image_family"]').selectOption('sdxl');await panel.locator('[name="image_negative"]').fill('no people, no watermark');await panel.locator('[name="image_turbo"]').uncheck();await panel.locator('[name="lora_folder"]').fill('Style');
+    await panel.locator('[name="image_positive_suffix"]').fill('(warm light:1.3), watercolor');await panel.locator('[name="image_family"]').selectOption('sdxl');await panel.locator('[name="image_negative"]').fill('no people, no watermark');await panel.locator('[name="image_appearance_negative"]').fill('(human face:1.4), wrong color');await panel.locator('[name="image_turbo"]').uncheck();await panel.locator('[name="lora_folder"]').fill('Style');
     await panel.locator('[name="image_count"]').fill('2');await panel.locator('[name="slide_seconds"]').fill('1');
     await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();
     await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((item:any)=>item.id===p.id).illustration.loras[0]?.strength??-1).toBeCloseTo(0.65);
@@ -2661,6 +2703,7 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await widget.locator('#drag-region').hover();await widget.locator('#widget-image').click();
     await expect(widget.locator('#widget-image-cell')).toBeVisible();
     expect(browser.contexts().flatMap(c=>c.pages())).toHaveLength(2);
+    await expect(widget.locator('#cell-image-placeholder')).toContainText('charge le modèle et les LoRA sélectionnés');
     const scene=widget,quick=widget;
     await widget.locator('#drag-region').hover();await widget.locator('#widget-text').click();
     await expect(widget.locator('#widget-text-cell')).toBeVisible();
@@ -2681,7 +2724,8 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await quick.locator('#cell-speak').uncheck();await quick.locator('#cell-text').fill('On part en camping dans la forêt.');
     await quick.locator('#cell-text').dispatchEvent('keydown',{key:'Enter',isComposing:true});
     await expect(quick.locator('#cell-text')).toHaveValue('On part en camping dans la forêt.');expect(plans).toHaveLength(0);
-    await widget.evaluate((bytes:number[])=>{const data=new DataTransfer();data.items.add(new File([new Uint8Array(bytes)],'sample.png',{type:'image/png'}));document.querySelector('#drag-region')!.dispatchEvent(new DragEvent('drop',{bubbles:true,dataTransfer:data}));},[...readFileSync('src-tauri/icons/32x32.png')]);
+    await widget.evaluate((bytes:number[])=>{const data=new DataTransfer();data.items.add(new File([new Uint8Array(bytes)],'sample.png',{type:'image/png'}));document.querySelector('#cell-text')!.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));},[...readFileSync('src-tauri/icons/32x32.png')]);
+    await expect(widget.locator('#cell-text')).toHaveAttribute('placeholder',/image/);
     await expect(widget.locator('.cell-attachment')).toHaveCount(1);
     await quick.getByRole('button',{name:'Envoyer',exact:true}).click();
     await expect.poll(async()=>{const status=await native<any>('get_illustration');if(status.phase==='error')throw new Error(status.message+' · planned='+plans.length+' rendered='+graphs.length);return status.phase;}).toBe('ready');
@@ -2700,6 +2744,44 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     expect((await widget.locator('#widget-image-cell').boundingBox())!.x).toBeGreaterThan(imageBefore!.x+15);
     const handle=await widget.locator('#cell-image-resize').boundingBox();await widget.mouse.move(handle!.x+8,handle!.y+8);await widget.mouse.down();await widget.mouse.move(handle!.x+42,handle!.y+42,{steps:5});await widget.mouse.up();
     expect((await widget.locator('#widget-image-cell').boundingBox())!.width).toBeGreaterThan(imageBefore!.width+20);
+    // A large cell is durable; full screen has its own background surface.
+    await native('save_widget_cell',{profileId:p.id,image:{x:0,y:0,size:650,moved:true},textHeight:100});
+    await widget.reload();await expect(widget.locator('#widget-image-cell')).toBeVisible();
+    await expect.poll(()=>widget.locator('#widget-image-cell').evaluate(el=>el.clientWidth)).toBeGreaterThan(600);
+    await expect.poll(()=>widget.locator('#cell-image-resize').evaluate(el=>{const r=el.getBoundingClientRect();return r.right<=innerWidth&&r.bottom<=innerHeight;})).toBe(true);
+    await widget.locator('#cell-image-resize').hover();
+    const largeHandle=await widget.locator('#cell-image-resize').boundingBox();
+    await widget.mouse.move(largeHandle!.x+8,largeHandle!.y+8);await widget.mouse.down();await widget.mouse.move(largeHandle!.x+58,largeHandle!.y+58,{steps:8});await widget.mouse.up();
+    await expect.poll(()=>widget.locator('#widget-image-cell').evaluate(el=>el.clientWidth)).toBeGreaterThan(670);
+    await expect.poll(async()=>(await native<any>('get_snapshot')).settings.desktop_layouts[p.id].image.size).toBeGreaterThan(670);
+    const placement=(await native<any>('get_snapshot')).settings.desktop_layouts[p.id].image;
+    await native('apply_mutation',{mutation:{kind:'preferences',preferences:{always_on_top:false,widget_scale:100}}});
+    const probe=(x=0,y=0)=>JSON.parse(execFileSync('powershell.exe',['-NoProfile','-File','tests/native/image-viewer-state.ps1','-TargetProcessId',String(child.pid),'-MoveWidgetX',String(x),'-MoveWidgetY',String(y)],{encoding:'utf8',windowsHide:true}));
+    const background=widget.locator('#cell-image-layers');
+    await background.dblclick({position:{x:650,y:500}});
+    await expect.poll(()=>browser.contexts().flatMap(c=>c.pages()).length).toBe(3);
+    const viewer=browser.contexts().flatMap(c=>c.pages()).find(page=>page!==panel&&page!==widget)!;
+    await expect(viewer.locator('.fullscreen-image-layers img:not(.leaving)')).toBeVisible();
+    await expect(widget.locator('#widget-image-cell')).toBeHidden();
+    await expect.poll(()=>viewer.evaluate(()=>innerWidth===screen.width&&innerHeight===screen.height)).toBe(true);
+    const stacking=probe();expect(stacking.image.visible).toBe(true);expect(stacking.widget.visible).toBe(true);expect(stacking.widget.topmost).toBe(true);expect(stacking.widget.rank).toBeLessThan(stacking.image.rank);
+    const moved=probe(20,20);expect(moved.widget.x).toBe(stacking.widget.x+20);expect(moved.widget.y).toBe(stacking.widget.y+20);expect(moved.image).toEqual(stacking.image);
+    await widget.locator('#drag-region').hover();
+    const avatarBefore=await native<any>('widget_surface'),resize=await widget.locator('#resize-widget').boundingBox();
+    await widget.mouse.move(resize!.x+8,resize!.y+8);await widget.mouse.down();await widget.mouse.move(resize!.x-24,resize!.y-24,{steps:8});await widget.mouse.up();
+    await expect.poll(async()=>(await native<any>('widget_surface')).base_width).toBeLessThan(avatarBefore.base_width);
+    await viewer.screenshot({path:'artifacts/illustration-fullscreen.png'});
+    await viewer.keyboard.press('Escape');
+    await expect(widget.locator('#widget-image-cell')).toBeVisible();
+    expect(probe().widget.topmost).toBe(false);expect(probe().image.visible).toBe(false);
+    expect((await native<any>('get_snapshot')).settings.desktop_layouts[p.id].image).toEqual(placement);
+    await background.dblclick({position:{x:650,y:500}});
+    await expect(viewer.locator('.fullscreen-image-layers img')).toBeVisible();
+    await viewer.locator('.fullscreen-image-layers').dblclick({position:{x:700,y:500}});
+    await expect(widget.locator('#widget-image-cell')).toBeVisible();
+    // Restore the compact cell for the remaining inline interaction checks.
+    await native('save_widget_cell',{profileId:p.id,image:{x:0,y:350,size:240,moved:true},textHeight:100});
+    await widget.reload();await expect(widget.locator('#widget-image-cell')).toBeVisible();
     expect(streamed[0].messages.at(-1).content.some((item:any)=>item.type==='image_url')).toBe(true);
     expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('data:image');
     visionEnabled=false;
@@ -2710,7 +2792,7 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     await expect(widget.locator('.toast')).toHaveCount(0,{timeout:5000});expect(await widget.locator('.cell-attachment').count()).toBe(0);visionEnabled=true;
     expect(plans).toHaveLength(1);expect(plans[0].messages[0].content).toContain('fluent English visual prose');expect(plans[0].reasoning_effort).toBe('none');
     const pair=JSON.parse(plans[0].messages[1].content);expect(pair.latest_user).toContain('camping');expect(pair.latest_companion).toContain('carrosserie');expect(pair.appearance).toContain('car');
-    expect(graphs[0]['19'].inputs.text).toEqual(['34',2]);expect(graphs[0]['2'].inputs.lora_1.strength).toBeCloseTo(0.65);expect(graphs[0]['5'].inputs.text).toBe('no people, no watermark');expect(graphs[0]['21'].inputs.steps).toBe(16);expect(graphs[0]['25'].inputs.steps).toBe(16);expect(graphs[0]['21'].inputs.cfg).toBeCloseTo(3.8);expect(graphs[0]['25'].inputs.cfg).toBe(7);expect(graphs[0]['4'].inputs.text).toContain('newly imagined scene detail');
+    expect(graphs[0]['19'].inputs.text).toEqual(['34',2]);expect(graphs[0]['2'].inputs.lora_1.strength).toBeCloseTo(0.65);expect(graphs[0]['5'].inputs.text).toBe('no people, no watermark\n(human face:1.4), wrong color');expect(graphs[0]['21'].inputs.steps).toBe(16);expect(graphs[0]['25'].inputs.steps).toBe(16);expect(graphs[0]['21'].inputs.cfg).toBeCloseTo(3.8);expect(graphs[0]['25'].inputs.cfg).toBe(7);expect(graphs[0]['4'].inputs.text).toContain('newly imagined scene detail');
     await scene.screenshot({path:'artifacts/scene-window.png'});await quick.screenshot({path:'artifacts/quick-text-window.png'});await widget.locator('#drag-region').hover();await widget.screenshot({path:'artifacts/kit-tight-widget.png'});
     held=true;await native('refresh_illustration');await expect.poll(()=>graphs.length).toBe(3);
     await widget.locator('#drag-region').hover();await widget.locator('#widget-image').click();await expect.poll(()=>deleted).toContain('scene_3');

@@ -530,4 +530,8 @@ async function start(): Promise<void> {
   await refresh();
 }
 
-void start();
+if(new URLSearchParams(location.search).get('view')==='image') {
+  void import('./image-viewer').then(module=>module.mountImageViewer()).catch(report);
+} else {
+  void start();
+}

@@ -18,6 +18,64 @@ fn config() -> Config {
 }
 
 #[test]
+fn character_negative_is_durable_and_only_applies_when_the_character_is_present() {
+    for family in [
+        illustration::ModelFamily::Illustrious,
+        illustration::ModelFamily::Sdxl,
+    ] {
+        let mut c = config();
+        c.model_family = family;
+        c.appearance_negative_prompt = "(human face:1.4), blue armor".into();
+        let scene = Scene {
+            positive: "moonlight, lake, wide landscape".into(),
+            negative: "ignored model output".into(),
+        };
+        for include in [true, false, true] {
+            let (request, _) = illustration::configured_scene_request(
+                &c,
+                if include { &c.physical_description } else { "" },
+                "Imagine",
+                "A scene.",
+            );
+            let data: Value = serde_json::from_str(&request[1].content).unwrap();
+            let graph = illustration::workflow_for_subject(&c, scene.clone(), &info(), 12, include)
+                .unwrap();
+            assert_eq!(graph["5"]["inputs"]["text"], data["negative_prompt"]);
+            let negative = graph["5"]["inputs"]["text"].as_str().unwrap();
+            assert_eq!(negative.contains("(human face:1.4)"), include);
+            assert_eq!(
+                negative.matches("(human face:1.4)").count(),
+                usize::from(include)
+            );
+        }
+        c.negative_prompt.clear();
+        assert_eq!(c.scene_negative(true), c.appearance_negative_prompt);
+        assert_eq!(c.scene_negative(false), "");
+        let root = tempfile::tempdir().unwrap();
+        let core = Companion::open(root.path()).unwrap();
+        let id = core.session.snapshot().profile_id;
+        let profile = core.profile(id).unwrap();
+        let mut draft = profile.details;
+        draft.illustration = c.clone();
+        core.store.update(id, profile.revision, draft).unwrap();
+        drop(core);
+        let core = Companion::open(root.path()).unwrap();
+        assert_eq!(
+            core.profile(id)
+                .unwrap()
+                .details
+                .illustration
+                .appearance_negative_prompt,
+            c.appearance_negative_prompt
+        );
+        c.appearance_negative_prompt = "x".repeat(2401);
+        assert!(c.validated().is_err());
+    }
+    let old: Config = serde_json::from_value(json!({"physical_description":"A robot"})).unwrap();
+    assert_eq!(old.appearance_negative_prompt, "");
+}
+
+#[test]
 fn advanced_sampling_keeps_both_passes_independent_of_turbo_and_node_names() {
     let mut c = config();
     c.advanced = illustration::AdvancedSampling {

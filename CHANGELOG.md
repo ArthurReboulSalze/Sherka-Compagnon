@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 — 2026-10-20
+
+- Fix desktop freezes caused by native window queries waiting on locks held by the activity scheduler or geometry saver; handle activity notifications off the UI thread.
+- Enlarge image cells and open illustrations full screen with a double-click, keeping the companion independently movable and resizable in front.
+- Add character-specific negative appearance prompts, applied only when the character appears, for both Illustrious and SDXL.
+- Accept image pastes in the widget text cell and mention image input in its placeholder.
+- Explain first-image startup and selected model/LoRA loading directly in the image generator; translate the new controls into all seven interface languages.
+
 ## 1.1.1 — 2026-10-20
 
 - Keep desktop widget controls visible when the pointer crosses transparent gaps between the avatar, toolbar and resize handle, including maximum-size Minerva.

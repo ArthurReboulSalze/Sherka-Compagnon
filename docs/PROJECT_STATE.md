@@ -1,6 +1,12 @@
 # Project status
 
-Release version: **1.1.0**, October 20, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.2.0**, October 20, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+
+## 1.2.0 — full-screen scenes and desktop responsiveness
+
+Conversation images have larger desktop cells and a separate full-screen surface. The companion keeps its native drag/resize behavior in front, and leaving full screen restores the image cell. Character-specific negative appearance prompts are appended only when the scene includes the companion; the general negative prompt remains authoritative. Image pastes use the same capability checks as dropped attachments. First-image loading explains local ComfyUI startup and loading of the selected checkpoint/LoRAs.
+
+A configured-model native regression reproduces a desktop freeze with the 1.1.1 executable. Activity notifications now run asynchronously; native visibility/geometry reads finish before acquiring engine locks, and geometry saves reject stale profile/surface state. The same stress scenario passes with the fix. Native Windows checks also cover full-screen stacking and controls, larger saved cells, clipboard attachments and text-cell resizing. Static/localization checks and focused core tests pass; Debian compilation and the core illustration/device tests pass. These checks use isolated data and simulated service responses, without physical audio or Linux desktop interaction claims.
 
 ## 1.1.0 — shared services and spontaneous conversation
 

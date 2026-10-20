@@ -85,7 +85,7 @@ fn geometry_is_independent_durable_and_rejects_late_cell_writes() {
     let image = ImagePlacement {
         x: -50.0,
         y: 12.0,
-        size: 240.0,
+        size: 960.0,
         moved: true,
     };
     core.save_bounds(bounds).unwrap();

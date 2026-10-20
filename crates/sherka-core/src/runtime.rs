@@ -81,7 +81,7 @@ impl Companion {
                 || !p.size.is_finite()
                 || !(-800.0..=900.0).contains(&p.x)
                 || !(-600.0..=800.0).contains(&p.y)
-                || !(140.0..=600.0).contains(&p.size)
+                || !(140.0..=1600.0).contains(&p.size)
         }) || text_height.is_some_and(|h| !h.is_finite() || !(32.0..=600.0).contains(&h))
         {
             return Err(Error::Validation(

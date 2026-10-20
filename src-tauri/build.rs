@@ -16,6 +16,8 @@ fn main() {
             "desktop_tool",
             "widget_surface",
             "save_widget_cell",
+            "image_fullscreen",
+            "get_image_viewer",
             "initiative_activity",
             "get_widget_visibility",
             "get_voice_service",

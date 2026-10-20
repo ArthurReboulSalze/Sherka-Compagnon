@@ -23,6 +23,7 @@
     "allow-get-attachment-support",
     "allow-refresh-illustration",
     "allow-initiative-activity",
-    "allow-save-widget-cell"
+    "allow-save-widget-cell",
+    "allow-image-fullscreen"
   ]
 }

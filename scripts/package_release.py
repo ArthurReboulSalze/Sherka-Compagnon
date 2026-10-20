@@ -45,7 +45,8 @@ Clear a companion's conversation from Conversation, or request /clear and confir
 with /confirm-clear. Saved facts remain; individual facts can be deleted from Memory.
 Preview memory optimization from Settings or Memory before applying it.
 Optional ComfyUI scenes support Illustrious and SDXL, with a per-companion
-negative prompt, positive prompt addition, model/LoRA folder filters and Turbo or normal sampling.
+negative prompt, character-only negative appearance prompt, positive prompt addition,
+model/LoRA folder filters and Turbo or normal sampling.
 Your requested scene, outfit and action take priority over default poses or reply context.
 Scene planning requests one companion by default and distinguishes intentional group scenes.
 Duplicate companions or share a .sherka.zip pack with all seven expression images.
@@ -56,7 +57,10 @@ ComfyUI adds advanced sampling/output size, live scenes with conversation priori
 remembered catalogs and optional startup of a configured local Python/portable install.
 The first images may take longer while ComfyUI and models load. See docs/COMFYUI.md.
 Avatar and image-cell position/size are remembered per companion across restarts.
-Overlapping images sit behind the avatar. Optional Spontaneous conversation chooses
+Overlapping images sit behind the avatar. Enlarge image cells or double-click an image
+for full screen; the companion stays movable/resizable in front. Esc returns to the cell.
+The widget text cell also accepts image pastes when the model supports them.
+Optional Spontaneous conversation chooses
 one brief invitation after a random idle delay, then waits for a real reply. Hermes is excluded.
 Voice pause, a hidden widget, typing and ongoing conversation postpone invitations.
 Hosted providers may charge for them. Machine paths/shared speech settings stay out of packs.

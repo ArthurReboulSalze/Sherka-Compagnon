@@ -82,10 +82,18 @@ impl Initiative {
     }
 }
 #[tauri::command]
-pub fn initiative_activity(shared: State<'_, crate::Shared>, state: State<'_, Initiative>) {
-    if let Ok(core) = shared.0.lock() {
-        state.activity(core.session.snapshot().profile_id, false);
-    }
+pub async fn initiative_activity(
+    shared: State<'_, crate::Shared>,
+    state: State<'_, Initiative>,
+) -> Result<(), String> {
+    // Activity is sent from pointer/keyboard events. Waiting for SQLite/core on
+    // the UI thread can deadlock a worker that is querying native visibility.
+    let id = crate::with_core(shared.inner().clone(), |core| {
+        Ok(core.session.snapshot().profile_id)
+    })
+    .await?;
+    state.activity(id, false);
+    Ok(())
 }
 pub fn user_activity(app: &tauri::AppHandle, id: Uuid) {
     if let Some(state) = app.try_state::<Initiative>() {
@@ -101,6 +109,9 @@ pub fn start(app: tauri::AppHandle) {
                 break;
             }
             let shared = app.state::<crate::Shared>().inner().clone();
+            // A native getter waits for the UI event loop; release all engine
+            // locks before calling it, even when spontaneous speech is disabled.
+            let visible = crate::windows::widget_visible(&app).unwrap_or(false);
             let candidate = {
                 let core = shared.0.lock().unwrap_or_else(|e| e.into_inner());
                 let session = core.session.snapshot();
@@ -114,7 +125,7 @@ pub fn start(app: tauri::AppHandle) {
                         || core.session.initiative_paused()
                         || session.response != ResponseState::Idle
                         || session.transcription != TranscriptionState::Idle
-                        || !crate::windows::widget_visible(&app).unwrap_or(false);
+                        || !visible;
                     (profile.id, profile.details.initiative, busy)
                 })
             };

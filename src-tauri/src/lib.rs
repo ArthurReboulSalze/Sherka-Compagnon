@@ -3,6 +3,7 @@ mod comfy_startup;
 mod conversation;
 mod desktop_tools;
 mod illustrations;
+mod image_viewer;
 mod initiative;
 mod memory_ops;
 mod owned_process;
@@ -983,6 +984,8 @@ pub fn run() {
             desktop_tools::desktop_tool,
             desktop_tools::widget_surface,
             desktop_tools::save_widget_cell,
+            image_viewer::image_fullscreen,
+            image_viewer::get_image_viewer,
             initiative::initiative_activity,
             get_widget_visibility,
             get_voice_service,
@@ -1053,6 +1056,7 @@ pub fn run() {
             app.manage(shared.clone());
             app.manage(illustrations::Illustrations::new());
             app.manage(desktop_tools::Canvas::default());
+            app.manage(image_viewer::Viewer::default());
             app.manage(initiative::Initiative::default());
             illustrations::synchronize(app.handle(), &shared);
             app.manage(Voice::setup(app.handle().clone(), shared, &directory));

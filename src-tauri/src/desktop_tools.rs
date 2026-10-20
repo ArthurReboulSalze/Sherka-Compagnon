@@ -9,7 +9,7 @@ pub enum Tool {
     Text,
     Image,
 }
-#[derive(Clone, Copy, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Serialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct Surface {
     pub left: f64,
@@ -19,7 +19,7 @@ pub struct Surface {
     pub base_width: f64,
     pub base_height: f64,
 }
-#[derive(Default)]
+#[derive(Clone, Copy, Default, PartialEq)]
 struct CanvasState {
     profile: Option<uuid::Uuid>,
     surface: Surface,
@@ -124,8 +124,8 @@ pub fn widget_surface(
     .any(|n| !n.is_finite())
         || !(-1200.0..=0.0).contains(&next.left)
         || !(-1200.0..=0.0).contains(&next.top)
-        || !(188.0..=1800.0).contains(&next.width)
-        || !(228.0..=1600.0).contains(&next.height)
+        || !(188.0..=4096.0).contains(&next.width)
+        || !(228.0..=4096.0).contains(&next.height)
         || !(188.0..=600.0).contains(&next.base_width)
         || !(228.0..=720.0).contains(&next.base_height)
         || next.width + next.left + 1.0 < next.base_width
@@ -170,22 +170,31 @@ pub fn widget_surface(
     };
     Ok(next)
 }
-pub fn avatar_bounds(app: &AppHandle) -> Option<sherka_core::window::Bounds> {
+pub fn avatar_bounds(app: &AppHandle) -> Option<(uuid::Uuid, sherka_core::window::Bounds)> {
     let window = app.get_webview_window("widget")?;
     let state = app.try_state::<Canvas>()?;
-    let value = state.0.lock().ok()?;
+    // Window getters marshal to the UI thread and wait for its reply. Never
+    // retain Canvas here: widget_surface runs on that thread and needs it too.
+    let value = *state.0.lock().ok()?;
+    let owner = value.profile?;
     let surface = value.surface;
     if surface.base_width == 0.0 {
         return None;
     }
     let position = window.outer_position().ok()?;
     let scale = window.scale_factor().ok()?;
-    Some(sherka_core::window::Bounds {
-        x: position.x - (surface.left * scale + value.correction.0).round() as i32,
-        y: position.y - (surface.top * scale + value.correction.1).round() as i32,
-        width: (surface.base_width * scale).round() as u32,
-        height: (surface.base_height * scale).round() as u32,
-    })
+    if *state.0.lock().ok()? != value {
+        return None; // A resize/profile switch superseded the captured geometry.
+    }
+    Some((
+        owner,
+        sherka_core::window::Bounds {
+            x: position.x - (surface.left * scale + value.correction.0).round() as i32,
+            y: position.y - (surface.top * scale + value.correction.1).round() as i32,
+            width: (surface.base_width * scale).round() as u32,
+            height: (surface.base_height * scale).round() as u32,
+        },
+    ))
 }
 
 pub fn is_owner(app: &AppHandle, id: uuid::Uuid) -> bool {
@@ -196,6 +205,7 @@ pub fn activate_profile(
     app: &AppHandle,
     snapshot: &sherka_core::runtime::Snapshot,
 ) -> tauri::Result<()> {
+    let _ = crate::image_viewer::close(app);
     let canvas = app.state::<Canvas>();
     // Suspend late geometry writes until the new avatar has been restored.
     *canvas.0.lock().unwrap_or_else(|e| e.into_inner()) = CanvasState::default();

@@ -58,6 +58,7 @@ pub struct Config {
     pub negative_prompt: String,
     pub positive_prompt_suffix: String,
     pub physical_description: String,
+    pub appearance_negative_prompt: String,
     pub loras: Vec<Lora>,
     pub turbo: bool,
     pub advanced: AdvancedSampling,
@@ -79,6 +80,7 @@ impl Default for Config {
                 "worst quality, low quality, blurry, bad anatomy, bad hands, text, watermark".into(),
             positive_prompt_suffix: String::new(),
             physical_description: String::new(),
+            appearance_negative_prompt: String::new(),
             loras: vec![],
             turbo: true,
             advanced: AdvancedSampling::default(),
@@ -131,12 +133,28 @@ fn turbo_name(value: &str) -> bool {
     value.rsplit(['/', '\\']).next() == Some(TURBO_FILE)
 }
 impl Config {
+    pub fn scene_negative(&self, include_companion: bool) -> String {
+        let appearance = self.appearance_negative_prompt.trim();
+        if !include_companion || appearance.is_empty() {
+            return self.negative_prompt.clone();
+        }
+        if self.negative_prompt.is_empty() {
+            return appearance.into();
+        }
+        let separator = match self.model_family {
+            ModelFamily::Illustrious => ", ",
+            ModelFamily::Sdxl => "\n",
+        };
+        format!("{}{separator}{appearance}", self.negative_prompt)
+    }
+
     pub fn validated(mut self) -> Result<Self> {
         self.server_url = server_url(&self.server_url)?
             .as_str()
             .trim_end_matches('/')
             .into();
         self.physical_description = self.physical_description.trim().into();
+        self.appearance_negative_prompt = self.appearance_negative_prompt.trim().into();
         self.negative_prompt = self.negative_prompt.trim().into();
         self.positive_prompt_suffix = self.positive_prompt_suffix.trim().into();
         for folder in [&mut self.checkpoint_folder, &mut self.lora_folder] {
@@ -150,6 +168,7 @@ impl Config {
             }
         }
         if self.physical_description.chars().count() > 2400
+            || self.appearance_negative_prompt.chars().count() > 2400
             || self.negative_prompt.chars().count() > 4000
             || self.positive_prompt_suffix.chars().count() > 4000
             || !(1..=8).contains(&self.image_count)
@@ -430,7 +449,7 @@ pub fn configured_scene_request(
     }
     messages[0].content.push_str("Copy the supplied negative_prompt unchanged into negative; the user's editable negative prompt is authoritative.");
     let mut data: Value = serde_json::from_str(&messages[1].content).expect("scene data");
-    data["negative_prompt"] = json!(config.negative_prompt);
+    data["negative_prompt"] = json!(config.scene_negative(!appearance.is_empty()));
     messages[1].content = data.to_string();
     (messages, schema)
 }
@@ -874,11 +893,21 @@ fn ordered_samplers(graph: &Value) -> Result<[String; 2]> {
     }
 }
 pub fn workflow(config: &Config, scene: Scene, info: &Value, seed: u64) -> Result<Value> {
+    workflow_for_subject(config, scene, info, seed, false)
+}
+
+pub fn workflow_for_subject(
+    config: &Config,
+    scene: Scene,
+    info: &Value,
+    seed: u64,
+    include_companion: bool,
+) -> Result<Value> {
     let config = config.clone().validated()?;
     let mut scene = scene.validated_for(config.model_family)?;
     // The editable negative prompt is authoritative, including an intentional
     // empty prompt. Model output must never replace the user's settings.
-    scene.negative = config.negative_prompt.clone();
+    scene.negative = config.scene_negative(include_companion);
     // Append after model-output validation, once per graph. User syntax and
     // weights survive unchanged; the planner cannot rewrite this suffix.
     if !config.positive_prompt_suffix.is_empty() {

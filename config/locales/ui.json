@@ -8238,5 +8238,93 @@
     "Server kann nicht überwacht werden: {0}",
     "无法跟踪服务器：{0}",
     "サーバーを追跡できません：{0}"
+  ],
+  "À éviter pour le compagnon (prompt négatif)": [
+    "Unwanted character traits (negative prompt)",
+    "Rasgos que evitar en el compañero (prompt negativo)",
+    "Tratti da evitare per il compagno (prompt negativo)",
+    "Unerwünschte Merkmale des Begleiters (Negativ-Prompt)",
+    "伙伴应避免的特征（负面提示词）",
+    "コンパニオンで避けたい特徴（ネガティブプロンプト）"
+  ],
+  "Ajouté au prompt négatif seulement lorsque le compagnon apparaît dans la scène.": [
+    "Added to the negative prompt only when the companion appears in the scene.",
+    "Se añade al prompt negativo solo cuando el compañero aparece en la escena.",
+    "Aggiunto al prompt negativo solo quando il compagno appare nella scena.",
+    "Wird dem Negativ-Prompt nur hinzugefügt, wenn der Begleiter in der Szene erscheint.",
+    "仅当伙伴出现在场景中时，才会添加到负面提示词中。",
+    "コンパニオンがシーンに登場する場合のみ、ネガティブプロンプトに追加されます。"
+  ],
+  "Aucune image à afficher.": [
+    "No image to display.",
+    "No hay ninguna imagen para mostrar.",
+    "Nessuna immagine da mostrare.",
+    "Kein Bild zum Anzeigen.",
+    "没有可显示的图像。",
+    "表示する画像がありません。"
+  ],
+  "Double-clique pour afficher en plein écran": [
+    "Double-click to view full screen",
+    "Haz doble clic para ver a pantalla completa",
+    "Fai doppio clic per visualizzare a schermo intero",
+    "Zum Anzeigen im Vollbild doppelklicken",
+    "双击全屏显示",
+    "ダブルクリックで全画面表示"
+  ],
+  "Double-clique pour quitter le plein écran": [
+    "Double-click to leave full screen",
+    "Haz doble clic para salir de la pantalla completa",
+    "Fai doppio clic per uscire dallo schermo intero",
+    "Zum Verlassen des Vollbilds doppelklicken",
+    "双击退出全屏",
+    "ダブルクリックで全画面表示を終了"
+  ],
+  "Écran indisponible.": [
+    "Display unavailable.",
+    "Pantalla no disponible.",
+    "Schermo non disponibile.",
+    "Bildschirm nicht verfügbar.",
+    "显示器不可用。",
+    "ディスプレイを利用できません。"
+  ],
+  "Écris ou colle du texte, ou ajoute une image ici.": [
+    "Type or paste text, or add an image here.",
+    "Escribe o pega texto, o añade una imagen aquí.",
+    "Scrivi o incolla del testo, oppure aggiungi un’immagine qui.",
+    "Schreibe oder füge Text ein, oder füge hier ein Bild hinzu.",
+    "在此输入或粘贴文本，也可添加图片。",
+    "ここにテキストを入力・貼り付け、または画像を追加できます。"
+  ],
+  "Illustration en plein écran": [
+    "Full-screen illustration",
+    "Ilustración a pantalla completa",
+    "Illustrazione a schermo intero",
+    "Illustration im Vollbild",
+    "全屏插图",
+    "全画面のイラスト"
+  ],
+  "Quitter le plein écran (Échap)": [
+    "Leave full screen (Esc)",
+    "Salir de pantalla completa (Esc)",
+    "Esci dallo schermo intero (Esc)",
+    "Vollbild verlassen (Esc)",
+    "退出全屏（Esc）",
+    "全画面表示を終了（Esc）"
+  ],
+  "Visage humain, couleurs ou détails indésirables…": [
+    "Human face, unwanted colors or details…",
+    "Rostro humano, colores o detalles no deseados…",
+    "Volto umano, colori o dettagli indesiderati…",
+    "Menschliches Gesicht, unerwünschte Farben oder Details…",
+    "人类面孔、不需要的颜色或细节…",
+    "人間の顔、不要な色や細部など…"
+  ],
+  "La première image peut prendre plus de temps : ComfyUI démarre si nécessaire, puis charge le modèle et les LoRA sélectionnés.": [
+    "The first image may take longer: ComfyUI starts if needed, then loads the selected model and LoRAs.",
+    "La primera imagen puede tardar más: ComfyUI se inicia si es necesario y después carga el modelo y los LoRA seleccionados.",
+    "La prima immagine può richiedere più tempo: ComfyUI si avvia se necessario, poi carica il modello e i LoRA selezionati.",
+    "Das erste Bild kann länger dauern: ComfyUI startet bei Bedarf und lädt anschließend das gewählte Modell und die LoRAs.",
+    "第一张图像可能需要更长时间：ComfyUI 会在需要时启动，然后加载所选模型和 LoRA。",
+    "最初の画像は時間がかかる場合があります。必要に応じてComfyUIが起動し、選択したモデルとLoRAを読み込みます。"
   ]
 }

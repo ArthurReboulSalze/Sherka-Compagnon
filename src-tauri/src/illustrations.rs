@@ -332,7 +332,7 @@ impl Illustrations {
                 let mut count=0;
                 loop {
                     if !valid(){return Err(Error::StaleOperation);}
-                    let graph=sherka_core::illustration::workflow(&config,scene.clone(),&info,(Uuid::new_v4().as_u128() as u64)&0x7fff_ffff_ffff_ffff)?;
+                    let graph=sherka_core::illustration::workflow_for_subject(&config,scene.clone(),&info,(Uuid::new_v4().as_u128() as u64)&0x7fff_ffff_ffff_ffff,subject.include_companion)?;
                     let image=client.render(graph,token.clone()).await?;
                     if config.live {images.clear();}
                     images.push(image);

@@ -35,7 +35,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**Sherka 1.1.1 is here:** desktop controls stay accessible as you move from the avatar to its buttons, even at maximum size. Enjoy 1.1's **spontaneous conversation**, remembered companion layouts and shared voice/service settings. [What's new](docs/releases/1.1.1.md).
+**Sherka 1.2 is here:** give conversation scenes more room with **full-screen illustrations**, keep your companion movable in front, and refine its appearance with a dedicated negative prompt. This release also fixes a reproduced desktop freeze and explains ComfyUI's first-image loading. [What's new](docs/releases/1.2.0.md).
 
 ## Meet your companions
 
@@ -71,7 +71,7 @@ The built-in Sherka is ready in every interface language. Custom companions keep
 
 ## Turn conversations into scenes
 
-Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its model family, folders, editable negative prompt and LoRAs. A **positive prompt addition** appends your style, lighting or composition preferences to every generated scene, exactly as written. Landscapes can stand alone; the avatar appears when it belongs in the scene. Images start preparing as soon as the reply text is ready, while the voice continues.
+Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, describe the character's appearance and add your favorite LoRAs. Each companion keeps its model family, folders, editable negative prompt and LoRAs. A **positive prompt addition** appends your style, lighting or composition preferences to every generated scene, exactly as written. A separate **character negative prompt** excludes unwanted features only when the companion appears. Landscapes can stand alone; the avatar appears when it belongs in the scene. Images start preparing as soon as the reply text is ready, while the voice continues.
 
 **Your request sets the scene.** Ask your robot companion to dance in a ballet outfit, and its usual armor or serious expression should not freeze the result into the same portrait. The planner prioritizes your requested action, clothes and setting, uses the reply for compatible details, and distinguishes one companion from a scene involving both of you. Prompt and character fidelity still depend on your chosen models and LoRAs.
 
@@ -107,7 +107,7 @@ Sherka manages context budgets and offers reasoning controls where supported. Sw
 
 Configure VoiceStudio transcription and local service startup once in Settings. VoiceStudio can run in the background without its desktop window; VoiceStudio and ComfyUI each have a **Start with Sherka** switch. Servers started by Sherka close with it; servers already running remain independent.
 
-Each companion remembers its desktop size, position and image-cell layout, even after restarting. Overlapping illustrations stay behind the avatar. Enable **Spontaneous conversation** per classic companion and choose a minimum and maximum idle delay: a short invitation breaks the silence, then your companion waits for a real reply. Typing, ongoing speech, voice pause and a hidden widget postpone it. Hermes keeps its own behavior. [Setup details](docs/GETTING_STARTED.md#spontaneous-conversation).
+Each companion remembers its desktop size, position and image-cell layout, even after restarting. Overlapping illustrations stay behind the avatar. **Double-click an illustration for full screen**, with the companion still movable and resizable in front; press Esc to return. Enable **Spontaneous conversation** per classic companion and choose a minimum and maximum idle delay: a short invitation breaks the silence, then your companion waits for a real reply. Typing, ongoing speech, voice pause and a hidden widget postpone it. Hermes keeps its own behavior. [Setup details](docs/GETTING_STARTED.md#spontaneous-conversation).
 
 ## Responsive without a huge setup
 
