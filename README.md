@@ -13,6 +13,7 @@
 
 <p align="center">
   <a href="https://github.com/ArthurReboulSalze/Sherka-Compagnon/releases/latest"><strong>↓ Download for Windows &amp; Linux</strong></a> &nbsp;·&nbsp;
+  <a href="https://arthurreboulsalze.github.io/Sherka-Compagnon/">Website</a> &nbsp;·&nbsp;
   <a href="docs/GETTING_STARTED.md">Quick start</a> &nbsp;·&nbsp;
   <a href="docs/README.md">Documentation</a> &nbsp;·&nbsp;
   <a href="docs/ROADMAP.md">What's next</a>
