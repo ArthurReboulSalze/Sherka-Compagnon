@@ -12,6 +12,7 @@ pub mod portable_update;
 mod service_process;
 mod speech_input;
 mod startup;
+mod turn_timing;
 mod updates;
 mod voice_startup;
 mod windows;

@@ -8,7 +8,10 @@ use sherka_core::{
     session::{MicrophoneState, OperationTag, SessionSnapshot},
     storage::{Delivery, MessageRole},
 };
-use std::sync::{Arc, Mutex};
+use std::{
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::{Mutex as AsyncMutex, mpsc};
 use tokio_util::sync::CancellationToken;
@@ -26,6 +29,7 @@ pub struct Voice {
     hermes_run: Arc<Mutex<Option<(OperationTag, sherka_core::hermes::HermesRun)>>>,
     diagnostics: Arc<crate::audio_diagnostics::AudioDiagnostics>,
     speech_input: Arc<Mutex<crate::speech_input::PendingSpeech>>,
+    speech_end: Arc<Mutex<Option<(OperationTag, Instant)>>>,
 }
 
 #[derive(Clone, Serialize)]
@@ -57,18 +61,57 @@ fn update<F>(app: &AppHandle, shared: &Shared, tag: OperationTag, f: F) -> Resul
 where
     F: FnOnce(&mut sherka_core::Companion) -> Result<()>,
 {
-    {
-        let mut core = shared
-            .0
-            .lock()
-            .map_err(|_| Error::Validation("Moteur indisponible.".into()))?;
-        if !core.session.accepts(tag) {
-            return Err(Error::StaleOperation);
-        }
-        f(&mut core)?;
-    }
+    quiet_update(shared, tag, f)?;
     emit(app, shared);
     Ok(())
+}
+
+/// Same checks as `update`, without notifying the webviews.
+fn quiet_update<F>(shared: &Shared, tag: OperationTag, f: F) -> Result<()>
+where
+    F: FnOnce(&mut sherka_core::Companion) -> Result<()>,
+{
+    let mut core = shared
+        .0
+        .lock()
+        .map_err(|_| Error::Validation("Moteur indisponible.".into()))?;
+    if !core.session.accepts(tag) {
+        return Err(Error::StaleOperation);
+    }
+    f(&mut core)
+}
+
+/// Streamed text reaches the webviews at most this often. Each event carries
+/// the whole live state, so one event per token grew quadratically.
+const LIVE_TEXT_INTERVAL: Duration = Duration::from_millis(40);
+
+/// When the webviews last saw the streamed reply, and whether text arrived since.
+#[derive(Default)]
+struct LivePaint {
+    shown: Option<(Instant, sherka_core::avatar::Emotion)>,
+    held: bool,
+}
+impl LivePaint {
+    fn show(&mut self, app: &AppHandle, shared: &Shared, emotion: sherka_core::avatar::Emotion) {
+        emit(app, shared);
+        self.shown = Some((Instant::now(), emotion));
+        self.held = false;
+    }
+    /// Expression changes show at once; text is coalesced.
+    fn text(&mut self, app: &AppHandle, shared: &Shared, emotion: sherka_core::avatar::Emotion) {
+        if self
+            .shown
+            .is_none_or(|(at, shown)| shown != emotion || at.elapsed() >= LIVE_TEXT_INTERVAL)
+        {
+            self.show(app, shared, emotion);
+        } else {
+            self.held = true;
+        }
+    }
+    /// The last paint, when newer text is waiting to be shown.
+    fn held(&self) -> Option<(Instant, sherka_core::avatar::Emotion)> {
+        self.shown.filter(|_| self.held)
+    }
 }
 
 impl Voice {
@@ -86,6 +129,7 @@ impl Voice {
             hermes_run: Arc::new(Mutex::new(None)),
             diagnostics: Arc::new(crate::audio_diagnostics::AudioDiagnostics::new(directory)),
             speech_input: Arc::new(Mutex::new(Default::default())),
+            speech_end: Arc::new(Mutex::new(None)),
         };
         tauri::async_runtime::spawn(audio_events(app, shared, voice.clone(), rx));
         voice
@@ -97,6 +141,12 @@ impl Voice {
             .map(|c| (c.live.reply.chars().count(), c.live.heard.chars().count()))
             .unwrap_or_default();
         self.diagnostics.record(event, reply, heard, audio_error);
+    }
+    /// When the utterance that produced this turn ended, if it did.
+    fn take_speech_end(&self, tag: OperationTag) -> Option<Instant> {
+        let mut end = self.speech_end.lock().unwrap_or_else(|e| e.into_inner());
+        end.take_if(|(at, _)| *at == tag)
+            .map(|(_, instant)| instant)
     }
     fn begin_pending(&self) -> CancellationToken {
         let mut token = self.pending.lock().unwrap_or_else(|e| e.into_inner());
@@ -654,6 +704,8 @@ async fn audio_events(
                 if let Some((run, tag, tx)) = capture.take()
                     && run == id
                 {
+                    *voice.speech_end.lock().unwrap_or_else(|e| e.into_inner()) =
+                        Some((tag, Instant::now()));
                     let _ = update(&app, &shared, tag, |c| c.session.finish_capture(tag));
                     drop(tx);
                 }
@@ -1440,6 +1492,11 @@ async fn run_turn(
     priority: crate::illustrations::Priority,
     spontaneous: bool,
 ) {
+    let speech_end = voice.take_speech_end(tag);
+    let clock = crate::turn_timing::TurnClock::new(speech_end);
+    if speech_end.is_some() {
+        clock.mark(crate::turn_timing::Mark::Transcribed);
+    }
     tokio::select! {biased;_=token.cancelled()=>return,_=priority.ready()=>{}}
     let agent = provider.connections.llm_provider.is_agent();
     let maintenance = if agent || spontaneous {
@@ -1549,6 +1606,7 @@ async fn run_turn(
             return;
         }
     };
+    clock.mark(crate::turn_timing::Mark::Prepared);
     if voice.playback.arm(token.clone()).is_err() {
         return;
     }
@@ -1616,39 +1674,57 @@ async fn run_turn(
     let consume = async {
         let mut web_speech = sherka_core::web::SpeechFilter::default();
         let mut expression = sherka_core::avatar::ExpressionStream::default();
-        let mut append = |text: String, emotion| -> sherka_core::Result<()> {
-            let text = sherka_core::conversation::plain_reply(&text);
-            update(&app, &shared, tag, |c| {
-                c.live.emotion = emotion;
-                c.live.reply.push_str(&text);
-                Ok(())
-            })?;
-            if speak {
-                let text = if web_reply {
-                    web_speech.push(&text)
-                } else {
-                    text
-                };
-                if !text.is_empty() {
-                    speech_text.push(&text)?;
+        let mut paint = LivePaint::default();
+        let mut append =
+            |text: String, emotion, paint: &mut LivePaint| -> sherka_core::Result<()> {
+                let text = sherka_core::conversation::plain_reply(&text);
+                quiet_update(&shared, tag, |c| {
+                    c.live.emotion = emotion;
+                    c.live.reply.push_str(&text);
+                    Ok(())
+                })?;
+                paint.text(&app, &shared, emotion);
+                if speak {
+                    let text = if web_reply {
+                        web_speech.push(&text)
+                    } else {
+                        text
+                    };
+                    if !text.is_empty() {
+                        speech_text.push(&text)?;
+                    }
                 }
-            }
-            Ok(())
-        };
-        while let Some(text) = tokens_rx.recv().await {
+                Ok(())
+            };
+        loop {
+            // Held-back text is shown even if the provider then pauses.
+            let next = match paint.held() {
+                Some((at, shown)) => tokio::select! {
+                    text = tokens_rx.recv() => text,
+                    _ = tokio::time::sleep(LIVE_TEXT_INTERVAL.saturating_sub(at.elapsed())) => {
+                        paint.show(&app, &shared, shown);
+                        continue;
+                    }
+                },
+                None => tokens_rx.recv().await,
+            };
+            let Some(text) = next else { break };
+            clock.mark(crate::turn_timing::Mark::FirstToken);
             let text = if expressions {
                 expression.push(&text)
             } else {
                 text
             };
-            append(text, expression.emotion)?;
+            append(text, expression.emotion, &mut paint)?;
         }
         if expressions {
-            append(expression.finish(), expression.emotion)?;
+            append(expression.finish(), expression.emotion, &mut paint)?;
         }
         if speak && web_reply {
             speech_text.push(&web_speech.finish())?;
         }
+        // The last coalesced tokens.
+        emit(&app, &shared);
         if expressions {
             update(&app, &shared, tag, |c| {
                 if c.live.reply.trim().is_empty() {
@@ -1671,6 +1747,7 @@ async fn run_turn(
         let result = async {
             if speak {
                 while let Some(phrase) = speech_text.next().await? {
+                    clock.mark(crate::turn_timing::Mark::FirstPassage);
                     let pcm = provider.speech(&phrase).await?;
                     audio_tx
                         .send((phrase, pcm))
@@ -1696,6 +1773,7 @@ async fn run_turn(
         &token,
         provider.connections.volume,
         audio_rx,
+        &clock,
     );
     let say = async {
         let (prepared, played) = tokio::join!(prepare, play);
@@ -1717,6 +1795,7 @@ async fn run_turn(
             let text=async {
                 let result=tokio::join!(generate,consume);
                 if result.0.is_ok() && result.1.is_ok() {
+                    clock.mark(crate::turn_timing::Mark::TextComplete);
                     let complete=update(&app,&shared,tag,|c|{
                         c.live.text_complete=true;
                         if !agent && !unavailable { c.complete_mood(tag, &user)?; }
@@ -1799,6 +1878,12 @@ async fn run_turn(
             fail_turn(&app, &shared, tag, &error).await;
         }
     }
+    let reply = shared
+        .0
+        .lock()
+        .map(|c| c.live.reply.chars().count())
+        .unwrap_or_default();
+    voice.diagnostics.record_timing(reply, &clock.summary());
     emit(&app, &shared);
     let _ = app.emit("sherka:history", tag.profile_id);
 }
@@ -1831,6 +1916,7 @@ async fn finish_hermes_run(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn play_prepared(
     app: &AppHandle,
     shared: &Shared,
@@ -1839,6 +1925,7 @@ async fn play_prepared(
     token: &CancellationToken,
     volume: f32,
     mut audio: mpsc::Receiver<(String, Vec<i16>)>,
+    clock: &crate::turn_timing::TurnClock,
 ) -> Result<()> {
     use futures_util::{StreamExt, stream::FuturesOrdered};
     // Next audio is queued before the current receipt completes. Dropping the
@@ -1859,10 +1946,11 @@ async fn play_prepared(
             }
             next = audio.recv(), if !closed && receipts.len() < 2 => {
                 let Some((phrase, pcm)) = next else { closed = true; continue; };
-                update(app, shared, tag, |_| Ok(()))?;
+                quiet_update(shared, tag, |_| Ok(()))?;
                 let receipt = playback.enqueue(pcm, volume, token.clone())?;
                 receipts.push_back(async move {
                     receipt.started.await.map_err(|_| Error::StaleOperation)?;
+                    clock.mark(crate::turn_timing::Mark::FirstAudio);
                     update(app, shared, tag, |c| c.session.playback_started(tag))?;
                     receipt.done.await.map_err(|_| Error::StaleOperation)?;
                     Ok::<_, Error>(phrase)

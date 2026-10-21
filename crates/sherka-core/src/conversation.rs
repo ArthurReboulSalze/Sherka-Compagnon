@@ -328,7 +328,7 @@ pub fn plain_reply(text: &str) -> String {
 #[derive(Default)]
 pub struct Phrases {
     pending: String,
-    emitted: bool,
+    emitted: usize,
 }
 impl Phrases {
     pub fn push(&mut self, text: &str) {
@@ -336,21 +336,31 @@ impl Phrases {
     }
     pub fn next(&mut self, finish: bool) -> Option<String> {
         let count = self.pending.chars().count();
-        // Start early, then group short sentences/poem verses into coherent
-        // chunks. A single line break is not an instruction to flush TTS.
-        let minimum = if self.emitted { 140 } else { 55 };
-        let limit = if self.emitted { 320 } else { 180 };
-        let punctuation = self
-            .pending
+        // Synthesis time grows with passage length, so the first passage is
+        // short and may end at a clause comma. Later passages grow while the
+        // previous one plays, grouping short sentences/poem verses. A single
+        // line break is not an instruction to flush TTS.
+        let (minimum, limit) = match self.emitted {
+            0 => (25, 110),
+            1 => (70, 220),
+            _ => (140, 320),
+        };
+        let clause = self.emitted == 0;
+        let pending = &self.pending;
+        let punctuation = pending
             .char_indices()
             .take(limit)
             .enumerate()
-            .find(|(n, (_, c))| {
+            .find(|(n, (i, c))| {
                 *n >= minimum
-                    && matches!(
+                    && (matches!(
                         c,
                         '.' | '!' | '?' | '\n' | ';' | ':' | '。' | '！' | '？' | '；' | '：'
-                    )
+                    ) || clause
+                        && (matches!(c, '，' | '、')
+                            // Not a decimal comma such as 20,5.
+                            || *c == ','
+                                && pending[i + 1..].starts_with(char::is_whitespace)))
             })
             .map(|(_, (i, c))| i + c.len_utf8());
         let boundary = punctuation
@@ -380,7 +390,7 @@ impl Phrases {
         if phrase.is_empty() {
             return self.next(finish);
         }
-        self.emitted = true;
+        self.emitted += 1;
         Some(phrase)
     }
 }
@@ -478,9 +488,33 @@ mod tests {
             assert!(s.chars().count() <= 320);
         }
         let mut p = Phrases::default();
-        p.push(&format!("{}.", "a".repeat(180)));
-        assert_eq!(p.next(true).unwrap().chars().count(), 180);
+        p.push(&format!("{}.", "a".repeat(110)));
+        assert_eq!(p.next(true).unwrap().chars().count(), 110);
         assert_eq!(p.next(true).as_deref(), Some("."));
+    }
+
+    #[test]
+    fn first_passage_is_short_and_later_passages_grow() {
+        let mut p = Phrases::default();
+        p.push("Bonjour Arthur, il fait 20,5 degrés aujourd’hui, parfait pour sortir. ");
+        // The clause comma ends the first passage once 25 characters are
+        // available; the decimal comma never does.
+        assert_eq!(
+            p.next(false).as_deref(),
+            Some("Bonjour Arthur, il fait 20,5 degrés aujourd’hui,")
+        );
+        p.push(&"Une phrase de suite, avec une virgule. ".repeat(6));
+        let second = p.next(false).unwrap();
+        assert!(second.ends_with('.'));
+        assert!((70..=220).contains(&second.chars().count()));
+        assert!(
+            !second.ends_with(','),
+            "commas only split the first passage"
+        );
+        let mut short = Phrases::default();
+        short.push("Oui, bien sûr.");
+        assert_eq!(short.next(false), None, "too short to start speaking");
+        assert_eq!(short.next(true).as_deref(), Some("Oui, bien sûr."));
     }
 
     #[test]
@@ -490,7 +524,10 @@ mod tests {
         assert_eq!(cleaned, "Bonjour , 你好  ! 20°C, 2×3=6. 日本語  ");
         let mut phrases = Phrases::default();
         phrases.push(text);
-        let phrase = phrases.next(true).unwrap();
+        let mut phrase = String::new();
+        while let Some(passage) = phrases.next(true) {
+            phrase.push_str(&passage);
+        }
         assert!(phrase.contains("20°C"));
         assert!(phrase.contains("日本語"));
         assert!(!phrase.contains('😊'));

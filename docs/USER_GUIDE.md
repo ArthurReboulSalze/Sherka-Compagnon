@@ -62,6 +62,16 @@ Use **Optimize memory** in **Settings** or **Memory**, or say **“optimize your
 
 Context contains selected recent exchanges and memories, not the entire archive. **Conversation → Context & memory** distinguishes estimates from server usage.
 
+## Measure response times
+
+After each reply, Sherka adds one `turn_timing` line to `audio-events.log` in its data folder. It contains only durations in milliseconds, counted from the end of your sentence (or from sending a typed message): transcript accepted, request ready, first word, first passage sent to the voice, first sound and complete text. No conversation text is recorded. On Windows, list them in PowerShell:
+
+```powershell
+Get-Content "$env:LOCALAPPDATA\fr.sherka.compagnon\audio-events.log" | ConvertFrom-Json | Where-Object event -eq turn_timing | ForEach-Object { $_.timing } | Format-Table
+```
+
+A long gap before *transcript accepted* usually comes from a speech-recognition engine that transcribes only after you stop, such as Whisper; streaming engines finish almost immediately. A long gap between *request ready* and *first word* with a short conversation often means the model is thinking silently: switch thinking off for that companion. Automatic web search adds a short decision request, plus the search itself when it runs.
+
 ## Storage and backups
 
 On Windows, both distributions use `%LOCALAPPDATA%\fr.sherka.compagnon`; the Debian package uses its per-user Linux data folder (see [Linux](LINUX.md)). Each contains a settings database and one database per companion, including images, text and memories. “No installation” describes launching the program; data is not carried in its ZIP folder.

@@ -28,23 +28,45 @@ pub struct ChatOutcome {
 pub(crate) fn failure(text: impl Into<String>) -> Error {
     Error::Validation(text.into())
 }
-pub(crate) fn network(service: &str, error: &reqwest::Error) -> Error {
-    let local = service.starts_with("LM Studio") || service.starts_with("VoiceStudio");
-    failure(if !local && error.is_timeout() {
-        format!(
-            "{service} met trop de temps à répondre. Réessaie plus tard ou réduis la réflexion du modèle."
-        )
-    } else if !local {
-        format!(
-            "Connexion à {service} interrompue. Vérifie ta connexion Internet et l’adresse de l’API."
-        )
-    } else if error.is_timeout() {
+fn is_local(service: &str) -> bool {
+    service.starts_with("LM Studio") || service.starts_with("VoiceStudio")
+}
+fn slow(service: &str) -> Error {
+    failure(if is_local(service) {
         format!(
             "{service} met trop de temps à répondre. Vérifie le chargement du modèle et la mémoire GPU."
         )
     } else {
-        format!("Connexion à {service} interrompue. Vérifie que son serveur est démarré.")
+        format!(
+            "{service} met trop de temps à répondre. Réessaie plus tard ou réduis la réflexion du modèle."
+        )
     })
+}
+pub(crate) fn network(service: &str, error: &reqwest::Error) -> Error {
+    if error.is_timeout() {
+        return slow(service);
+    }
+    failure(if is_local(service) {
+        format!("Connexion à {service} interrompue. Vérifie que son serveur est démarré.")
+    } else {
+        format!(
+            "Connexion à {service} interrompue. Vérifie ta connexion Internet et l’adresse de l’API."
+        )
+    })
+}
+
+/// A reply may stream for many minutes on a slow local model. Only a
+/// connection that stays silent this long (first token included) is stalled.
+const STREAM_IDLE: Duration = Duration::from_secs(180);
+/// Replaces the client's 180 s whole-request limit for streamed replies.
+pub(crate) const STREAM_TOTAL: Duration = Duration::from_secs(3600);
+pub(crate) async fn next_chunk<S: futures_util::Stream + Unpin>(
+    stream: &mut S,
+    service: &str,
+) -> Result<Option<S::Item>> {
+    tokio::time::timeout(STREAM_IDLE, stream.next())
+        .await
+        .map_err(|_| slow(service))
 }
 
 impl Providers {
@@ -94,13 +116,23 @@ impl Providers {
         if let Some(key) = &api_key {
             crate::credentials::validate_key(key)?;
         }
-        let http = Client::builder()
-            .no_proxy()
-            .redirect(reqwest::redirect::Policy::none())
-            .connect_timeout(Duration::from_secs(5))
-            .timeout(Duration::from_secs(180))
-            .build()
-            .map_err(|_| failure("Impossible d'initialiser les connexions."))?;
+        // One pool for the whole app keeps connections (and TLS sessions to
+        // hosted APIs) alive between turns instead of reconnecting each time.
+        static HTTP: std::sync::OnceLock<Client> = std::sync::OnceLock::new();
+        let http = match HTTP.get() {
+            Some(client) => client.clone(),
+            None => {
+                let client = Client::builder()
+                    .no_proxy()
+                    .redirect(reqwest::redirect::Policy::none())
+                    .connect_timeout(Duration::from_secs(5))
+                    .timeout(Duration::from_secs(180))
+                    .tcp_nodelay(true)
+                    .build()
+                    .map_err(|_| failure("Impossible d'initialiser les connexions."))?;
+                HTTP.get_or_init(|| client).clone()
+            }
+        };
         Ok(Self {
             images: vec![],
             http,
@@ -204,6 +236,7 @@ impl Providers {
                 "{}/v1/chat/completions",
                 self.connections.lm_studio_url
             ))
+            .timeout(STREAM_TOTAL)
             .json(&body)
             .send()
             .await
@@ -224,7 +257,7 @@ impl Providers {
         let mut total = 0;
         let mut finished = false;
         let mut outcome = ChatOutcome::default();
-        while let Some(bytes) = stream.next().await {
+        while let Some(bytes) = next_chunk(&mut stream, "LM Studio").await? {
             for event in decoder.feed(&bytes.map_err(|e| network("LM Studio", &e))?)? {
                 if event.trim() == "[DONE]" {
                     return if total > 0 {

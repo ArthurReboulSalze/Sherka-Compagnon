@@ -1,16 +1,24 @@
 # Project status
 
-Release version: **1.3.0**, October 21, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.3.1**, October 21, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
 ## Current state
 
 - **Data formats:** profile/settings database schema **9** (persistent moods), legacy JSON profile export **version 5** (accepting 1–4), default companion export Sherka Companion Archive **v1** (`.sherka.zip`). Upgraded data must not be opened with older executables; keep installed and no-install copies on the same version.
 - **Platforms:** Windows x64 is the tested platform (NSIS installer, portable ZIP, signed in-app updates). The Debian x64 package builds and starts under Xvfb; physical Linux audio, compositor, tray and Secret Service unlocking remain unvalidated, and Linux updates are manual.
-- **Test suite:** on October 21, 2026, `cargo test --workspace --locked` passed 159 Rust tests on Windows, with one opt-in live DuckDuckGo test ignored.
+- **Test suite:** for 1.3.1, `cargo test --workspace --locked` passed 163 Rust tests on Windows, with one opt-in live DuckDuckGo test ignored.
 - **Validation model:** core and native tests use isolated data (`SHERKA_DATA_DIR`) and simulated services; real-service checks are opt-in. Physical microphone, speaker-echo and listening behavior are validated manually by the author, not automatically.
 - **Known limitations:** speaker echo cancellation depends on hardware and placement; one VoiceStudio cold start exceeded the startup timeout; token counts are conservative estimates; speech is synthesized per passage, not per token; image and emotion fidelity depend on the selected models.
 
 See [roadmap](ROADMAP.md) for planned work. The sections below are the release log, newest first.
+
+## 1.3.1 — faster voice turns
+
+The first spoken passage starts at 25 characters and may end at a clause comma, then passages grow; a breath or click no longer restarts the end-of-turn silence countdown; interrupted speech fades out over 30 ms; streamed replies fail only after 180 seconds without data instead of after 180 seconds in total; provider requests share one connection pool; live text reaches the webviews at most every 40 ms. Each reply writes one `turn_timing` line with stage latencies to `audio-events.log`.
+
+A first real session on the author's machine (Gemma 4 E4B in LM Studio, faster-whisper, automatic web search, OmniVoice) measured about 8–12 s from the end of speech to the first sound: roughly 3 s of end-of-utterance Whisper transcription, 0.5–2.5 s of preparation including the automatic search decision, 3–5 s before the first visible token although LM Studio finished prompt processing within a second (consistent with hidden model thinking, not proven) and about 1.5 s to synthesize the first passage. The first passage left 0.1–0.3 s after the first token. A per-turn model cache was tried and dropped: it could keep a stale context limit after a model reload.
+
+Validation: 163 Rust tests (one opt-in live search test skipped), formatting, Clippy, localization checks and 27 native Windows scenarios passed in text-only mode with isolated data, plus 8 interruption-related scenarios after the fade. The user confirmed by ear that interruption works on a pre-release build and reported the click that the fade addresses; the fade itself is verified by unit test, not yet by a listening test.
 
 ## 1.3.0 — three-stage character creation
 

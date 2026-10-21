@@ -36,7 +36,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**Sherka 1.3 is here: create your own companion from an idea.** Shape its personality, approve its portrait, generate six emotions and give it a transparent place on your desktop. The new **Character creation** studio connects your LLM and ComfyUI in one guided flow. [What's new](docs/releases/1.3.0.md).
+**Sherka 1.3 is here: create your own companion from an idea.** Shape its personality, approve its portrait, generate six emotions and give it a transparent place on your desktop. The new **Character creation** studio connects your LLM and ComfyUI in one guided flow. [What's new](docs/releases/1.3.0.md). **1.3.1** makes voice conversations snappier: shorter first spoken phrases, smoother interruptions and a local timing log. [Details](docs/releases/1.3.1.md).
 
 ## Meet your companions
 
@@ -64,7 +64,7 @@ Sherka gives your AI a presence beyond a chat window: a transparent companion th
 
 | 🎙️ Talk naturally | ✨ Make it personal | 🪟 Keep it close |
 | --- | --- | --- |
-| Interrupt a spoken reply, pause while talking, then continue. Streaming and speech prepared ahead keep the exchange flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click and follow your selected theme. Its active halo keeps the character's own color. |
+| Interrupt a spoken reply — it fades out instead of cutting — pause while talking, then continue. Streaming and speech prepared ahead keep the exchange flowing. | A personality, image, voice and provider for every companion. Each keeps its own history. | An independent transparent avatar. Move it anywhere; controls appear on hover or click and follow your selected theme. Its active halo keeps the character's own color. |
 | **🧠 Memories you control** | **🌐 A little help from the web** | **💬 Seven interface languages** |
 | Persistent memory for each companion. Review, edit or delete facts; preview built-in memory optimization before applying it. Clear a conversation with confirmation while keeping saved facts. | [Search the web with sources](docs/WEB_SEARCH.md). Use DuckDuckGo without an account, or Brave, Tavily or SearXNG. Drop text files and, with a vision-capable model, images onto your companion. | French, English, Spanish, Italian, German, Simplified Chinese and Japanese. |
 
@@ -124,7 +124,7 @@ Each companion remembers its desktop size, position and image-cell layout, even 
 
 ## Responsive without a huge setup
 
-With suitable local language and speech models, Sherka can feel very responsive: text streams in, speech is prepared ahead, and new image scenes start while the voice is still speaking. There is no fixed latency promise — model size, context, voice engine and concurrent image generation all matter.
+With suitable local language and speech models, Sherka can feel very responsive: text streams in, the voice starts after a short first phrase while the rest is prepared, and new image scenes start while the voice is still speaking. There is no fixed latency promise — model size, context, voice engine and concurrent image generation all matter. For the snappiest voice chat, pick a streaming speech-recognition engine and switch off model thinking; a [local timing log](docs/USER_GUIDE.md#measure-response-times) shows where each second goes.
 
 Development and real-service testing used an **NVIDIA RTX 3090**. You do not need that much VRAM to start: **8 GB, and potentially less with small quantized models**, can suit a voice-companion setup. Running a large language model, speech and ComfyUI together needs more headroom; hosted conversation providers are also available.
 

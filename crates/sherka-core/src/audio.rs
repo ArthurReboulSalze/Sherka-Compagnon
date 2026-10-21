@@ -183,10 +183,24 @@ struct Draining {
     done: Option<oneshot::Sender<()>>,
 }
 
+/// Interrupted speech keeps playing this long (24 kHz source samples) while
+/// its gain ramps to zero, so barge-in does not click mid-waveform.
+const INTERRUPT_FADE: f64 = 24_000.0 * 0.03;
+
+/// The tail of an interrupted passage. It has no receipts and no token: it
+/// is never reported as heard and cannot delay or resume the reply.
+struct Fade {
+    pcm: Vec<i16>,
+    position: f64,
+    end: f64,
+    volume: f32,
+}
+
 #[derive(Default)]
 struct PlaybackQueue {
     packets: VecDeque<Packet>,
     draining: VecDeque<Draining>,
+    fade: Option<Fade>,
 }
 
 impl PlaybackQueue {
@@ -206,6 +220,18 @@ impl PlaybackQueue {
     }
 
     fn sample(&mut self, rate: u32, now: Instant, latency: Duration) -> f32 {
+        if let Some(fade) = self.fade.as_mut() {
+            let index = fade.position as usize;
+            if fade.position < fade.end && index < fade.pcm.len() {
+                let a = f32::from(fade.pcm[index]) / 32768.0;
+                let b = f32::from(*fade.pcm.get(index + 1).unwrap_or(&fade.pcm[index])) / 32768.0;
+                let gain = ((fade.end - fade.position) / INTERRUPT_FADE) as f32;
+                let value = (a + (b - a) * fade.position.fract() as f32) * fade.volume * gain;
+                fade.position += 24_000.0 / f64::from(rate);
+                return value;
+            }
+            self.fade = None;
+        }
         while self.packets.front().is_some_and(|p| p.token.is_cancelled()) {
             self.packets.pop_front();
         }
@@ -268,6 +294,19 @@ impl Playback {
             token.cancel();
         }
         if let Ok(mut slot) = self.0.lock() {
+            // Only a passage already heard needs a fade; one not started yet
+            // is simply dropped.
+            if let Some(packet) = slot.packets.pop_front() {
+                if packet.started.is_none() {
+                    slot.fade = Some(Fade {
+                        end: packet.position + INTERRUPT_FADE,
+                        position: packet.position,
+                        volume: packet.volume,
+                        pcm: packet.pcm,
+                    });
+                }
+                packet.token.cancel();
+            }
             for packet in &slot.packets {
                 packet.token.cancel();
             }
@@ -949,6 +988,41 @@ mod tests {
             0.125
         );
     }
+    #[test]
+    fn interrupting_speech_fades_out_quickly_without_a_heard_receipt() {
+        let playback = Playback::default();
+        let token = CancellationToken::new();
+        let mut receipt = playback
+            .enqueue(vec![16384; 24_000], 1.0, token.clone())
+            .unwrap();
+        let now = Instant::now();
+        let queue = || playback.0.lock().unwrap();
+        for _ in 0..240 {
+            assert_eq!(queue().sample(24_000, now, Duration::ZERO), 0.5);
+        }
+        playback.interrupt();
+        assert!(token.is_cancelled());
+        assert!(!playback.speaking());
+        let mut previous = 0.5;
+        let mut faded = 0;
+        loop {
+            let sample = queue().sample(24_000, now, Duration::ZERO);
+            assert!(sample <= previous, "the gain only decreases");
+            if sample == 0.0 {
+                break;
+            }
+            previous = sample;
+            faded += 1;
+        }
+        // About 30 ms at 24 kHz, then silence: the rest is never played.
+        assert!((700..=720).contains(&faded), "{faded} samples");
+        for _ in 0..1000 {
+            assert_eq!(queue().sample(24_000, now, Duration::ZERO), 0.0);
+        }
+        queue().acknowledge(now + Duration::from_secs(5));
+        assert!(receipt.done.try_recv().is_err(), "interrupted, not heard");
+    }
+
     #[test]
     fn canceled_audio_cannot_resume_and_queue_is_bounded() {
         let playback = Playback::default();

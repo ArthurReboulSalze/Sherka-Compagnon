@@ -131,6 +131,9 @@ export function paintLive(value: LiveState): void {
   if (remoteStop) remoteStop.hidden = !value.live.tag && !value.live.error;
   document.querySelectorAll('[data-session-status]').forEach((el) => { el.textContent = value.live.web?.searching ? t('Recherche sur Internet…') : status(value.session); });
   document.querySelectorAll<HTMLElement>('[data-mic-toggle]').forEach((el) => {
+    // Live events arrive while text streams; rebuild the icon only on change.
+    if (el.dataset.micOn === String(on)) return;
+    el.dataset.micOn = String(on);
     const label = on ? t('Couper le micro') : t('Activer le micro');
     el.setAttribute('aria-label', label); el.title = label;
     el.classList.toggle('microphone-on', on);

@@ -4,9 +4,8 @@ use crate::{
     catalogs::{ApiModelCapabilities, LanguageCatalog, LanguageModel, ReasoningCapabilities},
     connections::LlmProvider,
     conversation::ChatMessage,
-    providers::{ChatOutcome, Providers, Sse, failure, network},
+    providers::{ChatOutcome, Providers, STREAM_TOTAL, Sse, failure, network, next_chunk},
 };
-use futures_util::StreamExt;
 use reqwest::{RequestBuilder, Response, header::HeaderValue};
 use serde_json::{Value, json};
 use std::time::Duration;
@@ -473,6 +472,7 @@ impl Providers {
                 },
                 true,
             )?
+            .timeout(STREAM_TOTAL)
             .json(&body)
             .send()
             .await
@@ -493,7 +493,7 @@ impl Providers {
         let mut outcome = ChatOutcome::default();
         let mut total = 0;
         let mut finished = false;
-        while let Some(bytes) = stream.next().await {
+        while let Some(bytes) = next_chunk(&mut stream, kind.label()).await? {
             for event in decoder.feed(&bytes.map_err(|e| network(kind.label(), &e))?)? {
                 if event.trim() == "[DONE]" {
                     return complete(outcome, total, finished);

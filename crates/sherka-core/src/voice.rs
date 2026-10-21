@@ -55,7 +55,12 @@ pub struct Endpoint {
     active: bool,
     onset: u16,
     silence: u16,
+    speech_run: u16,
 }
+
+/// Speech needed to postpone the end of a turn. A lone VAD window (a breath,
+/// click or lip noise) keeps the silence countdown running.
+const SUSTAINED_SPEECH_MS: u16 = 60;
 
 #[derive(Debug, PartialEq)]
 pub enum Edge {
@@ -71,12 +76,14 @@ impl Endpoint {
             active: false,
             onset: 0,
             silence: 0,
+            speech_run: 0,
         }
     }
     pub fn reset(&mut self) {
         self.active = false;
         self.onset = 0;
         self.silence = 0;
+        self.speech_run = 0;
     }
     pub fn active(&self) -> bool {
         self.active
@@ -93,10 +100,16 @@ impl Endpoint {
             if self.onset >= threshold {
                 self.active = true;
                 self.silence = 0;
+                self.speech_run = 0;
                 return Edge::Start;
             }
         } else {
-            self.silence = if speech { 0 } else { self.silence + 10 };
+            self.speech_run = if speech { self.speech_run + 10 } else { 0 };
+            self.silence = if self.speech_run >= SUSTAINED_SPEECH_MS {
+                0
+            } else {
+                self.silence + 10
+            };
             if self.silence >= self.settings.silence_ms {
                 self.reset();
                 return Edge::End;
@@ -123,8 +136,30 @@ mod tests {
         for _ in 0..60 {
             assert_eq!(e.feed(false, false), Edge::None);
         }
-        assert_eq!(e.feed(true, false), Edge::None);
+        for _ in 0..6 {
+            assert_eq!(e.feed(true, false), Edge::None);
+        }
         for _ in 0..69 {
+            assert_eq!(e.feed(false, false), Edge::None);
+        }
+        assert_eq!(e.feed(false, false), Edge::End);
+    }
+
+    #[test]
+    fn a_breath_or_click_after_speech_does_not_postpone_the_end_of_turn() {
+        let mut e = Endpoint::new(AudioSettings::default());
+        for _ in 0..10 {
+            e.feed(true, false);
+        }
+        assert!(e.active());
+        for _ in 0..40 {
+            assert_eq!(e.feed(false, false), Edge::None);
+        }
+        // One 32 ms VAD window marks about three 10 ms frames as speech.
+        for _ in 0..3 {
+            assert_eq!(e.feed(true, false), Edge::None);
+        }
+        for _ in 0..26 {
             assert_eq!(e.feed(false, false), Edge::None);
         }
         assert_eq!(e.feed(false, false), Edge::End);

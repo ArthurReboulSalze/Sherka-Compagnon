@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.1 — 2026-10-21
+
+- Record one `turn_timing` line per reply in the local audio diagnostics log: milliseconds from the end of speech to the accepted transcript, prepared request, first token, first passage sent to speech synthesis, first audio and complete text. No conversation content is logged.
+- Start speaking sooner: the first spoken passage now needs 25 characters instead of 55 and may end at a clause comma; the second passage is medium-sized before passages grow to their previous length.
+- Fade interrupted speech out over 30 ms instead of cutting it mid-waveform, removing the click when you talk over the companion. The faded tail is never counted as heard.
+- Ignore a breath, click or lip noise after the last word instead of restarting the end-of-turn silence countdown; only sustained speech extends a turn.
+- Stop cutting long streamed replies after 180 seconds; replies now fail only when the provider sends nothing for 180 seconds.
+- Keep provider connections alive between turns through one shared connection pool, avoiding a new connection (and TLS handshake for hosted APIs) on every turn.
+- Coalesce streamed text updates to the control panel and widget (at most one every 40 ms, expression changes immediately) and avoid rebuilding unchanged microphone buttons.
+- Document response-time measurement in the user guide and README, and publish Windows installer/portable and Debian packages with signed Windows update assets.
+
 ## 1.3.0 — 2026-10-21
 
 - Create a companion from an idea with an editable LLM-generated personality and appearance, without using existing conversations or memories.

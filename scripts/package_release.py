@@ -68,6 +68,8 @@ Optional Spontaneous conversation chooses
 one brief invitation after a random idle delay, then waits for a real reply. Hermes is excluded.
 Voice pause, a hidden widget, typing and ongoing conversation postpone invitations.
 Hosted providers may charge for them. Machine paths/shared speech settings stay out of packs.
+Each reply adds a turn_timing line (durations only, no text) to audio-events.log in the
+data folder to show where response time goes. See docs/USER_GUIDE.md.
 Settings may be upgraded; avoid opening them with older executables.
 For Hermes, clearing in Sherka affects local history only.
 
