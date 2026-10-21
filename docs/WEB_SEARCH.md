@@ -43,7 +43,7 @@ DuckDuckGo's HTML interface can change or demand a challenge. Official API optio
 
 If a firewall blocks outbound traffic, allow the executable path you actually run. Rules for another installation or portable folder may not cover it. Sherka does not change firewall rules. There is no autonomous background browsing or polling.
 
-Engine preferences are included in profile export version 4; keys and search receipts are excluded. Current development databases use schema 8. Keep installed and portable versions aligned, and use a separate backup/data folder when testing an older executable.
+Each companion's search mode travels with its exports (`.sherka.zip` packs and legacy JSON version 5); the global engine settings, keys and search receipts are excluded. Current databases use schema 9. Keep installed and portable versions aligned, and use a separate backup/data folder when testing an older executable.
 
 Use **Test search engine** beside the saved engine settings to send a fixed, non-personal test query. This tests the selected draft engine and its stored key directly, without asking the companion model to choose a search. It does not save the draft settings. Save the engine separately when satisfied. A Windows 10013 message means the executable's outbound connection was blocked locally, rather than a key refusal.
 

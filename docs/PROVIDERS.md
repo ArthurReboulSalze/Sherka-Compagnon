@@ -18,7 +18,7 @@ The base URL includes its API path. Do not append `/chat/completions` or `/messa
 
 ## Keys and privacy
 
-Windows Credential Manager protects API keys for the current Windows account. A key is scoped to its provider and exact API base, shared by companions using that connection, and excluded from SQLite, profile exports and releases. The interface shows only whether a key exists. Removing a key affects all companions using that connection. Imported profiles require the recipient’s own key.
+Windows Credential Manager (or the Linux Secret Service through `secret-tool`) protects API keys for the current user account. A key is scoped to its provider and exact API base, shared by companions using that connection, and excluded from SQLite, profile exports and releases. The interface shows only whether a key exists. Removing a key affects all companions using that connection. Imported profiles require the recipient’s own key.
 
 With a remote provider, the companion prompt, selected conversation history, recalled memories and memory processing requests go to that provider. VoiceStudio keeps recognition and synthesis local. No audio recordings, avatar files or complete memory databases are uploaded by the conversation adapter. Provider billing and data policies apply. LM Studio remains the default for offline conversations; remote provider catalogs are refreshed on request.
 

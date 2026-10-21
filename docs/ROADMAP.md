@@ -1,38 +1,35 @@
 # Roadmap
 
-Sherka 1.0 includes optional persistent moods, live ComfyUI scenes, advanced sampling and local ComfyUI startup, alongside voice, memory, web search and companion packs. These remaining directions are not delivery promises.
+Sherka 1.3 is a fairly complete companion: voice conversation with interruption, memory, web search, persistent moods, ComfyUI scenes, AI-assisted character creation and companion packs. Companions keep their current presentation, with seven static expressions and half-second crossfades; portrait or mouth animation is not planned.
 
-## Bring companions to life
+The next phase focuses on performance, polish and wider provider support. Further features will follow user requests. These directions are not delivery promises.
 
-- Improve identity, framing and expression fidelity in the ComfyUI character creator, building on the three-stage portrait, Klein emotion editing and RMBG transparency workflow.
-- A community character gallery and pack previews, building on the five bundled companions and the documented ZIP sharing format.
-- Idle, listening, thinking and speaking animations.
-- Refine model-selected expressions, transitions and reactions beyond the seven static image slots. Hermes remote-agent mode remains excluded: neutral avatar, with listening/speaking indicators only.
-- Voice-driven mouth or portrait animation beyond the existing half-second image crossfades.
-- Animated formats and shareable character packs without personal data.
-- Extend illustration workflows beyond the supported Illustrious and SDXL families, and improve appearance consistency without changing the avatar editor.
+## Performance
 
-## Refine conversations
-
-- Compare LLM, STT and TTS choices and offer hardware-appropriate presets.
-- Measure latency and smooth long replies within TTS provider capabilities.
-- Improve speaker listening through broader acoustic and echo testing.
+- Measure end-to-end latency (end of speech, first text, first audio) and reduce it where Sherka adds overhead.
+- Smooth long replies within TTS provider capabilities.
 - Diagnose slow VoiceStudio launches and clarify model preparation status.
+- Keep the desktop widget, image cells and ComfyUI coordination light on CPU, GPU and memory while conversing.
+- Offer hardware-appropriate presets for LLM, STT and TTS choices.
 
-## Expand intelligence and memory
+## Polish features and interface
 
-- Full web page reading and stronger source selection beyond the excerpts supplied by DuckDuckGo, Brave, Tavily and SearXNG.
-- Broader provider/model compatibility, cost visibility and the OpenAI Responses API.
-- VoiceStudio authentication and broader credential-service coverage beyond Windows Credential Manager and Linux Secret Service.
-- Exact tokenizer counts, semantic retrieval and narrative summaries.
+- Refine existing settings, labels and help where they are hard to discover or understand.
+- Improve speaker listening through broader acoustic and echo testing.
+- Improve the character creator's identity, framing and expression fidelity, and refine model-selected expressions within the seven image slots. Hermes remains neutral.
 - Better memory relevance and corrections with smaller models.
+- Accessibility, translation review and guided backup/restore.
 
-## Strengthen distribution
+## More providers
+
+- Additional local runtimes such as Ollama, alongside LM Studio and compatible APIs.
+- Additional cloud APIs, broader model compatibility, cost visibility and the OpenAI Responses API.
+- VoiceStudio authentication and broader credential-service coverage beyond Windows Credential Manager and Linux Secret Service.
+
+## Distribution
 
 - A Windows signing certificate to reduce SmartScreen friction.
-- More Windows configurations and audio devices tested.
-- Accessibility, translation review and guided backup/restore.
-- Ongoing update and migration validation between published versions.
+- More Windows configurations and audio devices tested; ongoing update and migration validation between published versions.
 - Physical Linux desktop/audio validation, wider distribution compatibility and a Linux update mechanism beyond manual Debian packages.
 
-Visual effects must respect reduced-motion preferences and keep the desktop widget unobtrusive.
+Visual changes must respect reduced-motion preferences and keep the desktop widget unobtrusive.

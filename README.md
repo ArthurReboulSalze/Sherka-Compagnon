@@ -140,7 +140,7 @@ Check for signed Windows updates directly from **Settings**. Installed and no-in
 
 ## What's next
 
-Next come speaking/listening animations, richer character customization and further improvements to generated character consistency. Hermes remains outside the emotion and illustration systems.
+Next comes polish: faster responses, refined features and interface, and more local and cloud providers such as Ollama. Hermes remains outside the emotion and illustration systems.
 
 There is plenty still to explore. Speed depends on your hardware and model choices, and speaker echo handling still needs broader testing. See the [roadmap](docs/ROADMAP.md) and [current status](docs/PROJECT_STATE.md).
 

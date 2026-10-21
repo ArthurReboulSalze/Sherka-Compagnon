@@ -2,6 +2,16 @@
 
 Release version: **1.3.0**, October 21, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
+## Current state
+
+- **Data formats:** profile/settings database schema **9** (persistent moods), legacy JSON profile export **version 5** (accepting 1–4), default companion export Sherka Companion Archive **v1** (`.sherka.zip`). Upgraded data must not be opened with older executables; keep installed and no-install copies on the same version.
+- **Platforms:** Windows x64 is the tested platform (NSIS installer, portable ZIP, signed in-app updates). The Debian x64 package builds and starts under Xvfb; physical Linux audio, compositor, tray and Secret Service unlocking remain unvalidated, and Linux updates are manual.
+- **Test suite:** on October 21, 2026, `cargo test --workspace --locked` passed 159 Rust tests on Windows, with one opt-in live DuckDuckGo test ignored.
+- **Validation model:** core and native tests use isolated data (`SHERKA_DATA_DIR`) and simulated services; real-service checks are opt-in. Physical microphone, speaker-echo and listening behavior are validated manually by the author, not automatically.
+- **Known limitations:** speaker echo cancellation depends on hardware and placement; one VoiceStudio cold start exceeded the startup timeout; token counts are conservative estimates; speech is synthesized per passage, not per token; image and emotion fidelity depend on the selected models.
+
+See [roadmap](ROADMAP.md) for planned work. The sections below are the release log, newest first.
+
 ## 1.3.0 — three-stage character creation
 
 Character creation is in the sidebar between Memory and Settings, accessible through **Companions → Create with AI**. A connected classic companion's LLM proposes an editable sheet. Three supplied API workflows replace the previous creation path: an HD neutral portrait on uniform dark gray, Klein 4B editing for six emotions, then fixed RMBG-2.0 transparency. No IP-Adapter or Turbo is used for creation. The third stage has no settings.
@@ -14,7 +24,7 @@ Conversation illustrations retain a separate per-companion IP-Adapter switch, re
 
 Search engines and API keys are configured globally in Settings; search access mode remains per companion. An existing provider configuration migrates once. Help & about sits below Settings and summarizes audio guidance, ComfyUI nodes/models and workflow requirements. All authored interface messages have translations in the seven supported languages.
 
-Development checks include 26 focused core tests, TypeScript, formatting, Clippy and localization/catalog checks. Live local ComfyUI testing rendered a 1024² neutral robot, a Klein joy edit and both transparent versions using the exact RMBG settings. Both final PNGs have roughly 60.7% transparent pixels, transparent corners and an opaque face. The user subsequently created a companion from beginning to end and confirmed that the complete flow works. Artistic quality and emotional fidelity still depend on the selected models.
+Development checks for this release included 26 focused core tests for the changed modules, TypeScript, formatting, Clippy and localization/catalog checks. Live local ComfyUI testing rendered a 1024² neutral robot, a Klein joy edit and both transparent versions using the exact RMBG settings. Both final PNGs have roughly 60.7% transparent pixels, transparent corners and an opaque face. The user subsequently created a companion from beginning to end and confirmed that the complete flow works. Artistic quality and emotional fidelity still depend on the selected models.
 
 Creation keeps conversation priority, cancellation tokens and targeted ComfyUI cleanup. It never globally interrupts the server. Image processing during final creation runs outside the shared conversation lock. The optimized Windows executable passed the native scenario in 17.8 seconds with isolated data and local service fixtures: all three stages, individual retries, preview dialogs, cached models, missing-node recovery, creation and restart. These fixture checks are separate from live rendering. Release validation includes Windows/Linux CI, signed Windows assets and an extracted Debian package startup check. Physical Linux audio and compositor behavior remain separate validation work.
 
@@ -23,6 +33,10 @@ Creation keeps conversation priority, cancellation tokens and targeted ComfyUI c
 Conversation images have larger desktop cells and a separate full-screen surface. The companion keeps its native drag/resize behavior in front, and leaving full screen restores the image cell. Character-specific negative appearance prompts are appended only when the scene includes the companion; the general negative prompt remains authoritative. Image pastes use the same capability checks as dropped attachments. First-image loading explains local ComfyUI startup and loading of the selected checkpoint/LoRAs.
 
 A configured-model native regression reproduces a desktop freeze with the 1.1.1 executable. Activity notifications now run asynchronously; native visibility/geometry reads finish before acquiring engine locks, and geometry saves reject stale profile/surface state. The same stress scenario passes with the fix. Native Windows checks also cover full-screen stacking and controls, larger saved cells, clipboard attachments and text-cell resizing. Static/localization checks and focused core tests pass; Debian compilation and the core illustration/device tests pass. These checks use isolated data and simulated service responses, without physical audio or Linux desktop interaction claims.
+
+## 1.1.1 — reachable widget controls
+
+Widget controls stay visible while the pointer crosses transparent gaps between the avatar, toolbar and resize handle, including maximum-size Minerva. Automatic hiding still applies when leaving the avatar region, and overlapping image cells remain interactive. A native regression covers maximum-size controls and real pointer resizing.
 
 ## 1.1.0 — shared services and spontaneous conversation
 
@@ -88,25 +102,6 @@ Earlier alpha.1 service validation passed a real synthetic exchange through GLM 
 
 Linux has Secret Service credentials, native source-link opening, Debian packaging and CI configuration. External voice services start separately and updates are manual. Debian 13 x86-64 passed 109 Rust tests, all static/localization checks, native Debian packaging and an extracted-package startup under Xvfb. No LM Studio or VoiceStudio was installed. Physical desktop/audio checks remain unvalidated; see [Linux development](LINUX.md).
 
-Profile/settings schema is **8** and profile exports are **version 4**, accepting legacy versions 1–3. Development checks use isolated data and singleton identifiers. Windows updates use the signed installer/executable manifest; Linux packages update manually.
-
-## Published release history
-
-The application now has its own logo across Windows icons, the tray, sidebar and favicon. Companion portraits stay independent. Incremental builds rebuild icon resources when branding changes, and the English README features the new identity and a refreshed control-panel screenshot.
-
-Hermes remote-agent mode connects to server profiles with protected keys, persistent conversations, streaming, interruption, explicit tool approvals and a widget **New conversation** action. Hermes owns personality, memory, tools and model budgets; emotional avatars are explicitly excluded. See [Hermes setup](HERMES.md).
-
-This version also includes the fixes prepared for 0.6.1: Automatic search planning failures leave ordinary conversation available. Replies default to 8,192 tokens, with a configurable 64,000-token context fallback for remote models without metadata. Existing 1,024-token defaults are upgraded once (profile schema 5).
-
-Earlier 0.6.1 checks: 78 Rust tests, three localization tests and six native scenarios passed. Native fixtures cover failed local/API search planning followed by normal streamed conversation, advertised output caps, missing context metadata, cancellation, restart, seven languages and startup recovery. Migration tests preserve profile choices, messages and memories. These regression checks use simulated services; there was no new billed inference or physical listening test.
-
-Per-companion conversation providers include LM Studio, OpenRouter, Z.ai API, Z.ai Coding Plan, OpenAI, Anthropic and compatible APIs. Keys use Windows Credential Manager and are excluded from profiles. See [provider setup](PROVIDERS.md).
-
-Startup recovery keeps signed updates available when settings or databases are incompatible or unreadable. Installed and no-install executables share data; keep their versions aligned. See [startup recovery](STARTUP_RECOVERY.md).
-
-Optional DuckDuckGo search offers disabled, on-request and automatic modes, bounded snippets and persistent source links. Widget controls now dismiss on pointer exit, focus loss and opening the panel. See [web search](WEB_SEARCH.md).
-
-The public release adds localized widget/tray controls, polished settings fields and a built-in Sherka personality in each language. The original Sherka follows the interface language; custom companions keep the language chosen at creation. Models and voices remain user-configured. See [languages](LANGUAGES.md).
 
 ## 0.9.0 — conversation privacy and audio recovery
 
@@ -142,7 +137,35 @@ The packaged 0.8.0 executable, extracted from the no-install ZIP, passed the ava
 
 Validation for alpha.1: 88 Rust tests in total (87 in the workspace run, plus the added context-budget test in the focused seven-test avatar suite), three localization tests, and six native scenarios passed. Native checks cover all seven interface languages, the image editor, streamed emotion metadata, TTS input, cancellation, profile voices and Hermes exclusion. The optimized Windows executable also passed the avatar scenario with isolated data, including image changes, voice selection, metadata filtering, interruption and persistence after restart. Two native fixtures were adjusted to await completed saves and the short-answer TTS flush; an unrelated worker startup crash passed on rerun. Services were simulated; no physical microphone or real-model emotion-quality test was performed.
 
-## Available
+## 0.7.1 — application logo
+
+The application now has its own logo across Windows icons, the tray, sidebar and favicon. Companion portraits stay independent. Incremental builds rebuild icon resources when branding changes, and the English README features the new identity and a refreshed control-panel screenshot.
+
+## 0.7.0 — Hermes remote agent
+
+Hermes remote-agent mode connects to server profiles with protected keys, persistent conversations, streaming, interruption, explicit tool approvals and a widget **New conversation** action. Hermes owns personality, memory, tools and model budgets; emotional avatars are explicitly excluded. See [Hermes setup](HERMES.md).
+
+This version also includes the fixes prepared for 0.6.1: Automatic search planning failures leave ordinary conversation available. Replies default to 8,192 tokens, with a configurable 64,000-token context fallback for remote models without metadata. Existing 1,024-token defaults are upgraded once (profile schema 5).
+
+Earlier 0.6.1 checks: 78 Rust tests, three localization tests and six native scenarios passed. Native fixtures cover failed local/API search planning followed by normal streamed conversation, advertised output caps, missing context metadata, cancellation, restart, seven languages and startup recovery. Migration tests preserve profile choices, messages and memories. These regression checks use simulated services; there was no new billed inference or physical listening test.
+
+## 0.6.0 — remote providers
+
+Per-companion conversation providers include LM Studio, OpenRouter, Z.ai API, Z.ai Coding Plan, OpenAI, Anthropic and compatible APIs. Keys use Windows Credential Manager and are excluded from profiles. See [provider setup](PROVIDERS.md).
+
+## 0.5.1 — startup recovery
+
+Startup recovery keeps signed updates available when settings or databases are incompatible or unreadable. Installed and no-install executables share data; keep their versions aligned. See [startup recovery](STARTUP_RECOVERY.md).
+
+## 0.5.0 — web search
+
+Optional DuckDuckGo search offers disabled, on-request and automatic modes, bounded snippets and persistent source links. Widget controls now dismiss on pointer exit, focus loss and opening the panel. See [web search](WEB_SEARCH.md).
+
+## 0.4.0 — languages
+
+The public release adds localized widget/tray controls, polished settings fields and a built-in Sherka personality in each language. The original Sherka follows the interface language; custom companions keep the language chosen at creation. Models and voices remain user-configured. See [languages](LANGUAGES.md).
+
+## Baseline features (0.3.3)
 
 Transparent widget, hover/click controls, optional panel, independent profiles and voices, profile import/export, provider catalogs, streamed text with speech prepared ahead, cancellation and voice interruption, editable essential/topical memories, context budgets and capability-aware reasoning.
 
@@ -150,7 +173,7 @@ Installed VoiceStudio starts when its local service is stopped. Sherka waits for
 
 GitHub updates are checked on request. Downloads are signed; installed and no-install copies use separate paths. Voice and the managed model stop before replacement.
 
-## Validation and limitations
+## Earlier validation (0.6–0.7)
 
 0.7.0 checks: 81 Rust tests, three localization tests and 25 native scenarios passed. One Playwright worker exited before a scenario began; that scenario passed when rerun separately. Native Hermes coverage includes separate profile keys, user-only requests, streamed speech, approvals opened from Settings, interruption and a new conversation from the widget. Two real server profiles passed synthetic conversation checks, including cross-message recall on the first profile. Real Hermes inference was tested; speech used a VoiceStudio fixture, with no physical microphone/listening validation. The Windows installer and no-install package were built locally; both updater signatures passed verification and rejected altered data. The packaged release executable started with the widget visible and panel hidden, read the protected profile keys, then exited cleanly with isolated data. The installer was not executed on the developer account.
 

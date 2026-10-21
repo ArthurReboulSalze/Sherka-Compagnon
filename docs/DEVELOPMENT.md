@@ -30,7 +30,7 @@ Windows CI checks Rust, TypeScript and native flows without external services or
 
 The Linux CI job also checks formatting, Clippy, the Rust suite and a native Tauri build. See [Linux development](LINUX.md) for Debian dependencies, package output and desktop limitations. No local model/speech applications are installed by that build.
 
-The audio unit tests inject callback/event-queue congestion during synthetic capture, check that playback remains valid, reject partial commands after a gap, and verify that fresh barge-in still works. Desktop coordinator tests verify microphone consent and stale-result rejection after transcription failure. The native `texte indÃ©pendant du TTS` scenario exercises long-answer completion, queued-speech cancellation, a VoiceStudio failure and the next successful turn using silent PCM. Technical events are written only to its isolated data directory; these tests do not open a physical microphone.
+The audio unit tests inject callback/event-queue congestion during synthetic capture, check that playback remains valid, reject partial commands after a gap, and verify that fresh barge-in still works. Desktop coordinator tests verify microphone consent and stale-result rejection after transcription failure. The native `texte indépendant du TTS` scenario exercises long-answer completion, queued-speech cancellation, a VoiceStudio failure and the next successful turn using silent PCM. Technical events are written only to its isolated data directory; these tests do not open a physical microphone.
 
 `npm run check` includes the shared translation catalog audit and text-isolation tests. The native `languages:` scenario exercises all seven interfaces and persistence with mock services and isolated profiles.
 
@@ -62,7 +62,7 @@ The native `hermes:` scenario uses an isolated HTTP server and temporary vault k
 
 Set `SHERKA_TEST_TEXT_ONLY=1` to exercise the Hermes and provider scenarios without audio output, matching hosted Windows runners. The widget is explicitly shown before testing its controls.
 
-The optional `hermes live:` scenario uses `SHERKA_TEST_HERMES_URL` and a comma-separated `SHERKA_TEST_HERMES_PROFILES` (default `default`). Configure each profileâ€™s key in Windows Credential Manager through Sherka first. The scenario creates isolated test conversations, sends short synthetic prompts through Hermesâ€™s existing model, and verifies continuation. It may incur provider usage; no key values or existing conversations are logged. Do not enable Playwright tracing for this test.
+The optional `hermes live:` scenario uses `SHERKA_TEST_HERMES_URL` and a comma-separated `SHERKA_TEST_HERMES_PROFILES` (default `default`). Configure each profile’s key in Windows Credential Manager through Sherka first. The scenario creates isolated test conversations, sends short synthetic prompts through Hermes’s existing model, and verifies continuation. It may incur provider usage; no key values or existing conversations are logged. Do not enable Playwright tracing for this test.
 
 The `hermes stop:` native scenario verifies the widget and typed `/stop` shortcut, delayed server confirmation, a failed cancellation followed by retry, and prevention of overlapping work. It uses a local fixture and never controls a real service.
 
@@ -70,7 +70,7 @@ For an explicitly authorized real speech-path check, `cargo run -p sherka-core -
 
 ### Avatar checks
 
-`avatar_emotions` core tests cover Unicode stream boundaries, malformed markers, image validation, stale edits, migrations, profile copy/import/export and neutral resets. The native `avatars:` test exercises the seven bundled images, upload preview, per-avatar voice selection, streamed expression changes, TTS text filtering, cancellation and restart. It also freezes the real 500 ms opacity animations at their midpoint to verify both decoded layers, then resumes them and checks cleanup and return to neutral. The `languages:` tests cover the editor in all seven locales; `hermes:` checks its neutral-only mode. These tests simulate the model and VoiceStudio, so they do not measure a real modelâ€™s emotion choices or physical speech playback.
+`avatar_emotions` core tests cover Unicode stream boundaries, malformed markers, image validation, stale edits, migrations, profile copy/import/export and neutral resets. The native `avatars:` test exercises the seven bundled images, upload preview, per-avatar voice selection, streamed expression changes, TTS text filtering, cancellation and restart. It also freezes the real 500 ms opacity animations at their midpoint to verify both decoded layers, then resumes them and checks cleanup and return to neutral. The `languages:` tests cover the editor in all seven locales; `hermes:` checks its neutral-only mode. These tests simulate the model and VoiceStudio, so they do not measure a real model’s emotion choices or physical speech playback.
 
 `companion_pack` checks the five starter profiles, translated personalities, bundled image validity, one-time initialization and independent search modes. The native `companion settings:` scenario verifies placement in Companions, image rendering, separate preferences and preservation of unsaved connection edits during a web-mode save.
 
