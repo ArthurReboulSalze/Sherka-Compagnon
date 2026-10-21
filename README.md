@@ -26,9 +26,10 @@
 <p align="center"><em>Voice, conversation scenes and companion creation — connected to your own models.</em></p>
 
 <p align="center">
-  <img src="docs/images/desktop-companion.png" alt="Independent Sherka desktop companion with inline text input and a movable ComfyUI conversation illustration" width="900">
+  <img src="docs/images/desktop-companion-live-01.jpg" alt="Sherka's live desktop companion with a koi pond illustration" width="49%">
+  <img src="docs/images/desktop-companion-live-02.jpg" alt="Sherka's live desktop companion with a goldfish illustration" width="49%">
 </p>
-<p align="center"><em>A companion that lives on your desktop — with text and image cells right beside it.</em></p>
+<p align="center"><em>Live on your desktop, with conversation illustrations beside your companion.</em></p>
 
 <p align="center">
   <img src="docs/images/sherka-1.3.0.png" alt="Sherka 1.3 control panel with companions, character creation and help" width="1000">
