@@ -27,12 +27,6 @@
 <p align="center"><em>Voice, conversation scenes and companion creation — connected to your own models.</em></p>
 
 <p align="center">
-  <img src="docs/images/desktop-companion-live-01.jpg" alt="Sherka's live desktop companion with a koi pond illustration" width="49%">
-  <img src="docs/images/desktop-companion-live-02.jpg" alt="Sherka's live desktop companion with a goldfish illustration" width="49%">
-</p>
-<p align="center"><em>Live on your desktop, with conversation illustrations beside your companion.</em></p>
-
-<p align="center">
   <img src="docs/images/sherka-1.3.0.png" alt="Sherka 1.3 control panel with companions, character creation and help" width="1000">
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
@@ -72,6 +66,12 @@ Sherka gives your AI a presence beyond a chat window: a transparent companion th
 The built-in Sherka is ready in every interface language. Custom companions keep the language you choose for them.
 
 ## Bring your own companion to life
+
+<p align="center">
+  <img src="docs/images/desktop-companion-live-01.jpg" alt="Sherka's live desktop companion with a koi pond illustration" width="49%">
+  <img src="docs/images/desktop-companion-live-02.jpg" alt="Sherka's live desktop companion with a goldfish illustration" width="49%">
+</p>
+<p align="center"><em>Live on your desktop, with conversation illustrations beside your companion.</em></p>
 
 Open **Companions → Create with AI**. Your connected LLM proposes an editable personality and appearance, then ComfyUI brings the character to life:
 
