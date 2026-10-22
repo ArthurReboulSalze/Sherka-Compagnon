@@ -14,6 +14,9 @@ ROOT_FILES = {".gitattributes", ".gitignore", "Cargo.lock", "Cargo.toml", "LICEN
               "index.html", "package-lock.json", "package.json", "playwright.config.ts", "tsconfig.json", "vite.config.ts"}
 FOLDERS = {".github", "config", "crates", "docs", "licenses", "scripts", "src", "src-tauri", "tests", "public"}
 PRIVATE = re.compile(r"(?i)(?:^|/)(?:artifacts|target|dist|node_modules|profiles|backups|data|secrets|test-results|playwright-report|webview)(?:/|$)|(?:^|/)\.env(?:\.|$)|\.(?:sqlite3?|db|key|pem|pfx|p12|exe|dll|zip|7z|dmp|wav|pcm|mp3|mp4|webm)(?:-|$)")
+# Reviewed public media that would otherwise match PRIVATE or exceed the size
+# review threshold: exact path -> maximum bytes. Add entries deliberately.
+PUBLIC_MEDIA = {"docs/site/video/sherka-overview.mp4": 16 * 1024 * 1024}
 PATTERNS = [
     ("private key", re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH |ENCRYPTED )?PRIVATE KEY-----")),
     ("GitHub token", re.compile(rb"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b")),
@@ -43,12 +46,13 @@ def staged():
     count = 0
     for name in filter(None, names):
         count += 1
-        if PRIVATE.search(name) or ("/" not in name and name not in ROOT_FILES) or ("/" in name and name.split('/')[0] not in FOLDERS):
+        public_media = name in PUBLIC_MEDIA
+        if (PRIVATE.search(name) and not public_media) or ("/" not in name and name not in ROOT_FILES) or ("/" in name and name.split('/')[0] not in FOLDERS):
             errors.append(f"{name}: forbidden publication path")
         if name.startswith("src-tauri/gen/"):
             errors.append(f"{name}: generated private build metadata")
         data = subprocess.check_output(["git", "show", ":" + name], cwd=ROOT)
-        if len(data) > 8 * 1024 * 1024:
+        if len(data) > PUBLIC_MEDIA.get(name, 8 * 1024 * 1024):
             errors.append(f"{name}: oversized file requires review")
         errors.extend(scan(name, data))
     if not count:
