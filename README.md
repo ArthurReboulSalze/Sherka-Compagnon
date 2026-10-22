@@ -33,10 +33,9 @@
 
 **Sherka 1.3 is here: create your own companion from an idea.** Shape its personality, approve its portrait, generate six emotions and give it a transparent place on your desktop. The new **Character creation** studio connects your LLM and ComfyUI in one guided flow. [What's new](docs/releases/1.3.0.md). **1.3.1** makes voice conversations snappier: shorter first spoken phrases, smoother interruptions and a local timing log. [Details](docs/releases/1.3.1.md).
 
-<p align="center">
-  <a href="https://arthurreboulsalze.github.io/Sherka-Compagnon/#video"><img src="docs/images/sherka-video.jpg" alt="Watch the seven-minute Sherka overview video" width="820"></a>
-</p>
-<p align="center"><em>Watch the seven-minute tour: voice, companions, expressions, scenes and character creation.</em></p>
+https://github.com/user-attachments/assets/8bd3d9aa-43d1-41d1-be7f-70454c500ed7
+
+<p align="center"><em>The seven-minute tour: voice, companions, expressions, scenes and character creation. <a href="https://arthurreboulsalze.github.io/Sherka-Compagnon/#video">Watch in higher quality</a>.</em></p>
 
 ## Meet your companions
 
