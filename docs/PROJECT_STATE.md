@@ -5,7 +5,7 @@ Release version: **1.3.3**, October 23, 2026. Windows x64 and an initial Debian 
 ## Current state
 
 - **Data formats:** profile/settings database schema **9** (persistent moods), legacy JSON profile export **version 5** (accepting 1–4), default companion export Sherka Companion Archive **v1** (`.sherka.zip`). Upgraded data must not be opened with older executables; keep installed and no-install copies on the same version.
-- **Platforms:** Windows x64 is the tested platform (NSIS installer, portable ZIP, signed in-app updates). The Debian x64 package builds and starts under Xvfb; physical Linux audio, compositor, tray and Secret Service unlocking remain unvalidated, and Linux updates are manual.
+- **Platforms:** Windows x64 is the tested platform (NSIS installer, portable ZIP, signed in-app updates). The Debian x64 package builds, starts under Xvfb and opens its widget window in a KDE Plasma (X11) session; physical Linux audio, compositor, tray and Secret Service unlocking remain unvalidated, and Linux updates are manual.
 - **Test suite:** for 1.3.1, `cargo test --workspace --locked` passed 163 Rust tests on Windows, with one opt-in live DuckDuckGo test ignored.
 - **Validation model:** core and native tests use isolated data (`SHERKA_DATA_DIR`) and simulated services; real-service checks are opt-in. Physical microphone, speaker-echo and listening behavior are validated manually by the author, not automatically.
 - **Known limitations:** speaker echo cancellation depends on hardware and placement; one VoiceStudio cold start exceeded the startup timeout; token counts are conservative estimates; speech is synthesized per passage, not per token; image and emotion fidelity depend on the selected models.
@@ -14,7 +14,7 @@ See [roadmap](ROADMAP.md) for planned work. The sections below are the release l
 
 ## 1.3.3 — microphone mute keeps the reply
 
-Turning the microphone off now mutes capture only: the reply in progress finishes and is spoken, an utterance still being spoken is dropped, and the device closes once playback is idle. Global pause and Stop are unchanged. The large Hermes stop overlay over the desktop companion is removed; the toolbar stop and `/stop` remain. Validation: 170 Rust tests (one opt-in live search test skipped), formatting, Clippy and localization checks; the user confirmed both behaviors in the app.
+Turning the microphone off now mutes capture only: the reply in progress finishes and is spoken, an utterance still being spoken is dropped, and the device closes once playback is idle. Global pause and Stop are unchanged. The large Hermes stop overlay over the desktop companion is removed; the toolbar stop and `/stop` remain. Validation: 170 Rust tests on Windows and 168 on Debian 13 (two Windows-only tests excluded; one opt-in live search test skipped on each), formatting, Clippy and localization checks; the user confirmed both behaviors in the Windows app. The released Debian package starts under Xvfb and opens its widget window in a KDE Plasma (X11) session; no physical Linux audio test was performed.
 
 ## 1.3.2 — image control and companion retouching
 
