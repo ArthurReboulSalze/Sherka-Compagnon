@@ -10,11 +10,13 @@ export interface ImageResolution {width:number;height:number;latent_scale:number
 export interface ImageReference {enabled:boolean;model:string|null;clip_vision:string|null;weight:number}
 export interface IllustrationConfig { resolution?:ImageResolution|null; reference?:ImageReference; enabled:boolean; server_url:string; checkpoint:string|null; model_family:'illustrious'|'sdxl'; checkpoint_folder:string; lora_folder:string; negative_prompt:string; positive_prompt_suffix:string; physical_description:string; appearance_negative_prompt:string; loras:{name:string;strength:number}[]; turbo:boolean; live:boolean; advanced:{enabled:boolean;size:number;steps_first:number;steps_second:number;cfg_first:number;cfg_second:number;sampler_name:string}; image_count:number; slide_seconds:number; workflow:Record<string,unknown>|null }
 export interface IllustrationCatalog { ipadapters?:string[];clip_visions?:string[];upscalers?:string[];reference_available?:boolean;transparency_available?:boolean; checkpoints:string[]; loras:string[]; turbo_available:boolean; missing_nodes:string[]; samplers:string[] }
-export interface IllustrationStatus { profile_id:string|null; phase:'disabled'|'idle'|'planning'|'generating'|'ready'|'paused'|'error'; image:string|null; images:string[]; message:string|null }
+export interface ScenePrompts { positive:string; negative:string }
+export interface IllustrationStatus { profile_id:string|null; phase:'disabled'|'idle'|'planning'|'generating'|'ready'|'paused'|'error'; image:string|null; images:string[]; message:string|null; prompt:(ScenePrompts&{edited:boolean})|null }
 export interface CharacterDraft {
   name:string;personality:string;instructions:string;accent:ProfileDraft['accent'];language:import('./i18n').Language;
   physical_description:string;appearance_negative_prompt:string;portrait_prompt:string;
   emotion_prompts:Record<Exclude<Emotion,'neutral'>,string>;
+  prompt_overrides?:Partial<Record<Emotion,ScenePrompts>>;
 }
 export interface CharacterStudioConfig {
   server_url:string;checkpoint:string|null;model_family:'sdxl'|'illustrious';mood_model:string|null;text_encoder:string|null;vae:string|null;
@@ -23,7 +25,7 @@ export type CharacterStage='neutral'|'mood'|'transparency';
 export interface CharacterStudioCatalog {checkpoints:string[];mood_models:string[];text_encoders:string[];vaes:string[];missing_nodes:Record<CharacterStage,string[]>}
 export interface CharacterStudioStatus {
   sequence:number;revision:number;busy:boolean;phase:string;source_profile:string|null;draft:CharacterDraft|null;config:CharacterStudioConfig|null;
-  images:Partial<Record<Emotion,string>>;transparent_images:Partial<Record<Emotion,string>>;neutral_validated:boolean;error:string|null;created_profile:string|null;
+  images:Partial<Record<Emotion,string>>;transparent_images:Partial<Record<Emotion,string>>;neutral_validated:boolean;neutral_imported:boolean;note:string|null;target_profile:string|null;error:string|null;created_profile:string|null;
 }
 export interface Attachment {name:string;data:string}
 export type SearchProvider='duck_duck_go'|'brave'|'tavily'|'searxng';

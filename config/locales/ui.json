@@ -9598,5 +9598,309 @@
     "Integrierter Workflow, schreibgeschützt. Modelle und Bilder werden in jedem Schritt eingesetzt.",
     "内置只读工作流。模型和图片会在各阶段自动填入。",
     "組み込みの読み取り専用ワークフローです。各ステップでモデルと画像が設定されます。"
+  ],
+  "{0} LoRA disponibles avec ces filtres": [
+    "{0} LoRAs available with these filters",
+    "{0} LoRA disponibles con estos filtros",
+    "{0} LoRA disponibili con questi filtri",
+    "{0} LoRAs mit diesen Filtern verfügbar",
+    "符合这些筛选条件的 LoRA：{0} 个",
+    "この条件で使える LoRA：{0} 件"
+  ],
+  "Apparence du compagnon": [
+    "Companion appearance",
+    "Apariencia del compañero",
+    "Aspetto del compagno",
+    "Aussehen des Begleiters",
+    "伙伴外观",
+    "コンパニオンの外見"
+  ],
+  "Attends la première image de cet échange avant de modifier son prompt.": [
+    "Wait for the first image of this exchange before editing its prompt.",
+    "Espera la primera imagen de este intercambio antes de editar su prompt.",
+    "Attendi la prima immagine di questo scambio prima di modificarne il prompt.",
+    "Warte auf das erste Bild dieses Austauschs, bevor du seinen Prompt bearbeitest.",
+    "请等待本轮对话的第一张图片生成后再编辑其提示词。",
+    "このやり取りの最初の画像ができてからプロンプトを編集してください。"
+  ],
+  "Ce modèle ne voit pas les images : la fiche vient de ton texte. Vérifie la description physique.": [
+    "This model cannot see images: the sheet comes from your text. Check the physical description.",
+    "Este modelo no ve imágenes: la ficha viene de tu texto. Revisa la descripción física.",
+    "Questo modello non vede le immagini: la scheda deriva dal tuo testo. Controlla la descrizione fisica.",
+    "Dieses Modell kann keine Bilder sehen: Das Profil stammt aus deinem Text. Prüfe die äußere Beschreibung.",
+    "此模型无法识别图片：角色卡来自你的文字。请检查外貌描述。",
+    "このモデルは画像を認識できません。シートはテキストから作成されました。外見の説明を確認してください。"
+  ],
+  "Ce modèle ne voit pas les images. Décris aussi ton personnage en texte.": [
+    "This model cannot see images. Describe your character in text as well.",
+    "Este modelo no ve imágenes. Describe también tu personaje con texto.",
+    "Questo modello non vede le immagini. Descrivi anche il tuo personaggio a parole.",
+    "Dieses Modell kann keine Bilder sehen. Beschreibe deine Figur zusätzlich in Textform.",
+    "此模型无法识别图片。请同时用文字描述你的角色。",
+    "このモデルは画像を認識できません。キャラクターをテキストでも説明してください。"
+  ],
+  "Ces filtres limitent seulement les listes ci-dessous : un LoRA déjà choisi reste sélectionné.": [
+    "These filters only narrow the lists below: a LoRA you already chose stays selected.",
+    "Estos filtros solo acotan las listas de abajo: un LoRA ya elegido sigue seleccionado.",
+    "Questi filtri restringono solo gli elenchi qui sotto: un LoRA già scelto resta selezionato.",
+    "Diese Filter schränken nur die Listen unten ein: Ein bereits gewählter LoRA bleibt ausgewählt.",
+    "这些筛选只影响下方列表：已选的 LoRA 会保持选中。",
+    "これらの絞り込みは下のリストにだけ適用されます。選択済みの LoRA はそのまま残ります。"
+  ],
+  "Choisis une image PNG, JPEG ou WebP de moins de 10 Mio.": [
+    "Choose a PNG, JPEG or WebP image under 10 MiB.",
+    "Elige una imagen PNG, JPEG o WebP de menos de 10 MiB.",
+    "Scegli un'immagine PNG, JPEG o WebP inferiore a 10 MiB.",
+    "Wähle ein PNG-, JPEG- oder WebP-Bild unter 10 MiB.",
+    "请选择小于 10 MiB 的 PNG、JPEG 或 WebP 图片。",
+    "10 MiB 未満の PNG、JPEG、WebP 画像を選んでください。"
+  ],
+  "Connexion et modèle": [
+    "Connection and model",
+    "Conexión y modelo",
+    "Connessione e modello",
+    "Verbindung und Modell",
+    "连接与模型",
+    "接続とモデル"
+  ],
+  "Décris ton personnage ou ajoute une image.": [
+    "Describe your character or add an image.",
+    "Describe tu personaje o añade una imagen.",
+    "Descrivi il tuo personaggio o aggiungi un'immagine.",
+    "Beschreibe deine Figur oder füge ein Bild hinzu.",
+    "请描述你的角色，或添加一张图片。",
+    "キャラクターを説明するか、画像を追加してください。"
+  ],
+  "Facultatif. Ton image devient le portrait neutre. Si le modèle connecté voit les images, il s’en sert aussi pour rédiger la description physique.": [
+    "Optional. Your image becomes the neutral portrait. If the connected model can see images, it also uses it to write the physical description.",
+    "Opcional. Tu imagen se convierte en el retrato neutro. Si el modelo conectado ve imágenes, también la usa para redactar la descripción física.",
+    "Facoltativo. La tua immagine diventa il ritratto neutro. Se il modello collegato vede le immagini, la usa anche per scrivere la descrizione fisica.",
+    "Optional. Dein Bild wird zum neutralen Porträt. Wenn das verbundene Modell Bilder sehen kann, nutzt es das Bild auch für die äußere Beschreibung.",
+    "可选。你的图片将作为中性肖像。如果所连接的模型能识别图片，它也会据此撰写外貌描述。",
+    "任意。画像はニュートラルな肖像になります。接続中のモデルが画像を認識できる場合は、外見の説明にも使われます。"
+  ],
+  "Génération pendant la conversation": [
+    "Generation during conversation",
+    "Generación durante la conversación",
+    "Generazione durante la conversazione",
+    "Erzeugung während des Gesprächs",
+    "对话中生成",
+    "会話中の生成"
+  ],
+  "Image de ton prompt modifié": [
+    "Image from your edited prompt",
+    "Imagen de tu prompt modificado",
+    "Immagine dal tuo prompt modificato",
+    "Bild aus deinem bearbeiteten Prompt",
+    "根据你修改的提示词生成的图片",
+    "編集したプロンプトの画像"
+  ],
+  "Instruction de modification envoyée à Klein pour cette émotion.": [
+    "Editing instruction sent to Klein for this emotion.",
+    "Instrucción de edición enviada a Klein para esta emoción.",
+    "Istruzione di modifica inviata a Klein per questa emozione.",
+    "Bearbeitungsanweisung, die für diese Emotion an Klein gesendet wird.",
+    "为该情绪发送给 Klein 的编辑指令。",
+    "この感情のために Klein へ送る編集指示です。"
+  ],
+  "Le bouton crayon de la vignette du bureau affiche le prompt de la dernière image et permet de le modifier.": [
+    "The pencil button on the desktop image cell shows the latest image's prompt and lets you edit it.",
+    "El botón del lápiz de la viñeta del escritorio muestra el prompt de la última imagen y permite editarlo.",
+    "Il pulsante a forma di matita della vignetta sul desktop mostra il prompt dell'ultima immagine e permette di modificarlo.",
+    "Die Stift-Schaltfläche der Bildzelle auf dem Desktop zeigt den Prompt des letzten Bildes und lässt ihn bearbeiten.",
+    "桌面图片框上的铅笔按钮会显示最新图片的提示词，并可编辑。",
+    "デスクトップの画像セルにある鉛筆ボタンで、最新の画像のプロンプトを表示・編集できます。"
+  ],
+  "Le prompt doit contenir un texte positif de 8000 caractères au maximum.": [
+    "The prompt needs positive text of at most 8000 characters.",
+    "El prompt necesita un texto positivo de 8000 caracteres como máximo.",
+    "Il prompt deve contenere un testo positivo di al massimo 8000 caratteri.",
+    "Der Prompt braucht einen positiven Text mit höchstens 8000 Zeichen.",
+    "提示词需要包含正向文本，且不超过 8000 个字符。",
+    "プロンプトには 8000 文字以内のポジティブテキストが必要です。"
+  ],
+  "Le prompt positif ne peut pas être vide.": [
+    "The positive prompt cannot be empty.",
+    "El prompt positivo no puede estar vacío.",
+    "Il prompt positivo non può essere vuoto.",
+    "Der positive Prompt darf nicht leer sein.",
+    "正向提示词不能为空。",
+    "ポジティブプロンプトは空にできません。"
+  ],
+  "Nom ou partie du nom": [
+    "Name or part of the name",
+    "Nombre o parte del nombre",
+    "Nome o parte del nome",
+    "Name oder Namensteil",
+    "名称或名称的一部分",
+    "名前または名前の一部"
+  ],
+  "Partir d’une image": [
+    "Start from an image",
+    "Partir de una imagen",
+    "Parti da un'immagine",
+    "Von einem Bild ausgehen",
+    "从图片开始",
+    "画像から始める"
+  ],
+  "Prompt": [
+    "Prompt",
+    "Prompt",
+    "Prompt",
+    "Prompt",
+    "提示词",
+    "プロンプト"
+  ],
+  "Prompt · {0}": [
+    "Prompt · {0}",
+    "Prompt · {0}",
+    "Prompt · {0}",
+    "Prompt · {0}",
+    "提示词 · {0}",
+    "プロンプト · {0}"
+  ],
+  "Prompt envoyé au modèle du portrait (SDXL ou Illustrious), avant les réglages fixes du workflow.": [
+    "Prompt sent to the portrait model (SDXL or Illustrious), before the workflow's fixed settings.",
+    "Prompt enviado al modelo del retrato (SDXL o Illustrious), antes de los ajustes fijos del workflow.",
+    "Prompt inviato al modello del ritratto (SDXL o Illustrious), prima delle impostazioni fisse del workflow.",
+    "Prompt, der an das Porträtmodell (SDXL oder Illustrious) gesendet wird, vor den festen Workflow-Einstellungen.",
+    "发送给肖像模型（SDXL 或 Illustrious）的提示词，工作流的固定设置另行应用。",
+    "肖像モデル（SDXL または Illustrious）に送るプロンプトです。ワークフローの固定設定は別に適用されます。"
+  ],
+  "Prompt positif": [
+    "Positive prompt",
+    "Prompt positivo",
+    "Prompt positivo",
+    "Positiver Prompt",
+    "正向提示词",
+    "ポジティブプロンプト"
+  ],
+  "Prompts": [
+    "Prompts",
+    "Prompts",
+    "Prompt",
+    "Prompts",
+    "提示词",
+    "プロンプト"
+  ],
+  "Rechercher un LoRA": [
+    "Search a LoRA",
+    "Buscar un LoRA",
+    "Cerca un LoRA",
+    "LoRA suchen",
+    "搜索 LoRA",
+    "LoRA を検索"
+  ],
+  "Revenir au prompt automatique": [
+    "Back to the automatic prompt",
+    "Volver al prompt automático",
+    "Torna al prompt automatico",
+    "Zurück zum automatischen Prompt",
+    "恢复自动提示词",
+    "自動プロンプトに戻す"
+  ],
+  "Revenir au prompt préparé par le modèle": [
+    "Back to the prompt prepared by the model",
+    "Volver al prompt preparado por el modelo",
+    "Torna al prompt preparato dal modello",
+    "Zurück zum vom Modell vorbereiteten Prompt",
+    "恢复模型准备的提示词",
+    "モデルが用意したプロンプトに戻す"
+  ],
+  "Ta propre image est placée sur un fond gris foncé uni et remplace le portrait généré. Elle reste valable si tu modifies la fiche ou le modèle du portrait.": [
+    "Your own image is placed on a plain dark gray background and replaces the generated portrait. It stays valid if you edit the sheet or the portrait model.",
+    "Tu propia imagen se coloca sobre un fondo gris oscuro liso y sustituye al retrato generado. Sigue siendo válida si modificas la ficha o el modelo del retrato.",
+    "La tua immagine viene posta su uno sfondo grigio scuro uniforme e sostituisce il ritratto generato. Resta valida se modifichi la scheda o il modello del ritratto.",
+    "Dein eigenes Bild wird auf einen einfarbig dunkelgrauen Hintergrund gesetzt und ersetzt das erzeugte Porträt. Es bleibt gültig, wenn du das Profil oder das Porträtmodell änderst.",
+    "你自己的图片会放在纯深灰色背景上，并替换生成的肖像。修改角色卡或肖像模型后它仍然有效。",
+    "自分の画像は無地のダークグレーの背景に配置され、生成された肖像の代わりになります。シートや肖像モデルを変更しても有効なままです。"
+  ],
+  "Ton texte est envoyé tel quel. Une modification de la fiche ne change plus ce prompt tant que tu ne reviens pas au prompt automatique.": [
+    "Your text is sent as is. Editing the sheet no longer changes this prompt until you go back to the automatic prompt.",
+    "Tu texto se envía tal cual. Modificar la ficha ya no cambia este prompt hasta que vuelvas al prompt automático.",
+    "Il tuo testo viene inviato così com'è. Modificare la scheda non cambia più questo prompt finché non torni al prompt automatico.",
+    "Dein Text wird unverändert gesendet. Änderungen am Profil wirken sich nicht mehr auf diesen Prompt aus, bis du zum automatischen Prompt zurückkehrst.",
+    "你的文本会原样发送。在恢复自动提示词之前，修改角色卡不会再改变此提示词。",
+    "入力したテキストはそのまま送信されます。自動プロンプトに戻すまで、シートを変更してもこのプロンプトは変わりません。"
+  ],
+  "Utiliser ce prompt": [
+    "Use this prompt",
+    "Usar este prompt",
+    "Usa questo prompt",
+    "Diesen Prompt verwenden",
+    "使用此提示词",
+    "このプロンプトを使う"
+  ],
+  "Utiliser mon image": [
+    "Use my image",
+    "Usar mi imagen",
+    "Usa la mia immagine",
+    "Mein Bild verwenden",
+    "使用我的图片",
+    "自分の画像を使う"
+  ],
+  "Voir et modifier le prompt": [
+    "View and edit the prompt",
+    "Ver y editar el prompt",
+    "Vedi e modifica il prompt",
+    "Prompt anzeigen und bearbeiten",
+    "查看并编辑提示词",
+    "プロンプトを表示・編集"
+  ],
+  "{0} Régénérer ses images": [
+    "{0} Regenerate images",
+    "{0} Regenerar sus imágenes",
+    "{0} Rigenera le immagini",
+    "{0} Bilder neu erzeugen",
+    "{0} 重新生成图片",
+    "{0} 画像を再生成"
+  ],
+  "Appliquer à {0}": [
+    "Apply to {0}",
+    "Aplicar a {0}",
+    "Applica a {0}",
+    "Auf {0} anwenden",
+    "应用到 {0}",
+    "{0} に適用"
+  ],
+  "Images du compagnon mises à jour.": [
+    "Companion images updated.",
+    "Imágenes del compañero actualizadas.",
+    "Immagini del compagno aggiornate.",
+    "Bilder des Begleiters aktualisiert.",
+    "伙伴图片已更新。",
+    "コンパニオンの画像を更新しました。"
+  ],
+  "Le portrait du compagnon est illisible.": [
+    "The companion portrait cannot be read.",
+    "No se puede leer el retrato del compañero.",
+    "Impossibile leggere il ritratto del compagno.",
+    "Das Porträt des Begleiters ist nicht lesbar.",
+    "无法读取伙伴肖像。",
+    "コンパニオンの肖像を読み込めません。"
+  ],
+  "Ouvre ses images dans la création de personnage pour régénérer son portrait ou ses émotions.": [
+    "Opens its images in character creation to regenerate its portrait or emotions.",
+    "Abre sus imágenes en la creación de personajes para regenerar su retrato o sus emociones.",
+    "Apre le sue immagini nella creazione del personaggio per rigenerarne il ritratto o le emozioni.",
+    "Öffnet seine Bilder in der Figurenerstellung, um Porträt oder Emotionen neu zu erzeugen.",
+    "在角色创建中打开其图片，以重新生成肖像或情绪。",
+    "キャラクター作成で画像を開き、肖像や感情を再生成します。"
+  ],
+  "Retouche des images de {0}. Sa personnalité, sa voix et ses souvenirs ne changent pas.": [
+    "Retouching the images of {0}. Personality, voice and memories stay unchanged.",
+    "Retoque de las imágenes de {0}. Su personalidad, su voz y sus recuerdos no cambian.",
+    "Ritocco delle immagini di {0}. Personalità, voce e ricordi restano invariati.",
+    "Bilder von {0} werden überarbeitet. Persönlichkeit, Stimme und Erinnerungen bleiben unverändert.",
+    "正在修改 {0} 的图片。其性格、声音和记忆保持不变。",
+    "{0} の画像を修正中です。性格、声、記憶は変わりません。"
+  ],
+  "Ses sept images actuelles seront remplacées.": [
+    "Its seven current images will be replaced.",
+    "Sus siete imágenes actuales serán reemplazadas.",
+    "Le sue sette immagini attuali verranno sostituite.",
+    "Seine sieben aktuellen Bilder werden ersetzt.",
+    "其当前的七张图片将被替换。",
+    "現在の7枚の画像が置き換えられます。"
   ]
 }

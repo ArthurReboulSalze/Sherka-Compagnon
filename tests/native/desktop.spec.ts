@@ -9,7 +9,7 @@ const currentVersion=JSON.parse(readFileSync('package.json','utf8')).version as 
 const nextVersion=currentVersion.replace(/(\d+)$/,part=>String(Number(part)+1));
 
 test('character studio: three fixed workflows, individual emotions, large previews, transparency and fresh companion',async()=>{
-  test.setTimeout(180000);
+  test.setTimeout(360000);
   const model=modelRoutes(['studio-chat'],64000);
   const draft={name:'Vega Studio',personality:'Curieuse, calme et précise.',instructions:'Réponds naturellement.',accent:'teal',language:'fr',
     physical_description:'A silver mechanical robot with green optical eyes.',appearance_negative_prompt:'human face, hair',portrait_prompt:'full body, entire silhouette inside the frame, side profile',
@@ -51,7 +51,7 @@ test('character studio: three fixed workflows, individual emotions, large previe
   try{
     let state=await native<any>('get_snapshot'),source=state.profiles.find((p:any)=>p.id===state.session.profile_id);
     await native('apply_mutation',{mutation:{kind:'connections',id:source.id,revision:source.revision,connections:{...source.connections,lm_studio_url:url,llm_model:'studio-chat',reasoning:'on'}}});
-    expect(await panel.locator('nav [data-nav]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-nav')))).toEqual(['profiles','conversation','memory','studio','settings','help']);
+    expect(await panel.locator('nav [data-nav]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-nav')))).toEqual(['profiles','studio','conversation','memory','settings','help']);
     await panel.locator('[data-nav="profiles"]').click();await panel.locator('#create-character').click();
     await expect(panel.locator('#studio-concept')).toBeVisible();
     await expect(panel.locator('[name="steps_first"],[name="image_ipadapter"],[name="image_turbo"],[name="background_model"]')).toHaveCount(0);
@@ -90,11 +90,16 @@ test('character studio: three fixed workflows, individual emotions, large previe
     await expect(panel.locator('#studio-sheet [name="personality"]')).toHaveValue('Curieuse, calme, précise et malicieuse.');
     panel.off('framenavigated',onSheetNavigation);expect(sheetNavigated).toBe(false);
     await expect(panel.locator('#studio-emotions')).toBeEnabled(); // Personality edits keep the approved visual identity.
+    // The exact Klein instruction for one emotion can be edited and is sent verbatim.
+    await panel.locator('[data-prompt="joy"]').click();const joyPrompt=panel.locator('.studio-dialog [name="positive"]');
+    await expect(joyPrompt).toHaveValue(/solid dark gray background/);const automaticJoy=await joyPrompt.inputValue();
+    await joyPrompt.fill(automaticJoy+' Extra sparkle.');await panel.locator('.studio-dialog [data-apply]').click();
+    await expect(panel.locator('[data-prompt="joy"]')).toHaveClass(/studio-prompt-edited/);
     await panel.locator('[data-regenerate="joy"]').click();
     await expect(panel.locator('[data-emotion="joy"][data-transparent="false"] img')).toBeVisible();
     await expect(panel.locator('#studio-emotions')).toBeEnabled();
     expect(graphs).toHaveLength(2);expect(graphs[1]['129'].inputs.type).toBe('flux2');
-    expect(graphs[1]['130'].inputs.text).toContain('solid dark gray background');
+    expect(graphs[1]['130'].inputs.text).toBe(automaticJoy+' Extra sparkle.');
     expect(graphs[1]['76'].inputs.image).toMatch(/sherka\/reference-.* \[temp\]/);
     await panel.locator('#studio-emotions').click();
     await expect(panel.locator('#studio-transparency')).toBeEnabled({timeout:60000});
@@ -133,6 +138,11 @@ test('character studio: three fixed workflows, individual emotions, large previe
     await panel.locator('[data-nav="help"]').click();await expect(panel.locator('h1')).toContainText('Aide et à propos');
     await expect(panel.locator('.content')).toContainText('RMBG-2.0');await expect(panel.locator('.content')).toContainText('Un casque et un environnement calme');
     await panel.locator('[data-nav="studio"]').click();await panel.locator('#studio-plan').click();await expect(panel.locator('#studio-neutral')).toBeEnabled();
+    // A user picture can replace the generated neutral portrait.
+    await panel.locator('#studio-import-file').setInputFiles('src-tauri/icons/128x128.png');
+    await expect(panel.locator('[data-emotion="neutral"][data-transparent="false"] img')).toBeVisible();
+    const imported=await native<any>('get_character_studio');expect(imported.neutral_imported).toBe(true);expect(imported.neutral_validated).toBe(false);
+    await expect(panel.locator('[data-prompt="neutral"]')).toBeDisabled();
     held=true;await panel.locator('#studio-neutral').click();await expect.poll(()=>graphs.length).toBe(17);await panel.locator('#studio-stop').click();
     await expect.poll(()=>deleted).toContain('studio_17');await expect(panel.locator('#studio-phase')).toContainText('interrompue');
     await stopApplication();await startApplication();state=await native<any>('get_snapshot');
@@ -140,6 +150,24 @@ test('character studio: three fixed workflows, individual emotions, large previe
     await panel.locator('[data-nav="studio"]').click();
     await expect(panel.locator('#studio-models [name="mood_model"]')).toHaveValue('klein.safetensors');
     await expect(panel.locator('#studio-catalog-note')).toContainText('mémorisé');
+    // An existing companion, including bundled artwork, can regenerate some images in place.
+    held=false;await panel.locator('[data-nav="profiles"]').click();
+    await panel.locator('#regenerate-images').click();await expect(panel.locator('#studio-target')).toBeVisible({timeout:60000});
+    const retouch=await native<any>('get_character_studio');expect(retouch.target_profile).not.toBeNull();expect(retouch.neutral_validated).toBe(true);
+    expect(Object.keys(retouch.images)).toHaveLength(7);
+    const targetBefore=(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===retouch.target_profile);
+    await expect(panel.locator('#studio-finish')).toContainText(targetBefore.name);
+    const graphsBeforeRetouch=graphs.length;
+    await panel.locator('[data-regenerate="joy"]').click();await expect.poll(()=>graphs.length).toBe(graphsBeforeRetouch+1);
+    await expect(panel.locator('#studio-transparency')).toBeEnabled({timeout:30000});await panel.locator('#studio-transparency').click();
+    await expect(panel.locator('#studio-finish')).toBeEnabled({timeout:30000});
+    await panel.locator('#studio-finish').click();
+    await expect.poll(async()=>{const s=await native<any>('get_character_studio');if(s.error)throw new Error(s.error);return s.created_profile;},{timeout:90000}).toBe(retouch.target_profile);
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===retouch.target_profile).emotion_avatars.joy).toMatch(/^data:image\/png/);
+    const targetAfter=(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===retouch.target_profile);
+    expect(targetAfter.name).toBe(targetBefore.name);expect(targetAfter.personality).toBe(targetBefore.personality);
+    expect(targetAfter.message_count).toBe(targetBefore.message_count);expect(targetAfter.connections.tts_voice).toBe(targetBefore.connections.tts_voice);
+    expect(targetAfter.emotion_avatars.joy).not.toBe(targetBefore.emotion_avatars.joy);
     expect(consoleErrors).toEqual([]);
   }finally{server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
 });
@@ -858,7 +886,7 @@ test('imports validés, texte non exécutable et permissions distinctes des fen�
 test('companion archives: ZIP images, duplicate settings, empty histories and restart', async () => {
   test.setTimeout(150_000);
   expect(await panel.locator('nav [data-nav]').evaluateAll(nodes => nodes.map(n => n.getAttribute('data-nav'))))
-    .toEqual(['profiles','conversation','memory','studio','settings','help']);
+    .toEqual(['profiles','studio','conversation','memory','settings','help']);
   await panel.locator('[name="image_positive_suffix"]').fill('(warm light:1.3), watercolor');
   await panel.locator('#illustration-form [type="submit"]').click();
   await expect(panel.locator('body')).not.toHaveClass(/working/);
@@ -965,7 +993,9 @@ test('providers: API controls, protected keys, Anthropic streaming, cancellation
     await panel.getByLabel('Ou écris-lui ici').fill('Aujourd’hui je te raconte ma journée.');await panel.getByRole('button',{name:'Envoyer',exact:true}).click();await expect.poll(()=>number).toBe(2);await expect(panel.locator('#live-reply')).toContainText('Bonjour depuis le cloud.');
     const fallback=await native<any>('get_conversation');expect(fallback.live.web).toBeNull();expect(fallback.live.budget.limit).toBe(64000);expect(fallback.live.budget.response_tokens).toBe(8192);
     expect(requests.filter(r=>r.path.endsWith('/messages')&&r.body.stream).at(-1)!.body.max_tokens).toBe(8192);
-    await panel.getByRole('button',{name:'Arrêter la réponse',exact:true}).click();interrupted?.();
+    // Text the provider sends after the stop has taken effect must never be kept.
+    await panel.getByRole('button',{name:'Arrêter la réponse',exact:true}).click();
+    await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();interrupted?.();
     await expect.poll(async()=> (await native<any[]>('get_history',{profileId:p.id})).at(-1)?.delivery).toBe('interrupted');
     expect(JSON.stringify(await native('get_history',{profileId:p.id}))).not.toContain('FIN ANCIENNE');
     await panel.getByRole('button',{name:'Compagnons',exact:true}).click();await panel.screenshot({path:'artifacts/providers-options.png',fullPage:true});
@@ -2944,6 +2974,21 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
     const duringSpeech=await native<any>('get_conversation');if(canSpeak){expect(duringSpeech.live.tag).not.toBeNull();expect(duringSpeech.live.text_complete).toBe(true);}
     for(const response of spoken){response.writeHead(200,{'Content-Type':'audio/pcm'});response.end(Buffer.alloc(4800));}
     await expect.poll(async()=>(await native<any>('get_conversation')).live.tag).toBeNull();
+    // The latest scene prompt can be read and replaced from the widget image cell.
+    const current=(await native<any>('get_illustration')).prompt;expect(current.edited).toBe(false);
+    expect(String(graphs.at(-1)['4'].inputs.text)).toContain(current.positive.slice(0,30));
+    await widget.locator('#cell-image-prompt').click();await expect(widget.locator('#cell-prompt')).toBeVisible();
+    await expect(widget.locator('#cell-prompt [name="positive"]')).toHaveValue(current.positive);
+    const graphsBeforeEdit=graphs.length,plansBeforeEdit=plans.length;
+    await widget.locator('#cell-prompt [name="positive"]').fill('(edited moon:1.2), lake at night');await widget.locator('#cell-prompt [name="negative"]').fill('people');
+    await widget.screenshot({path:'artifacts/widget-prompt-editor.png'});
+    await widget.locator('#cell-prompt button[type="submit"]').click();await expect(widget.locator('#cell-prompt')).toBeHidden();
+    await expect.poll(async()=>(await native<any>('get_illustration')).phase).toBe('ready');
+    expect(graphs.length).toBeGreaterThan(graphsBeforeEdit);expect(plans.length).toBe(plansBeforeEdit);
+    expect(graphs.at(-1)['4'].inputs.text).toBe('(edited moon:1.2), lake at night');expect(graphs.at(-1)['5'].inputs.text).toBe('people');
+    expect((await native<any>('get_illustration')).prompt).toEqual({positive:'(edited moon:1.2), lake at night',negative:'people',edited:true});
+    await native('reset_illustration_prompt');await expect.poll(()=>plans.length).toBe(plansBeforeEdit+1);
+    await expect.poll(async()=>(await native<any>('get_illustration')).phase).toBe('ready');expect((await native<any>('get_illustration')).prompt.edited).toBe(false);
     await native('desktop_tool',{tool:'image',open:false});
     await expect(panel.locator('[name="image_enabled"]')).not.toBeChecked();
     await panel.locator('[data-nav="settings"]').click();

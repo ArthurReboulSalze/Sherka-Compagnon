@@ -1,6 +1,6 @@
 # Project status
 
-Release version: **1.3.1**, October 21, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.3.2**, October 23, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
 ## Current state
 
@@ -11,6 +11,12 @@ Release version: **1.3.1**, October 21, 2026. Windows x64 and an initial Debian 
 - **Known limitations:** speaker echo cancellation depends on hardware and placement; one VoiceStudio cold start exceeded the startup timeout; token counts are conservative estimates; speech is synthesized per passage, not per token; image and emotion fidelity depend on the selected models.
 
 See [roadmap](ROADMAP.md) for planned work. The sections below are the release log, newest first.
+
+## 1.3.2 — image control and companion retouching
+
+Character creation accepts a user picture as the neutral portrait (flattened onto the portrait gray, at most 1024 pixels); the sheet request then accepts an empty idea and attaches the picture only when the source model reports vision support. Each creation image exposes its exact ComfyUI prompts for verbatim editing (`Draft.prompt_overrides`), which take part in invalidation. Existing companions, bundled ones included, can be loaded into the studio to regenerate any emotion or the portrait and written back in place; identity, voice, history and memories are untouched. The conversation scene prompt is shown and editable below the desktop image cell, reused for variants and live mode until the next reply. Illustration settings are grouped into remembered collapsible sections with LoRA folder and search filters above the LoRA rows. Character creation moved below Companions in the sidebar.
+
+Validation: 169 Rust tests (one opt-in live search test skipped), formatting, Clippy and seven-language checks passed. Native scenarios with simulated ComfyUI and model services covered prompt editing in the studio and widget, picture import, the full retouch of a bundled companion, the reorganized settings and catalog cache. Real image generation was checked by the user in the app, not by automated tests.
 
 ## 1.3.1 — faster voice turns
 

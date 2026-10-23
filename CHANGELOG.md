@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.2 — 2026-10-23
+
+- Start a new character from your own picture: it becomes the neutral portrait (scaled to 1024 px and flattened onto the portrait gray), the written idea becomes optional, and a vision-capable model also writes the physical description from the image. An imported portrait can also replace the neutral portrait later.
+- Show and edit the exact ComfyUI prompts of each creation image with a **Prompt** button; edits are sent verbatim and invalidate only their own image.
+- Show and edit the current conversation scene prompt in an editor attached below the desktop image cell, regenerate with it verbatim, keep it for variants and live mode until the next reply, or return to the automatic prompt.
+- Reorganize illustration settings into remembered collapsible sections, with the LoRA folder filter and a new LoRA search placed directly above the LoRA rows and a save button that stays reachable.
+- Regenerate an existing companion's images from its page with **Regenerate images**: the studio loads its current portrait and seven expressions, lets you regenerate any emotion or the whole portrait, then applies the images back to that companion while its personality, voice, history and memories stay unchanged.
+- Move **Character creation** right below **Companions** in the sidebar.
+- Translate the new controls into all seven interface languages, and publish Windows installer/portable and Debian packages with signed Windows update assets.
+
 ## 1.3.1 — 2026-10-21
 
 - Record one `turn_timing` line per reply in the local audio diagnostics log: milliseconds from the end of speech to the accepted transcript, prepared request, first token, first passage sent to speech synthesis, first audio and complete text. No conversation content is logged.

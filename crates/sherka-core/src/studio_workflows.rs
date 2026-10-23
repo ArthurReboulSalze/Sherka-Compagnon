@@ -3,7 +3,7 @@ use crate::{
     Error, Result,
     avatar::Emotion,
     character_studio::Draft,
-    illustration::{self, Client, ModelFamily},
+    illustration::{self, Client, ModelFamily, Scene},
     image_pipeline::catalog_names,
 };
 use serde::{Deserialize, Serialize};
@@ -76,6 +76,13 @@ impl Config {
             && self.checkpoint == other.checkpoint
             && self.model_family == other.model_family
     }
+    /// The Klein models and server, independent of how the neutral portrait was made.
+    pub fn mood_models_match(&self, other: &Self) -> bool {
+        self.server_url == other.server_url
+            && self.mood_model == other.mood_model
+            && self.text_encoder == other.text_encoder
+            && self.vae == other.vae
+    }
     pub fn mood_matches(&self, other: &Self) -> bool {
         self.neutral_matches(other)
             && self.mood_model == other.mood_model
@@ -98,6 +105,13 @@ pub fn same_portrait(a: &Draft, b: &Draft) -> bool {
     a.physical_description == b.physical_description
         && a.appearance_negative_prompt == b.appearance_negative_prompt
         && a.portrait_prompt == b.portrait_prompt
+        && a.prompt_override(Emotion::Neutral) == b.prompt_override(Emotion::Neutral)
+}
+/// Whether two sheets produce the same prompts for one emotion edit.
+pub fn same_mood(a: &Draft, b: &Draft, emotion: Emotion) -> bool {
+    a.emotion_prompts.get(&emotion) == b.emotion_prompts.get(&emotion)
+        && a.appearance_negative_prompt == b.appearance_negative_prompt
+        && a.prompt_override(emotion) == b.prompt_override(emotion)
 }
 pub fn template(stage: Stage) -> Value {
     serde_json::from_str(match stage {
@@ -176,6 +190,35 @@ pub fn mood_prompt(draft: &Draft, emotion: Emotion) -> Result<String> {
     ))
 }
 // i18n: data-end
+/// The prompts composed from the sheet for one image, before any user edit.
+pub fn automatic_prompts(config: &Config, draft: &Draft, emotion: Emotion) -> Result<Scene> {
+    if emotion == Emotion::Neutral {
+        let image_config = config.illustration(draft);
+        let scene = draft
+            .scene(&image_config, Emotion::Neutral)?
+            .validated_for(config.model_family)?;
+        let negative = template(Stage::Neutral)["5"]["inputs"]["text"]
+            .as_str()
+            .unwrap_or("%negative_prompt%")
+            .replace("%negative_prompt%", &image_config.scene_negative(true));
+        Ok(Scene {
+            positive: scene.positive,
+            negative: negative.trim().into(),
+        })
+    } else {
+        Ok(Scene {
+            positive: mood_prompt(draft, emotion)?,
+            negative: draft.appearance_negative_prompt.clone(),
+        })
+    }
+}
+/// What ComfyUI receives for this image: the user's edit, or the composed prompts.
+pub fn prompts(config: &Config, draft: &Draft, emotion: Emotion) -> Result<Scene> {
+    match draft.prompt_override(emotion) {
+        Some(scene) => crate::illustration::exact_prompts(&scene.positive, &scene.negative),
+        None => automatic_prompts(config, draft, emotion),
+    }
+}
 pub fn workflow(
     config: &Config,
     draft: &Draft,
@@ -207,16 +250,9 @@ pub fn workflow(
                 "CheckpointLoaderSimple",
                 "ckpt_name"
             )?);
-            let image_config = c.illustration(draft);
-            let scene = draft
-                .scene(&image_config, Emotion::Neutral)?
-                .validated_for(c.model_family)?;
+            let scene = prompts(&c, draft, Emotion::Neutral)?;
             graph["4"]["inputs"]["text"] = json!(scene.positive);
-            let negative = graph["5"]["inputs"]["text"]
-                .as_str()
-                .unwrap()
-                .replace("%negative_prompt%", &image_config.scene_negative(true));
-            graph["5"]["inputs"]["text"] = json!(negative);
+            graph["5"]["inputs"]["text"] = json!(scene.negative);
             graph["55"]["inputs"]["noise_seed"] = json!(seed);
             graph["66"]["inputs"]["seed"] = json!(seed.wrapping_add(1) & 0x7fff_ffff_ffff_ffff);
         }
@@ -227,8 +263,9 @@ pub fn workflow(
                 json!(selected(&c.text_encoder, info, "CLIPLoader", "clip_name")?);
             graph["132"]["inputs"]["vae_name"] =
                 json!(selected(&c.vae, info, "VAELoader", "vae_name")?);
-            graph["130"]["inputs"]["text"] = json!(mood_prompt(draft, emotion)?);
-            graph["131"]["inputs"]["text"] = json!(draft.appearance_negative_prompt);
+            let scene = prompts(&c, draft, emotion)?;
+            graph["130"]["inputs"]["text"] = json!(scene.positive);
+            graph["131"]["inputs"]["text"] = json!(scene.negative);
             graph["127"]["inputs"]["noise_seed"] = json!(seed);
         }
         Stage::Transparency => {

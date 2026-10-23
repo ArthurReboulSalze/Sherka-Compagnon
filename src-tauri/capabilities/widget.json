@@ -22,6 +22,8 @@
     "allow-send-message",
     "allow-get-attachment-support",
     "allow-refresh-illustration",
+    "allow-set-illustration-prompt",
+    "allow-reset-illustration-prompt",
     "allow-initiative-activity",
     "allow-save-widget-cell",
     "allow-image-fullscreen"

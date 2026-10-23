@@ -243,7 +243,7 @@ pub fn upgrade_appearance(draft: &mut crate::model::ProfileDraft) -> bool {
     false
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Scene {
     pub positive: String,
@@ -1007,14 +1007,16 @@ pub fn workflow_for_subject(
     crate::image_pipeline::workflow(config, scene, info, seed, include_companion, None, false)
 }
 
-pub(crate) fn base_workflow(
+/// The exact prompts ComfyUI receives for a planned scene: validated model
+/// output, the authoritative negative prompt (with the companion's unwanted
+/// traits when it appears), job-specific negative constraints and the
+/// positive addition.
+pub fn final_prompts(
     config: &Config,
     scene: Scene,
-    info: &Value,
-    seed: u64,
     include_companion: bool,
     negative_suffix: Option<&str>,
-) -> Result<Value> {
+) -> Result<Scene> {
     let config = config.clone().validated()?;
     let mut scene = scene.validated_for(config.model_family)?;
     // The editable negative prompt is authoritative, including an intentional
@@ -1040,6 +1042,33 @@ pub(crate) fn base_workflow(
         });
         scene.positive.push_str(&config.positive_prompt_suffix);
     }
+    Ok(scene)
+}
+
+/// Prompts written or edited by the user are sent verbatim, within the same
+/// bounds as generated ones. Line breaks and weighting syntax are preserved.
+pub fn exact_prompts(positive: &str, negative: &str) -> Result<Scene> {
+    let invalid =
+        |s: &str| s.chars().count() > 8000 || s.chars().any(|c| c.is_control() && c != '\n');
+    if positive.trim().is_empty() || invalid(positive) || invalid(negative) {
+        return Err(Error::Validation(
+            "Le prompt doit contenir un texte positif de 8000 caractères au maximum.".into(),
+        ));
+    }
+    Ok(Scene {
+        positive: positive.trim().into(),
+        negative: negative.trim().into(),
+    })
+}
+
+/// Builds the graph from final prompts; see [`final_prompts`].
+pub(crate) fn base_workflow(
+    config: &Config,
+    scene: Scene,
+    info: &Value,
+    seed: u64,
+) -> Result<Value> {
+    let config = config.clone().validated()?;
     let checkpoint = config.checkpoint.as_deref().ok_or_else(invalid)?;
     let list = |node: &str, field: &str| {
         info[node]["input"]["required"][field][0]

@@ -11,6 +11,8 @@ let report:(e:unknown)=>void=()=>{},started=false,focus=false,frame=0,inflight=f
 let slides:string[]=[],slide=0,first='',timer:ReturnType<typeof setInterval>|undefined,decode=0;
 let textSize:ResizeObserver|undefined;
 let fullscreen=false;
+// Open prompt editor over the image cell, with the text being edited.
+let promptEdit:{positive:string;negative:string}|null=null;
 let saveTimer:ReturnType<typeof setTimeout>|undefined;
 const savedPlacements=new Map<string,string>();
 function persistPlacement(immediate=false):void {
@@ -40,9 +42,12 @@ function layout():void{
  if(!c.image){const size=Math.min(260,Math.max(210,base.base_width));c.image={x:(base.base_width-size)/2,y:y+(c.text?text.offsetHeight+7:0),size,moved:false};}
  if(!c.image.moved){c.image.x=(base.base_width-c.image.size)/2;c.image.y=y+(c.text?text.offsetHeight+7:0);}
  const pos=c.image;image.style.left=pos.x+'px';image.style.top=pos.y+'px';image.style.width=pos.size+'px';
+ // The prompt editor is attached below the image and follows it.
+ const prompt=root.querySelector<HTMLElement>('#widget-prompt-cell')!,promptTop=pos.y+image.offsetHeight+5;prompt.hidden=image.hidden||!promptEdit;
+ prompt.style.left=pos.x+'px';prompt.style.top=promptTop+'px';prompt.style.width=pos.size+'px';
  const minX=Math.floor(Math.min(0,c.text?textX:0,!image.hidden?pos.x:0)),minY=Math.floor(Math.min(0,!image.hidden?pos.y:0));
  const right=Math.ceil(Math.max(base.base_width,c.text?textX+textWidth+3:0,!image.hidden?pos.x+pos.size+3:0));
- const bottom=Math.ceil(Math.max(base.base_height,c.text?y+text.offsetHeight+3:0,!image.hidden?pos.y+image.offsetHeight+3:0));
+ const bottom=Math.ceil(Math.max(base.base_height,c.text?y+text.offsetHeight+3:0,!image.hidden?pos.y+image.offsetHeight+3:0,!prompt.hidden?promptTop+prompt.offsetHeight+3:0));
  canvas.style.left=-minX+'px';canvas.style.top=-minY+'px';
  const notices=document.querySelector<HTMLElement>('.notifications');if(notices)notices.style.left=(-minX+base.base_width/2)+'px';
  persistPlacement();
@@ -59,16 +64,22 @@ function showSlide():void{
 function paintImages():void{
  if(!root||!current)return;const active=status?.profile_id===profile().id?status:undefined;
  const images=active?.images??(active?.image?[active.image]:[]);if(images[0]!==first){first=images[0]??'';slide=0;}slides=images;slide=slides.length?slide%slides.length:0;
- const message=comfyStartupMessage(profile().illustration?.server_url??'')??active?.message??(active?.phase==='paused'?t('Images en pause : priorité à la conversation.'):active?.phase==='planning'?t('Préparation de la scène…'):active?.phase==='generating'?t('ComfyUI dessine la scène…'):active?.phase==='ready'?t('Image du dernier échange'):t('La prochaine conversation inspirera une image.'));
+ const message=comfyStartupMessage(profile().illustration?.server_url??'')??active?.message??(active?.phase==='paused'?t('Images en pause : priorité à la conversation.'):active?.phase==='planning'?t('Préparation de la scène…'):active?.phase==='generating'?t('ComfyUI dessine la scène…'):active?.phase==='ready'?(active.prompt?.edited?t('Image de ton prompt modifié'):t('Image du dernier échange')):t('La prochaine conversation inspirera une image.'));
  root.querySelector('#cell-image-status')!.textContent=message;
  root.querySelector<HTMLElement>('#cell-image-placeholder')!.hidden=slides.length>0;
  root.querySelector<HTMLButtonElement>('#cell-image-refresh')!.disabled=['planning','generating','paused','disabled'].includes(active?.phase??'disabled');
+ const promptButton=root.querySelector<HTMLButtonElement>('#cell-image-prompt')!;
+ if(!active?.prompt)promptEdit=null;
+ promptButton.disabled=!active?.prompt;promptButton.setAttribute('aria-pressed',String(!!promptEdit));promptButton.classList.toggle('edited',!!active?.prompt?.edited);
+ const editor=root.querySelector<HTMLFormElement>('#cell-prompt')!;const wasOpen=!root.querySelector<HTMLElement>('#widget-prompt-cell')!.hidden;
+ if(wasOpen!==!!promptEdit)schedule();
+ if(promptEdit)for(const name of ['positive','negative'] as const){const field=editor.elements.namedItem(name) as HTMLTextAreaElement;if(field.value!==promptEdit[name])field.value=promptEdit[name];}
  showSlide();
 }
 function paint():void{
  if(!root||!current)return;const c=cell();
  textSize?.disconnect();
- root.innerHTML=html`<section id="widget-text-cell" class="widget-text-cell" hidden><div id="cell-attachments">${c.attachments.map((a,i)=>html`<span class="cell-attachment"><img src="${a.data}" alt="" /><span>${esc(a.name)}</span><button type="button" data-remove-attachment="${i}" aria-label="Retirer l’image">×</button></span>`).join('')}</div><form id="cell-text-form"><textarea id="cell-text" rows="2" maxlength="128000" aria-label="Message au compagnon" placeholder="Écris ou colle du texte, ou ajoute une image ici.">${esc(c.draft)}</textarea><div class="cell-text-actions"><label title="Lire à voix haute"><input id="cell-speak" type="checkbox" ${c.speak?'checked':''}/>${icon('mic')}</label><button type="submit" class="icon-button" aria-label="Envoyer" title="Envoyer">${icon('arrow')}</button></div></form></section><section id="widget-image-cell" class="widget-image-cell" hidden><div id="cell-image-layers" class="cell-image-layers" title="Double-clique pour afficher en plein écran"></div><div id="cell-image-placeholder">${icon('image')}<p>La première image peut prendre plus de temps : ComfyUI démarre si nécessaire, puis charge le modèle et les LoRA sélectionnés.</p></div><div class="cell-image-bar" id="cell-image-drag"><span id="cell-image-status"></span><small id="cell-image-count"></small><button id="cell-image-refresh" class="icon-button" title="Régénérer l’image" aria-label="Régénérer l’image">${icon('spark')}</button></div><button id="cell-image-resize" class="cell-image-resize" title="Redimensionner l’image" aria-label="Redimensionner l’image">${icon('resize')}</button></section>`;
+ root.innerHTML=html`<section id="widget-text-cell" class="widget-text-cell" hidden><div id="cell-attachments">${c.attachments.map((a,i)=>html`<span class="cell-attachment"><img src="${a.data}" alt="" /><span>${esc(a.name)}</span><button type="button" data-remove-attachment="${i}" aria-label="Retirer l’image">×</button></span>`).join('')}</div><form id="cell-text-form"><textarea id="cell-text" rows="2" maxlength="128000" aria-label="Message au compagnon" placeholder="Écris ou colle du texte, ou ajoute une image ici.">${esc(c.draft)}</textarea><div class="cell-text-actions"><label title="Lire à voix haute"><input id="cell-speak" type="checkbox" ${c.speak?'checked':''}/>${icon('mic')}</label><button type="submit" class="icon-button" aria-label="Envoyer" title="Envoyer">${icon('arrow')}</button></div></form></section><section id="widget-image-cell" class="widget-image-cell" hidden><div id="cell-image-layers" class="cell-image-layers" title="Double-clique pour afficher en plein écran"></div><div id="cell-image-placeholder">${icon('image')}<p>La première image peut prendre plus de temps : ComfyUI démarre si nécessaire, puis charge le modèle et les LoRA sélectionnés.</p></div><div class="cell-image-bar" id="cell-image-drag"><span id="cell-image-status"></span><small id="cell-image-count"></small><button id="cell-image-prompt" class="icon-button" title="Voir et modifier le prompt" aria-label="Voir et modifier le prompt">${icon('edit')}</button><button id="cell-image-refresh" class="icon-button" title="Régénérer l’image" aria-label="Régénérer l’image">${icon('spark')}</button></div><button id="cell-image-resize" class="cell-image-resize" title="Redimensionner l’image" aria-label="Redimensionner l’image">${icon('resize')}</button></section><section id="widget-prompt-cell" class="widget-prompt-cell" hidden><form id="cell-prompt" class="cell-prompt"><label>Prompt positif<textarea name="positive" rows="4" maxlength="8000" spellcheck="false"></textarea></label><label>Prompt négatif<textarea name="negative" rows="2" maxlength="8000" spellcheck="false"></textarea></label><div class="cell-prompt-actions"><button type="button" class="button quiet small" data-prompt-auto title="Revenir au prompt préparé par le modèle">Automatique</button><button type="submit" class="button primary small">Générer</button></div></form></section>`;
  root.querySelectorAll<HTMLButtonElement>('[data-remove-attachment]').forEach(b=>b.onclick=()=>{c.attachments.splice(Number(b.dataset.removeAttachment),1);paint();});
  const input=root.querySelector<HTMLTextAreaElement>('#cell-text')!,form=root.querySelector<HTMLFormElement>('form')!;
  if(c.textHeight)input.style.height=c.textHeight+'px';
@@ -78,6 +89,12 @@ function paint():void{
  form.onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text&&!c.attachments.length)return;const id=profile().id,button=form.querySelector<HTMLButtonElement>('button[type="submit"]')!;if(button.disabled)return;button.disabled=true;void (text==='/new'&&profile().connections.llm_provider==='hermes'&&!c.attachments.length?api.newHermesConversation(id):api.sendMessage(id,text||t('Décris cette image.'),c.speak,[...c.attachments])).then(()=>{c.draft='';c.attachments=[];if(current?.session.profile_id===id){focus=true;paint();}}).catch(report).finally(()=>button.disabled=false);};
  input.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();form.requestSubmit();}};
  root.querySelector('#cell-image-refresh')!.addEventListener('click',()=>void api.refreshIllustration().catch(report));
+ const editor=root.querySelector<HTMLFormElement>('#cell-prompt')!;
+ root.querySelector('#cell-image-prompt')!.addEventListener('click',()=>{const prompt=status?.profile_id===profile().id?status.prompt:null;promptEdit=promptEdit||!prompt?null:{positive:prompt.positive,negative:prompt.negative};paintImages();if(promptEdit)requestAnimationFrame(()=>editor.querySelector('textarea')?.focus());});
+ editor.oninput=()=>{if(promptEdit)promptEdit={positive:(editor.elements.namedItem('positive') as HTMLTextAreaElement).value,negative:(editor.elements.namedItem('negative') as HTMLTextAreaElement).value};};
+ editor.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();promptEdit=null;paintImages();}};
+ editor.onsubmit=e=>{e.preventDefault();if(!promptEdit)return;const value=promptEdit;if(!value.positive.trim()){report(new Error(t('Le prompt positif ne peut pas être vide.')));return;}void api.setIllustrationPrompt(value.positive,value.negative).then(()=>{promptEdit=null;paintImages();}).catch(report);};
+ editor.querySelector('[data-prompt-auto]')!.addEventListener('click',()=>void api.resetIllustrationPrompt().then(()=>{promptEdit=null;paintImages();}).catch(report));
  const drag=(event:PointerEvent,resize:boolean)=>{if(event.button!==0)return;event.preventDefault();const target=event.currentTarget as HTMLElement;target.setPointerCapture(event.pointerId);const preview=root!.querySelector<HTMLElement>('#cell-image-layers')!,ratio=preview.offsetWidth/Math.max(1,preview.offsetHeight);const start={...c.image!},x=event.screenX,y=event.screenY;const move=(e:PointerEvent)=>{c.image=resize?{...start,size:Math.max(140,Math.min(1600,screen.availWidth-12,(screen.availHeight-40)*ratio,start.size+Math.max(e.screenX-x,(e.screenY-y)*ratio))),moved:true}:{...start,moved:true,x:Math.max(-800,Math.min(900,start.x+e.screenX-x)),y:Math.max(-600,Math.min(800,start.y+e.screenY-y))};if(resize){c.image.x=Math.min(c.image.x,Math.max(0,screen.availWidth-c.image.size-3));c.image.y=Math.min(c.image.y,Math.max(0,screen.availHeight-c.image.size/ratio-34));}schedule();};const end=()=>{persistPlacement(true);target.removeEventListener('pointermove',move);target.removeEventListener('pointerup',end);target.removeEventListener('pointercancel',end);};target.addEventListener('pointermove',move);target.addEventListener('pointerup',end);target.addEventListener('pointercancel',end);};
  root.querySelector('#cell-image-drag')!.addEventListener('pointerdown',e=>{if(!(e.target as Element).closest('button'))drag(e as PointerEvent,false);});
  root.querySelector('#cell-image-layers')!.addEventListener('pointerdown',e=>drag(e as PointerEvent,false));

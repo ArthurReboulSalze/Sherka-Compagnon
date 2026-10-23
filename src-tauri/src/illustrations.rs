@@ -47,11 +47,39 @@ pub struct Status {
     pub image: Option<String>,
     pub images: Vec<String>,
     pub message: Option<String>,
+    /// The exact prompts of the latest scene, shown and editable in the widget.
+    pub prompt: Option<PromptView>,
+}
+#[derive(Clone, Serialize)]
+pub struct PromptView {
+    pub positive: String,
+    pub negative: String,
+    pub edited: bool,
+}
+/// Final prompts of the latest planned scene. An edited copy replaces scene
+/// planning for the same exchange until a new reply arrives.
+#[derive(Clone)]
+struct Memo {
+    profile: Uuid,
+    message: String,
+    include_companion: bool,
+    prompts: sherka_core::illustration::Scene,
+    edited: bool,
+}
+impl Memo {
+    fn view(&self) -> PromptView {
+        PromptView {
+            positive: self.prompts.positive.clone(),
+            negative: self.prompts.negative.clone(),
+            edited: self.edited,
+        }
+    }
 }
 struct Inner {
     sequence: u64,
     token: CancellationToken,
     status: Status,
+    memo: Option<Memo>,
     context: Option<(Uuid, Uuid, Config, sherka_core::connections::Connections)>,
     priority: usize,
     pending: bool,
@@ -110,12 +138,14 @@ impl Illustrations {
                 context: None,
                 priority: 0,
                 pending: false,
+                memo: None,
                 status: Status {
                     profile_id: None,
                     phase: "disabled",
                     image: None,
                     images: vec![],
                     message: None,
+                    prompt: None,
                 },
             })),
             gate: Arc::new(AsyncMutex::new(())),
@@ -192,12 +222,16 @@ impl Illustrations {
         inner.sequence += 1;
         inner.context = Some(context);
         inner.pending = false;
+        if inner.memo.as_ref().is_some_and(|m| m.profile != profile.id) {
+            inner.memo = None;
+        }
         inner.status = Status {
             profile_id: Some(profile.id),
             phase: if config.enabled { "idle" } else { "disabled" },
             image: None,
             images: vec![],
             message: None,
+            prompt: inner.memo.as_ref().map(Memo::view),
         };
         drop(inner);
         self.emit(app);
@@ -210,6 +244,8 @@ impl Illustrations {
             inner.pending = false;
             inner.status.image = None;
             inner.status.images.clear();
+            inner.memo = None;
+            inner.status.prompt = None;
         }
         inner.status.phase = if inner.context.as_ref().is_some_and(|c| c.2.enabled) {
             "idle"
@@ -348,20 +384,40 @@ impl Illustrations {
             if !valid() {
                 return;
             }
+            // An edited prompt for this same exchange replaces scene planning.
+            let edited = manager
+                .inner
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .memo
+                .clone()
+                .filter(|m| m.edited && m.profile == profile.id && m.message == last);
             let result=async {
-                let mut provider=Providers::new(profile.details.connections.clone())?;
-                if !provider.connections.llm_provider.is_local() { let model=provider.remote_model().await?;provider.use_api_model(&model); }
-                let appearance=if config.physical_description.is_empty() {sherka_core::illustration::default_description(profile.details.avatar_preset)} else {&config.physical_description};
-                let (messages,schema)=sherka_core::illustration::subject_request(&profile.details.name,&history[0].content,&history[1].content);
-                let subject:sherka_core::illustration::Subject=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured_budgeted(messages,schema,limit,128)=>r?};
-                let (messages,schema)=sherka_core::illustration::configured_scene_request(&config,if subject.include_companion {appearance}else{""},&history[0].content,&history[1].content);
-                let plan:ScenePlan=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured(messages,schema,limit)=>r.map_err(|e|if e.to_string().contains("mémoire"){Error::Validation("La préparation de la scène a échoué. Vérifie le modèle de conversation puis réessaie.".into())}else{e})?};
-                let scene=plan.into_scene(config.model_family);
+                let (include_companion,prompts)=match edited {
+                    Some(memo)=>(memo.include_companion,memo.prompts),
+                    None=>{
+                        let mut provider=Providers::new(profile.details.connections.clone())?;
+                        if !provider.connections.llm_provider.is_local() { let model=provider.remote_model().await?;provider.use_api_model(&model); }
+                        let appearance=if config.physical_description.is_empty() {sherka_core::illustration::default_description(profile.details.avatar_preset)} else {&config.physical_description};
+                        let (messages,schema)=sherka_core::illustration::subject_request(&profile.details.name,&history[0].content,&history[1].content);
+                        let subject:sherka_core::illustration::Subject=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured_budgeted(messages,schema,limit,128)=>r?};
+                        let (messages,schema)=sherka_core::illustration::configured_scene_request(&config,if subject.include_companion {appearance}else{""},&history[0].content,&history[1].content);
+                        let plan:ScenePlan=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured(messages,schema,limit)=>r.map_err(|e|if e.to_string().contains("mémoire"){Error::Validation("La préparation de la scène a échoué. Vérifie le modèle de conversation puis réessaie.".into())}else{e})?};
+                        let prompts=sherka_core::illustration::final_prompts(&config,plan.into_scene(config.model_family),subject.include_companion,None)?;
+                        let memo=Memo{profile:profile.id,message:last.clone(),include_companion:subject.include_companion,prompts:prompts.clone(),edited:false};
+                        {
+                            let mut inner=manager.inner.lock().unwrap_or_else(|e|e.into_inner());
+                            if inner.sequence==sequence&&!token.is_cancelled(){inner.status.prompt=Some(memo.view());inner.memo=Some(memo);}
+                        }
+                        manager.emit(&app);
+                        (subject.include_companion,prompts)
+                    }
+                };
                 if !valid() {return Err(Error::StaleOperation);}
                 let client=Client::new(&config.server_url)?;
                 if config.live {client.require_live_support().await?;}
                 let (_,info)=client.catalog(&config).await?;
-                let reference=if subject.include_companion && config.reference.enabled {
+                let reference=if include_companion && config.reference.enabled {
                     let bytes=avatar_reference(&app,&profile)?;
                     Some(client.upload_reference(&bytes).await?)
                 }else{None};
@@ -372,7 +428,7 @@ impl Illustrations {
                 let mut count=0;
                 loop {
                     if !valid(){return Err(Error::StaleOperation);}
-                    let graph=sherka_core::image_pipeline::workflow(&config,scene.clone(),&info,(Uuid::new_v4().as_u128() as u64)&0x7fff_ffff_ffff_ffff,subject.include_companion,reference.as_deref(),false)?;
+                    let graph=sherka_core::image_pipeline::workflow_with_prompts(&config,prompts.clone(),&info,(Uuid::new_v4().as_u128() as u64)&0x7fff_ffff_ffff_ffff,include_companion,reference.as_deref(),false)?;
                     let image=client.render(graph,token.clone()).await?;
                     if config.live {images.clear();}
                     images.push(image);
@@ -473,6 +529,62 @@ pub async fn discover_illustration(
         .map(|v| v.0)
         .map_err(|e| e.to_string())
 }
+/// Regenerate the latest exchange with prompts edited in the widget. They are
+/// sent verbatim and reused (including live variations) until a new reply.
+#[tauri::command]
+pub fn set_illustration_prompt(
+    app: AppHandle,
+    shared: State<'_, Shared>,
+    state: State<'_, Illustrations>,
+    positive: String,
+    negative: String,
+) -> Result<(), String> {
+    crate::windows::ensure_running()?;
+    let prompts = sherka_core::illustration::exact_prompts(&positive, &negative)
+        .map_err(|e| e.to_string())?;
+    {
+        let mut inner = state
+            .inner
+            .lock()
+            .map_err(|_| "Illustrations indisponibles.")?;
+        let current = inner.status.profile_id;
+        let memo = inner
+            .memo
+            .as_mut()
+            .filter(|m| Some(m.profile) == current)
+            .ok_or("Attends la première image de cet échange avant de modifier son prompt.")?;
+        memo.prompts = prompts;
+        memo.edited = true;
+        inner.status.prompt = inner.memo.as_ref().map(Memo::view);
+        inner.token.cancel();
+    }
+    state.request(app, shared.inner().clone());
+    Ok(())
+}
+
+/// Forget an edited prompt and plan the latest exchange again.
+#[tauri::command]
+pub fn reset_illustration_prompt(
+    app: AppHandle,
+    shared: State<'_, Shared>,
+    state: State<'_, Illustrations>,
+) -> Result<(), String> {
+    crate::windows::ensure_running()?;
+    {
+        let mut inner = state
+            .inner
+            .lock()
+            .map_err(|_| "Illustrations indisponibles.")?;
+        if let Some(memo) = inner.memo.as_mut() {
+            memo.edited = false;
+        }
+        inner.status.prompt = inner.memo.as_ref().map(Memo::view);
+        inner.token.cancel();
+    }
+    state.request(app, shared.inner().clone());
+    Ok(())
+}
+
 #[tauri::command]
 pub fn refresh_illustration(
     app: AppHandle,

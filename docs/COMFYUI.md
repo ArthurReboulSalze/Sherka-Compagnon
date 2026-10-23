@@ -76,6 +76,14 @@ Sherka supplies the checkpoint, selected LoRAs, prompt text, canvas dimensions a
 
 References: [ComfyUI targeted interrupt](https://github.com/Comfy-Org/ComfyUI/commit/464ba1d6140eda6a0173703ac00c69f7fddab6ba), [ComfyUI server routes](https://docs.comfy.org/development/comfyui-server/comms_routes), [Illustrious author's model card](https://huggingface.co/OnomaAIResearch/Illustrious-XL-v1.0).
 
+## View and edit the current prompt
+
+The pencil button in the desktop image cell opens, just below the image and attached to it, the exact prompts of the latest scene: the planned prompt with the positive addition, the negative prompt and the companion's unwanted traits when it appears. Edit them and choose **Generate** to render that exchange again with your text, sent verbatim. The edited prompt is reused for further variants and live mode until the next reply, which plans a new scene. **Automatic** discards the edit and plans the scene again. Hermes mode has no illustrations.
+
+## Settings layout
+
+Illustration settings are grouped into collapsible sections: connection and model, companion appearance, prompts, LoRA, format and quality, visual reference, sampling, generation during conversation and the workflow. Collapsed sections are remembered on this device. The LoRA section has its own folder filter and a search field right above the LoRA rows; both filters only narrow the lists, and an already selected LoRA stays selected.
+
 ## IP-Adapter reference
 
 Enable **Use neutral portrait with IP-Adapter** on a companion and select an SDXL adapter and its matching CLIP Vision encoder. Sherka uses the neutral image only when the scene planner includes the companion; unrelated landscapes do not receive it. The portrait is normalized, flattened onto a neutral background for CLIP, and uploaded to ComfyUI's temporary directory. The saved avatar retains its transparency.
@@ -97,6 +105,18 @@ Portraits use a **straight-on front view of the head and shoulders / upper chest
 3. **Emotions:** the [Klein workflow](../config/workflows/character-mood.json) edits the approved neutral with reference latents, 20 steps, Euler and CFG 5. Generate or retry each emotion separately, or fill in missing emotions together. English editing instructions preserve the character, materials, clothing, front view, framing and gray background. Every edit starts from the neutral portrait, avoiding cumulative alterations.
 4. **Transparency:** once all seven portraits look right, apply the [fixed RMBG workflow](../config/workflows/character-transparency.json). It uses RMBG-2.0 at 1024 processing resolution, sensitivity 1, no mask blur, mask offset −2, foreground refinement and the gray color preset. The resulting mask supplies the alpha channel of the original image; no diffusion regeneration takes place here. There are no settings for this stage.
 5. Click any original or transparent portrait to inspect it in a large preview. Review all seven transparent images and choose **Add to companions**. The character starts with an empty conversation and memory; select its own VoiceStudio voice in Companions. Conversation illustrations and IP-Adapter start disabled.
+
+### Start from your own image
+
+Choose **Start from an image** next to your idea, or **Use my image** in the neutral portrait step, to supply a PNG, JPEG or WebP picture under 10 MiB. Sherka scales it to fit 1024 pixels, flattens any transparency onto the same plain dark gray as generated portraits and uses it as the neutral portrait to approve. The written idea becomes optional. When the connected model supports images, it also receives the picture to write the physical description and unwanted traits from what it actually shows; otherwise the sheet comes from your text and a notice asks you to check the description. An imported portrait stays valid when you later edit the sheet or change the portrait checkpoint; the Klein emotions and transparency stages then work as usual.
+
+### Regenerate an existing companion's images
+
+On a companion's page, **Regenerate images** opens the studio with that companion's current portrait and seven expressions, bundled artwork included. The current portrait counts as already approved, so you can regenerate a single emotion right away, or generate a new neutral portrait (which resets the emotions). Apply transparency to the new images, then **Apply to ⟨name⟩** replaces the companion's seven images. Its personality, voice, history and memories are not changed; the sheet's identity fields are only shown for reference.
+
+### Edit the exact prompts
+
+Each image card has a **Prompt** button. It shows the exact positive and negative prompts ComfyUI will receive for that image: for the neutral portrait, the composed SDXL or Illustrious prompt; for an emotion, the Klein editing instruction. Edit them and choose **Use this prompt** to send your text verbatim for that image only, or **Back to the automatic prompt** to compose it from the sheet again. An edited prompt no longer follows later sheet edits, and changing it invalidates only the image it belongs to. Workflow sampling settings stay fixed.
 
 Changing the neutral model, physical description, unwanted traits or framing requires a new portrait and approval. Editing the name or personality does not. Changing Klein models invalidates dependent emotions; changing one expression or regenerating it invalidates only that expression's transparent result. Background removal retries only missing images after a partial failure. Regenerating the neutral resets all dependent images.
 

@@ -22,6 +22,7 @@ fn draft() -> Draft {
             .iter()
             .map(|e| (*e, format!("{} with mechanical eyes", e.as_str())))
             .collect(),
+        prompt_overrides: Default::default(),
     }
 }
 fn config() -> Config {
@@ -276,4 +277,86 @@ fn opaque_intermediate_is_valid_but_final_avatar_requires_actual_alpha() {
         1024
     );
     assert!(transparent_png(&data).is_err());
+}
+
+#[test]
+fn edited_prompts_are_sent_verbatim_and_invalidate_only_their_image() {
+    let mut d = draft();
+    let automatic = studio_workflows::automatic_prompts(&config(), &d, Emotion::Neutral).unwrap();
+    // The automatic view matches what the bundled graph receives.
+    let g = graph(Stage::Neutral, Emotion::Neutral);
+    assert_eq!(g["4"]["inputs"]["text"], json!(automatic.positive));
+    assert_eq!(g["5"]["inputs"]["text"], json!(automatic.negative));
+    let neutral = sherka_core::illustration::Scene {
+        positive: "(robot portrait:1.2), my exact words".into(),
+        negative: "photo, human".into(),
+    };
+    d.prompt_overrides.insert(Emotion::Neutral, neutral.clone());
+    let joy = sherka_core::illustration::Scene {
+        positive: "Make the optical eyes glow brighter with joy.".into(),
+        negative: String::new(),
+    };
+    d.prompt_overrides.insert(Emotion::Joy, joy.clone());
+    d.validate().unwrap();
+    let edited = |stage, emotion| {
+        studio_workflows::workflow(
+            &config(),
+            &d,
+            stage,
+            emotion,
+            &info(),
+            42,
+            Some("sherka/reference-00000000-0000-4000-8000-000000000042.png [temp]"),
+        )
+        .unwrap()
+    };
+    let g = edited(Stage::Neutral, Emotion::Neutral);
+    assert_eq!(g["4"]["inputs"]["text"], json!(neutral.positive));
+    assert_eq!(g["5"]["inputs"]["text"], json!(neutral.negative));
+    let g = edited(Stage::Mood, Emotion::Joy);
+    assert_eq!(g["130"]["inputs"]["text"], json!(joy.positive));
+    assert_eq!(g["131"]["inputs"]["text"], json!(""));
+    // Other emotions keep their composed Klein instruction.
+    let g = edited(Stage::Mood, Emotion::Sadness);
+    assert_eq!(
+        g["130"]["inputs"]["text"],
+        json!(studio_workflows::mood_prompt(&d, Emotion::Sadness).unwrap())
+    );
+    let original = draft();
+    assert!(!studio_workflows::same_portrait(&original, &d));
+    assert!(!studio_workflows::same_mood(&original, &d, Emotion::Joy));
+    assert!(studio_workflows::same_mood(&original, &d, Emotion::Sadness));
+    // Edited prompts keep the same bounds as generated ones.
+    d.prompt_overrides.insert(
+        Emotion::Anger,
+        sherka_core::illustration::Scene {
+            positive: " ".into(),
+            negative: String::new(),
+        },
+    );
+    assert!(d.validate().is_err());
+}
+
+#[test]
+fn sheets_round_trip_without_overrides_and_accept_them_from_the_panel() {
+    let value = serde_json::to_value(draft()).unwrap();
+    assert!(value.get("prompt_overrides").is_none());
+    let mut with = value.clone();
+    with["prompt_overrides"] = json!({"neutral":{"positive":"exact","negative":""}});
+    let parsed: Draft = serde_json::from_value(with).unwrap();
+    assert_eq!(
+        parsed.prompt_override(Emotion::Neutral).unwrap().positive,
+        "exact"
+    );
+}
+
+#[test]
+fn widget_prompt_edits_keep_syntax_and_reject_empty_or_control_text() {
+    use sherka_core::illustration::exact_prompts;
+    let scene = exact_prompts("  (moon:1.3), night sky\nwatercolor  ", "people").unwrap();
+    assert_eq!(scene.positive, "(moon:1.3), night sky\nwatercolor");
+    assert_eq!(scene.negative, "people");
+    assert!(exact_prompts("", "x").is_err());
+    assert!(exact_prompts("ok", "bad\u{0007}").is_err());
+    assert!(exact_prompts(&"a".repeat(8001), "").is_err());
 }

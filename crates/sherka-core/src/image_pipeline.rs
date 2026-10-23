@@ -208,22 +208,43 @@ pub fn workflow(
     reference_image: Option<&str>,
     transparent: bool,
 ) -> Result<Value> {
+    // Transparent generations are the studio portraits. Conversation scenes
+    // keep their own composition, including full-body and side views.
+    let prompts = illustration::final_prompts(
+        config,
+        scene,
+        include_companion,
+        transparent.then_some(crate::character_studio::PORTRAIT_NEGATIVE),
+    )?;
+    workflow_with_prompts(
+        config,
+        prompts,
+        info,
+        seed,
+        include_companion,
+        reference_image,
+        transparent,
+    )
+}
+
+/// Same graph as [`workflow`], with prompts already final (see
+/// [`illustration::final_prompts`] and [`illustration::exact_prompts`]).
+pub fn workflow_with_prompts(
+    config: &Config,
+    prompts: Scene,
+    info: &Value,
+    seed: u64,
+    include_companion: bool,
+    reference_image: Option<&str>,
+    transparent: bool,
+) -> Result<Value> {
     let mut base = config.clone();
     base.workflow = base.workflow.map(base_template);
     let source = base
         .workflow
         .clone()
         .unwrap_or_else(illustration::default_workflow);
-    // Transparent generations are the studio portraits. Conversation scenes
-    // keep their own composition, including full-body and side views.
-    let mut graph = illustration::base_workflow(
-        &base,
-        scene,
-        info,
-        seed,
-        include_companion,
-        transparent.then_some(crate::character_studio::PORTRAIT_NEGATIVE),
-    )?;
+    let mut graph = illustration::base_workflow(&base, prompts, info, seed)?;
     let size = resolution(&base);
     size.validate()?;
     let (sample_width, sample_height) = size.sampled_size();

@@ -31,7 +31,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         appearance_negative_prompt:"human face, human skin, hair, flesh, human lips".into(),
         portrait_prompt:"Front view bust portrait, head and shoulders, solid dark gray background.".into(),
         emotion_prompts:EMOTIONS[1..].iter().map(|e|(*e,
-            "Delighted joyful expression, smiling crescent shaped mechanical optical eyes, preserve the rigid metal faceplate.".into())).collect()
+            "Delighted joyful expression, smiling crescent shaped mechanical optical eyes, preserve the rigid metal faceplate.".into())).collect(),
+        prompt_overrides:Default::default(),
     };
     let client = Client::new(&config.server_url)?;
     let (catalog, info) = studio_workflows::catalog(&client).await?;

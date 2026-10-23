@@ -78,6 +78,7 @@ fn draft() -> Draft {
                 )
             })
             .collect(),
+        prompt_overrides: Default::default(),
     }
 }
 fn png(transparent: bool) -> Vec<u8> {
@@ -426,4 +427,95 @@ fn legacy_web_provider_migrates_once_to_global_and_remains_global_after_switch()
             .provider,
         Provider::Tavily
     );
+}
+
+#[test]
+fn an_imported_picture_becomes_a_flat_gray_bounded_png_portrait() {
+    // A transparent 2000×1000 picture with an opaque red square in the middle.
+    let mut image = image::RgbaImage::new(2000, 1000);
+    for x in 900..1100 {
+        for y in 400..600 {
+            image.put_pixel(x, y, image::Rgba([255, 0, 0, 255]));
+        }
+    }
+    let mut png = std::io::Cursor::new(Vec::new());
+    image.write_to(&mut png, image::ImageFormat::Png).unwrap();
+    let data = format!(
+        "data:image/png;base64,{}",
+        STANDARD.encode(png.into_inner())
+    );
+    let portrait = sherka_core::character_studio::imported_portrait(&data).unwrap();
+    let bytes = sherka_core::character_studio::portrait_png(&portrait).unwrap();
+    let decoded = image::load_from_memory(&bytes).unwrap().to_rgba8();
+    assert_eq!((decoded.width(), decoded.height()), (1024, 512));
+    let gray = sherka_core::character_studio::PORTRAIT_BACKGROUND;
+    assert_eq!(decoded.get_pixel(0, 0).0, [gray[0], gray[1], gray[2], 255]);
+    assert_eq!(decoded.get_pixel(512, 256).0, [255, 0, 0, 255]);
+    for invalid in [
+        "data:image/gif;base64,R0lGODlh",
+        "data:image/png;base64,not-base64",
+        "https://example.com/a.png",
+    ] {
+        assert!(sherka_core::character_studio::imported_portrait(invalid).is_err());
+    }
+}
+
+#[test]
+fn a_reference_image_can_replace_the_written_idea() {
+    let (messages, _) = sherka_core::character_studio::request(
+        "",
+        Language::Fr,
+        illustration::ModelFamily::Sdxl,
+        true,
+    )
+    .unwrap();
+    assert!(
+        messages[0]
+            .content
+            .contains("reference image of the character is attached")
+    );
+    assert!(messages[1].content.contains("\"reference_image\":true"));
+    assert!(
+        sherka_core::character_studio::request(
+            "",
+            Language::Fr,
+            illustration::ModelFamily::Sdxl,
+            false
+        )
+        .is_err()
+    );
+    let (messages, _) = sherka_core::character_studio::request(
+        "Un robot.",
+        Language::Fr,
+        illustration::ModelFamily::Sdxl,
+        false,
+    )
+    .unwrap();
+    assert!(!messages[0].content.contains("reference image"));
+}
+
+#[test]
+fn every_bundled_companion_can_be_retouched_from_its_current_images() {
+    for preset in [
+        sherka_core::avatar::AvatarPreset::Sherka,
+        sherka_core::avatar::AvatarPreset::Botsy,
+        sherka_core::avatar::AvatarPreset::Alba,
+        sherka_core::avatar::AvatarPreset::Kit,
+        sherka_core::avatar::AvatarPreset::Minerva,
+    ] {
+        let details = presets::companion(preset, Language::En);
+        let draft = Draft::for_existing(&details);
+        draft.validate().unwrap();
+        assert_eq!(draft.name, details.name);
+        assert!(!draft.physical_description.trim().is_empty());
+        let file = format!("../../public{}", preset.neutral());
+        let portrait =
+            sherka_core::character_studio::portrait_on_gray(&std::fs::read(file).unwrap()).unwrap();
+        assert!(portrait.starts_with("data:image/png;base64,"));
+    }
+    // A custom companion without appearance text still gets a usable sheet.
+    let mut details = presets::companion(sherka_core::avatar::AvatarPreset::Kit, Language::Fr);
+    details.avatar_preset = None;
+    details.illustration.physical_description.clear();
+    Draft::for_existing(&details).validate().unwrap();
 }

@@ -31,7 +31,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**Sherka 1.3 is here: create your own companion from an idea.** Shape its personality, approve its portrait, generate six emotions and give it a transparent place on your desktop. The new **Character creation** studio connects your LLM and ComfyUI in one guided flow. [What's new](docs/releases/1.3.0.md). **1.3.1** makes voice conversations snappier: shorter first spoken phrases, smoother interruptions and a local timing log. [Details](docs/releases/1.3.1.md).
+**Sherka 1.3 is here: create your own companion from an idea.** Shape its personality, approve its portrait, generate six emotions and give it a transparent place on your desktop. The new **Character creation** studio connects your LLM and ComfyUI in one guided flow. [What's new](docs/releases/1.3.0.md). **1.3.2** starts a character from your own picture, lets you edit the exact image prompts and regenerates an existing companion's images. [Details](docs/releases/1.3.2.md).
 
 https://github.com/user-attachments/assets/899093f4-a2f0-4dce-b621-23430d216280
 
@@ -83,6 +83,8 @@ Open **Companions → Create with AI**. Your connected LLM proposes an editable 
 2. **Give it six emotions.** Flux Klein 4B edits the approved portrait. Generate or retry each expression individually, and click any image to inspect it in a large preview.
 3. **Make it transparent.** Apply automatic background removal to the seven portraits, review the cutouts, then add the companion and choose its VoiceStudio voice.
 
+**Start from your own picture.** Drop in an image and it becomes the neutral portrait; a model that can see images also writes the physical description from it. **Every prompt is yours to edit:** the **Prompt** button on each image shows the exact text sent to ComfyUI, and your edit is sent as written. Already have a companion? **Regenerate images** on its page reopens its portrait and expressions in the studio, so you can redo a single emotion or the whole portrait without touching its personality, voice or memories.
+
 Choose the models; the three workflows use fixed settings focused on quality. Your model selections are remembered. A new companion starts with its own empty conversation and memory. The required ComfyUI nodes and models are separate installations; the in-app **Help & about** and [creation guide](docs/COMFYUI.md#character-creation) explain the setup.
 
 ## Turn conversations into scenes
@@ -91,11 +93,11 @@ Connect [ComfyUI](docs/COMFYUI.md), choose an **Illustrious or SDXL model**, des
 
 **Your request sets the scene.** Ask your robot companion to dance in a ballet outfit, and its usual armor or serious expression should not freeze the result into the same portrait. The planner prioritizes your requested action, clothes and setting, uses the reply for compatible details, and distinguishes one companion from a scene involving both of you. Prompt and character fidelity still depend on your chosen models and LoRAs.
 
-The **Image** button reveals a movable, resizable cell that follows your companion. Generate up to eight variations and let them loop with gentle crossfades at your chosen pace. The **Text** button reveals a transparent input just beneath the controls: type, paste or drop text, and attach images when your model supports vision.
+The **Image** button reveals a movable, resizable cell that follows your companion. Generate up to eight variations and let them loop with gentle crossfades at your chosen pace. Its pencil button opens the exact prompt of the current scene just below the image: rewrite it and generate again with your own words. The **Text** button reveals a transparent input just beneath the controls: type, paste or drop text, and attach images when your model supports vision.
 
 **Live scenes, with conversation first.** Enable live mode for continuous variations that follow the latest exchange. Sherka pauses its image work for speech recognition, text generation and speech synthesis, then resumes automatically. Choose portrait, landscape or square formats, latent scaling and an optional final ×2 upscale. Set each sampler’s steps and CFG independently. Open, edit, import or export the API workflow from the same settings.
 
-**Ready when you are.** Model, LoRA and sampler lists are remembered on this device; the highlighted refresh button rescans the whole catalog. For a local Python or portable ComfyUI installation, save its folder and optional Python path in **Settings**: Sherka can start it when illustrations are enabled. The first images take longer while the server and models load. Remote servers remain manually managed.
+**Ready when you are.** Settings are grouped into collapsible sections, and the LoRA section has its own folder filter and search right above your LoRAs. Model, LoRA and sampler lists are remembered on this device; the highlighted refresh button rescans the whole catalog. For a local Python or portable ComfyUI installation, save its folder and optional Python path in **Settings**: Sherka can start it when illustrations are enabled. The first images take longer while the server and models load. Remote servers remain manually managed.
 
 Each companion can independently enable or disable its neutral portrait as an **IP-Adapter reference** for conversation illustrations. Keep it on for likeness, or off for more freedom from the reference image. See the [ComfyUI guide](docs/COMFYUI.md) for required nodes and models.
 

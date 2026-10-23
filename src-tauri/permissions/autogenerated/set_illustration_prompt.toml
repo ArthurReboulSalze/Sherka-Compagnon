@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-illustration-prompt"
+description = "Enables the set_illustration_prompt command without any pre-configured scope."
+commands.allow = ["set_illustration_prompt"]
+
+[[permission]]
+identifier = "deny-set-illustration-prompt"
+description = "Denies the set_illustration_prompt command without any pre-configured scope."
+commands.deny = ["set_illustration_prompt"]

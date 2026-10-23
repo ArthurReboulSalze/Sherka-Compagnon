@@ -68,6 +68,9 @@ Optional Spontaneous conversation chooses
 one brief invitation after a random idle delay, then waits for a real reply. Hermes is excluded.
 Voice pause, a hidden widget, typing and ongoing conversation postpone invitations.
 Hosted providers may charge for them. Machine paths/shared speech settings stay out of packs.
+Start a character from your own picture, edit the exact ComfyUI prompt of each image,
+and regenerate an existing companion's images from its page without changing its identity.
+The pencil button on the desktop image cell shows and edits the current scene prompt.
 Each reply adds a turn_timing line (durations only, no text) to audio-events.log in the
 data folder to show where response time goes. See docs/USER_GUIDE.md.
 Settings may be upgraded; avoid opening them with older executables.

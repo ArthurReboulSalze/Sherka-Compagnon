@@ -24,7 +24,7 @@ import {layoutWidget} from './widget-layout';
 import {themesView,paintTheme} from './themes';
 import {illustrationSettings,mountIllustrationSettings} from './illustration-settings';
 import {mountWidgetCells,captureCellFocus} from './widget-cells';
-import {characterStudioView,mountCharacterStudio} from './character-studio';
+import {characterStudioView,mountCharacterStudio,editCompanionImages} from './character-studio';
 import {helpView,mountHelp} from './help';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -144,9 +144,9 @@ function render(): void {
       <div class="nav-caption">POSTE DE BORD</div>
       <nav aria-label="Navigation principale">
         ${navItem('profiles', 'profiles', t('Compagnons'))}
+        ${navItem('studio', 'spark', t('Création de personnage'))}
         ${navItem('conversation', 'chat', t('Conversation'))}
         ${navItem('memory', 'memory', t('Mémoire & histoire'))}
-        ${navItem('studio', 'spark', t('Création de personnage'))}
         ${navItem('settings', 'settings', t('Réglages'))}
         ${navItem('help', 'info', t('Aide et à propos'))}
       </nav>
@@ -189,7 +189,7 @@ function profilesView(profile: Profile): string {
     <p class="connection-note">Partage un compagnon au format .sherka.zip : personnalité, réglages et sept images. Sans historique, souvenirs ni clés API. Les anciens profils JSON restent acceptés.</p>
     <div class="profile-gallery" aria-label="Galerie des compagnons">${state!.profiles.map((p) => html`<button class="profile-card ${profile.id === p.id ? 'chosen' : ''}" data-profile="${p.id}" aria-pressed="${profile.id === p.id}"><span class="mini-portrait accent-${p.accent}"><img src="${portrait(p)}" alt="" /></span><span class="card-text"><strong>${escape(p.name)}</strong><small>${p.id === state!.settings.active_profile ? html`<i class="status-dot"></i> Compagnon actif` : t('Espace indépendant')}</small></span>${profile.id === p.id ? html`<span class="card-check">${icon('check')}</span>` : ''}</button>`).join('')}<button class="import-card" id="import-profile">${icon('upload')}<span>Importer<br><small>un profil Sherka</small></span></button></div>
     <article class="companion-detail accent-${profile.accent}">
-      <div class="portrait-stage"><div class="stage-label"><span class="tiny-cross">+</span> IDENTITÉ DU COMPAGNON <span class="tiny-cross">+</span></div><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><img class="hero-portrait" src="${portrait(profile)}" alt="Apparence de ${escape(profile.name)}" /><div class="portrait-controls"><button class="button glass small" id="change-avatar">${icon('image')} Avatar et voix</button><span id="profile-voice-label"></span><button class="text-button" id="choose-profile-voice">Choisir sa voix →</button></div><span class="stage-coordinate">01 / PRÉSENCE</span></div>
+      <div class="portrait-stage"><div class="stage-label"><span class="tiny-cross">+</span> IDENTITÉ DU COMPAGNON <span class="tiny-cross">+</span></div><div class="orbit-ring ring-one"></div><div class="orbit-ring ring-two"></div><img class="hero-portrait" src="${portrait(profile)}" alt="Apparence de ${escape(profile.name)}" /><div class="portrait-controls"><button class="button glass small" id="change-avatar">${icon('image')} Avatar et voix</button><button class="button glass small" id="regenerate-images" title="${t('Ouvre ses images dans la création de personnage pour régénérer son portrait ou ses émotions.')}">${icon('spark')} Régénérer ses images</button><span id="profile-voice-label"></span><button class="text-button" id="choose-profile-voice">Choisir sa voix →</button></div><span class="stage-coordinate">01 / PRÉSENCE</span></div>
       <div class="companion-copy"><div class="identity-line"><span class="tag ${isActive ? 'live' : ''}">${isActive ? html`<i class="status-dot"></i> ACTIF SUR TON BUREAU` : t('PRÊT À ÊTRE ACTIVÉ')}</span><button class="icon-button" id="edit-profile" aria-label="Modifier le compagnon" title="Modifier">${icon('edit')}</button></div><h2>${escape(profile.name)}</h2><p class="personality-preview">${escape(profile.personality || t('Sa personnalité reste à écrire. Donne-lui une façon bien à lui de t’accompagner.'))}</p><div class="profile-stats"><div><strong>${profile.message_count}</strong><span>messages</span></div><div><strong>${profile.memory_count}</strong><span>souvenirs</span></div><div><strong class="text-value">Indépendant</strong><span>son propre espace</span></div></div><div class="detail-actions">${isActive ? html`<button class="button primary" data-action="show_widget">${icon('eye')} Retrouver ${escape(profile.name)}</button>` : html`<button class="button primary" id="activate-profile">${icon('spark')} Activer ce compagnon</button>`}<button class="button secondary" id="personality-button">Personnalité ${icon('arrow')}</button></div><div class="profile-tools"><button class="button secondary small" id="duplicate-profile">${icon('copy')} Dupliquer ce compagnon</button><button class="text-button" id="export-profile">${icon('download')} Exporter</button><button class="text-button danger" id="delete-profile" ${isActive ? html`disabled title="Active un autre compagnon avant de supprimer celui-ci."` : ''}>${icon('trash')} Supprimer</button></div></div>
     </article>
     ${moodSettings(profile)}${initiativeSettings(profile)}${illustrationSettings(profile)}<div id="connections-root"></div>${profile.connections.llm_provider === 'hermes' ? '' : webSettings(profile.web_search ?? state!.settings.web_search,profile)}
@@ -223,6 +223,7 @@ function openAvatar(profile: Profile): void {
 
 function bindPanel(): void {
   document.querySelector('#create-character')?.addEventListener('click',()=>{view='studio';render();});
+  document.querySelector<HTMLButtonElement>('#regenerate-images')?.addEventListener('click',event=>{const button=event.currentTarget as HTMLButtonElement,profile=selectedProfile();if(!profile||button.disabled)return;button.disabled=true;button.setAttribute('aria-busy','true');void editCompanionImages(state!.profiles,profile).then(()=>{view='studio';render();}).catch(report).finally(()=>{button.disabled=false;button.removeAttribute('aria-busy');});});
   document.querySelector('#settings-memory-optimize')?.addEventListener('click',()=>{selected=state!.session.profile_id;view='memory';render();document.querySelector<HTMLButtonElement>('#memory-optimize')?.click();});
   document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]').forEach(button=>button.onclick=()=>void change({kind:'theme',theme:button.dataset.themeChoice as Snapshot['settings']['theme']},t('Ambiance enregistrée.')));
   document.querySelector<HTMLSelectElement>('#web-search-mode')?.addEventListener('change', event => {

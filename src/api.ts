@@ -18,10 +18,15 @@ export const illustration = () => invoke<IllustrationStatus>('get_illustration')
 // Discovery depends only on the server and graph, not unfinished form values.
 export const discoverIllustration = (config:IllustrationConfig,startIfNeeded=config.enabled) => invoke<IllustrationCatalog>('discover_illustration',{config:{server_url:config.server_url,workflow:config.workflow},startIfNeeded});
 export const refreshIllustration = () => invoke<void>('refresh_illustration');
+export const setIllustrationPrompt = (positive:string,negative:string) => invoke<void>('set_illustration_prompt',{positive,negative});
+export const resetIllustrationPrompt = () => invoke<void>('reset_illustration_prompt');
 export const onIllustration = (callback:(status:IllustrationStatus)=>void) => listen<IllustrationStatus>('sherka:illustration',e=>callback(e.payload));
 export const characterStudio=()=>invoke<import('./types').CharacterStudioStatus>('get_character_studio');
 export const onCharacterStudio=(callback:(status:import('./types').CharacterStudioStatus)=>void)=>listen<import('./types').CharacterStudioStatus>('sherka:character-studio',e=>callback(e.payload));
-export const planCharacter=(sourceProfile:string,concept:string,language:import('./i18n').Language,config:import('./types').CharacterStudioConfig)=>invoke<void>('plan_character',{sourceProfile,concept,language,config});
+export const planCharacter=(sourceProfile:string,concept:string,language:import('./i18n').Language,config:import('./types').CharacterStudioConfig,image:string|null=null)=>invoke<void>('plan_character',{sourceProfile,concept,language,config,image});
+export const importCharacterNeutral=(image:string)=>invoke<void>('import_character_neutral',{image});
+export const editCharacterImages=(profileId:string,config:import('./types').CharacterStudioConfig)=>invoke<void>('edit_character_images',{profileId,config});
+export const characterPrompts=(draft:import('./types').CharacterDraft,config:import('./types').CharacterStudioConfig)=>invoke<Record<import('./types').Emotion,import('./types').ScenePrompts>>('get_character_prompts',{draft,config});
 export const generateCharacter=(draft:import('./types').CharacterDraft,config:import('./types').CharacterStudioConfig,emotion:import('./types').Emotion|null)=>invoke<void>('generate_character',{draft,config,emotion});
 export const validateCharacterNeutral=(revision:number)=>invoke<void>('validate_character_neutral',{revision});
 export const finishCharacter=(revision:number,draft:import('./types').CharacterDraft,config:import('./types').CharacterStudioConfig)=>invoke<string>('finish_character',{revision,draft,config});

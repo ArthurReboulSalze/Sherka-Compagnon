@@ -573,6 +573,7 @@ impl Providers {
         max_tokens: u32,
         timeout: Duration,
         limit: u64,
+        images: &[String],
     ) -> Result<T> {
         let kind = self.connections.llm_provider;
         // Providers without constrained decoding still get the schema; final
@@ -585,12 +586,18 @@ impl Providers {
                 .and_then(|m| m.max_output_tokens)
                 .unwrap_or(u32::MAX),
         );
-        if crate::conversation::estimate(&messages) as u64 + u64::from(max_tokens) + 512 > limit {
+        if crate::conversation::estimate(&messages) as u64
+            + images.len() as u64 * 4096
+            + u64::from(max_tokens)
+            + 512
+            > limit
+        {
             return Err(failure(
                 "La demande structurée dépasse le budget du modèle ; aucune mémoire n’a été modifiée.",
             ));
         }
         let mut body = self.api_body(messages, max_tokens, false, true)?;
+        crate::attachments::inject(&mut body, images, kind.is_anthropic())?;
         let constrained = self
             .api_model
             .as_ref()

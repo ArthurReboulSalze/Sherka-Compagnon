@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-edit-character-images"
+description = "Enables the edit_character_images command without any pre-configured scope."
+commands.allow = ["edit_character_images"]
+
+[[permission]]
+identifier = "deny-edit-character-images"
+description = "Denies the edit_character_images command without any pre-configured scope."
+commands.deny = ["edit_character_images"]

@@ -6,8 +6,10 @@ const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const emotions:Emotion[]=['neutral','joy','sadness','anger','surprise','reflection','tenderness'];
 const labels=()=>[t('Neutre'),t('Joie'),t('Tristesse'),t('Colère'),t('Surprise'),t('Réflexion'),t('Tendresse')];
 const storageKey='sherka:studio-models:v1';
-let status:CharacterStudioStatus={sequence:0,revision:0,busy:false,phase:'',source_profile:null,draft:null,config:null,images:{},transparent_images:{},neutral_validated:false,error:null,created_profile:null};
+let status:CharacterStudioStatus={sequence:0,revision:0,busy:false,phase:'',source_profile:null,draft:null,config:null,images:{},transparent_images:{},neutral_validated:false,neutral_imported:false,note:null,target_profile:null,error:null,created_profile:null};
 let draft:CharacterDraft|null=null,config:CharacterStudioConfig|undefined,concept='',sourceId='',chosenLanguage:Language|undefined;
+// Optional picture for a new sheet: it becomes the neutral portrait.
+let seed:{name:string;data:string}|null=null;
 let pending=false,initialized=false,subscription:Promise<unknown>|undefined;
 let localError:string|null=null;
 let context:{root:HTMLElement;profiles:Profile[];created:(id:string)=>void}|undefined;
@@ -17,12 +19,21 @@ const same=(a:unknown,b:unknown):boolean=>{
  return JSON.stringify(ordered(a))===JSON.stringify(ordered(b));
 };
 const server=()=>config!.server_url.trim().replace(/\/+$/,'');
-const portraitMatches=()=>!!draft&&!!status.draft&&!!config&&!!status.config&&
+const edited=(d:CharacterDraft|null,e:Emotion)=>d?.prompt_overrides?.[e];
+// An imported neutral portrait does not depend on the sheet or the checkpoint.
+const portraitMatches=()=>!!draft&&!!status.draft&&!!config&&!!status.config&&(status.neutral_imported||
  ['physical_description','appearance_negative_prompt','portrait_prompt'].every(k=>draft![k as keyof CharacterDraft]===status.draft![k as keyof CharacterDraft])&&
- ['server_url','checkpoint','model_family'].every(k=>config![k as keyof CharacterStudioConfig]===status.config![k as keyof CharacterStudioConfig]);
+ same(edited(draft,'neutral'),edited(status.draft,'neutral'))&&
+ ['server_url','checkpoint','model_family'].every(k=>config![k as keyof CharacterStudioConfig]===status.config![k as keyof CharacterStudioConfig]));
 const moodMatches=(e:Emotion)=>portraitMatches()&&
- ['mood_model','text_encoder','vae'].every(k=>config![k as keyof CharacterStudioConfig]===status.config![k as keyof CharacterStudioConfig])&&
+ ['server_url','mood_model','text_encoder','vae'].every(k=>config![k as keyof CharacterStudioConfig]===status.config![k as keyof CharacterStudioConfig])&&
+ draft!.appearance_negative_prompt===status.draft!.appearance_negative_prompt&&same(edited(draft,e),edited(status.draft,e))&&
  draft!.emotion_prompts[e as Exclude<Emotion,'neutral'>]===status.draft!.emotion_prompts[e as Exclude<Emotion,'neutral'>];
+const imageTypes=['image/png','image/jpeg','image/webp'];
+function readImage(file:File):Promise<string> {
+ if(!imageTypes.includes(file.type)||file.size>10*1024*1024)return Promise.reject(new Error(t('Choisis une image PNG, JPEG ou WebP de moins de 10 Mio.')));
+ return new Promise((done,fail)=>{const reader=new FileReader();reader.onload=()=>done(String(reader.result));reader.onerror=()=>fail(new Error(t('Impossible de lire ce fichier.')));reader.readAsDataURL(file);});
+}
 function saveConfig():void {try{localStorage.setItem(storageKey,JSON.stringify(config));}catch{/* Storage may be full. */}}
 function cachedCatalog():CharacterStudioCatalog|undefined {
  const key=server();if(catalogs.has(key))return catalogs.get(key);
@@ -43,17 +54,25 @@ export function mountCharacterStudio(profiles:Profile[],selected:Profile,created
   context=undefined;root.innerHTML=html`<p class="connection-note">Choisis un compagnon classique avec un modèle connecté pour créer un personnage.</p>`;return;
  }
  if(!sourceId)sourceId=(selected.connections.llm_provider!=='hermes'?selected:profiles.find(p=>p.connections.llm_provider!=='hermes'))?.id??'';
- if(!config){
-  const image=profiles.find(p=>p.id===sourceId)?.illustration;
-  config={server_url:image?.server_url??'http://127.0.0.1:8188',checkpoint:image?.checkpoint??null,model_family:image?.model_family??'sdxl',mood_model:null,text_encoder:null,vae:null};
-  try{const saved=JSON.parse(localStorage.getItem(storageKey)??'null');
-   if(saved&&typeof saved.server_url==='string'&&['sdxl','illustrious'].includes(saved.model_family)&&['checkpoint','mood_model','text_encoder','vae'].every(k=>saved[k]===null||typeof saved[k]==='string'))config=saved;
-  }catch{/* Use the connected companion's server on first use. */}
- }
+ ensureConfig(profiles);
  chosenLanguage??=language();
  if(!subscription)subscription=api.onCharacterStudio(receive);
  if(!initialized)void api.characterStudio().then(s=>{initialized=true;receive(s,true);}).catch(showError);
  render();
+}
+function ensureConfig(profiles:Profile[]):void {
+ if(config)return;
+ const image=profiles.find(p=>p.id===sourceId)?.illustration;
+ config={server_url:image?.server_url??'http://127.0.0.1:8188',checkpoint:image?.checkpoint??null,model_family:image?.model_family??'sdxl',mood_model:null,text_encoder:null,vae:null};
+ try{const saved=JSON.parse(localStorage.getItem(storageKey)??'null');
+  if(saved&&typeof saved.server_url==='string'&&['sdxl','illustrious'].includes(saved.model_family)&&['checkpoint','mood_model','text_encoder','vae'].every(k=>saved[k]===null||typeof saved[k]==='string'))config=saved;
+ }catch{/* Use the connected companion's server on first use. */}
+}
+// Load an existing companion's images into the studio to regenerate some of them.
+export async function editCompanionImages(profiles:Profile[],profile:Profile):Promise<void> {
+ sourceId=profile.id;ensureConfig(profiles);seed=null;
+ await api.editCharacterImages(profile.id,config!);
+ receive(await api.characterStudio(),true);
 }
 function receive(next:CharacterStudioStatus,initial=false):void {
  if(next.sequence<status.sequence)return;
@@ -79,7 +98,8 @@ function modelOptions(names:string[],chosen:string|null):string {
 function gallery(list:Emotion[],transparent=false):string {
  return `<div class="studio-gallery ${list.length===1?'studio-neutral-gallery':''}">`+list.map(e=>{
   const label=labels()[emotions.indexOf(e)];
-  return html`<article data-emotion="${e}" data-transparent="${transparent}"><h3>${label}</h3><button type="button" class="studio-preview" aria-label="${label}" disabled><img alt="${label}" hidden/><span>À générer</span></button>${e==='neutral'||transparent?'':html`<button class="button secondary small" data-regenerate="${e}">Générer</button>`}</article>`;
+  const actions=transparent?'':(e==='neutral'?'':html`<button class="button secondary small" data-regenerate="${e}">Générer</button>`)+html`<button class="button quiet small" data-prompt="${e}">Prompt</button>`;
+  return html`<article data-emotion="${e}" data-transparent="${transparent}"><h3>${label}</h3><button type="button" class="studio-preview" aria-label="${label}" disabled><img alt="${label}" hidden/><span>À générer</span></button>${actions?`<div class="studio-card-actions">${actions}</div>`:''}</article>`;
  }).join('')+'</div>';
 }
 function render():void {
@@ -91,7 +111,9 @@ function render():void {
  <section class="settings-card"><h2>Imagine ton personnage</h2><p>Le modèle du compagnon choisi prépare une fiche modifiable, sans utiliser sa conversation ni ses souvenirs.</p>
  <form id="studio-concept"><div class="connection-selects"><label>Modèle connecté via<select name="source">${ctx.profiles.filter(p=>p.connections.llm_provider!=='hermes').map(p=>`<option value="${p.id}" ${p.id===sourceId?'selected':''}>${escape(p.name)} · ${escape(p.connections.llm_model??'')}</option>`).join('')}</select></label>
  <label>Langue du personnage<select name="language">${languageOptions(chosenLanguage!)}</select></label></div>
- <label>Ton idée<textarea name="concept" rows="3" required maxlength="6000" placeholder="Une exploratrice robotique au visage de métal, curieuse et sarcastique…">${escape(concept)}</textarea></label>
+ <label>Ton idée<textarea name="concept" rows="3" maxlength="6000" placeholder="Une exploratrice robotique au visage de métal, curieuse et sarcastique…">${escape(concept)}</textarea></label>
+ <div class="studio-seed"><img id="studio-seed-preview" alt="" hidden/><div><div class="settings-actions"><button type="button" class="button secondary" id="studio-seed-pick">Partir d’une image</button><button type="button" class="button quiet small" id="studio-seed-clear" hidden>Retirer l’image</button><span id="studio-seed-name"></span></div>
+ <p class="connection-note">Facultatif. Ton image devient le portrait neutre. Si le modèle connecté voit les images, il s’en sert aussi pour rédiger la description physique.</p></div><input type="file" id="studio-seed-file" accept="image/png,image/jpeg,image/webp" hidden/></div>
  <button class="button primary" type="submit" id="studio-plan">Proposer une fiche</button></form></section>
  <section class="settings-card"><h2>Modèles de création</h2><form id="studio-models">
  <label>Serveur ComfyUI<input name="server_url" type="url" value="${escape(c.server_url)}"/></label>
@@ -114,20 +136,33 @@ function render():void {
  <p class="connection-note">De face, tête et buste sur un fond gris foncé uni. Klein conserve le personnage, le cadrage et ce fond pour chaque émotion.</p>
  <details><summary>Expressions à générer</summary>${emotions.slice(1).map((e,i)=>html`<label>${labels()[i+1]}<textarea name="${e}" rows="2" maxlength="800">${escape(d.emotion_prompts[e as Exclude<Emotion,'neutral'>])}</textarea></label>`).join('')}</details></form>
  <p class="connection-note">Descriptions en anglais : tags pour Illustrious, phrases pour SDXL et instructions de modification pour Klein.</p></section>`:''}
- <section class="settings-card studio-progress"><div class="section-heading"><p id="studio-phase" role="status"></p><button type="button" class="button secondary" id="studio-stop" hidden>Arrêter</button></div><p id="studio-error" class="form-error" role="alert"></p><p id="studio-changed" class="connection-note" hidden>La fiche ou les réglages ont changé. Régénère et valide le portrait neutre avant de continuer.</p></section>
+ <section class="settings-card studio-progress"><p id="studio-target" class="studio-target" hidden></p><div class="section-heading"><p id="studio-phase" role="status"></p><button type="button" class="button secondary" id="studio-stop" hidden>Arrêter</button></div><p id="studio-error" class="form-error" role="alert"></p><p id="studio-note" class="connection-note"></p><p id="studio-changed" class="connection-note" hidden>La fiche ou les réglages ont changé. Régénère et valide le portrait neutre avant de continuer.</p></section>
  <section class="settings-card"><div class="section-heading"><h2>1. Portrait neutre</h2><button class="button secondary small" data-workflow="neutral">Voir le workflow</button></div>
  <p>Génère le portrait HD sur fond gris, ramené à 1024 pixels. Valide son apparence avant de passer aux émotions.</p>
- <div class="settings-actions"><button class="button primary" id="studio-neutral">Générer le portrait neutre</button><button class="button secondary" id="studio-validate">Valider ce portrait</button></div>${gallery(['neutral'])}</section>
+ <div class="settings-actions"><button class="button primary" id="studio-neutral">Générer le portrait neutre</button><button class="button secondary" id="studio-import">Utiliser mon image</button><button class="button secondary" id="studio-validate">Valider ce portrait</button><input type="file" id="studio-import-file" accept="image/png,image/jpeg,image/webp" hidden/></div>
+ <p class="connection-note">Ta propre image est placée sur un fond gris foncé uni et remplace le portrait généré. Elle reste valable si tu modifies la fiche ou le modèle du portrait.</p>${gallery(['neutral'])}</section>
  <section class="settings-card"><div class="section-heading"><h2>2. Émotions avec Klein</h2><button class="button secondary small" data-workflow="mood">Voir le workflow</button></div>
  <p>Génère ou recommence chaque expression séparément. Clique sur une image pour la voir en grand.</p>
  <button class="button primary" id="studio-emotions">Générer les émotions manquantes</button>${gallery(emotions.slice(1))}</section>
  <section class="settings-card"><div class="section-heading"><h2>3. Transparence</h2><button class="button secondary small" data-workflow="transparency">Voir le workflow</button></div>
  <p>Quand les sept portraits te conviennent, applique le détourage. Les images d’origine restent disponibles pour recommencer une émotion.</p>
  <button class="button primary" id="studio-transparency">Appliquer la transparence</button>${gallery(emotions,true)}
- <div class="settings-actions"><button class="button primary" id="studio-finish">Ajouter aux compagnons</button><span>La voix et les connexions se règlent ensuite dans Compagnons.</span></div></section>`;
+ <div class="settings-actions"><button class="button primary" id="studio-finish">Ajouter aux compagnons</button><span id="studio-finish-note">La voix et les connexions se règlent ensuite dans Compagnons.</span></div></section>`;
  const idea=ctx.root.querySelector<HTMLFormElement>('#studio-concept')!;
  idea.oninput=()=>{concept=(idea.elements.namedItem('concept') as HTMLTextAreaElement).value;sourceId=(idea.elements.namedItem('source') as HTMLSelectElement).value;chosenLanguage=(idea.elements.namedItem('language') as HTMLSelectElement).value as Language;};
- idea.onsubmit=e=>{e.preventDefault();void run(()=>api.planCharacter(sourceId,concept,chosenLanguage!,config!));};
+ idea.onsubmit=e=>{e.preventDefault();
+  if(!concept.trim()&&!seed){showError(t('Décris ton personnage ou ajoute une image.'));return;}
+  void run(()=>api.planCharacter(sourceId,concept,chosenLanguage!,config!,seed?.data??null));};
+ const seedFile=ctx.root.querySelector<HTMLInputElement>('#studio-seed-file')!;
+ ctx.root.querySelector('#studio-seed-pick')!.addEventListener('click',()=>seedFile.click());
+ seedFile.onchange=()=>void(async()=>{const file=seedFile.files?.[0];seedFile.value='';if(!file)return;
+  try{seed={name:file.name,data:await readImage(file)};localError=null;paint();}catch(error){showError(error);}})();
+ ctx.root.querySelector('#studio-seed-clear')!.addEventListener('click',()=>{seed=null;paint();});
+ const importFile=ctx.root.querySelector<HTMLInputElement>('#studio-import-file')!;
+ ctx.root.querySelector('#studio-import')!.addEventListener('click',()=>importFile.click());
+ importFile.onchange=()=>void(async()=>{const file=importFile.files?.[0];importFile.value='';if(!file)return;
+  try{const data=await readImage(file);await run(()=>api.importCharacterNeutral(data));}catch(error){showError(error);}})();
+ ctx.root.querySelectorAll<HTMLButtonElement>('[data-prompt]').forEach(b=>b.onclick=()=>void editPrompt(b.dataset.prompt as Emotion).catch(showError));
  const models=ctx.root.querySelector<HTMLFormElement>('#studio-models')!;
  models.onsubmit=e=>e.preventDefault();
  models.oninput=()=>{
@@ -177,6 +212,17 @@ function paint():void {
  const done=!!status.created_profile,moodReady=!!(config.mood_model&&config.text_encoder&&config.vae);
  const button=(id:string,disabled:boolean)=>{const b=root.querySelector<HTMLButtonElement>('#'+id);if(b)b.disabled=disabled;};
  button('studio-plan',working);button('studio-refresh',working);button('studio-neutral',working||!draft||!config.checkpoint||done);
+ button('studio-import',working||!draft||done);
+ root.querySelectorAll<HTMLButtonElement>('[data-prompt]').forEach(b=>b.disabled=working||!draft||done||(b.dataset.prompt==='neutral'&&status.neutral_imported&&!!status.images.neutral));
+ const preview=root.querySelector<HTMLImageElement>('#studio-seed-preview')!;preview.hidden=!seed;if(seed&&preview.getAttribute('src')!==seed.data)preview.src=seed.data;
+ root.querySelector('#studio-seed-name')!.textContent=seed?.name??'';root.querySelector<HTMLElement>('#studio-seed-clear')!.hidden=!seed;
+ root.querySelector('#studio-note')!.textContent=status.note?feedback(status.note):'';
+ // Retouching an existing companion replaces its images; identity stays as it is.
+ const target=status.target_profile?context!.profiles.find(p=>p.id===status.target_profile):undefined,targetNote=root.querySelector<HTMLElement>('#studio-target')!;
+ targetNote.hidden=!target;targetNote.textContent=target?t`Retouche des images de ${target.name}. Sa personnalité, sa voix et ses souvenirs ne changent pas.`:'';
+ root.querySelector('#studio-finish')!.textContent=target?t`Appliquer à ${target.name}`:t('Ajouter aux compagnons');
+ root.querySelector('#studio-finish-note')!.textContent=target?t('Ses sept images actuelles seront remplacées.'):t('La voix et les connexions se règlent ensuite dans Compagnons.');
+ root.querySelectorAll<HTMLElement>('[data-prompt]').forEach(b=>b.classList.toggle('studio-prompt-edited',!!edited(draft,b.dataset.prompt as Emotion)));
  button('studio-validate',working||!matching||!status.images.neutral||status.neutral_validated||done);
  button('studio-emotions',working||!valid||!moodReady||allRaw||done);
  button('studio-transparency',working||!allRaw||allAlpha||done);
@@ -193,7 +239,7 @@ function paint():void {
  const phase=root.querySelector('#studio-phase')!;
  const current=emotions.find(e=>status.phase.endsWith('_'+e));
  const progress=current?' · '+labels()[emotions.indexOf(current)]:'';
- phase.textContent=status.busy?(status.phase==='planning'?t('Le modèle prépare la fiche…'):status.phase==='publishing'?t('Ajout du compagnon…'):status.phase.startsWith('transparency')?t('Détourage des portraits…')+progress:t('ComfyUI génère le portrait. Le premier chargement peut prendre du temps…')+progress):done?t('Compagnon ajouté.'):status.phase==='stopped'?t('Création interrompue.'):valid?t('Portrait neutre validé.'):t('Vérifie les images avant de les valider.');
+ phase.textContent=status.busy?(status.phase==='planning'?t('Le modèle prépare la fiche…'):status.phase==='publishing'?t('Ajout du compagnon…'):status.phase.startsWith('transparency')?t('Détourage des portraits…')+progress:t('ComfyUI génère le portrait. Le premier chargement peut prendre du temps…')+progress):done?(status.target_profile?t('Images du compagnon mises à jour.'):t('Compagnon ajouté.')):status.phase==='stopped'?t('Création interrompue.'):valid?t('Portrait neutre validé.'):t('Vérifie les images avant de les valider.');
  root.querySelector('#studio-error')!.textContent=localError??(!pending&&status.error?feedback(status.error):'');
  root.querySelectorAll<HTMLElement>('[data-emotion]').forEach(card=>{
   const e=card.dataset.emotion as Emotion,alpha=card.dataset.transparent==='true';
@@ -214,6 +260,31 @@ function modal(title:string,body:string):HTMLDialogElement {
 function showPortrait(data:string,title:string):void {
  const dialog=modal(title,'<div class="studio-large-preview"><img/></div>');
  const image=dialog.querySelector('img')!;image.src=data;image.alt=title;
+}
+// The exact prompts ComfyUI receives for one image. An edit is kept with the
+// sheet and sent verbatim; matching the automatic prompts removes it.
+async function editPrompt(e:Emotion):Promise<void> {
+ if(!draft||!config)return;
+ const automatic=(await api.characterPrompts(draft,config))[e],current=edited(draft,e)??automatic;
+ const label=labels()[emotions.indexOf(e)]!;
+ const dialog=modal(t`Prompt · ${label}`,html`<p>${e==='neutral'?t('Prompt envoyé au modèle du portrait (SDXL ou Illustrious), avant les réglages fixes du workflow.'):t('Instruction de modification envoyée à Klein pour cette émotion.')}</p>
+ <label>Prompt positif<textarea name="positive" rows="8" maxlength="8000" spellcheck="false"></textarea></label>
+ <label>Prompt négatif<textarea name="negative" rows="4" maxlength="8000" spellcheck="false"></textarea></label>
+ <p class="connection-note">${t('Ton texte est envoyé tel quel. Une modification de la fiche ne change plus ce prompt tant que tu ne reviens pas au prompt automatique.')}</p>
+ <p class="form-error" role="alert"></p><div class="modal-actions"><button class="button secondary" data-automatic>Revenir au prompt automatique</button><button class="button primary" data-apply>Utiliser ce prompt</button></div>`);
+ const field=(n:string)=>dialog.querySelector<HTMLTextAreaElement>(`[name="${n}"]`)!;
+ field('positive').value=current.positive;field('negative').value=current.negative;
+ const save=(value:{positive:string;negative:string}|null)=>{
+  if(!draft)return;const overrides={...draft.prompt_overrides};
+  if(!value||same(value,automatic))delete overrides[e];else overrides[e]=value;
+  draft={...draft,prompt_overrides:overrides};dialog.close();paint();
+ };
+ dialog.querySelector('[data-automatic]')!.addEventListener('click',()=>save(null));
+ dialog.querySelector('[data-apply]')!.addEventListener('click',()=>{
+  const value={positive:field('positive').value.trim(),negative:field('negative').value.trim()};
+  if(!value.positive){dialog.querySelector('.form-error')!.textContent=t('Le prompt positif ne peut pas être vide.');return;}
+  save(value);
+ });
 }
 async function showWorkflow(stage:CharacterStage):Promise<void> {
  const graph=await api.characterWorkflow(stage);

@@ -376,13 +376,29 @@ impl Providers {
 
     pub async fn structured_budgeted<T: serde::de::DeserializeOwned>(
         &self,
-        mut messages: Vec<ChatMessage>,
+        messages: Vec<ChatMessage>,
         schema: Value,
         limit: u64,
         output: u32,
     ) -> Result<T> {
+        self.structured_with_images(messages, schema, limit, output, &[])
+            .await
+    }
+
+    /// A structured request whose last user message also carries normalized
+    /// images (see `attachments::normalize`). Only callers that checked the
+    /// model's vision support pass images; other auxiliary tasks never do.
+    pub async fn structured_with_images<T: serde::de::DeserializeOwned>(
+        &self,
+        mut messages: Vec<ChatMessage>,
+        schema: Value,
+        limit: u64,
+        output: u32,
+        images: &[String],
+    ) -> Result<T> {
         crate::structured::request(&mut messages, &schema);
-        let input = crate::conversation::estimate(&messages) as u64;
+        // Conservative per-image allowance, as for conversation attachments.
+        let input = crate::conversation::estimate(&messages) as u64 + images.len() as u64 * 4096;
         let available = limit.saturating_sub(input + 512).min(4096) as u32;
         let output = output.min(available);
         if output < 128 {
@@ -392,7 +408,14 @@ impl Providers {
         }
         if !self.connections.llm_provider.is_local() {
             return self
-                .api_structured(messages, schema, output, Duration::from_secs(90), limit)
+                .api_structured(
+                    messages,
+                    schema,
+                    output,
+                    Duration::from_secs(90),
+                    limit,
+                    images,
+                )
                 .await;
         }
         // Auxiliary tasks have their own reasoning policy. Never inherit a
@@ -423,6 +446,7 @@ impl Providers {
         if let Some(effort) = effort {
             body["reasoning_effort"] = json!(effort);
         }
+        crate::attachments::inject(&mut body, images, false)?;
         let mut last_error = failure(
             "La proposition du fournisseur est invalide ; aucune mémoire n’a été modifiée.",
         );
