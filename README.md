@@ -55,7 +55,7 @@ Choose your company, then give each character its own voice and model. Five bund
 
 Expressions follow the tone of a reply and blend with a gentle **half-second crossfade**. Use the bundled images or assign your own in **Avatar & voice**, alongside that character's VoiceStudio voice. Enable **Persistent moods** per companion to let repeated reactions linger, soften over later exchanges and respond to a change in tone. Reset mood independently of messages and memories. Short examples help small models choose an expression; a conservative fallback reads the visible reply when the marker is missing. [See how it works](docs/USER_GUIDE.md#how-expressions-change).
 
-Hermes keeps a neutral avatar and its own personality, memory and tools. Its **/stop** button stops the current task while leaving the server running.
+Hermes keeps a neutral avatar and its own personality, memory and tools. The stop button in the widget toolbar, or **/stop**, ends the current task while leaving the server running.
 
 ## A conversation that keeps up with you
 

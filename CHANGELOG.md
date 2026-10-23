@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.3 — 2026-10-23
+
+- Turning the microphone off no longer interrupts the companion: it finishes generating and speaking its reply, and the microphone device closes once nothing is left to play. Only an utterance you were still speaking is dropped. **Stop** and **Pause all voice activity** still interrupt the reply.
+- Remove the large Hermes stop overlay drawn over the desktop companion; the small stop button in the widget toolbar and the typed `/stop` command remain.
+- Publish Windows installer/portable and Debian packages with signed Windows update assets.
+
 ## 1.3.2 — 2026-10-23
 
 - Start a new character from your own picture: it becomes the neutral portrait (scaled to 1024 px and flattened onto the portrait gray), the written idea becomes optional, and a vision-capable model also writes the physical description from the image. An imported portrait can also replace the neutral portrait later.

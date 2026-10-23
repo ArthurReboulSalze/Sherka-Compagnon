@@ -52,9 +52,9 @@ The widget toolbar, companion picker, text cell and image cell follow the boardâ
 
 ## Voice and memory
 
-Microphone activation is explicit; listening can continue during replies. **Stop response** stops the response; **Pause all voice activity** stops input and output. The microphone is off after startup and updates.
+Microphone activation is explicit; listening can continue during replies. Turning the microphone off only stops listening: a reply already under way is finished and spoken, then the microphone closes. **Stop response** stops the response; **Pause all voice activity** stops input and output. The microphone is off after startup and updates.
 
-With Hermes, use **Stop Hermes (/stop)** in the conversation or widget, or type **`/stop`**. This interrupts the companion's current remote task and local speech; it never shuts down or restarts the server. Sherka checks the server's task status before confirming the stop. If confirmation fails, retry the button before sending more work. Already completed actions are not undone. Speech recognition can mishear words; use the text box when an exact instruction matters.
+With Hermes, use **Stop Hermes (/stop)** in the conversation or the stop button in the widget toolbar, or type **`/stop`**. This interrupts the companion's current remote task and local speech; it never shuts down or restarts the server. Sherka checks the server's task status before confirming the stop. If confirmation fails, retry the button before sending more work. Already completed actions are not undone. Speech recognition can mishear words; use the text box when an exact instruction matters.
 
 Under **Memory & history**, add, correct or forget memories. Essential memories are recalled regularly; topical drawers are retrieved for relevant messages. Ask the companion to remember, correct or forget something: the database write is validated before confirmation. Automatically extracted facts are offered for review.
 

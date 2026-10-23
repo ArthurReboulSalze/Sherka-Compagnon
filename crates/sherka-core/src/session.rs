@@ -117,6 +117,12 @@ impl Session {
         self.state.voice_paused = true;
     }
 
+    /// Microphone off without cancelling a reply in progress.
+    pub fn mute_microphone(&mut self) {
+        self.initiative_paused = true;
+        self.state.microphone = MicrophoneState::Off;
+    }
+
     pub fn begin_text_turn(&mut self) -> OperationTag {
         self.begin_turn(TranscriptionState::Idle, ResponseState::Generating)
     }
@@ -207,6 +213,33 @@ impl Session {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn muting_the_microphone_lets_a_spoken_reply_finish() {
+        let mut session = Session::new(Uuid::new_v4());
+        session.capture_started();
+        let utterance = session.begin_utterance().unwrap();
+        session.finish_capture(utterance).unwrap();
+        session
+            .accept_stt_final(utterance, "Raconte-moi une histoire")
+            .unwrap();
+        let token = session.cancellation();
+        session.playback_started(utterance).unwrap();
+        session.mute_microphone();
+        assert_eq!(session.snapshot().microphone, MicrophoneState::Off);
+        assert!(!token.is_cancelled());
+        assert!(session.accepts(utterance));
+        assert_eq!(session.snapshot().response, ResponseState::Speaking);
+        // No new utterance can start while muted; the reply still completes.
+        assert!(session.begin_utterance().is_err());
+        session.complete(utterance).unwrap();
+        // Global pause, unlike mute, still stops a reply.
+        session.capture_started();
+        let other = session.begin_text_turn();
+        let token = session.cancellation();
+        session.pause_voice();
+        assert!(token.is_cancelled());
+        assert!(!session.accepts(other));
+    }
     #[test]
     fn interruption_rejects_every_late_event_and_cancels_workers() {
         let mut session = Session::new(Uuid::new_v4());

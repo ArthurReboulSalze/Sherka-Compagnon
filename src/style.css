@@ -411,9 +411,6 @@ html:has(.widget-body) { background: transparent; }
 @media (max-width: 610px) { .portrait-stage { min-height: 390px; } }
 
 /* A remote task can always be stopped without revealing the hover toolbar. */
-.hermes-stop-button { position:absolute; bottom:48px; left:50%; transform:translateX(-50%); z-index:6; display:flex; align-items:center; gap:6px; max-width:95%; padding:7px 10px; border:1px solid #9c6464; border-radius:16px; background:#211b24ee; color:#f1d1d1; font-size:10px; cursor:pointer; white-space:nowrap; }
-.hermes-stop-button[hidden] { display:none; }
-.hermes-stop-button svg { width:12px; height:12px; }
 #connections-root { margin-top:24px; }
 
 /* Global themes remain independent from each companion's accent. */
@@ -481,14 +478,12 @@ html { background:var(--app-bg); }
 #comfy-startup-status { border-left:2px solid var(--accent); padding:10px 14px; }
 #comfy-path-error { color:#f2bba4; }
 
-.widget .hermes-stop-button { background:var(--widget-surface); border-color:var(--widget-line); color:var(--accent); }
 
 /* Image cells sit behind the companion; controls and text remain interactive. */
 #widget-canvas .widget { pointer-events:none; }
 #widget-canvas .widget-portrait { z-index:2; pointer-events:auto; }
 #widget-canvas .widget-chrome { z-index:4; }
 #widget-canvas .widget-companions { z-index:6; pointer-events:auto; }
-#widget-canvas .hermes-stop-button { z-index:5; pointer-events:auto; }
 #widget-image-cell { z-index:0; }
 #widget-text-cell { z-index:3; }
 #voice-global-settings form { display:grid; gap:16px; }

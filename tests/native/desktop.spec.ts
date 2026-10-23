@@ -2396,8 +2396,9 @@ test('hermes stop: scoped command, server confirmation, retry and no overlapping
     await expect.poll(()=>next).toBe(1);
     await expect.poll(async()=>(await native<any>('get_conversation')).live.reply).toBe('Je travaille.');
     await native('widget_action',{action:'show_widget'});
-    await expect(widget.locator('.hermes-stop-button')).toBeVisible();
-    await widget.locator('.hermes-stop-button').click();
+    // Only the toolbar's small stop remains; no overlay covers the companion.
+    await expect(widget.locator('.hermes-stop-button')).toHaveCount(0);
+    await widget.locator('#drag-region').hover();await widget.locator('.widget-toolbar [data-action="stop_hermes"]').click();
     await expect.poll(async()=>(await native<any>('get_conversation')).live.notice).toBe('Arrêt Hermes confirmé.');
     expect(stopCalls).toBe(1);expect(polls).toBeGreaterThanOrEqual(2);
     await native('send_message',{profileId:p.id,text:'deuxième tâche',speak:false});

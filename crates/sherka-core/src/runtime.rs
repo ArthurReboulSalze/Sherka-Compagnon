@@ -453,6 +453,20 @@ impl Companion {
         Ok(())
     }
 
+    /// Turn the microphone off. A reply already being generated or spoken
+    /// continues; only an utterance the user is still speaking is dropped.
+    pub fn mute_microphone(&mut self) {
+        let state = self.session.snapshot();
+        if state.transcription == crate::session::TranscriptionState::Capturing
+            && state.response == crate::session::ResponseState::Idle
+        {
+            self.session.cancel();
+            self.live.tag = None;
+            self.live.transcript.clear();
+        }
+        self.session.mute_microphone();
+    }
+
     pub fn pause_voice(&mut self) -> Result<()> {
         self.session.pause_voice();
         self.stop_response()

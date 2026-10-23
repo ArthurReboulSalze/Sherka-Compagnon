@@ -1,6 +1,6 @@
 # Project status
 
-Release version: **1.3.2**, October 23, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.3.3**, October 23, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
 ## Current state
 
@@ -11,6 +11,10 @@ Release version: **1.3.2**, October 23, 2026. Windows x64 and an initial Debian 
 - **Known limitations:** speaker echo cancellation depends on hardware and placement; one VoiceStudio cold start exceeded the startup timeout; token counts are conservative estimates; speech is synthesized per passage, not per token; image and emotion fidelity depend on the selected models.
 
 See [roadmap](ROADMAP.md) for planned work. The sections below are the release log, newest first.
+
+## 1.3.3 — microphone mute keeps the reply
+
+Turning the microphone off now mutes capture only: the reply in progress finishes and is spoken, an utterance still being spoken is dropped, and the device closes once playback is idle. Global pause and Stop are unchanged. The large Hermes stop overlay over the desktop companion is removed; the toolbar stop and `/stop` remain. Validation: 170 Rust tests (one opt-in live search test skipped), formatting, Clippy and localization checks; the user confirmed both behaviors in the app.
 
 ## 1.3.2 — image control and companion retouching
 

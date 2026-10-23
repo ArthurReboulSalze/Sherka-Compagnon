@@ -360,6 +360,9 @@ struct Run {
     id: Uuid,
     cancel: CancellationToken,
     capture: bool,
+    /// Off while the microphone is muted during a reply: input is dropped,
+    /// playback continues.
+    listening: Arc<AtomicBool>,
     options: AudioSettings,
     thread: std::thread::JoinHandle<()>,
 }
@@ -384,6 +387,13 @@ impl AudioController {
     pub fn owns(&self, id: Uuid) -> bool {
         self.run.as_ref().is_some_and(|r| r.id == id)
     }
+    /// Stop or resume using microphone input without closing the output, so
+    /// a reply can finish after the user mutes the microphone.
+    pub fn set_listening(&self, on: bool) {
+        if let Some(run) = self.run.as_ref() {
+            run.listening.store(on && run.capture, Ordering::Release);
+        }
+    }
     pub fn stop(&mut self) {
         self.playback.interrupt();
         if let Some(run) = self.run.take() {
@@ -397,6 +407,9 @@ impl AudioController {
             && run.options == options
             && (!capture || run.capture)
         {
+            if capture {
+                run.listening.store(true, Ordering::Release);
+            }
             return Ok(run.id);
         }
         self.stop();
@@ -407,6 +420,8 @@ impl AudioController {
         let playback = self.playback.clone();
         let events = self.events.clone();
         let thread_options = options.clone();
+        let listening = Arc::new(AtomicBool::new(capture));
+        let thread_listening = listening.clone();
         let (tx, rx) = sync::sync_channel(1);
         let thread = std::thread::Builder::new()
             .name("sherka-audio".into())
@@ -415,6 +430,7 @@ impl AudioController {
                     id,
                     thread_options,
                     capture,
+                    &thread_listening,
                     playback,
                     &thread_cancel,
                     &events,
@@ -434,6 +450,7 @@ impl AudioController {
                     id,
                     cancel,
                     capture,
+                    listening,
                     options,
                     thread,
                 });
@@ -591,10 +608,12 @@ where
         .map_err(|_| audio_error("L’accès à la sortie audio choisie est refusé."))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_audio(
     id: Uuid,
     options: AudioSettings,
     capture: bool,
+    listening: &AtomicBool,
     playback: Playback,
     cancel: &CancellationToken,
     events: &mpsc::Sender<AudioEvent>,
@@ -790,6 +809,13 @@ fn run_audio(
         if !frame.capture {
             if capture {
                 acoustics.render(&frame.samples)?;
+            }
+            continue;
+        }
+        if !listening.load(Ordering::Acquire) {
+            // Muted: drop input and start from a clean endpoint when resumed.
+            if dispatch.endpoint.active() {
+                dispatch = CaptureDispatch::new(id, options.clone());
             }
             continue;
         }

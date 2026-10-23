@@ -39,7 +39,6 @@ export function layoutWidget():void {
     resize.style.top=`${Math.max(4,Math.min(surface.clientHeight-22,visible.top+visible.height+3))}px`;
     resize.style.left=`${Math.max(4,Math.min(surface.clientWidth-23,visible.left+visible.width+2))}px`;
     document.dispatchEvent(new Event('sherka:widget-layout'));
-    const remote=surface.querySelector<HTMLElement>('.hermes-stop-button');if(remote){remote.style.top=`${Math.max(4,visible.top+visible.height-24)}px`;remote.style.bottom='auto';}
   };
   const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>void update());};
   const size=new ResizeObserver(schedule);size.observe(surface);size.observe(surface.querySelector('.widget-toolbar')!);

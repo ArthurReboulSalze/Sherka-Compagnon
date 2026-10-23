@@ -127,8 +127,6 @@ function scrollConversation(follow = false): void {
 export function paintLive(value: LiveState): void {
   const follow = nearConversationBottom();
   const on = value.session.microphone === 'listening';
-  const remoteStop = document.querySelector<HTMLButtonElement>('.hermes-stop-button');
-  if (remoteStop) remoteStop.hidden = !value.live.tag && !value.live.error;
   document.querySelectorAll('[data-session-status]').forEach((el) => { el.textContent = value.live.web?.searching ? t('Recherche sur Internet…') : status(value.session); });
   document.querySelectorAll<HTMLElement>('[data-mic-toggle]').forEach((el) => {
     // Live events arrive while text streams; rebuild the icon only on change.

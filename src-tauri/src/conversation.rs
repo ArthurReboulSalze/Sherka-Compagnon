@@ -297,6 +297,53 @@ pub async fn pause(
     result
 }
 
+/// Microphone button: stop listening but let the companion finish its reply.
+/// The audio device closes once nothing remains to play. Global pause and
+/// Stop still interrupt the reply.
+async fn mute(app: &AppHandle, shared: Shared, voice: &Voice) -> std::result::Result<(), String> {
+    voice.diagnose(&shared, "microphone_muted", None);
+    voice.cancel_pending();
+    voice
+        .speech_input
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clear();
+    let audio = voice.audio.clone();
+    let _ = tauri::async_runtime::spawn_blocking(move || {
+        if let Ok(audio) = audio.lock() {
+            audio.set_listening(false);
+        }
+    })
+    .await;
+    with_core(shared.clone(), |c| {
+        c.mute_microphone();
+        Ok(())
+    })
+    .await?;
+    emit(app, &shared);
+    let _ = app.emit("sherka:changed", ());
+    let voice = voice.clone();
+    tauri::async_runtime::spawn(async move {
+        loop {
+            if live(&shared).map_or(true, |s| s.session.microphone == MicrophoneState::Listening) {
+                return;
+            }
+            if !voice.playback.responding() && !voice.playback.speaking() {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        }
+        let _gate = voice.gate.lock().await;
+        if live(&shared).is_ok_and(|s| s.session.microphone != MicrophoneState::Listening)
+            && !voice.playback.responding()
+            && !voice.playback.speaking()
+        {
+            voice.stop_audio().await;
+        }
+    });
+    Ok(())
+}
+
 pub async fn toggle(
     app: AppHandle,
     shared: Shared,
@@ -306,7 +353,7 @@ pub async fn toggle(
     let gate = voice.gate.lock().await;
     crate::windows::ensure_running()?;
     if live(&shared)?.session.microphone == MicrophoneState::Listening {
-        return pause(&app, shared, &voice, true).await;
+        return mute(&app, shared, &voice).await;
     }
     let connections=with_core(shared.clone(),|c| {
         let p=c.profile(c.session.snapshot().profile_id)?;
@@ -331,7 +378,7 @@ pub async fn toggle(
         return Err("Demande vocale annulée.".into());
     }
     if live(&shared)?.session.microphone == MicrophoneState::Listening {
-        return pause(&app, shared, &voice, true).await;
+        return mute(&app, shared, &voice).await;
     }
     // Read-only preflight before opening the microphone. No model downloads.
     let catalog = sherka_core::catalogs::CatalogClient::new(&connections.voice_studio_url)
