@@ -2,7 +2,7 @@ use base64::{Engine, engine::general_purpose::STANDARD};
 use serde_json::{Value, json};
 use sherka_core::{
     avatar::Emotion,
-    character_studio::{Draft, EMOTIONS, portrait_png, transparent_png},
+    character_studio::{Draft, EMOTIONS, portrait_image, transparent_image},
     i18n::Language,
     illustration::ModelFamily,
     studio_workflows::{self, Config, STAGES, Stage},
@@ -271,12 +271,12 @@ fn opaque_intermediate_is_valid_but_final_avatar_requires_actual_alpha() {
         "data:image/png;base64,{}",
         STANDARD.encode(out.into_inner())
     );
-    let intermediate = portrait_png(&data).unwrap();
+    let intermediate = portrait_image(&data).unwrap();
     assert_eq!(
         image::load_from_memory(&intermediate).unwrap().width(),
         1024
     );
-    assert!(transparent_png(&data).is_err());
+    assert!(transparent_image(&data).is_err());
 }
 
 #[test]

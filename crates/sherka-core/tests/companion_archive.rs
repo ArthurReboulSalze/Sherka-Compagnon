@@ -96,6 +96,13 @@ fn zip_roundtrip_preserves_appearance_and_settings_without_private_state() {
     assert_eq!(packed.len(), 8);
     assert_eq!(packed["images/sadness.png"], packed["images/neutral.png"]);
     assert_ne!(packed["images/joy.png"], packed["images/neutral.png"]);
+    // Archive v1 stays PNG for earlier versions, although avatars are stored as WebP.
+    assert!(
+        packed
+            .iter()
+            .filter(|(name, _)| name.starts_with("images/"))
+            .all(|(_, bytes)| image::guess_format(bytes).ok() == Some(image::ImageFormat::Png))
+    );
     let json = String::from_utf8(packed["companion.json"].clone()).unwrap();
     for forbidden in [
         "private-voice-server",
@@ -127,7 +134,7 @@ fn zip_roundtrip_preserves_appearance_and_settings_without_private_state() {
         imported
             .emotion_avatars
             .values()
-            .all(|v| v.starts_with("data:image/png;base64,"))
+            .all(|v| v.starts_with("data:image/webp;base64,"))
     );
     let again = app
         .store

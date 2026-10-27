@@ -397,3 +397,62 @@ fn expression_prompt_respects_context_budget_and_agent_boundary() {
         assert!(!agent.messages[0].content.contains("[[emotion:"));
     }
 }
+
+#[test]
+fn stored_avatars_are_lossless_webp_and_keep_every_pixel() {
+    let dir = tempdir().unwrap();
+    let store = Store::open(dir.path()).unwrap();
+    // Varied colors and alpha, fully transparent pixels included.
+    let mut source = image::RgbaImage::new(1024, 640);
+    for (x, y, pixel) in source.enumerate_pixels_mut() {
+        *pixel = image::Rgba([
+            (x * 7 % 256) as u8,
+            (y * 13 % 256) as u8,
+            ((x + y) % 256) as u8,
+            ((x * y) % 256) as u8,
+        ]);
+    }
+    let mut png = Cursor::new(Vec::new());
+    source.write_to(&mut png, image::ImageFormat::Png).unwrap();
+    let profile = store
+        .create(
+            ProfileDraft {
+                avatar_preset: None,
+                ..Default::default()
+            },
+            Some(png.get_ref()),
+        )
+        .unwrap();
+    let url = profile.avatar.unwrap();
+    assert!(url.starts_with("data:image/webp;base64,"));
+    let stored = sherka_core::storage::image_data_url_bytes(&url)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        image::guess_format(&stored).unwrap(),
+        image::ImageFormat::WebP
+    );
+    assert_eq!(image::load_from_memory(&stored).unwrap().to_rgba8(), source);
+    // ComfyUI, archives and vision requests receive the same pixels as PNG.
+    let again = sherka_core::storage::normalize_png(&stored).unwrap();
+    assert_eq!(
+        image::guess_format(&again).unwrap(),
+        image::ImageFormat::Png
+    );
+    assert_eq!(image::load_from_memory(&again).unwrap().to_rgba8(), source);
+    let vision = sherka_core::character_studio::png_data_url(&url).unwrap();
+    let vision = sherka_core::storage::image_data_url_bytes(&vision)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        image::guess_format(&vision).unwrap(),
+        image::ImageFormat::Png
+    );
+    assert_eq!(image::load_from_memory(&vision).unwrap().to_rgba8(), source);
+}
+
+#[test]
+fn earlier_png_avatars_still_load_with_their_media_type() {
+    let bytes = png(40);
+    assert!(sherka_core::storage::image_data_url(&bytes).starts_with("data:image/png;base64,"));
+}

@@ -17,21 +17,18 @@ fn avatar_reference(
     app: &AppHandle,
     profile: &sherka_core::model::Profile,
 ) -> sherka_core::Result<Vec<u8>> {
-    use base64::Engine;
     if let Some(data) = profile
         .avatar
         .as_deref()
-        .and_then(|s| s.strip_prefix("data:image/png;base64,"))
+        .and_then(sherka_core::storage::image_data_url_bytes)
     {
-        return base64::engine::general_purpose::STANDARD
-            .decode(data)
-            .map_err(|_| Error::Validation("Le portrait neutre est invalide.".into()));
+        return data.map_err(|_| Error::Validation("Le portrait neutre est invalide.".into()));
     }
     let path = profile
         .details
         .avatar_preset
         .map(|p| p.neutral())
-        .unwrap_or("/assets/sherka.png");
+        .unwrap_or("/assets/sherka.webp");
     app.asset_resolver()
         .get(path.to_owned())
         .map(|a| a.bytes)

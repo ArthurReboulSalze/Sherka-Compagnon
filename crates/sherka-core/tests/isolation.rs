@@ -355,7 +355,7 @@ fn image_import_decodes_real_pixels_and_rejects_disguised_code() {
         updated
             .avatar
             .unwrap()
-            .starts_with("data:image/png;base64,")
+            .starts_with("data:image/webp;base64,")
     );
     let copy = app.store.duplicate(profile.id).unwrap();
     assert!(copy.avatar.is_some());

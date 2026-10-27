@@ -190,7 +190,7 @@ pub async fn plan_character(
             let vision=portrait.is_some()&&provider.supports_images(&model).images;
             if portrait.is_some()&&!vision&&concept.trim().is_empty() {return Err("Ce modèle ne voit pas les images. Décris aussi ton personnage en texte.".into());}
             let (messages,schema)=sherka_core::character_studio::request(&concept,language,config.model_family,vision).map_err(|e|e.to_string())?;
-            let images:Vec<String>=if vision {portrait.iter().cloned().collect()} else {vec![]};
+            let images:Vec<String>=if vision {portrait.iter().map(|p|sherka_core::character_studio::png_data_url(p)).collect::<Result<_,_>>().map_err(|e|e.to_string())?} else {vec![]};
             let draft:Draft=tokio::select!{biased;_=token.cancelled()=>return Err("Création interrompue.".into()),r=provider.structured_with_images(messages,schema,limit,3072,&images)=>r.map_err(|e|e.to_string())?};
             draft.validate().map_err(|e|e.to_string())?;
             if draft.language!=language {return Err("La langue de la fiche générée est invalide.".into());}
@@ -414,22 +414,21 @@ fn render_images(
             let (_,info)=studio_workflows::catalog(&client).await.map_err(|e|e.to_string())?;
             let raw=studio.status().images;
             let reference=if stage==Stage::Mood {
-                let bytes=sherka_core::character_studio::portrait_png(raw.get(&Emotion::Neutral).ok_or("Portrait absent.")?).map_err(|e|e.to_string())?;
+                let bytes=sherka_core::character_studio::portrait_image(raw.get(&Emotion::Neutral).ok_or("Portrait absent.")?).map_err(|e|e.to_string())?;
                 Some(client.upload_image(&bytes).await.map_err(|e|e.to_string())?)
             }else{None};
             for emotion in jobs {
                 if token.is_cancelled(){return Err("Création interrompue.".into());}
                 studio.update(&app,revision,|s|s.phase=format!("{}_{}",if stage==Stage::Transparency{"transparency"}else{"portrait"},emotion.as_str()));
                 let input=if stage==Stage::Transparency {
-                    let bytes=sherka_core::character_studio::portrait_png(raw.get(&emotion).ok_or("Portrait absent.")?).map_err(|e|e.to_string())?;
+                    let bytes=sherka_core::character_studio::portrait_image(raw.get(&emotion).ok_or("Portrait absent.")?).map_err(|e|e.to_string())?;
                     Some(client.upload_image(&bytes).await.map_err(|e|e.to_string())?)
                 }else{reference.clone()};
                 let graph=studio_workflows::workflow(&config,&draft,stage,emotion,&info,(Uuid::new_v4().as_u128() as u64)&0x7fff_ffff_ffff_ffff,input.as_deref()).map_err(|e|e.to_string())?;
                 let image=client.render(graph,token.clone()).await.map_err(|e|e.to_string())?;
                 let image=tauri::async_runtime::spawn_blocking(move||{
-                    use base64::Engine;
-                    let bytes=if stage==Stage::Transparency{sherka_core::character_studio::transparent_png(&image)}else{sherka_core::character_studio::portrait_png(&image)}.map_err(|e|e.to_string())?;
-                    Ok::<_,String>(format!("data:image/png;base64,{}",base64::engine::general_purpose::STANDARD.encode(bytes)))
+                    let bytes=if stage==Stage::Transparency{sherka_core::character_studio::transparent_image(&image)}else{sherka_core::character_studio::portrait_image(&image)}.map_err(|e|e.to_string())?;
+                    Ok::<_,String>(sherka_core::storage::image_data_url(&bytes))
                 }).await.map_err(|_|"La tâche locale n'a pas pu se terminer.".to_string())??;
                 studio.update(&app,revision,|s|{
                     if stage==Stage::Transparency{s.transparent_images.insert(emotion,image);}
@@ -485,15 +484,12 @@ pub async fn edit_character_images(
     profile_id: Uuid,
     config: Config,
 ) -> Result<(), String> {
-    use base64::Engine;
     let config = config.validated().map_err(|e| e.to_string())?;
     let profile = with_core(shared.inner().clone(), move |c| c.profile(profile_id)).await?;
     let resolver = app.asset_resolver();
     let bytes_of = |value: &str| -> Result<Vec<u8>, String> {
-        match value.strip_prefix("data:image/png;base64,") {
-            Some(data) => base64::engine::general_purpose::STANDARD
-                .decode(data)
-                .map_err(|_| "Le portrait du compagnon est illisible.".to_string()),
+        match sherka_core::storage::image_data_url_bytes(value) {
+            Some(data) => data.map_err(|_| "Le portrait du compagnon est illisible.".to_string()),
             None => resolver
                 .get(value.to_owned())
                 .map(|asset| asset.bytes)
@@ -505,7 +501,7 @@ pub async fn edit_character_images(
             .details
             .avatar_preset
             .map(|p| p.neutral())
-            .unwrap_or("/assets/sherka.png")
+            .unwrap_or("/assets/sherka.webp")
             .to_owned()
     });
     let mut sources = vec![(Emotion::Neutral, bytes_of(&neutral)?)];
@@ -524,12 +520,10 @@ pub async fn edit_character_images(
                     .map_err(|e| e.to_string())?,
             );
             // Current images without usable alpha go through the transparency stage again.
-            let png = sherka_core::storage::normalize_image(&bytes).map_err(|e| e.to_string())?;
-            let data = format!(
-                "data:image/png;base64,{}",
-                base64::engine::general_purpose::STANDARD.encode(png)
-            );
-            if sherka_core::character_studio::transparent_png(&data).is_ok() {
+            let normalized =
+                sherka_core::storage::normalize_image(&bytes).map_err(|e| e.to_string())?;
+            let data = sherka_core::storage::image_data_url(&normalized);
+            if sherka_core::character_studio::transparent_image(&data).is_ok() {
                 transparent.insert(emotion, data);
             }
         }
@@ -654,7 +648,7 @@ pub async fn finish_character(
             images.insert(
                 emotion,
                 Some(
-                    sherka_core::character_studio::transparent_png(&data)
+                    sherka_core::character_studio::transparent_image(&data)
                         .map_err(|e| e.to_string())?,
                 ),
             );
@@ -705,7 +699,8 @@ async fn apply_character_images(
             let data = images.get(&emotion).ok_or("Portrait absent.")?;
             decoded.push((
                 emotion,
-                sherka_core::character_studio::transparent_png(data).map_err(|e| e.to_string())?,
+                sherka_core::character_studio::transparent_image(data)
+                    .map_err(|e| e.to_string())?,
             ));
         }
         if token.is_cancelled() {

@@ -24,11 +24,11 @@ impl AvatarPreset {
     }
     pub fn neutral(self) -> &'static str {
         match self {
-            Self::Sherka => "/assets/sherka.png",
-            Self::Botsy => "/assets/botsy/neutral.png",
-            Self::Alba => "/assets/alba/neutral.png",
-            Self::Kit => "/assets/kit/neutral.png",
-            Self::Minerva => "/assets/minerva-v2/neutral.png",
+            Self::Sherka => "/assets/sherka.webp",
+            Self::Botsy => "/assets/botsy/neutral.webp",
+            Self::Alba => "/assets/alba/neutral.webp",
+            Self::Kit => "/assets/kit/neutral.webp",
+            Self::Minerva => "/assets/minerva-v2/neutral.webp",
         }
     }
     pub fn images(self) -> [(Emotion, String); 6] {
@@ -44,7 +44,7 @@ impl AvatarPreset {
             (
                 emotion,
                 format!(
-                    "/assets/{}/{}.png",
+                    "/assets/{}/{}.webp",
                     if self == Self::Minerva {
                         "minerva-v2".into()
                     } else {

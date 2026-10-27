@@ -328,8 +328,10 @@ pub fn request(
 }
 // i18n: data-end
 
-pub fn transparent_png(data: &str) -> Result<Vec<u8>> {
-    let normalized = portrait_png(data)?;
+/// A cut-out studio image as lossless WebP bytes, rejected when the background
+/// removal left no usable transparency.
+pub fn transparent_image(data: &str) -> Result<Vec<u8>> {
+    let normalized = portrait_image(data)?;
     let image = image::load_from_memory(&normalized)?.to_rgba8();
     let transparent = image.pixels().filter(|p| p[3] < 32).count();
     let visible = image.pixels().filter(|p| p[3] > 128).count();
@@ -363,7 +365,6 @@ pub fn imported_portrait(data: &str) -> Result<String> {
 }
 /// Same as [`imported_portrait`] for raw image bytes, such as a stored avatar.
 pub fn portrait_on_gray(bytes: &[u8]) -> Result<String> {
-    use base64::Engine;
     let invalid =
         || Error::Validation("Choisis une image PNG, JPEG ou WebP de moins de 10 Mio.".into());
     if bytes.len() > 10 * 1024 * 1024 {
@@ -401,25 +402,35 @@ pub fn portrait_on_gray(bytes: &[u8]) -> Result<String> {
                 ((u16::from(pixel[c]) * alpha + u16::from(out[c]) * (255 - alpha)) / 255) as u8;
         }
     }
-    let mut png = std::io::Cursor::new(Vec::new());
-    flat.write_to(&mut png, image::ImageFormat::Png)?;
-    Ok(format!(
-        "data:image/png;base64,{}",
-        base64::engine::general_purpose::STANDARD.encode(png.into_inner())
+    let flat = image::DynamicImage::ImageRgb8(flat).to_rgba8();
+    Ok(crate::storage::image_data_url(
+        &crate::storage::encode_lossless_webp(&flat)?,
+    ))
+}
+/// A studio data URL as a PNG data URL, for vision requests: every provider
+/// accepts PNG. The pixels are unchanged.
+pub fn png_data_url(data: &str) -> Result<String> {
+    let invalid = || Error::Validation("Le portrait généré est invalide.".into());
+    let bytes = crate::storage::image_data_url_bytes(data)
+        .ok_or_else(invalid)?
+        .map_err(|_| invalid())?;
+    Ok(crate::storage::image_data_url(
+        &crate::storage::lossless_png(&bytes)?,
     ))
 }
 /// The uniform dark gray behind generated and imported neutral portraits.
 pub const PORTRAIT_BACKGROUND: [u8; 3] = [48, 48, 48];
 
-pub fn portrait_png(data: &str) -> Result<Vec<u8>> {
-    use base64::Engine;
+/// A studio image (PNG from ComfyUI or WebP from the studio) normalized to
+/// lossless WebP bytes.
+pub fn portrait_image(data: &str) -> Result<Vec<u8>> {
     if data.len() > 16 * 1024 * 1024 {
         return Err(Error::Validation(
             "Le portrait généré est trop volumineux.".into(),
         ));
     }
-    let bytes = base64::engine::general_purpose::STANDARD
-        .decode(data.strip_prefix("data:image/png;base64,").unwrap_or(""))
+    let bytes = crate::storage::image_data_url_bytes(data)
+        .unwrap_or_else(|| Err(Error::Validation(String::new())))
         .map_err(|_| Error::Validation("Le portrait généré est invalide.".into()))?;
     crate::storage::normalize_image(&bytes)
 }

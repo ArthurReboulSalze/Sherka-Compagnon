@@ -2,7 +2,7 @@
 //! Arguments: URL CHECKPOINT OUTPUT_DIRECTORY [NEUTRAL.png]
 use base64::{Engine, engine::general_purpose::STANDARD};
 use sherka_core::{
-    character_studio::{Draft, EMOTIONS, portrait_png, transparent_png},
+    character_studio::{Draft, EMOTIONS, portrait_image, transparent_image},
     i18n::Language,
     illustration::{Client, ModelFamily},
     studio_workflows::{self, Config, Stage},
@@ -76,13 +76,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Starting {name}");
         let image = client.render(graph, CancellationToken::new()).await?;
         let bytes = if stage == Stage::Transparency {
-            transparent_png(&image)?
+            transparent_image(&image)?
         } else {
-            portrait_png(&image)?
+            portrait_image(&image)?
         };
         let decoded = image::load_from_memory(&bytes)?.to_rgba8();
         let alpha = decoded.pixels().filter(|p| p[3] < 32).count();
-        std::fs::write(directory.join(format!("{name}.png")), &bytes)?;
+        // Studio images are lossless WebP; the inspection files stay PNG.
+        std::fs::write(
+            directory.join(format!("{name}.png")),
+            sherka_core::storage::lossless_png(&bytes)?,
+        )?;
         println!(
             "{name}: {}x{}, {:.1}% transparent pixels",
             decoded.width(),
@@ -93,7 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             neutral = Some(bytes);
         }
         // Validate that the same PNG transport is accepted by the studio.
-        let _ = portrait_png(&format!(
+        let _ = portrait_image(&format!(
             "data:image/png;base64,{}",
             STANDARD.encode(std::fs::read(directory.join(format!("{name}.png")))?)
         ))?;

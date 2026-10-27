@@ -563,9 +563,8 @@ pub struct Client {
 }
 impl Client {
     pub async fn upload_reference(&self, bytes: &[u8]) -> Result<String> {
-        let normalized = crate::storage::normalize_image(bytes)?;
-        let image = image::load_from_memory(&normalized)
-            .map_err(|_| invalid())?
+        let normalized = crate::storage::decode_normalized(bytes)?;
+        let image = image::DynamicImage::ImageRgba8(normalized)
             .thumbnail(768, 768)
             .to_rgba8();
         // CLIP sees a centered opaque image; transparency remains intact in
@@ -585,8 +584,8 @@ impl Client {
     }
     /// Preserve dimensions and alpha for image editing and background removal.
     pub async fn upload_image(&self, bytes: &[u8]) -> Result<String> {
-        self.upload_png(crate::storage::normalize_image(bytes)?)
-            .await
+        // Stored avatars are WebP; ComfyUI receives the same pixels as PNG.
+        self.upload_png(crate::storage::normalize_png(bytes)?).await
     }
     async fn upload_png(&self, png: Vec<u8>) -> Result<String> {
         let name = format!("reference-{}.png", uuid::Uuid::new_v4());

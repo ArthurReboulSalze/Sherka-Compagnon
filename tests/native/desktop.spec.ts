@@ -26,7 +26,7 @@ test('character studio: three fixed workflows, individual emotions, large previe
     ['VAELoader','vae_name','flux2.safetensors'],
     ['RMBG','model','RMBG-2.0']
   ])info[node!]={input:{required:{[field!]:[[name]]}}};
-  const png=readFileSync('public/assets/botsy/neutral.png'),graphs:any[]=[],requests:any[]=[],deleted:string[]=[];
+  const png=readFileSync('tests/fixtures/botsy-neutral.png'),graphs:any[]=[],requests:any[]=[],deleted:string[]=[];
   let held=false,uploads=0;
   const server=createServer((req,res)=>{
     if(model(req,res))return;
@@ -127,7 +127,7 @@ test('character studio: three fixed workflows, individual emotions, large previe
     await panel.locator('#studio-transparency').scrollIntoViewIfNeeded();await panel.screenshot({path:'artifacts/character-studio-three-stages-native.png'});
     await panel.locator('#studio-finish').click();await expect(panel.locator('.companion-copy h2')).toHaveText('Vega Studio',{timeout:60000});
     state=await native<any>('get_snapshot');const created=state.profiles.find((p:any)=>p.name==='Vega Studio');
-    expect(Object.keys(created.emotion_avatars)).toHaveLength(6);expect(created.avatar).toMatch(/^data:image\/png/);
+    expect(Object.keys(created.emotion_avatars)).toHaveLength(6);expect(created.avatar).toMatch(/^data:image\/webp/);
     expect(created.connections.tts_voice).toBeNull();expect(created.message_count).toBe(0);expect(created.memory_count).toBe(0);
     expect(created.personality).toBe('Curieuse, calme, précise et malicieuse.');
     expect(created.illustration.reference.enabled).toBe(false);
@@ -146,7 +146,7 @@ test('character studio: three fixed workflows, individual emotions, large previe
     held=true;await panel.locator('#studio-neutral').click();await expect.poll(()=>graphs.length).toBe(17);await panel.locator('#studio-stop').click();
     await expect.poll(()=>deleted).toContain('studio_17');await expect(panel.locator('#studio-phase')).toContainText('interrompue');
     await stopApplication();await startApplication();state=await native<any>('get_snapshot');
-    expect(state.settings.search.provider).toBe('brave');expect(state.profiles.find((p:any)=>p.id===created.id).emotion_avatars.anger).toMatch(/^data:image\/png/);
+    expect(state.settings.search.provider).toBe('brave');expect(state.profiles.find((p:any)=>p.id===created.id).emotion_avatars.anger).toMatch(/^data:image\/webp/);
     await panel.locator('[data-nav="studio"]').click();
     await expect(panel.locator('#studio-models [name="mood_model"]')).toHaveValue('klein.safetensors');
     await expect(panel.locator('#studio-catalog-note')).toContainText('mémorisé');
@@ -163,7 +163,7 @@ test('character studio: three fixed workflows, individual emotions, large previe
     await expect(panel.locator('#studio-finish')).toBeEnabled({timeout:30000});
     await panel.locator('#studio-finish').click();
     await expect.poll(async()=>{const s=await native<any>('get_character_studio');if(s.error)throw new Error(s.error);return s.created_profile;},{timeout:90000}).toBe(retouch.target_profile);
-    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===retouch.target_profile).emotion_avatars.joy).toMatch(/^data:image\/png/);
+    await expect.poll(async()=>(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===retouch.target_profile).emotion_avatars.joy).toMatch(/^data:image\/webp/);
     const targetAfter=(await native<any>('get_snapshot')).profiles.find((p:any)=>p.id===retouch.target_profile);
     expect(targetAfter.name).toBe(targetBefore.name);expect(targetAfter.personality).toBe(targetBefore.personality);
     expect(targetAfter.message_count).toBe(targetBefore.message_count);expect(targetAfter.connections.tts_voice).toBe(targetBefore.connections.tts_voice);
@@ -905,11 +905,11 @@ test('companion archives: ZIP images, duplicate settings, empty histories and re
   const manifest={format:'sherka-companion',version:1,profile:{name:'ZIP fixture',personality:'Curious and thoughtful.',instructions:'Speak English.',accent:'teal',illustration:source.illustration},images:Object.fromEntries(emotionNames.map(e=>[e,`images/${e}.png`]))};
   const manifestPath=resolve(dataDirectory,'companion.json'),pack=resolve(dataDirectory,'fixture.sherka.zip');
   writeFileSync(manifestPath,JSON.stringify(manifest));
-  execFileSync('python',['-c',`import sys,json,zipfile\nm=json.load(open(sys.argv[1]))\nwith zipfile.ZipFile(sys.argv[2],'w',zipfile.ZIP_DEFLATED) as z:\n z.writestr('companion.json',json.dumps(m))\n for p in m['images'].values(): z.write(sys.argv[3],p)`,manifestPath,pack,resolve(process.env.SHERKA_LARGE_PACK_TEST==='1'?'public/assets/sherka.png':'src-tauri/icons/32x32.png')],{windowsHide:true});
+  execFileSync('python',['-c',`import sys,json,zipfile\nm=json.load(open(sys.argv[1]))\nwith zipfile.ZipFile(sys.argv[2],'w',zipfile.ZIP_DEFLATED) as z:\n z.writestr('companion.json',json.dumps(m))\n for p in m['images'].values(): z.write(sys.argv[3],p)`,manifestPath,pack,resolve(process.env.SHERKA_LARGE_PACK_TEST==='1'?'tests/fixtures/sherka.png':'src-tauri/icons/32x32.png')],{windowsHide:true});
   const chooser=panel.waitForEvent('filechooser'); await panel.locator('#import-profile').click(); await (await chooser).setFiles(pack);
   await expect(panel.getByRole('heading',{name:'ZIP fixture',exact:true})).toBeVisible({timeout:60_000});
   const imported=(await native<any>('get_snapshot')).profiles.find((p:any)=>p.name==='ZIP fixture');
-  expect(imported.avatar_preset).toBeNull(); expect(imported.avatar).toMatch(/^data:image\/png;base64,/);
+  expect(imported.avatar_preset).toBeNull(); expect(imported.avatar).toMatch(/^data:image\/webp;base64,/);
   expect(Object.keys(imported.emotion_avatars)).toHaveLength(6);
   expect(imported.illustration.positive_prompt_suffix).toBe('(warm light:1.3), watercolor');
   expect((await native<any>('get_snapshot')).session.profile_id).toBe(source.id);
@@ -1248,7 +1248,7 @@ test('LM Studio réel : mémoire autonome et aller-retour Dolphin / Gemma sans d
   expect((await native<any>('get_memories',{profileId:p.id,query:''})).entries).toHaveLength(0);
   const changed=await native<any>('apply_mutation',{mutation:{kind:'create_profile',draft:{name:'Orion essai réel',personality:'Curieux et concis, avec un humour discret. Tu tutoies.',instructions:'Réponds en français.',accent:'teal',connections:{...config,llm_model:gemma,llm_model_key:gemma,reasoning:'off'}}}});
   const b=changed.profiles.find((x:any)=>x.name==='Orion essai réel');
-  const bytes=readFileSync(resolve('public/assets/botsy/neutral.png'));
+  const bytes=readFileSync(resolve('tests/fixtures/botsy-neutral.png'));
   await native('apply_mutation',{mutation:{kind:'set_avatar',id:b.id,revision:b.revision,base64:bytes.toString('base64')}});
   await native('apply_mutation',{mutation:{kind:'switch_profile',id:b.id}});
   await expect.poll(()=>count(gemma),{timeout:120_000,intervals:[1000,2000]}).toBe(1);
@@ -1540,16 +1540,16 @@ test('avatars: seven images, avatar voice, streamed emotions, neutral fallback a
     await expect(panel.locator('.emotion-slot')).toHaveCount(7);
     for (const emotion of ['neutral','joy','sadness','anger','surprise','reflection','tenderness']) {
       await panel.locator(`.emotion-slot[data-emotion="${emotion}"]`).click();
-      const expected = emotion === 'neutral' ? '/assets/sherka.png' : `/assets/sherka/${emotion}.png`;
+      const expected = emotion === 'neutral' ? '/assets/sherka.webp' : `/assets/sherka/${emotion}.webp`;
       await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src', expected);
       await expect.poll(()=>panel.locator('.avatar-preview img').evaluate((img:HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
     }
     await panel.screenshot({path:'artifacts/avatar-editor.png', fullPage:true});
     await panel.locator('.emotion-slot[data-emotion="joy"]').click();
-    await panel.locator('#avatar-file').setInputFiles({name:'joy.png',mimeType:'image/png',buffer:readFileSync('public/assets/botsy/neutral.png')});
+    await panel.locator('#avatar-file').setInputFiles({name:'joy.png',mimeType:'image/png',buffer:readFileSync('tests/fixtures/botsy-neutral.png')});
     await expect(panel.locator('#avatar-save-status')).toHaveText('Nouvelle apparence enregistrée.');
     const customJoy = await panel.locator('.avatar-preview img').getAttribute('src');
-    expect(customJoy).toMatch(/^data:image\/png;base64,/);
+    expect(customJoy).toMatch(/^data:image\/webp;base64,/);
     await panel.locator('#avatar-voice-edit').click();
     await panel.locator('#profile-voice-form [name="voice"]').selectOption('voice-b');
     await panel.getByRole('button', {name:'Associer cette voix',exact:true}).click();
@@ -1601,11 +1601,11 @@ test('avatars: seven images, avatar voice, streamed emotions, neutral fallback a
     await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('data-emotion','neutral');
     expect((await native<any[]>('get_history',{profileId:profile.id})).at(-1).content).not.toContain('[[emotion:');
     await native('send_message',{profileId:profile.id,text:'anger',speak:false});
-    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('src','/assets/sherka/anger.png');
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('src','/assets/sherka/anger.webp');
     await native('apply_mutation',{mutation:{kind:'stop_response'}});
     finish!();
     await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('data-emotion','neutral');
-    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('src','/assets/sherka.png');
+    await expect(widget.locator('.widget-portrait > img:not(.avatar-outgoing)')).toHaveAttribute('src','/assets/sherka.webp');
     await expect(widget.locator('.avatar-outgoing')).toHaveCount(0);
     await native('send_message',{profileId:profile.id,text:'unknown',speak:false});
     await expect.poll(async()=>(await native<any>('get_conversation')).live.reply).toBe('Bonjour, quelle belle journée !');
@@ -2249,7 +2249,7 @@ test('hermes: profiles, server sessions, streaming, voice, approvals and widget 
     await panel.locator('#change-avatar').click();
     await expect(panel.locator('#avatar-hermes')).toBeVisible();
     await expect(panel.locator('.emotion-slot:disabled')).toHaveCount(6);
-    await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src','/assets/sherka.png');
+    await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src','/assets/sherka.webp');
     await expect(panel.locator('#avatar-voice-edit')).toBeEnabled();
     await panel.locator('.avatar-modal [data-close]').first().click();
     await panel.getByRole('button',{name:'Conversation',exact:true}).click();if(!canSpeak) await panel.locator('#speak-reply').uncheck();
@@ -2313,14 +2313,14 @@ test('companion settings: starter pack, provider placement, independent web choi
     const profile = original.profiles.find((p:any)=>p.name===name);
     const imageFolder = name === 'Minerva' ? 'minerva-v2' : name.toLowerCase();
     await panel.locator(`[data-profile="${profile.id}"]`).click();
-    await expect(panel.locator('.hero-portrait')).toHaveAttribute('src',`/assets/${imageFolder}/neutral.png`);
+    await expect(panel.locator('.hero-portrait')).toHaveAttribute('src',`/assets/${imageFolder}/neutral.webp`);
     await expect(panel.locator('[name="llm_provider"]')).toBeVisible();
     await expect(panel.locator('[name="stt_model"]')).toHaveCount(0);
     await panel.locator('#change-avatar').click();
     await expect(panel.locator('.emotion-slot')).toHaveCount(7);
     for (const emotion of ['neutral','joy','sadness','anger','surprise','reflection','tenderness']) {
       await panel.locator(`.emotion-slot[data-emotion="${emotion}"]`).click();
-      await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src',`/assets/${imageFolder}/${emotion}.png`);
+      await expect(panel.locator('.avatar-preview img')).toHaveAttribute('src',`/assets/${imageFolder}/${emotion}.webp`);
       await expect.poll(()=>panel.locator('.avatar-preview img').evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
     }
     await panel.locator('.avatar-modal [data-close]').first().click();
@@ -2632,7 +2632,7 @@ test('persistent moods: optional per companion, decay, reset, deletion and theme
     expect(await portrait().evaluate(e=>getComputedStyle(e).filter)).toMatch(/176, 167, 219|0\.690196/);
     await send('Tu es nul');await send('Tu es stupide');await send('Tu es nul');
     await expect(portrait()).toHaveAttribute('data-emotion','anger');
-    await expect(portrait()).toHaveAttribute('src','/assets/sherka/anger.png');
+    await expect(portrait()).toHaveAttribute('src','/assets/sherka/anger.webp');
     await widget.locator('#drag-region').hover();await widget.screenshot({path:'artifacts/widget-ocean-persistent-mood.png',omitBackground:true});
     await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode,{timeout:30000}).toBe(0);await stopApplication();await startApplication();
     await expect(portrait()).toHaveAttribute('data-emotion','anger');await expect(widget.locator('html')).toHaveAttribute('data-theme','ocean');
@@ -2802,7 +2802,7 @@ test('desktop scenes: tight widget chrome, profile halo, themes, quick text and 
   const info:any={};for(const node of Object.values(template) as any[])info[node.class_type]={input:{required:{}}};
   info.CheckpointLoaderSimple={input:{required:{ckpt_name:[['Illustrious/scene.safetensors','Flux/unrelated.safetensors']]}}};
   info.LoraLoader={input:{required:{lora_name:[['Style/scene.safetensors','Models/Turbo/PAseer-SDXL-LCM+Turbo.safetensors']]}}};
-  const png=readFileSync(process.env.SHERKA_TEST_SCENE_PNG??'public/assets/sherka.png'),png2=readFileSync('public/assets/botsy/neutral.png');
+  const png=readFileSync(process.env.SHERKA_TEST_SCENE_PNG??'tests/fixtures/sherka.png'),png2=readFileSync('tests/fixtures/botsy-neutral.png');
   const fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));const spoken:ServerResponse[]=[];const streamed:any[]=[];const searches:string[]=[];
   const server=createServer((req,res)=>{
     if(model(req,res))return;
@@ -3046,7 +3046,7 @@ test('live scenes: advanced settings, targeted interruption and text/TTS priorit
   info.CheckpointLoaderSimple={input:{required:{ckpt_name:[['scene.safetensors']]}}};
   info.LoraLoader={input:{required:{lora_name:[['PAseer-SDXL-LCM+Turbo.safetensors']]}}};
   info.KSampler={input:{required:{sampler_name:[['euler_ancestral','dpmpp_2m']]}}};
-  const png=readFileSync('public/assets/sherka.png'),fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
+  const png=readFileSync('tests/fixtures/sherka.png'),fixture=JSON.parse(readFileSync('tests/fixtures/services.json','utf8'));
   const jobs=new Map<string,boolean>(),graphs:any[]=[],events:string[]=[],speech:string[]=[];
   let heldChat:ServerResponse|undefined,heldSpeech:ServerResponse|undefined,holdChat=false,holdSpeech=false;
   const answer=(res:ServerResponse)=>{res.writeHead(200,{'Content-Type':'text/event-stream'});res.end('data: '+JSON.stringify({choices:[{delta:{content:'Une lune brillante dans le ciel. 😊'}}]})+'\n\ndata: [DONE]\n\n');};

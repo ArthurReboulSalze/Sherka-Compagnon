@@ -435,10 +435,7 @@ impl Store {
             .unwrap_or_default();
         for (emotion, bytes) in self.emotion_avatar_bytes(id)? {
             if let Some(bytes) = bytes {
-                emotion_avatars.insert(
-                    emotion,
-                    format!("data:image/png;base64,{}", STANDARD.encode(bytes)),
-                );
+                emotion_avatars.insert(emotion, image_data_url(&bytes));
             } else {
                 // An explicit reset suppresses a built-in slot as well.
                 emotion_avatars.remove(&emotion);
@@ -450,7 +447,7 @@ impl Store {
             created_at,
             updated_at,
             details,
-            avatar: avatar.map(|bytes| format!("data:image/png;base64,{}", STANDARD.encode(bytes))),
+            avatar: avatar.map(|bytes| image_data_url(&bytes)),
             emotion_avatars,
             message_count: db.query_row("SELECT count(*) FROM messages", [], |r| r.get(0))?,
             memory_count: db.query_row(
@@ -566,7 +563,7 @@ impl Store {
         emotion: crate::avatar::Emotion,
         bytes: Option<&[u8]>,
     ) -> Result<Profile> {
-        let png = bytes.map(normalize_image).transpose()?;
+        let image = bytes.map(normalize_image).transpose()?;
         let mut db = self.db(id)?;
         let tx = db.transaction()?;
         if tx.execute("UPDATE profile SET revision=revision+1,updated_at=?1 WHERE singleton=1 AND revision=?2", params![now(), revision])? != 1 {
@@ -575,10 +572,10 @@ impl Store {
         if emotion == crate::avatar::Emotion::Neutral {
             tx.execute(
                 "UPDATE profile SET avatar=?1 WHERE singleton=1",
-                params![png],
+                params![image],
             )?;
         } else {
-            tx.execute("INSERT INTO avatar_emotions(emotion,image) VALUES(?1,?2) ON CONFLICT(emotion) DO UPDATE SET image=excluded.image", params![emotion.as_str(), png])?;
+            tx.execute("INSERT INTO avatar_emotions(emotion,image) VALUES(?1,?2) ON CONFLICT(emotion) DO UPDATE SET image=excluded.image", params![emotion.as_str(), image])?;
         }
         tx.commit()?;
         drop(db);
@@ -790,7 +787,9 @@ impl Store {
     }
 }
 
-pub fn normalize_image(bytes: &[u8]) -> Result<Vec<u8>> {
+/// Validate a stored avatar image and bound it to 1024 pixels. Shared by the
+/// WebP storage encoding and the PNG copies sent to ComfyUI or archives.
+pub(crate) fn decode_normalized(bytes: &[u8]) -> Result<image::RgbaImage> {
     if bytes.len() > MAX_IMAGE_BYTES {
         return Err(Error::Validation(
             "L'image dépasse la limite de 10 Mio.".into(),
@@ -807,10 +806,78 @@ pub fn normalize_image(bytes: &[u8]) -> Result<Vec<u8>> {
     limits.max_alloc = Some(80 * 1024 * 1024);
     reader.limits(limits);
     let decoded = reader.decode()?;
-    let normalized = decoded.thumbnail(1024, 1024).to_rgba8();
+    Ok(decoded.thumbnail(1024, 1024).to_rgba8())
+}
+
+/// Stored avatars are lossless WebP: every pixel, alpha included, is kept
+/// exactly while the file is smaller than the equivalent PNG.
+pub fn normalize_image(bytes: &[u8]) -> Result<Vec<u8>> {
+    encode_lossless_webp(&decode_normalized(bytes)?)
+}
+
+/// The same normalized pixels as [`normalize_image`], encoded as PNG for
+/// services and formats that expect PNG (ComfyUI uploads, companion archives).
+pub fn normalize_png(bytes: &[u8]) -> Result<Vec<u8>> {
+    encode_png(&decode_normalized(bytes)?)
+}
+
+pub fn encode_lossless_webp(image: &image::RgbaImage) -> Result<Vec<u8>> {
+    let mut output = Vec::new();
+    image::codecs::webp::WebPEncoder::new_lossless(&mut output).encode(
+        image.as_raw(),
+        image.width(),
+        image.height(),
+        image::ExtendedColorType::Rgba8,
+    )?;
+    Ok(output)
+}
+
+pub fn encode_png(image: &image::RgbaImage) -> Result<Vec<u8>> {
     let mut output = Cursor::new(Vec::new());
-    normalized.write_to(&mut output, ImageFormat::Png)?;
+    image.write_to(&mut output, ImageFormat::Png)?;
     Ok(output.into_inner())
+}
+
+/// Re-encode an image as PNG without resizing it. PNG input is returned as is.
+pub fn lossless_png(bytes: &[u8]) -> Result<Vec<u8>> {
+    if image::guess_format(bytes)? == ImageFormat::Png {
+        return Ok(bytes.to_vec());
+    }
+    encode_png(&decode_normalized_full(bytes)?)
+}
+
+fn decode_normalized_full(bytes: &[u8]) -> Result<image::RgbaImage> {
+    let mut reader = ImageReader::new(Cursor::new(bytes)).with_guessed_format()?;
+    let mut limits = Limits::default();
+    limits.max_image_width = Some(4096);
+    limits.max_image_height = Some(4096);
+    limits.max_alloc = Some(80 * 1024 * 1024);
+    reader.limits(limits);
+    Ok(reader.decode()?.to_rgba8())
+}
+
+/// A data URL whose media type matches the stored bytes (WebP, or PNG kept
+/// from earlier versions).
+pub fn image_data_url(bytes: &[u8]) -> String {
+    let media = match image::guess_format(bytes) {
+        Ok(ImageFormat::WebP) => "image/webp",
+        Ok(ImageFormat::Jpeg) => "image/jpeg",
+        _ => "image/png",
+    };
+    format!("data:{media};base64,{}", STANDARD.encode(bytes))
+}
+
+/// Decode a PNG or WebP data URL produced by [`image_data_url`]. Returns
+/// `None` when the value is not such a data URL (for example an asset path).
+pub fn image_data_url_bytes(value: &str) -> Option<Result<Vec<u8>>> {
+    ["data:image/webp;base64,", "data:image/png;base64,"]
+        .iter()
+        .find_map(|prefix| value.strip_prefix(prefix))
+        .map(|encoded| {
+            STANDARD
+                .decode(encoded)
+                .map_err(|_| Error::Validation("L'image est invalide.".into()))
+        })
 }
 
 pub(crate) fn now() -> i64 {

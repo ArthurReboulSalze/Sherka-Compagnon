@@ -54,7 +54,7 @@ Exports embed the visible image for every slot, including bundled artwork. An un
 ## Validation and compatibility
 
 - Stored and Deflate ZIP compression are accepted. Paths are fixed, case-sensitive and relative. No extra files, directory entries, encrypted entries or symlinks are accepted.
-- The archive and its total decoded content are limited to 48 MiB. The manifest is limited to 512 KiB; each PNG to 10 MiB and 4096 × 4096 decoded pixels. Images are normalized to PNG within 1024 × 1024 while retaining transparency.
+- The archive and its total decoded content are limited to 48 MiB. The manifest is limited to 512 KiB; each PNG to 10 MiB and 4096 × 4096 decoded pixels. Images are normalized within 1024 × 1024 while retaining transparency and stored as lossless WebP. Exported archives keep PNG files, converted without loss, so earlier Sherka versions can import them.
 - All entries are read and validated in memory. Nothing is extracted to a path supplied by the archive. Unsupported versions, unknown manifest/profile fields, invalid images and unsupported workflows fail before a new profile is created.
 - Credentials never belong in this format. Importing a pack does not execute its prompts or workflows. Choosing to activate and use the imported companion is a separate action.
 - Archive version 1 is independent of the legacy JSON export version (now 5) and database schema (9). Newer required archive behavior must use a new archive version; unsupported versions are rejected explicitly.

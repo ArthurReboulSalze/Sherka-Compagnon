@@ -6,7 +6,6 @@ use crate::{
     model::{Profile, ProfileDraft},
     storage::Store,
 };
-use base64::{Engine, engine::general_purpose::STANDARD};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
@@ -53,10 +52,9 @@ impl Store {
     ) -> Result<Vec<u8>> {
         let source = self.profile(id)?;
         let image_bytes = |value: &str| -> Result<Vec<u8>> {
-            if let Some(encoded) = value.strip_prefix("data:image/png;base64,") {
-                STANDARD.decode(encoded).map_err(|_| invalid())
-            } else {
-                resolve(value).ok_or_else(invalid)
+            match crate::storage::image_data_url_bytes(value) {
+                Some(decoded) => decoded.map_err(|_| invalid()),
+                None => resolve(value).ok_or_else(invalid),
             }
         };
         let neutral = source.avatar.as_deref().unwrap_or_else(|| {
@@ -64,7 +62,7 @@ impl Store {
                 .details
                 .avatar_preset
                 .map(|p| p.neutral())
-                .unwrap_or("/assets/sherka.png")
+                .unwrap_or("/assets/sherka.webp")
         });
         let neutral_bytes = image_bytes(neutral)?;
         let mut profile = source.details.for_export();
@@ -93,7 +91,9 @@ impl Store {
                 _ => neutral_bytes.clone(),
             };
             // Validate/canonicalize built-ins too, including their decoded dimensions.
-            let bytes = crate::storage::normalize_image(&bytes)?;
+            // Archive v1 stays PNG so earlier Sherka versions can import it;
+            // stored WebP converts to PNG without loss.
+            let bytes = crate::storage::normalize_png(&bytes)?;
             total += bytes.len();
             if total > MAX_ARCHIVE_BYTES {
                 return Err(invalid());

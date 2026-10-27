@@ -364,8 +364,8 @@ fn invalid_capabilities_dimensions_and_reference_paths_fail_before_submission() 
 #[test]
 fn opaque_portrait_is_rejected_and_complete_character_has_fresh_history_and_own_voice() {
     let url = |bytes: Vec<u8>| format!("data:image/png;base64,{}", STANDARD.encode(bytes));
-    assert!(sherka_core::character_studio::transparent_png(&url(png(false))).is_err());
-    let bytes = sherka_core::character_studio::transparent_png(&url(png(true))).unwrap();
+    assert!(sherka_core::character_studio::transparent_image(&url(png(false))).is_err());
+    let bytes = sherka_core::character_studio::transparent_image(&url(png(true))).unwrap();
     let dir = tempfile::tempdir().unwrap();
     let app = Companion::open(dir.path()).unwrap();
     let mut source = presets::sherka(Language::Fr);
@@ -430,7 +430,7 @@ fn legacy_web_provider_migrates_once_to_global_and_remains_global_after_switch()
 }
 
 #[test]
-fn an_imported_picture_becomes_a_flat_gray_bounded_png_portrait() {
+fn an_imported_picture_becomes_a_flat_gray_bounded_lossless_webp_portrait() {
     // A transparent 2000×1000 picture with an opaque red square in the middle.
     let mut image = image::RgbaImage::new(2000, 1000);
     for x in 900..1100 {
@@ -445,7 +445,7 @@ fn an_imported_picture_becomes_a_flat_gray_bounded_png_portrait() {
         STANDARD.encode(png.into_inner())
     );
     let portrait = sherka_core::character_studio::imported_portrait(&data).unwrap();
-    let bytes = sherka_core::character_studio::portrait_png(&portrait).unwrap();
+    let bytes = sherka_core::character_studio::portrait_image(&portrait).unwrap();
     let decoded = image::load_from_memory(&bytes).unwrap().to_rgba8();
     assert_eq!((decoded.width(), decoded.height()), (1024, 512));
     let gray = sherka_core::character_studio::PORTRAIT_BACKGROUND;
@@ -511,7 +511,7 @@ fn every_bundled_companion_can_be_retouched_from_its_current_images() {
         let file = format!("../../public{}", preset.neutral());
         let portrait =
             sherka_core::character_studio::portrait_on_gray(&std::fs::read(file).unwrap()).unwrap();
-        assert!(portrait.starts_with("data:image/png;base64,"));
+        assert!(portrait.starts_with("data:image/webp;base64,"));
     }
     // A custom companion without appearance text still gets a usable sheet.
     let mut details = presets::companion(sherka_core::avatar::AvatarPreset::Kit, Language::Fr);

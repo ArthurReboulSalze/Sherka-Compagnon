@@ -124,7 +124,7 @@ fn legacy_candis_upgrades_to_alba_without_losing_personal_data_or_overwriting_ed
         legacy.name = "Candis".into();
         legacy.personality = legacy.personality.replacen("Alba", "Candis", 1);
         let profile = app.store.create(legacy.clone(), None).unwrap();
-        let png = include_bytes!("../../../public/assets/botsy/neutral.png");
+        let png = include_bytes!("../../../tests/fixtures/botsy-neutral.png");
         let profile = app
             .store
             .set_avatar(profile.id, profile.revision, Some(png))

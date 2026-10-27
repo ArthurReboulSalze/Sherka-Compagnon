@@ -26,7 +26,7 @@ PATTERNS = [
 ]
 
 def scan(name, data):
-    if b"\0" in data[:4096] or name.endswith((".png", ".ico", ".onnx")):
+    if b"\0" in data[:4096] or name.endswith((".png", ".webp", ".ico", ".onnx")):
         return []
     errors = [f"{name}: {label}" for label, pattern in PATTERNS if pattern.search(data)]
     # Tauri private keys are base64 containers, not PEM.
