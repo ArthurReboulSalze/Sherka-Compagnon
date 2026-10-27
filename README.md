@@ -31,7 +31,7 @@
 </p>
 <p align="center"><em>Your companion on the desktop. Everything you need in the control panel.</em></p>
 
-**Sherka 1.3 is here: create your own companion from an idea.** Shape its personality, approve its portrait, generate six emotions and give it a transparent place on your desktop. The new **Character creation** studio connects your LLM and ComfyUI in one guided flow. [What's new](docs/releases/1.3.0.md). **1.3.2** starts a character from your own picture, lets you edit the exact image prompts and regenerates an existing companion's images. [Details](docs/releases/1.3.2.md).
+**Sherka 1.3 is here: create your own companion from an idea.** Shape its personality, approve its portrait, generate six emotions and give it a transparent place on your desktop. The new **Character creation** studio connects your LLM and ComfyUI in one guided flow. [What's new](docs/releases/1.3.0.md). **1.3.2** starts a character from your own picture, lets you edit the exact image prompts and regenerates an existing companion's images. [Details](docs/releases/1.3.2.md). **1.3.4** ships companion images as lossless WebP: lighter downloads, identical pictures. [Details](docs/releases/1.3.4.md).
 
 https://github.com/user-attachments/assets/899093f4-a2f0-4dce-b621-23430d216280
 

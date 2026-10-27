@@ -1,16 +1,20 @@
 # Project status
 
-Release version: **1.3.3**, October 23, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.3.4**, October 27, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
 ## Current state
 
 - **Data formats:** profile/settings database schema **9** (persistent moods), legacy JSON profile export **version 5** (accepting 1–4), default companion export Sherka Companion Archive **v1** (`.sherka.zip`). Upgraded data must not be opened with older executables; keep installed and no-install copies on the same version.
 - **Platforms:** Windows x64 is the tested platform (NSIS installer, portable ZIP, signed in-app updates). The Debian x64 package builds, starts under Xvfb and opens its widget window in a KDE Plasma (X11) session; physical Linux audio, compositor, tray and Secret Service unlocking remain unvalidated, and Linux updates are manual.
-- **Test suite:** for 1.3.1, `cargo test --workspace --locked` passed 163 Rust tests on Windows, with one opt-in live DuckDuckGo test ignored.
+- **Test suite:** for 1.3.4, `cargo test --workspace --locked` passed 172 Rust tests on Windows, with one opt-in live DuckDuckGo test ignored.
 - **Validation model:** core and native tests use isolated data (`SHERKA_DATA_DIR`) and simulated services; real-service checks are opt-in. Physical microphone, speaker-echo and listening behavior are validated manually by the author, not automatically.
 - **Known limitations:** speaker echo cancellation depends on hardware and placement; one VoiceStudio cold start exceeded the startup timeout; token counts are conservative estimates; speech is synthesized per passage, not per token; image and emotion fidelity depend on the selected models.
 
 See [roadmap](ROADMAP.md) for planned work. The sections below are the release log, newest first.
+
+## 1.3.4 — lossless WebP companion images
+
+Bundled companion images were converted from PNG to lossless WebP with libwebp (49.8 MB to 31.9 MB, visible pixels verified identical for all 35 files); two PNG originals remain as test fixtures. `storage::normalize_image` now encodes lossless WebP, so studio results, imported pictures and edited avatars are stored as WebP, while PNG avatars from earlier versions are served with their own media type. ComfyUI uploads, vision requests and archive v1 entries are re-encoded as PNG with the same pixels; the database schema and JSON export version are unchanged. Validation: 172 Rust tests (one opt-in live search test skipped), formatting, Clippy, localization and publication checks, and the full Windows/Linux CI including native WebView2 scenarios. The user confirmed companion display, character creation, picture import and archives in the Windows app.
 
 ## 1.3.3 — microphone mute keeps the reply
 

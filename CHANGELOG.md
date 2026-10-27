@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.4 — 2026-10-27
+
+- Ship the bundled companion images as lossless WebP instead of PNG: 49.8 MB of artwork becomes 31.9 MB with identical visible pixels, and the Windows executable shrinks from 99 MB to 83 MB.
+- Store new and edited companion images (character creation, retouching, your own picture and avatar editing) as lossless WebP, which is smaller than PNG and keeps every pixel and alpha value. Images stored by earlier versions stay PNG and keep working.
+- Keep sending PNG with the same pixels to ComfyUI and vision models, and keep PNG inside `.sherka.zip` archives so earlier Sherka versions can still import them.
+- Publish Windows installer/portable and Debian packages with signed Windows update assets.
+
 ## 1.3.3 — 2026-10-23
 
 - Turning the microphone off no longer interrupts the companion: it finishes generating and speaking its reply, and the microphone device closes once nothing is left to play. Only an utterance you were still speaking is dropped. **Stop** and **Pause all voice activity** still interrupt the reply.
