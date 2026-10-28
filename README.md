@@ -22,11 +22,8 @@
 
 ---
 
-<p align="center">
-  <video src="docs/images/sherka-explainer.mp4" poster="docs/images/sherka-explainer-poster.jpg" controls muted playsinline width="1000">
-    <a href="docs/images/sherka-explainer.mp4">Watch the 90-second Sherka overview (MP4)</a>
-  </video>
-</p>
+https://github.com/user-attachments/assets/e12e1b44-71a2-4866-9995-52e633abf220
+
 <p align="center"><em>Ninety seconds: a voice, a personality, memory, scenes and three-way conversations.</em></p>
 
 <p align="center">
