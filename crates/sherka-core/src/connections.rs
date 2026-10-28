@@ -109,6 +109,25 @@ impl Default for Connections {
 }
 
 impl Connections {
+    /// A copy of these connections that borrows the language model of
+    /// `master`: provider, endpoint, model, budgets and reasoning. Voice, speed
+    /// and language stay the guest's own.
+    pub fn with_llm_of(&self, master: &Connections) -> Connections {
+        Connections {
+            hermes_profile: master.hermes_profile.clone(),
+            llm_provider: master.llm_provider,
+            llm_api_url: master.llm_api_url.clone(),
+            lm_studio_url: master.lm_studio_url.clone(),
+            llm_model: master.llm_model.clone(),
+            llm_model_key: master.llm_model_key.clone(),
+            context_limit: master.context_limit,
+            response_tokens: master.response_tokens,
+            reasoning: master.reasoning.clone(),
+            vision_confirmed: master.vision_confirmed,
+            ..self.clone()
+        }
+    }
+
     pub fn validated(mut self) -> Result<Self> {
         if self.reasoning.as_deref().is_some_and(|s| {
             ![
@@ -282,4 +301,56 @@ pub fn base_url(value: &str) -> Result<String> {
         .to_owned();
     url.set_path(&path);
     Ok(url.to_string().trim_end_matches('/').to_owned())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn guest_borrows_only_the_language_model() {
+        let guest = Connections {
+            voice_studio_url: "http://127.0.0.1:4000".into(),
+            tts_engine: Some("kokoro".into()),
+            tts_voice: Some("guest-voice".into()),
+            stt_model: Some("small".into()),
+            language: "en".into(),
+            speed: 1.2,
+            volume: 0.3,
+            ..Default::default()
+        };
+        let master = Connections {
+            hermes_profile: Some("main".into()),
+            llm_provider: LlmProvider::OpenAi,
+            llm_api_url: Some("https://api.example.com/v1".into()),
+            lm_studio_url: "http://127.0.0.1:9999".into(),
+            llm_model: Some("big".into()),
+            llm_model_key: Some("big-key".into()),
+            tts_voice: Some("master-voice".into()),
+            language: "fr".into(),
+            context_limit: Some(16_384),
+            response_tokens: 2048,
+            reasoning: Some("high".into()),
+            vision_confirmed: true,
+            ..Default::default()
+        };
+        let merged = guest.with_llm_of(&master);
+        assert_eq!(merged.hermes_profile, master.hermes_profile);
+        assert_eq!(merged.llm_provider, master.llm_provider);
+        assert_eq!(merged.llm_api_url, master.llm_api_url);
+        assert_eq!(merged.lm_studio_url, master.lm_studio_url);
+        assert_eq!(merged.llm_model, master.llm_model);
+        assert_eq!(merged.llm_model_key, master.llm_model_key);
+        assert_eq!(merged.context_limit, Some(16_384));
+        assert_eq!(merged.response_tokens, 2048);
+        assert_eq!(merged.reasoning.as_deref(), Some("high"));
+        assert!(merged.vision_confirmed);
+        assert_eq!(merged.voice_studio_url, guest.voice_studio_url);
+        assert_eq!(merged.tts_engine, guest.tts_engine);
+        assert_eq!(merged.tts_voice, guest.tts_voice);
+        assert_eq!(merged.stt_model, guest.stt_model);
+        assert_eq!(merged.language, "en");
+        assert_eq!(merged.speed, guest.speed);
+        assert_eq!(merged.volume, guest.volume);
+    }
 }

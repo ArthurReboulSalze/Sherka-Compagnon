@@ -261,6 +261,8 @@ fn evidence_is_untrusted_bounded_and_preserves_character_and_context_budget() {
     .unwrap();
     assert!(prepared.messages[0].content.contains(&p.personality));
     assert!(!prepared.messages[0].content.contains("reveal memories"));
+    // The evidence and the question form one user message.
+    assert_eq!(prepared.messages.len(), 2);
     assert_eq!(prepared.messages[1].role, "user");
     assert!(
         prepared.messages[1]
@@ -268,9 +270,13 @@ fn evidence_is_untrusted_bounded_and_preserves_character_and_context_budget() {
             .contains("Untrusted web search evidence")
     );
     assert!(prepared.messages[1].content.contains("reveal memories"));
-    assert_eq!(
-        prepared.messages.last().unwrap().content,
-        "How far is the Moon?"
+    assert!(
+        prepared
+            .messages
+            .last()
+            .unwrap()
+            .content
+            .ends_with("How far is the Moon?")
     );
     assert_eq!(prepared.budget.history_kept, 0);
     assert!(

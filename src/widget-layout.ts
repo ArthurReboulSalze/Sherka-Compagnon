@@ -1,8 +1,8 @@
 // Anchor chrome to visible pixels, rather than the transparent square canvas.
 // This keeps controls close to wide cars and avatars with generous margins.
-type Bounds={x:number;y:number;width:number;height:number};
+export type Bounds={x:number;y:number;width:number;height:number};
 const bounds=new Map<string,Bounds>();
-async function alphaBounds(src:string):Promise<Bounds> {
+export async function alphaBounds(src:string):Promise<Bounds> {
   const saved=bounds.get(src);if(saved)return saved;
   const img=new Image();img.src=src;await img.decode();
   const scale=Math.min(1,384/Math.max(img.naturalWidth,img.naturalHeight));
@@ -13,6 +13,12 @@ async function alphaBounds(src:string):Promise<Bounds> {
   for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++)if(rgba[(y*canvas.width+x)*4+3]!>24){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x+1);bottom=Math.max(bottom,y+1);}
   const result=right>left?{x:left/canvas.width,y:top/canvas.height,width:(right-left)/canvas.width,height:(bottom-top)/canvas.height}:{x:0,y:0,width:1,height:1};
   if(bounds.size>=40)bounds.delete(bounds.keys().next().value!);bounds.set(src,result);return result;
+}
+/** The opaque pixels' rectangle, in `root` coordinates, for an `object-fit: contain` image filling `box`. */
+export function visibleRect(image:HTMLImageElement,box:DOMRect,root:DOMRect,alpha:Bounds):{left:number;top:number;width:number;height:number} {
+  const scale=Math.min(box.width/(image.naturalWidth||1),box.height/(image.naturalHeight||1));
+  const w=image.naturalWidth*scale,h=image.naturalHeight*scale;
+  return {left:box.left-root.left+(box.width-w)/2+alpha.x*w,top:box.top-root.top+(box.height-h)/2+alpha.y*h,width:alpha.width*w,height:alpha.height*h};
 }
 let stop:(()=>void)|undefined;
 export function layoutWidget():void {
@@ -28,9 +34,7 @@ export function layoutWidget():void {
     try{alpha=await alphaBounds(image.src);}catch{alpha={x:0,y:0,width:1,height:1};}
     if(version!==request||!surface.isConnected)return;
     const box=portrait.getBoundingClientRect(),root=surface.getBoundingClientRect();
-    const scale=Math.min(box.width/(image.naturalWidth||1),box.height/(image.naturalHeight||1));
-    const w=image.naturalWidth*scale,h=image.naturalHeight*scale;
-    const visible={left:box.left-root.left+(box.width-w)/2+alpha.x*w,top:box.top-root.top+(box.height-h)/2+alpha.y*h,width:alpha.width*w,height:alpha.height*h};
+    const visible=visibleRect(image,box,root,alpha);
     const name=surface.querySelector<HTMLElement>('.widget-name')!;const status=surface.querySelector<HTMLElement>('.widget-status')!;
     name.style.top=`${Math.max(3,visible.top-name.offsetHeight-6)}px`;
     const statusTop=Math.min(surface.clientHeight-status.offsetHeight-toolbar.offsetHeight-30,visible.top+visible.height+6);

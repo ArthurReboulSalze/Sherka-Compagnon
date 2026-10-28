@@ -85,10 +85,17 @@ impl Initiative {
 pub async fn initiative_activity(
     shared: State<'_, crate::Shared>,
     state: State<'_, Initiative>,
+    typing: Option<bool>,
 ) -> Result<(), String> {
     // Activity is sent from pointer/keyboard events. Waiting for SQLite/core on
     // the UI thread can deadlock a worker that is querying native visibility.
-    let id = crate::with_core(shared.inner().clone(), |core| {
+    let typing = typing.unwrap_or(false);
+    let id = crate::with_core(shared.inner().clone(), move |core| {
+        // Only typed text is participation: the other companion must not cut
+        // in. A click or a key press elsewhere keeps the silence relay alive.
+        if typing {
+            core.cancel_relay();
+        }
         Ok(core.session.snapshot().profile_id)
     })
     .await?;
@@ -122,6 +129,13 @@ pub fn start(app: tauri::AppHandle) {
                         || config.llm_model.is_none()
                         || config.tts_engine.is_none()
                         || config.tts_voice.is_none()
+                        // A guest needs its own voice to join the invitation.
+                        || core.guest().is_some_and(|guest| {
+                            core.profile(guest).map_or(true, |g| {
+                                g.details.connections.tts_engine.is_none()
+                                    || g.details.connections.tts_voice.is_none()
+                            })
+                        })
                         || core.session.initiative_paused()
                         || session.response != ResponseState::Idle
                         || session.transcription != TranscriptionState::Idle

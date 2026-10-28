@@ -39,6 +39,7 @@ fn main() {
             "get_voice_service",
             "retry_voice_service",
             "switch_companion",
+            "set_guest_companion",
             "apply_mutation",
             "get_history",
             "clear_conversation",

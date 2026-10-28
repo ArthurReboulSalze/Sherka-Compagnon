@@ -284,6 +284,16 @@ pub fn launch(
     children.insert(key, process);
     Ok(())
 }
+/// Exit code of the server this session started on `port`, once it has died.
+pub fn exited(port: u16) -> Option<String> {
+    let mut children = CHILDREN.lock().ok()?;
+    let suffix = format!(":{port}");
+    children
+        .iter_mut()
+        .filter(|(key, _)| key.ends_with(&suffix))
+        .find_map(|(_, child)| child.try_wait().ok().flatten())
+        .map(|status| status.code().map_or("?".into(), |code| code.to_string()))
+}
 pub fn shutdown() {
     let mut children = CHILDREN.lock().unwrap_or_else(|e| e.into_inner());
     for child in children.values_mut() {

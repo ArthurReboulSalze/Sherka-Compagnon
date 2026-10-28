@@ -7,7 +7,7 @@ import { icon } from './icons';
 import type { Profile, ProfileDraft, Snapshot, Mutation, WidgetAction } from './types';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { mountConnections, freshConnections } from './connections';
-import { conversationView, mountConversation, loadConversationHistory, clearConversationDraft, paintLive, paintMeter } from './conversation';
+import { conversationView, mountConversation, loadConversationHistory, clearConversationDraft, paintLive, paintMeter, rememberCompanions } from './conversation';
 import { mountAudioSettings } from './audio-settings';
 import { memoryPanel, mountMemory } from './memory';
 import { paintProfileVoice, editProfileVoice } from './profile-voice';
@@ -17,6 +17,7 @@ import {comfyStartupOptions,mountComfyOptions,mountComfyService} from './comfy-s
 import { updatesView, mountUpdates, initializeUpdates } from './updates';
 import {initiativeSettings,mountInitiativeSettings} from './initiative-settings';
 import {voiceServiceOptions,mountVoiceServiceOptions} from './service-settings';
+import {trioSettings,mountTrioSettings} from './trio-settings';
 import { bindRangeControls } from './settings-controls';
 import { webSettings,mountWebSettings,globalWebSettings,mountGlobalWebSettings } from './web';
 import { mountStartupRecovery } from './startup-recovery';
@@ -116,6 +117,27 @@ async function change(mutation: Mutation, success: string, selectNew = false): P
   }
 }
 
+async function setGuest(id: string | null, success: string): Promise<boolean> {
+  if (busy) return false;
+  busy = true;
+  document.body.classList.add('working');
+  try {
+    const next = await api.setGuestCompanion(id);
+    ++requestVersion;
+    state = next;
+    render();
+    toast(feedback(success));
+    return true;
+  } catch (error) {
+    report(error);
+    await refresh();
+    return false;
+  } finally {
+    busy = false;
+    document.body.classList.remove('working');
+  }
+}
+
 async function act(action: WidgetAction): Promise<void> {
   try {
     await api.widgetAction(action);
@@ -133,6 +155,7 @@ function render(): void {
   if (!state) return;
   setLanguage(state.settings.ui_language);
   paintTheme(state.settings.theme);
+  rememberCompanions(state.profiles);
   app.setAttribute('aria-busy', 'false');
   if (widget) { renderWidget(); paintAvatar(state); paintLive(state); paintVoiceService(); return; }
   const profile = selectedProfile();
@@ -165,7 +188,7 @@ function render(): void {
   if (view === 'conversation') mountConversation(activeProfile()!, report, change);
   paintLive(state);
   paintVoiceService();
-  if (view === 'settings') { mountGlobalWebSettings(language(),change); mountUpdates(); mountComfyOptions(document.querySelector('#comfy-startup-options')!,change); mountVoiceServiceOptions(state.settings.voice_service,change); }
+  if (view === 'settings') { mountGlobalWebSettings(language(),change); mountUpdates(); mountComfyOptions(document.querySelector('#comfy-startup-options')!,change); mountVoiceServiceOptions(state.settings.voice_service,change); mountTrioSettings(state.settings.trio,change); }
   if (view === 'settings') void mountAudioSettings(document.querySelector('#audio-settings-root')!, state.settings.audio, (audio) => change({ kind: 'audio_settings', audio }, t('Réglages audio enregistrés.')));
   if (view === 'memory') { void loadHistory(profile.id); mountMemory(profile, report); }
   if (view === 'profiles') mountConnections(document.querySelector('#connections-root')!, profile,
@@ -211,7 +234,7 @@ function settingsView(): string {
   return html`<div class="page-heading"><div><p class="eyebrow">DISCRET, COMME TU L’AIMES</p><h1>À tes commandes<span>.</span></h1><p>La présence de Sherka sur ton bureau.</p></div></div>
     <section class="settings-card"><div class="section-heading"><h2>Le widget</h2>${icon('orbit')}</div><form id="preferences-form"><label class="setting-row"><span><strong>Toujours au premier plan</strong><small>Garder ton compagnon visible au-dessus des autres fenêtres.</small></span><input class="switch" type="checkbox" name="always_on_top" ${state!.settings.always_on_top ? 'checked' : ''} /></label><label class="setting-row"><span><strong>Taille du compagnon</strong><small>Tu peux aussi tirer le coin inférieur droit du widget.</small></span><span class="scale-control range-control"><input id="widget-scale" name="widget_scale" type="range" min="65" max="160" step="5" value="${state!.settings.widget_scale}" /><output id="scale-value" for="widget-scale" data-percent-scale="0.01">${state!.settings.widget_scale} %</output></span></label><div class="settings-actions"><button class="button primary" type="submit">${icon('check')} Enregistrer</button><button class="button secondary" type="button" data-action="restore_widget">Replacer le widget</button></div></form></section>
     <section class="settings-card"><h2>Passage des clics</h2><p>Le widget peut laisser passer les clics vers ce qui se trouve derrière lui. Pour reprendre le contrôle, clique sur l’icône Sherka dans la zone de notification.</p><div class="settings-actions"><button class="button secondary" data-action="click_through">Laisser passer les clics</button><button class="text-button" data-action="restore_widget">Reprendre les clics</button></div></section>
-    ${globalWebSettings(state!.settings.search)}${themesView(state!.settings.theme)}${interfaceLanguageView()}${updatesView()}${voiceServiceOptions(state!.settings.voice_service)}${comfyStartupOptions(state!.settings.comfyui_startup)}<div id="audio-settings-root"></div>
+    ${globalWebSettings(state!.settings.search)}${themesView(state!.settings.theme)}${interfaceLanguageView()}${updatesView()}${voiceServiceOptions(state!.settings.voice_service)}${comfyStartupOptions(state!.settings.comfyui_startup)}<div id="audio-settings-root"></div>${trioSettings(state!.settings.trio)}
     ${activeProfile()?.connections.llm_provider === 'hermes' ? '' : html`<section class="settings-card"><h2>Mémoire du compagnon</h2><p>Raccourcir et regrouper les souvenirs redondants, avec une proposition à vérifier.</p><button type="button" class="button secondary" id="settings-memory-optimize">Optimiser la mémoire</button></section>`}
     <section class="settings-card"><h2>Quitter Sherka</h2><p>Arrête le micro et la réponse, puis décharge le modèle du compagnon dans LM Studio.</p><button class="button secondary" data-action="quit">Quitter Sherka</button></section>
     <section class="storage-card">${icon('shield')}<div><strong>Données conservées sur ce PC</strong><p class="storage-path">${escape(state!.data_directory)}</p><small>Un dossier et une base par compagnon. Aucun enregistrement audio.</small></div></section>`;
@@ -349,7 +372,7 @@ async function loadHistory(id: string): Promise<void> {
     if (version !== historyVersion || view !== 'memory' || selected !== id) return;
     const container = document.querySelector('#history');
     if (!container) return;
-    container.innerHTML = messages.length ? messages.map((message) => html`<article class="message"><div><strong>${message.role === 'user' ? t('Toi') : escape(selectedProfile()!.name)}</strong><small>${date(message.created_at)}${['interrupted', 'uncertain'].includes(message.delivery) ? t(' · diffusion incomplète') : ''}</small></div><p>${escape(message.content)}</p></article>`).join('') : html`<div class="empty-state">${icon('chat')}<h3>La première page reste à écrire.</h3><p>Commence un échange dans l’onglet Conversation ou active le micro du compagnon.</p></div>`;
+    container.innerHTML = messages.length ? messages.map((message) => html`<article class="message${message.speaker ? ' peer' : ''}"><div><strong>${message.role === 'user' ? t('Toi') : escape(message.speaker?.name ?? selectedProfile()!.name)}</strong><small>${date(message.created_at)}${['interrupted', 'uncertain'].includes(message.delivery) ? t(' · diffusion incomplète') : ''}</small></div><p>${escape(message.content)}</p></article>`).join('') : html`<div class="empty-state">${icon('chat')}<h3>La première page reste à écrire.</h3><p>Commence un échange dans l’onglet Conversation ou active le micro du compagnon.</p></div>`;
   } catch (error) { report(error); }
 }
 
@@ -357,9 +380,19 @@ function renderWidget(): void {
   const profile = activeProfile();
   if (!profile) return;
   captureCellFocus();
+  const hermes = profile.connections.llm_provider === 'hermes';
+  const guest = state!.profiles.find(p => p.id === state!.session.guest_profile_id);
+  const peers = state!.profiles.filter(p => p.id !== profile.id);
+  const guestBlock = (p: Profile) => p.id === guest?.id ? '' : p.connections.llm_provider === 'hermes' ? t('Les compagnons Hermes ne participent pas aux conversations à trois.') : p.connections.tts_voice ? '' : t('Choisis d’abord une voix pour ce compagnon.');
+  const guestEntry = (p: Profile, resume = false) => {
+    const blocked = guestBlock(p);
+    return html`<button type="button" data-guest="${p.id}" data-name="${escape(p.name)}" aria-pressed="${p.id === guest?.id}" ${blocked ? `disabled title="${blocked}"` : ''}><img src="${portrait(p)}" alt="" /><span>${resume ? html`<small>Reprendre la dernière conversation</small>` : ''}${escape(p.name)}</span>${p.id === guest?.id ? icon('check') : ''}</button>`;
+  };
+  // Recent guests of this master that still exist and could join again, most recent first.
+  const recents = (state!.settings.recent_guests?.[profile.id] ?? []).map(id => peers.find(p => p.id === id)).filter((p): p is Profile => !!p && !guestBlock(p) && p.id !== guest?.id).slice(0, 3);
   const oldPortrait = document.querySelector<HTMLElement>('.widget-portrait');
   const layers = oldPortrait?.dataset.profileId === profile.id ? Array.from(oldPortrait.childNodes) : [];
-  app.innerHTML = html`<div id="widget-canvas" class="accent-${profile.accent}"><main class="widget accent-${profile.accent}${widgetPointerInside || widgetControlsPinned || widgetKeyboardControls ? ' controls-visible' : ''}"><div class="widget-name widget-chrome"><i class="status-dot"></i><span>${escape(profile.name)}</span></div><button class="widget-portrait" id="drag-region" aria-label="Afficher ou masquer les commandes de ${escape(profile.name)}" aria-pressed="${widgetControlsPinned}" title="Survole ou clique pour les commandes, fais glisser pour déplacer"><img draggable="false" src="${portrait(profile)}" alt="${escape(profile.name)}" /></button><div class="widget-status widget-chrome">${icon('micOff')}<span data-session-status>Microphone coupé</span></div><div class="widget-toolbar widget-chrome"><button class="icon-button" id="choose-companion" aria-label="Changer de compagnon" title="Changer de compagnon" aria-expanded="false" aria-controls="widget-companions">${icon('profiles')}</button><button class="icon-button" data-action="show_panel" aria-label="Ouvrir le poste de bord" title="Poste de bord">${icon('settings')}</button><button class="icon-button" data-mic-toggle data-action="toggle_microphone" aria-label="Activer le micro" title="Activer le micro">${icon('micOff')}</button><button class="icon-button" data-action="${profile.connections.llm_provider === 'hermes' ? 'stop_hermes' : 'stop_response'}" aria-label="${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}" title="${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}">${icon('stop')}</button>${profile.connections.llm_provider === 'hermes' ? html`<button class="icon-button" id="hermes-new" aria-label="Nouvelle conversation Hermes" title="Nouvelle conversation Hermes">${icon('plus')}</button>` : ''}<button class="icon-button" id="widget-text" aria-label="Écrire au compagnon" title="Écrire au compagnon">${icon('chat')}</button>${profile.connections.llm_provider==='hermes'?'':html`<button class="icon-button" id="widget-image" aria-label="Illustrer la conversation" title="Illustrer la conversation" aria-pressed="${!!profile.illustration?.enabled}">${icon('image')}</button>`}<button class="icon-button" data-action="hide_widget" aria-label="Masquer le compagnon" title="Masquer (accessible dans la zone de notification)">${icon('close')}</button></div><div class="widget-companions" id="widget-companions" hidden><span>Ton compagnon</span><div role="group" aria-label="Choisir un compagnon">${state!.profiles.map(p => html`<button type="button" data-companion="${p.id}" aria-pressed="${p.id === profile.id}"><img src="${portrait(p)}" alt="" /><span>${escape(p.name)}</span>${p.id === profile.id ? icon('check') : ''}</button>`).join('')}</div></div><button class="resize-handle widget-chrome" id="resize-widget" aria-label="Redimensionner le widget" title="Redimensionner">${icon('resize')}</button></main><div id="widget-cells"></div></div>`;
+  app.innerHTML = html`<div id="widget-canvas" class="accent-${profile.accent}"><main class="widget accent-${profile.accent}${widgetPointerInside || widgetControlsPinned || widgetKeyboardControls ? ' controls-visible' : ''}"><div class="widget-name widget-chrome"><i class="status-dot"></i><span>${escape(profile.name)}</span></div><button class="widget-portrait" id="drag-region" aria-label="Afficher ou masquer les commandes de ${escape(profile.name)}" aria-pressed="${widgetControlsPinned}" title="Survole ou clique pour les commandes, fais glisser pour déplacer"><img draggable="false" src="${portrait(profile)}" alt="${escape(profile.name)}" /></button><div class="widget-status widget-chrome">${icon('micOff')}<span data-session-status>Microphone coupé</span></div><div class="widget-toolbar widget-chrome"><button class="icon-button" id="choose-companion" aria-label="Changer de compagnon" title="Changer de compagnon" aria-expanded="false" aria-controls="widget-companions">${icon('profiles')}</button>${hermes ? '' : html`<button class="icon-button" id="add-companion" aria-label="Ajouter un compagnon" title="Ajouter un compagnon" aria-expanded="false" aria-controls="widget-guests" aria-pressed="${!!guest}">${icon('userAdd')}</button>`}<button class="icon-button" data-action="show_panel" aria-label="Ouvrir le poste de bord" title="Poste de bord">${icon('settings')}</button><button class="icon-button" data-mic-toggle data-action="toggle_microphone" aria-label="Activer le micro" title="Activer le micro">${icon('micOff')}</button><button class="icon-button" data-action="${profile.connections.llm_provider === 'hermes' ? 'stop_hermes' : 'stop_response'}" aria-label="${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}" title="${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}">${icon('stop')}</button>${profile.connections.llm_provider === 'hermes' ? html`<button class="icon-button" id="hermes-new" aria-label="Nouvelle conversation Hermes" title="Nouvelle conversation Hermes">${icon('plus')}</button>` : ''}<button class="icon-button" id="widget-text" aria-label="Écrire au compagnon" title="Écrire au compagnon">${icon('chat')}</button>${hermes ? '' : guest ? html`<button class="icon-button" id="widget-image" aria-label="Illustrer la conversation" title="${t('Indisponible en conversation à trois')}" aria-pressed="false" disabled>${icon('image')}</button>` : html`<button class="icon-button" id="widget-image" aria-label="Illustrer la conversation" title="Illustrer la conversation" aria-pressed="${!!profile.illustration?.enabled}">${icon('image')}</button>`}<button class="icon-button" data-action="hide_widget" aria-label="Masquer le compagnon" title="Masquer (accessible dans la zone de notification)">${icon('close')}</button></div><div class="widget-companions" id="widget-companions" hidden><span>Ton compagnon</span><div role="group" aria-label="Choisir un compagnon">${state!.profiles.map(p => html`<button type="button" data-companion="${p.id}" aria-pressed="${p.id === profile.id}"><img src="${portrait(p)}" alt="" /><span>${escape(p.name)}</span>${p.id === profile.id ? icon('check') : ''}</button>`).join('')}</div></div>${hermes ? '' : html`<div class="widget-companions" id="widget-guests" hidden>${recents.length ? html`<span>Récents</span><div role="group" aria-label="Récents">${recents.map((p, i) => guestEntry(p, !guest && i === 0)).join('')}</div>` : ''}<span>Compagnon invité</span><div role="group" aria-label="Inviter un compagnon">${peers.length ? peers.map(p => guestEntry(p)).join('') : html`<p class="muted">Aucun autre compagnon à inviter.</p>`}</div></div>`}<button class="resize-handle widget-chrome" id="resize-widget" aria-label="Redimensionner le widget" title="Redimensionner">${icon('resize')}</button></main><div id="widget-cells"></div></div>`;
   bindWindowActions();
   const newPortrait = document.querySelector<HTMLElement>('.widget-portrait')!;
   newPortrait.dataset.profileId = profile.id;
@@ -374,7 +407,11 @@ function renderWidget(): void {
   const portraitButton = document.querySelector<HTMLButtonElement>('#drag-region')!;
   const picker = document.querySelector<HTMLElement>('#widget-companions')!;
   const pickerButton = document.querySelector<HTMLButtonElement>('#choose-companion')!;
-  const closePicker = () => { picker.hidden = true; pickerButton.setAttribute('aria-expanded', 'false'); };
+  const guestPicker = document.querySelector<HTMLElement>('#widget-guests');
+  const guestButton = document.querySelector<HTMLButtonElement>('#add-companion');
+  // The companion switcher and the guest picker share one open/close behaviour.
+  const pickers = [{ panel: picker, button: pickerButton }, ...(guestPicker && guestButton ? [{ panel: guestPicker, button: guestButton }] : [])];
+  const closePicker = () => pickers.forEach(({ panel, button }) => { panel.hidden = true; button.setAttribute('aria-expanded', 'false'); });
   const updateControls = () => {
     surface.classList.toggle('controls-visible', widgetPointerInside || widgetControlsPinned || widgetKeyboardControls);
     portraitButton.setAttribute('aria-pressed', String(widgetControlsPinned));
@@ -415,19 +452,28 @@ function renderWidget(): void {
     }, 0);
   });
   updateControls();
-  pickerButton.addEventListener('click', () => {
-    picker.hidden = !picker.hidden;
-    pickerButton.setAttribute('aria-expanded', String(!picker.hidden));
-    if (!picker.hidden) picker.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
+  for (const { panel, button } of pickers) button.addEventListener('click', () => {
+    const opening = panel.hidden;
+    closePicker();
+    if (!opening) return;
+    panel.hidden = false;
+    button.setAttribute('aria-expanded', 'true');
+    panel.querySelector<HTMLButtonElement>('[aria-pressed="true"]:not(:disabled)')?.focus();
   });
   surface.addEventListener('pointerdown', event => {
-    if (!(event.target as Element).closest('#widget-companions, #choose-companion')) closePicker();
+    if (!(event.target as Element).closest('#widget-companions, #widget-guests, #choose-companion, #add-companion')) closePicker();
   });
   picker.querySelectorAll<HTMLButtonElement>('[data-companion]').forEach(button => button.addEventListener('click', async () => {
     const id = button.dataset.companion!;
     if (id === profile.id) { closePicker(); pickerButton.focus(); return; }
     picker.querySelectorAll<HTMLButtonElement>('button').forEach(b => { b.disabled = true; });
     await change({ kind: 'switch_profile', id }, t`${button.querySelector('span')!.textContent} est maintenant actif.`);
+  }));
+  guestPicker?.querySelectorAll<HTMLButtonElement>('[data-guest]').forEach(button => button.addEventListener('click', async () => {
+    const id = button.dataset.guest!;
+    const name = button.dataset.name!;
+    guestPicker.querySelectorAll<HTMLButtonElement>('button').forEach(b => { b.disabled = true; });
+    await setGuest(id === guest?.id ? null : id, id === guest?.id ? t`${name} quitte la conversation.` : t`${name} rejoint la conversation.`);
   }));
   let press: { x: number; y: number } | undefined;
   let dragged = false;
@@ -454,7 +500,8 @@ function renderWidget(): void {
   });
   surface.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    if (!picker.hidden) { closePicker(); pickerButton.focus(); return; }
+    const open = pickers.find(({ panel }) => !panel.hidden);
+    if (open) { closePicker(); open.button.focus(); return; }
     dismissWidgetControls?.();
   });
   mountWidgetCells(state!,report);
@@ -470,10 +517,13 @@ async function start(): Promise<void> {
       await mountStartupRecovery(app);
       return;
     }
-    let lastActivity=0;
-    const activity=()=>{if(Date.now()-lastActivity<1500)return;lastActivity=Date.now();void api.initiativeActivity().catch(()=>{});};
-    document.addEventListener('input',activity);document.addEventListener('pointerdown',activity);document.addEventListener('keydown',activity);
-    setInterval(()=>{const active=document.activeElement;if(document.hasFocus()&&active instanceof HTMLTextAreaElement&&active.value.trim())activity();},2000);
+    // Any activity feeds the initiative timer; only typed text (`typing`) cancels the silence relay of a three-way conversation, a click never does.
+    let lastActivity=0,lastTyping=0,watched:HTMLTextAreaElement|null=null,watchedValue='';
+    const activity=(typing=false)=>{const now=Date.now();if(typing?now-lastTyping<1500:now-lastActivity<1500)return;lastActivity=now;if(typing)lastTyping=now;void api.initiativeActivity(typing).catch(()=>{});};
+    const textField=(target:EventTarget|null)=>target instanceof HTMLTextAreaElement||(target instanceof HTMLInputElement&&/^(text|search|url|email|tel|password|number)$/.test(target.type))||(target instanceof HTMLElement&&target.isContentEditable);
+    document.addEventListener('input',event=>activity(textField(event.target)));document.addEventListener('keydown',event=>activity(textField(event.target)));document.addEventListener('pointerdown',()=>activity());
+    // A focused draft that keeps changing counts as typing; a stale one does not.
+    setInterval(()=>{const active=document.activeElement;if(!document.hasFocus()||!(active instanceof HTMLTextAreaElement)||!active.value.trim())return;const changed=active===watched&&active.value!==watchedValue;watched=active;watchedValue=active.value;activity(changed);},2000);
     await api.onChanged(() => void refresh());
     if (widget) {
       document.addEventListener('pointermove', event => trackWidgetPointer?.(event));
@@ -540,6 +590,8 @@ async function start(): Promise<void> {
 
 if(new URLSearchParams(location.search).get('view')==='image') {
   void import('./image-viewer').then(module=>module.mountImageViewer()).catch(report);
+} else if(new URLSearchParams(location.search).get('view')==='guest') {
+  void import('./guest').then(module=>module.mountGuest(report)).catch(report);
 } else {
   void start();
 }

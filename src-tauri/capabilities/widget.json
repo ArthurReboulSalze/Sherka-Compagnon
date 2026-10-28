@@ -12,6 +12,7 @@
     "allow-get-snapshot",
     "allow-get-comfy-service",
     "allow-switch-companion",
+    "allow-set-guest-companion",
     "allow-new-hermes-conversation",
     "allow-widget-action",
     "allow-get-conversation",

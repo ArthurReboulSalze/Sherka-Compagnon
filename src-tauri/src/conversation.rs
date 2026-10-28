@@ -4,9 +4,10 @@ use sherka_core::{
     Error, Result,
     audio::{AudioController, AudioEvent, Playback},
     conversation::{LiveConversation, SpeechText},
+    event::AppEvent,
     providers::Providers,
     session::{MicrophoneState, OperationTag, SessionSnapshot},
-    storage::{Delivery, MessageRole},
+    storage::Delivery,
 };
 use std::{
     sync::{Arc, Mutex},
@@ -381,11 +382,9 @@ pub async fn toggle(
         return mute(&app, shared, &voice).await;
     }
     // Read-only preflight before opening the microphone. No model downloads.
-    let catalog = sherka_core::catalogs::CatalogClient::new(&connections.voice_studio_url)
-        .map_err(|e| e.to_string())?
-        .voices()
-        .await
-        .map_err(|e| e.to_string())?;
+    // VoiceStudio may still be finishing its start-up: transient failures wait.
+    let catalog =
+        crate::voice_startup::voice_catalog(&connections.voice_studio_url, &pending).await?;
     let http_available = catalog
         .stt_models
         .iter()
@@ -432,7 +431,7 @@ pub async fn send(
         text,
         speak,
         attachments,
-        false,
+        None,
     )
     .await
 }
@@ -447,12 +446,55 @@ pub async fn speak_spontaneously(
         shared,
         voice,
         profile_id,
-        "Idle invitation".into(),
+        AppEvent::Idle.label().into(),
         true,
         vec![],
-        true,
+        Some(AppEvent::Idle),
     )
     .await
+}
+/// The master reacts to an application event with one spoken remark. Silent
+/// when the conversation is busy, the event is stale or the master cannot
+/// answer or speak.
+pub async fn speak_event(
+    app: AppHandle,
+    shared: Shared,
+    voice: Voice,
+    profile_id: Uuid,
+    event: AppEvent,
+) -> std::result::Result<(), String> {
+    send_inner(
+        app,
+        shared,
+        voice,
+        profile_id,
+        event.label().into(),
+        true,
+        vec![],
+        Some(event),
+    )
+    .await
+}
+/// The master greets the guest that was just invited, unless it is no longer
+/// the guest.
+pub async fn greet_guest(
+    app: AppHandle,
+    shared: Shared,
+    voice: Voice,
+    guest: Uuid,
+) -> std::result::Result<(), String> {
+    let found = with_core(shared.clone(), move |c| {
+        if c.guest() != Some(guest) {
+            return Ok(None);
+        }
+        let master = c.session.snapshot().profile_id;
+        Ok(sherka_core::event::guest_joined(c)?.map(|event| (master, event)))
+    })
+    .await?;
+    let Some((master, event)) = found else {
+        return Ok(());
+    };
+    speak_event(app, shared, voice, master, event).await
 }
 #[allow(clippy::too_many_arguments)]
 async fn send_inner(
@@ -463,8 +505,9 @@ async fn send_inner(
     text: String,
     speak: bool,
     attachments: Vec<sherka_core::attachments::Input>,
-    spontaneous: bool,
+    event: Option<AppEvent>,
 ) -> std::result::Result<(), String> {
+    let spontaneous = event.is_some();
     crate::windows::ensure_running()?;
     let gate = voice.gate.lock().await;
     crate::windows::ensure_running()?;
@@ -486,13 +529,14 @@ async fn send_inner(
         }
     }
     let command = text.clone();
+    let gated = event.clone();
     let (connections, maintenance) = with_core(shared.clone(), move |core| {
         if core.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
         let profile = core.profile(profile_id)?;
-        if spontaneous {
-            check_spontaneous(core, &profile)?;
+        if let Some(event) = &gated {
+            check_event(core, &profile, event)?;
         }
         let maintenance = (!spontaneous && !profile.details.connections.llm_provider.is_agent())
             .then(|| {
@@ -518,7 +562,14 @@ async fn send_inner(
         if maintenance.is_none()
             && speak
             && (profile.details.connections.tts_engine.is_none()
-                || profile.details.connections.tts_voice.is_none())
+                || profile.details.connections.tts_voice.is_none()
+                || core
+                    .guest()
+                    .and_then(|guest| core.profile(guest).ok())
+                    .is_some_and(|guest| {
+                        guest.details.connections.tts_engine.is_none()
+                            || guest.details.connections.tts_voice.is_none()
+                    }))
         {
             return Err(Error::Validation(
                 "Choisis un moteur vocal et une voix, ou désactive la lecture de la réponse."
@@ -570,15 +621,17 @@ async fn send_inner(
     if pending.is_cancelled() {
         return Err("Demande vocale annulée.".into());
     }
-    if spontaneous {
-        if !app
-            .state::<crate::initiative::Initiative>()
-            .invitation_current(profile_id)
+    if let Some(event) = event.clone() {
+        // Only the idle timer is tied to its own invitation window.
+        if event == AppEvent::Idle
+            && !app
+                .state::<crate::initiative::Initiative>()
+                .invitation_current(profile_id)
         {
             return Err(Error::StaleOperation.to_string());
         }
         with_core(shared.clone(), move |c| {
-            check_spontaneous(c, &c.profile(profile_id)?)
+            check_event(c, &c.profile(profile_id)?, &event)
         })
         .await?;
     }
@@ -591,40 +644,66 @@ async fn send_inner(
     }
     let user = text.trim().to_owned();
     let recorded = user.clone();
-    let (tag, token) = with_core(shared.clone(), move |c| {
+    let checked = event.clone();
+    let (tag, token, guest) = with_core(shared.clone(), move |c| {
         if c.session.snapshot().profile_id != profile_id {
             return Err(Error::StaleOperation);
         }
-        if spontaneous {
-            check_spontaneous(c, &c.profile(profile_id)?)?;
+        if let Some(event) = &checked {
+            check_event(c, &c.profile(profile_id)?, event)?;
         }
         let tag = c.session.begin_text_turn();
-        c.reset_live(tag);
-        if !spontaneous {
-            c.record_message(tag, MessageRole::User, &recorded, Delivery::TextOnly)?;
+        if spontaneous {
+            // Not the user: a pending memory extraction stays alive.
+            c.reset_live_for_event(tag);
+        } else {
+            c.reset_live(tag);
         }
-        Ok((tag, c.session.cancellation()))
+        if !spontaneous {
+            // Also written to the guest's history during a three-way conversation.
+            c.record_user_message(tag, &recorded, Delivery::TextOnly)?;
+        }
+        Ok((tag, c.session.cancellation(), c.guest()))
     })
     .await?;
     app.state::<crate::illustrations::Illustrations>()
         .cancel(&app, false);
     emit(&app, &shared);
     let _ = app.emit("sherka:history", profile_id);
+    if let Some(guest) = guest {
+        let _ = app.emit("sherka:history", guest);
+    }
     let priority = app
         .state::<crate::illustrations::Illustrations>()
         .priority(app.clone(), shared.clone());
-    tauri::async_runtime::spawn(run_turn(
-        app,
-        shared,
-        voice.clone(),
-        tag,
-        token,
-        provider,
-        user,
-        speak,
-        priority,
-        spontaneous,
-    ));
+    if guest.is_some() {
+        tauri::async_runtime::spawn(run_trio_turn(
+            app,
+            shared,
+            voice.clone(),
+            tag,
+            token,
+            provider,
+            (!spontaneous).then_some(user),
+            event,
+            speak,
+            priority,
+        ));
+    } else {
+        tauri::async_runtime::spawn(run_turn(
+            app,
+            shared,
+            voice.clone(),
+            tag,
+            token,
+            provider,
+            user,
+            speak,
+            priority,
+            event,
+            None,
+        ));
+    }
     Ok(())
 }
 
@@ -843,9 +922,9 @@ async fn recognize(
                     c.live.transcript.clear();
                     return Ok(None);
                 };
-                c.record_message(tag, MessageRole::User, &text, Delivery::TextOnly)?;
+                c.record_user_message(tag, &text, Delivery::TextOnly)?;
                 c.live.transcript = text.clone();
-                Ok(Some(text))
+                Ok(Some((text, c.guest())))
             })
             .await;
             voice
@@ -854,13 +933,31 @@ async fn recognize(
                 .unwrap_or_else(|e| e.into_inner())
                 .finish(tag);
             match result {
-                Ok(Some(messages)) => {
+                Ok(Some((messages, guest))) => {
                     emit(&app, &shared);
                     let _ = app.emit("sherka:history", tag.profile_id);
-                    run_turn(
-                        app, shared, voice, tag, token, provider, messages, true, priority, false,
-                    )
-                    .await;
+                    if let Some(guest) = guest {
+                        let _ = app.emit("sherka:history", guest);
+                        run_trio_turn(
+                            app,
+                            shared,
+                            voice,
+                            tag,
+                            token,
+                            provider,
+                            Some(messages),
+                            None,
+                            true,
+                            priority,
+                        )
+                        .await;
+                    } else {
+                        run_turn(
+                            app, shared, voice, tag, token, provider, messages, true, priority,
+                            None, None,
+                        )
+                        .await;
+                    }
                 }
                 Ok(None) => emit(&app, &shared),
                 Err(e) => fail_turn(&app, &shared, tag, &e).await,
@@ -1147,16 +1244,47 @@ async fn speak_receipt(
     });
 }
 
-#[allow(clippy::too_many_arguments)]
-async fn prepare_turn(
-    app: &AppHandle,
-    shared: &Shared,
+/// Load the conversation model for this turn and adapt the provider to it.
+/// Which operation of the session a preparation step works for: the one
+/// speaking now, the next speaker generating ahead (`Session::pending`), or a
+/// reaction prepared for after the session turn is over (`Detached`).
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Gate {
+    Current,
+    Pending,
+    /// Prepared for the relay while the user may speak: no session turn
+    /// stays open for it, only the relay token (and its cancellation by the
+    /// caller) keeps it alive.
+    Detached,
+}
+impl Gate {
+    fn accepts(self, core: &sherka_core::Companion, tag: OperationTag) -> bool {
+        match self {
+            Self::Current => core.session.accepts(tag),
+            Self::Pending => core.session.accepts_pending(tag),
+            Self::Detached => core.relay_active(),
+        }
+    }
+}
+
+/// The tag of a reaction prepared outside any session operation: the session
+/// never accepts it. The turn is the one that holds the exchange it answers.
+fn detached_tag(after: OperationTag, profile_id: Uuid) -> OperationTag {
+    OperationTag {
+        profile_id,
+        session_id: after.session_id,
+        turn_id: after.turn_id,
+        generation_id: Uuid::new_v4(),
+    }
+}
+
+async fn activate_model(
     voice: &Voice,
+    shared: &Shared,
     tag: OperationTag,
+    gate: Gate,
     provider: &mut Providers,
-    user: &str,
-    spontaneous: bool,
-) -> std::result::Result<sherka_core::conversation::PreparedChat, String> {
+) -> std::result::Result<sherka_core::catalogs::LanguageModel, String> {
     let models = voice.models.clone();
     let config = provider.connections.clone();
     let state = shared.clone();
@@ -1165,7 +1293,7 @@ async fn prepare_turn(
     let model = tauri::async_runtime::spawn(async move {
         models
             .activate(&config, None, || {
-                state.0.lock().is_ok_and(|c| c.session.accepts(tag))
+                state.0.lock().is_ok_and(|c| gate.accepts(&c, tag))
             })
             .await
     })
@@ -1185,29 +1313,66 @@ async fn prepare_turn(
         .connections
         .validate_reasoning(&model)
         .map_err(|e| e.to_string())?;
-    if spontaneous {
-        return with_core(shared.clone(),move |c| {
-            if !c.session.accepts(tag) { return Err(Error::StaleOperation); }
-            let mut profile=c.profile(tag.profile_id)?;
-            profile.details.connections.response_tokens=256;
-            let budget=sherka_core::conversation::budget(&profile.details,&model)?;
-            let history=c.store.context_history(tag.profile_id)?;
-            let recall=c.store.recall(tag.profile_id, "")?;
-            let mut chat=sherka_core::conversation::prepare_context_with_avatar(&profile.details,&history,
-                "[Application idle event, not a user message] Take the initiative with one brief, natural invitation to chat in your character's language. At most two short sentences and one question. You may refer to an established topic, but do not invent recent events, user activity or new facts. Do not mention this timer or repeat your identity. No tools, web search or memory changes. Wait for a reply afterwards.",
-                &recall,budget,None,None,!profile.emotion_avatars.is_empty()||profile.details.mood_persistence)?;
+    Ok(model)
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn prepare_turn(
+    app: &AppHandle,
+    shared: &Shared,
+    voice: &Voice,
+    tag: OperationTag,
+    provider: &mut Providers,
+    user: &str,
+    event: Option<&AppEvent>,
+    peer: Option<&sherka_core::trio::Peer>,
+) -> std::result::Result<sherka_core::conversation::PreparedChat, String> {
+    let model = activate_model(voice, shared, tag, Gate::Current, provider).await?;
+    let peer = peer.cloned();
+    if let Some(event) = event.cloned() {
+        return with_core(shared.clone(), move |c| {
+            if !c.session.accepts(tag) {
+                return Err(Error::StaleOperation);
+            }
+            let mut profile = c.speaking_profile(tag.profile_id)?;
+            profile.details.connections.response_tokens =
+                sherka_core::trio::response_tokens(256, peer.as_ref().is_some_and(|p| p.quick));
+            let budget = sherka_core::conversation::budget(&profile.details, &model)?;
+            let history = c.store.context_history(tag.profile_id)?;
+            let recall = c.store.recall(tag.profile_id, "")?;
+            let mut chat = sherka_core::conversation::prepare_context_with_avatar(
+                &profile.details,
+                &history,
+                &event.prompt(),
+                &recall,
+                budget,
+                None,
+                None,
+                !profile.emotion_avatars.is_empty() || profile.details.mood_persistence,
+                peer.as_ref(),
+                &c.trio_settings().user_name,
+                sherka_core::trio::Last::Attributed,
+            )?;
             // A bounded invitation uses the normal cancellable TTS pipeline.
-            chat.budget.response_tokens=chat.budget.response_tokens.min(256);
-            c.live.budget=Some(chat.budget.clone());
+            chat.budget.response_tokens = chat.budget.response_tokens.min(256);
+            c.live.budget = Some(chat.budget.clone());
             Ok(chat)
-        }).await;
+        })
+        .await;
     }
     let text = user.to_owned();
+    let quick_peer = peer.clone();
     let (profile, source, guard, visible) = with_core(shared.clone(), move |c| {
         if !c.session.accepts(tag) {
             return Err(Error::StaleOperation);
         }
-        let profile = c.profile(tag.profile_id)?;
+        let mut profile = c.speaking_profile(tag.profile_id)?;
+        // Quick replies in a three-way turn also shorten the response budget.
+        if let Some(peer) = &quick_peer {
+            let connections = &mut profile.details.connections;
+            connections.response_tokens =
+                sherka_core::trio::response_tokens(connections.response_tokens, peer.quick);
+        }
         let source = c.store.source_for_turn(tag.profile_id, tag.turn_id)?;
         let guard = c.store.memory_guard(tag.profile_id)?;
         let recall = c.store.recall(tag.profile_id, &text)?;
@@ -1230,7 +1395,10 @@ async fn prepare_turn(
     let mut budget =
         sherka_core::conversation::budget(&profile.details, &model).map_err(|e| e.to_string())?;
     budget.safety_tokens += provider.images.len() * 4096;
-    let mode = with_core(shared.clone(), |c| c.web_search_mode()).await?;
+    let mode = with_core(shared.clone(), move |c| {
+        c.web_search_mode_for(tag.profile_id)
+    })
+    .await?;
     let mut web = None;
     if let Some(explicit) = sherka_core::web::explicit_query(user) {
         if mode == sherka_core::web::SearchMode::Off {
@@ -1339,6 +1507,9 @@ async fn prepare_turn(
             receipt.as_deref(),
             web,
             !profile.emotion_avatars.is_empty() || profile.details.mood_persistence,
+            peer.as_ref(),
+            &c.trio_settings().user_name,
+            sherka_core::trio::Last::User,
         )?;
         c.live.budget = Some(prepared.budget.clone());
         c.live.web = prepared.web.clone();
@@ -1346,6 +1517,81 @@ async fn prepare_turn(
     })
     .await?;
     emit(app, shared);
+    Ok(prepared)
+}
+
+/// The second speaker's context: its own history and memories, with the first
+/// speaker's line as the final message. No memory commands, no web search.
+/// A `Gate::Pending` preparation leaves the live state alone and notifies
+/// nobody; the caller publishes the returned budget when the speaker takes over.
+#[allow(clippy::too_many_arguments)]
+async fn prepare_peer(
+    app: &AppHandle,
+    shared: &Shared,
+    voice: &Voice,
+    tag: OperationTag,
+    gate: Gate,
+    provider: &mut Providers,
+    follow: &str,
+    peer: &sherka_core::trio::Peer,
+    first_generation: Uuid,
+    user_turn: Uuid,
+    spontaneous: bool,
+) -> std::result::Result<sherka_core::conversation::PreparedChat, String> {
+    let model = activate_model(voice, shared, tag, gate, provider).await?;
+    let (follow, peer) = (follow.to_owned(), peer.clone());
+    let prepared = with_core(shared.clone(), move |c| {
+        if !gate.accepts(c, tag) {
+            return Err(Error::StaleOperation);
+        }
+        let mut profile = c.speaking_profile(tag.profile_id)?;
+        let connections = &mut profile.details.connections;
+        if spontaneous {
+            connections.response_tokens = 256;
+        }
+        connections.response_tokens =
+            sherka_core::trio::response_tokens(connections.response_tokens, peer.quick);
+        let budget = sherka_core::conversation::budget(&profile.details, &model)?;
+        // The user's message belongs to `user_turn`, which is an earlier turn
+        // when this is a relay.
+        let user_row = c
+            .store
+            .source_for_turn(tag.profile_id, user_turn)
+            .ok()
+            .map(|source| source.id);
+        let excluded = peer_exclusions(user_row, first_generation);
+        let history = c
+            .store
+            .context_history(tag.profile_id)?
+            .into_iter()
+            .filter(|m| !excluded.contains(&m.id))
+            .collect::<Vec<_>>();
+        let recall = c.store.recall(tag.profile_id, &follow)?;
+        let mut chat = sherka_core::conversation::prepare_context_with_avatar(
+            &profile.details,
+            &history,
+            &follow,
+            &recall,
+            budget,
+            None,
+            None,
+            !profile.emotion_avatars.is_empty() || profile.details.mood_persistence,
+            Some(&peer),
+            &c.trio_settings().user_name,
+            sherka_core::trio::Last::Attributed,
+        )?;
+        if spontaneous {
+            chat.budget.response_tokens = chat.budget.response_tokens.min(256);
+        }
+        if gate == Gate::Current {
+            c.live.budget = Some(chat.budget.clone());
+        }
+        Ok(chat)
+    })
+    .await?;
+    if gate == Gate::Current {
+        emit(app, shared);
+    }
     Ok(prepared)
 }
 
@@ -1393,7 +1639,9 @@ async fn search_web(
     Ok(report)
 }
 
-fn schedule_memory(app: AppHandle, shared: Shared, profile: Uuid, provider: Providers) {
+/// Extract memories once the conversation is quiet: one job, and in a
+/// three-way conversation one companion after the other.
+fn schedule_memory(app: AppHandle, shared: Shared, profiles: Vec<Uuid>, provider: Providers) {
     let token = match shared.0.lock() {
         Ok(c) => c.memory_job.clone(),
         Err(_) => return,
@@ -1401,68 +1649,133 @@ fn schedule_memory(app: AppHandle, shared: Shared, profile: Uuid, provider: Prov
     tauri::async_runtime::spawn(async move {
         let job = async {
             tokio::time::sleep(std::time::Duration::from_secs(30)).await;
-            let batch = with_core(shared.clone(), move |c| {
-                if c.session.snapshot().profile_id != profile || c.live.tag.is_some() {
-                    return Err(Error::StaleOperation);
-                }
-                c.store.extraction_batch(profile)
-            })
-            .await
-            .ok()
-            .flatten()?;
-            let catalog = provider.catalog().await.ok()?;
-            let model = sherka_core::models::selected(
-                &catalog.models,
-                provider.connections.llm_model.as_deref()?,
-            )
-            .ok()?;
-            if provider.connections.llm_provider.is_local() && model.loaded != Some(true) {
-                return None;
+            for profile in profiles {
+                extract_memories(&app, &shared, &token, &provider, profile).await;
             }
-            let limit = if provider.connections.llm_provider.is_local() {
-                model.loaded_context_length?
-            } else {
-                model
-                    .max_context_length
-                    .or(provider.connections.context_limit.map(u64::from))
-                    .unwrap_or(sherka_core::connections::FALLBACK_CONTEXT_TOKENS)
-            };
-            let (messages, schema) = sherka_core::memory::consolidation_request(&batch);
-            let priority = app
-                .state::<crate::illustrations::Illustrations>()
-                .priority(app.clone(), shared.clone());
-            priority.ready().await;
-            let value = provider
-                .structured::<sherka_core::memory::Consolidation>(
-                    messages,
-                    schema,
-                    limit.min(
-                        provider
-                            .connections
-                            .context_limit
-                            .map(u64::from)
-                            .unwrap_or(limit),
-                    ),
-                )
-                .await
-                .ok()?;
-            let check = token.clone();
-            with_core(shared.clone(), move |c| {
-                if check.is_cancelled()
-                    || c.session.snapshot().profile_id != profile
-                    || c.live.tag.is_some()
-                {
-                    return Err(Error::StaleOperation);
-                }
-                c.store.consolidate(&batch, value)
-            })
-            .await
-            .ok()?;
-            let _ = app.emit("sherka:memory", profile);
-            Some(())
         };
         tokio::select! {biased; _=token.cancelled()=>{}, _=job=>{}}
     });
+}
+
+/// How long an extraction waits for the companions to fall silent.
+const MEMORY_IDLE_LIMIT: std::time::Duration = std::time::Duration::from_secs(300);
+
+/// The master or the guest.
+fn memory_participant(c: &sherka_core::Companion, profile: Uuid) -> bool {
+    c.session.snapshot().profile_id == profile || c.guest() == Some(profile)
+}
+
+/// What an extraction does now: go ahead, wait (a reply is being produced, as
+/// during the relay of a three-way conversation) or give up.
+#[derive(Debug, PartialEq)]
+enum MemoryTurn {
+    Go,
+    Wait,
+    Stale,
+}
+
+fn memory_turn(c: &sherka_core::Companion, profile: Uuid) -> MemoryTurn {
+    match (memory_participant(c, profile), c.live.tag.is_none()) {
+        (false, _) => MemoryTurn::Stale,
+        (true, false) => MemoryTurn::Wait,
+        (true, true) => MemoryTurn::Go,
+    }
+}
+
+/// Run `job` on the core as soon as the companions are silent: poll every
+/// second, for at most `MEMORY_IDLE_LIMIT`, until `token` is cancelled.
+async fn when_quiet<T: Send + 'static>(
+    shared: &Shared,
+    token: &CancellationToken,
+    profile: Uuid,
+    job: impl Fn(&mut sherka_core::Companion) -> Result<T> + Send + Sync + 'static,
+) -> Option<T> {
+    let job = std::sync::Arc::new(job);
+    let started = std::time::Instant::now();
+    loop {
+        let (job, cancelled) = (job.clone(), token.clone());
+        let done = with_core(shared.clone(), move |c| {
+            if cancelled.is_cancelled() {
+                return Err(Error::StaleOperation);
+            }
+            match memory_turn(c, profile) {
+                MemoryTurn::Go => job(c).map(Some),
+                MemoryTurn::Wait => Ok(None),
+                MemoryTurn::Stale => Err(Error::StaleOperation),
+            }
+        })
+        .await
+        .ok()?;
+        if done.is_some() || started.elapsed() >= MEMORY_IDLE_LIMIT {
+            return done;
+        }
+        tokio::select! {
+            biased;
+            _ = token.cancelled() => return None,
+            _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {}
+        }
+    }
+}
+
+async fn extract_memories(
+    app: &AppHandle,
+    shared: &Shared,
+    token: &CancellationToken,
+    provider: &Providers,
+    profile: Uuid,
+) -> Option<()> {
+    let batch = when_quiet(shared, token, profile, move |c| {
+        c.store.extraction_batch(profile)
+    })
+    .await
+    .flatten()?;
+    let catalog = provider.catalog().await.ok()?;
+    let model =
+        sherka_core::models::selected(&catalog.models, provider.connections.llm_model.as_deref()?)
+            .ok()?;
+    if provider.connections.llm_provider.is_local() && model.loaded != Some(true) {
+        return None;
+    }
+    let limit = if provider.connections.llm_provider.is_local() {
+        model.loaded_context_length?
+    } else {
+        model
+            .max_context_length
+            .or(provider.connections.context_limit.map(u64::from))
+            .unwrap_or(sherka_core::connections::FALLBACK_CONTEXT_TOKENS)
+    };
+    let (messages, schema) = sherka_core::memory::consolidation_request(&batch);
+    let priority = app
+        .state::<crate::illustrations::Illustrations>()
+        .priority(app.clone(), shared.clone());
+    priority.ready().await;
+    let value = provider
+        .structured::<sherka_core::memory::Consolidation>(
+            messages,
+            schema,
+            limit.min(
+                provider
+                    .connections
+                    .context_limit
+                    .map(u64::from)
+                    .unwrap_or(limit),
+            ),
+        )
+        .await
+        .ok()?;
+    // The reply may have started while the model was thinking: wait for it too.
+    let value = std::sync::Mutex::new(Some(value));
+    when_quiet(shared, token, profile, move |c| {
+        let value = value
+            .lock()
+            .ok()
+            .and_then(|mut slot| slot.take())
+            .ok_or(Error::StaleOperation)?;
+        c.store.consolidate(&batch, value)
+    })
+    .await?;
+    let _ = app.emit("sherka:memory", profile);
+    Some(())
 }
 
 pub fn switch_model(
@@ -1526,6 +1839,1166 @@ pub fn switch_model(
     });
 }
 
+/// One companion's part in a three-way turn.
+enum TrioStep {
+    /// Answers first, or alone when named. `continues`: the other companion
+    /// speaks next, so the turn stays open after this reply.
+    First {
+        peer: sherka_core::trio::Peer,
+        continues: bool,
+        /// Tells the prefetching second speaker how far this reply has come.
+        signals: Option<FirstSignals>,
+    },
+    /// Replies to the first speaker's line and may stay silent.
+    Second {
+        peer: sherka_core::trio::Peer,
+        follow: String,
+        first_generation: Uuid,
+        /// The turn that holds the user's message (a relay has a turn of its own).
+        user_turn: Uuid,
+        /// The reply was already generated (and its start synthesized) while
+        /// the first speaker was talking; `None` generates it now.
+        prefetch: Option<Box<Prefetch>>,
+        /// A reply of the relay chain keeps the turn open and tells the
+        /// speaker who follows how far it has come, like `First`.
+        signals: Option<FirstSignals>,
+        continues: bool,
+    },
+}
+impl TrioStep {
+    fn peer(&self) -> &sherka_core::trio::Peer {
+        match self {
+            Self::First { peer, .. } | Self::Second { peer, .. } => peer,
+        }
+    }
+}
+
+/// How one `run_turn` ended.
+enum TurnEnd {
+    /// The reply was saved. `memory`: its history may feed memory extraction.
+    Done {
+        reply: String,
+        provider: Box<Providers>,
+        memory: bool,
+    },
+    /// The second speaker chose silence; nothing was saved.
+    Passed,
+    /// Cancelled, failed, or replaced by a maintenance command.
+    Stopped,
+}
+
+/// Holds back the start of a second speaker's reply while it could still be
+/// `[[pass]]`. Without a filter (everybody else) text goes straight through.
+struct PassGate {
+    filter: Option<sherka_core::trio::PassFilter>,
+    passed: bool,
+}
+impl PassGate {
+    fn new(second: bool) -> Self {
+        Self {
+            filter: second.then(sherka_core::trio::PassFilter::new),
+            passed: false,
+        }
+    }
+    /// The text to show and speak now, if any.
+    fn push(&mut self, text: String) -> Option<String> {
+        use sherka_core::trio::PassOutput;
+        let Some(filter) = &mut self.filter else {
+            return Some(text);
+        };
+        match filter.push(&text) {
+            PassOutput::Pending => None,
+            PassOutput::Text(text) => Some(text),
+            PassOutput::Passed => {
+                self.passed = true;
+                None
+            }
+        }
+    }
+    /// End of the reply: text still held back, or the decision to stay silent
+    /// (an empty reply counts as silence).
+    fn finish(&mut self) -> Option<String> {
+        use sherka_core::trio::PassOutput;
+        match self.filter.as_mut()?.finish() {
+            PassOutput::Text(text) => Some(text),
+            PassOutput::Passed => {
+                self.passed = true;
+                None
+            }
+            PassOutput::Pending => None,
+        }
+    }
+}
+
+/// What the listener sees and hears of a streamed reply: the expression header
+/// and, for a second speaker, a leading `[[pass]]` removed, emoji stripped. The
+/// live reply and the prefetch both use it, so they produce the same text.
+struct ReplyFilter {
+    expression: sherka_core::avatar::ExpressionStream,
+    expressions: bool,
+    gate: PassGate,
+}
+impl ReplyFilter {
+    fn new(expressions: bool, second: bool) -> Self {
+        Self {
+            expression: Default::default(),
+            expressions,
+            gate: PassGate::new(second),
+        }
+    }
+    fn emotion(&self) -> sherka_core::avatar::Emotion {
+        self.expression.emotion
+    }
+    fn passed(&self) -> bool {
+        self.gate.passed
+    }
+    /// The visible text of one streamed chunk, if any (possibly empty).
+    fn push(&mut self, chunk: &str) -> Option<String> {
+        let text = if self.expressions {
+            self.expression.push(chunk)
+        } else {
+            chunk.to_owned()
+        };
+        self.gate
+            .push(text)
+            .map(|text| sherka_core::conversation::plain_reply(&text))
+    }
+    /// The text still held back at the end of the stream.
+    fn finish(&mut self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.expressions
+            && let Some(text) = self.gate.push(self.expression.finish())
+        {
+            out.push(sherka_core::conversation::plain_reply(&text));
+        }
+        if let Some(text) = self.gate.finish() {
+            out.push(sherka_core::conversation::plain_reply(&text));
+        }
+        out
+    }
+}
+
+/// A synthesized passage: its text and its PCM.
+type Passage = (String, Vec<i16>);
+/// Passages of the prefetched reply synthesized while the first speaker is
+/// still audible. More would only delay the second speaker's own start.
+const PRESYNTH: usize = 2;
+/// Tokens of the prefetched reply buffered for the live replay.
+const PREFETCH_TOKENS: usize = 8192;
+
+/// How far the first speaker's reply has come, for the second one's prefetch.
+/// A sender dropped unsent means the reply failed or was cut: nothing to follow.
+struct FirstSignals {
+    /// The text is complete: its visible reply. The language model is free.
+    text: tokio::sync::oneshot::Sender<String>,
+    /// Every passage is synthesized (or nothing is spoken). VoiceStudio is free.
+    synthesized: tokio::sync::oneshot::Sender<()>,
+}
+
+/// The first passages of a prefetched reply, synthesized ahead of its turn.
+struct PcmCache {
+    passages: mpsc::Receiver<Passage>,
+    /// Stops the synthesis when the cache is dropped.
+    _halt: Option<tokio_util::sync::DropGuard>,
+}
+impl PcmCache {
+    /// The audio of `phrase` if it is the next prepared passage. Waits for a
+    /// passage still being synthesized rather than requesting it twice. A
+    /// different phrase (chunking is deterministic, so this is rare) or an
+    /// exhausted cache drops the cache: the caller synthesizes from there on.
+    async fn take(cache: &mut Option<Self>, phrase: &str) -> Option<Vec<i16>> {
+        match cache.as_mut()?.passages.recv().await {
+            Some((cached, pcm)) if cached == phrase => Some(pcm),
+            _ => {
+                *cache = None;
+                None
+            }
+        }
+    }
+}
+
+/// The second speaker's reply, started while the first one is still speaking:
+/// context built, language model running, first passages synthesized. It owns
+/// no live state; `run_trio_turn` promotes its tag when the first speaker is done.
+struct Prefetch {
+    /// The follow-up message it answers; a mismatch discards the prefetch.
+    follow: String,
+    tag: OperationTag,
+    /// Model activated; the same provider synthesizes the speech.
+    provider: Providers,
+    /// Without its messages: only the budget and the expression flag are read.
+    chat: sherka_core::conversation::PreparedChat,
+    /// Every raw token of the reply, from the first; the live pipeline replays them.
+    tokens: mpsc::Receiver<String>,
+    generation: tauri::async_runtime::JoinHandle<Result<sherka_core::providers::ChatOutcome>>,
+    cache: Option<PcmCache>,
+}
+
+/// Who the prefetch is for and what it needs from the turn.
+struct PrefetchPlan {
+    /// `Pending` (the turn stays open) or `Detached` (the relay token alone).
+    gate: Gate,
+    first_tag: OperationTag,
+    first: sherka_core::trio::Participant,
+    second: Uuid,
+    user: Option<String>,
+    /// How the companions call the user (empty: "the user").
+    user_name: String,
+    quick: bool,
+    spontaneous: bool,
+    speak: bool,
+}
+
+/// Generate the second speaker's reply ahead of its turn. Waits for the first
+/// reply's text (so the language model is free), then runs the second speaker's
+/// context and generation under a tag that cannot touch the live state: a
+/// pending one of the open turn (`Gate::Pending`), or a detached one
+/// (`Gate::Detached`) for a reaction that comes after the turn is over and the
+/// user may speak. Once the first reply is synthesized (VoiceStudio is free) it
+/// synthesizes the first passages. Any failure returns `None` and the turn runs
+/// as before. `token` ends everything: for a pending prefetch it is a child of
+/// the turn's token, for a detached one a child of the relay token, so the
+/// user's activity drops the language-model stream and the synthesis at once.
+async fn start_prefetch(
+    app: AppHandle,
+    shared: Shared,
+    voice: Voice,
+    token: CancellationToken,
+    plan: PrefetchPlan,
+    text: tokio::sync::oneshot::Receiver<String>,
+    synthesized: tokio::sync::oneshot::Receiver<()>,
+) -> Option<Prefetch> {
+    let reply = tokio::select! {biased; _=token.cancelled()=>return None, reply=text=>reply.ok()?};
+    let PrefetchPlan {
+        gate,
+        first_tag,
+        first,
+        second,
+        user,
+        user_name,
+        quick,
+        spontaneous,
+        speak,
+    } = plan;
+    let follow = sherka_core::trio::follow_message(user.as_deref(), &user_name, &first, &reply);
+    let tag = match gate {
+        Gate::Detached => detached_tag(first_tag, second),
+        _ => with_core(shared.clone(), move |c| {
+            c.session.begin_pending_peer(first_tag, second)
+        })
+        .await
+        .ok()?,
+    };
+    let mut provider = speaker_provider(&shared, second).await.ok()?;
+    let peer = sherka_core::trio::Peer {
+        name: first.name,
+        second: true,
+        quick,
+    };
+    let mut chat = tokio::select! {biased; _=token.cancelled()=>return None, chat=prepare_peer(
+        &app,
+        &shared,
+        &voice,
+        tag,
+        gate,
+        &mut provider,
+        &follow,
+        &peer,
+        first_tag.generation_id,
+        first_tag.turn_id,
+        spontaneous,
+    )=>chat.ok()?};
+    let messages = std::mem::take(&mut chat.messages);
+    let max_tokens = chat.budget.response_tokens;
+    let expressions = chat.avatar_emotions;
+    let (llm_tx, mut llm_rx) = mpsc::channel::<String>(64);
+    let (tokens_tx, tokens) = mpsc::channel::<String>(PREFETCH_TOKENS);
+    let (generating, stop) = (provider.clone(), token.clone());
+    let generation = tauri::async_runtime::spawn(async move {
+        tokio::select! {
+            biased;
+            _=stop.cancelled()=>Err(Error::StaleOperation),
+            outcome=generating.chat_budgeted(messages, llm_tx, max_tokens)=>outcome
+        }
+    });
+    // The text the listener will get, chunked as the live pipeline does, so the
+    // first passages can be synthesized before that pipeline starts.
+    let speech = SpeechText::shared();
+    let (writer, stop) = (speech.clone(), token.clone());
+    tauri::async_runtime::spawn(async move {
+        let mut filter = ReplyFilter::new(expressions, true);
+        loop {
+            let next =
+                tokio::select! {biased; _=stop.cancelled()=>None, token=llm_rx.recv()=>token};
+            let Some(raw) = next else { break };
+            if speak && let Some(text) = filter.push(&raw) {
+                let _ = writer.push(&text);
+            }
+            if tokens_tx.send(raw).await.is_err() {
+                break;
+            }
+        }
+        if speak {
+            for text in filter.finish() {
+                let _ = writer.push(&text);
+            }
+        }
+        writer.finish();
+    });
+    let cache = speak.then(|| {
+        let (passages_tx, passages) = mpsc::channel::<Passage>(PRESYNTH);
+        let halt = token.child_token();
+        let (stop, synth) = (halt.clone(), provider.clone());
+        tauri::async_runtime::spawn(async move {
+            tokio::select! {biased; _=stop.cancelled()=>return, free=synthesized=>if free.is_err() { return }}
+            for _ in 0..PRESYNTH {
+                let phrase = tokio::select! {biased; _=stop.cancelled()=>None, next=speech.next()=>next.ok().flatten()};
+                let Some(phrase) = phrase else { break };
+                let pcm = tokio::select! {biased; _=stop.cancelled()=>None, pcm=synth.speech(&phrase)=>pcm.ok()};
+                let Some(pcm) = pcm else { break };
+                if passages_tx.send((phrase, pcm)).await.is_err() {
+                    break;
+                }
+            }
+        });
+        PcmCache {
+            passages,
+            _halt: Some(halt.drop_guard()),
+        }
+    });
+    Some(Prefetch {
+        follow,
+        tag,
+        provider,
+        chat,
+        tokens,
+        generation,
+        cache,
+    })
+}
+
+/// Who speaks, in order. One companion answers the user (the addressee, else
+/// the coin). A spontaneous turn has no addressee: a coin decides who opens and
+/// the other reacts, unless the event is for the master alone (`alone`).
+fn speaking_order(
+    user: Option<&str>,
+    master: &sherka_core::trio::Participant,
+    guest: &sherka_core::trio::Participant,
+    coin: bool,
+    alone: bool,
+) -> Vec<Uuid> {
+    match user {
+        // The user is answered by one companion; the other waits for the relay.
+        Some(text) => vec![sherka_core::trio::answerer(text, master, guest, coin)],
+        None if alone => vec![master.id],
+        None if coin => vec![master.id, guest.id],
+        None => vec![guest.id, master.id],
+    }
+}
+
+/// Rows of the second speaker's own history that the follow-up message
+/// already carries: the user's message of this turn and the first reply.
+fn peer_exclusions(user_row: Option<String>, first_generation: Uuid) -> Vec<String> {
+    user_row
+        .into_iter()
+        .chain([first_generation.to_string()])
+        .collect()
+}
+
+/// The provider a trio speaker generates with: its own voice and language,
+/// the master's language model.
+async fn speaker_provider(shared: &Shared, id: Uuid) -> std::result::Result<Providers, String> {
+    let profile = with_core(shared.clone(), move |c| c.speaking_profile(id)).await?;
+    Providers::new(profile.details.connections).map_err(|e| e.to_string())
+}
+
+/// A privacy or maintenance command in the master's message runs instead of a
+/// reply. True when one was handled.
+async fn handle_maintenance(
+    app: &AppHandle,
+    shared: &Shared,
+    voice: &Voice,
+    tag: OperationTag,
+    user: &str,
+    speak: bool,
+) -> bool {
+    let command = shared.0.lock().ok().and_then(|mut c| {
+        let command = c.profile(tag.profile_id).ok().and_then(|p| {
+            sherka_core::privacy::contextual_command(
+                user,
+                &p.details.name,
+                c.pending_clear.valid(tag.profile_id, tag.session_id),
+            )
+        });
+        if command.is_none() {
+            c.pending_clear = Default::default();
+        }
+        command
+    });
+    let Some(command) = command else {
+        return false;
+    };
+    if let Err(error) = maintenance_command(
+        app,
+        shared.clone(),
+        voice,
+        tag.profile_id,
+        command,
+        speak,
+        Some(tag),
+    )
+    .await
+    {
+        if let Ok(mut c) = shared.0.lock()
+            && c.session.snapshot().profile_id == tag.profile_id
+            && c.session.snapshot().session_id == tag.session_id
+        {
+            c.live.error = Some(error);
+        }
+        emit(app, shared);
+    }
+    true
+}
+
+/// A three-way turn: the companion(s) answering the user, or opening a
+/// spontaneous exchange when `user` is `None`, one after the other. `tag` and
+/// `provider` are the master's; one session turn and one cancellation token
+/// cover every speaker, so a barge-in stops them all.
+#[allow(clippy::too_many_arguments)]
+async fn run_trio_turn(
+    app: AppHandle,
+    shared: Shared,
+    voice: Voice,
+    tag: OperationTag,
+    token: CancellationToken,
+    mut provider: Providers,
+    user: Option<String>,
+    event: Option<AppEvent>,
+    speak: bool,
+    priority: crate::illustrations::Priority,
+) {
+    use sherka_core::trio;
+    let spontaneous = user.is_none();
+    if let Some(text) = &user {
+        // Maintenance commands belong to the master and are not answered.
+        tokio::select! {biased;_=token.cancelled()=>return,_=priority.ready()=>{}}
+        if handle_maintenance(&app, &shared, &voice, tag, text, speak).await {
+            return;
+        }
+    }
+    let Some(((master, guest), settings)) = shared
+        .0
+        .lock()
+        .ok()
+        .and_then(|c| Some((c.participants()?, c.trio_settings())))
+    else {
+        return;
+    };
+    let quick = settings.quick_replies;
+    let text = user.clone().unwrap_or_else(|| {
+        event
+            .as_ref()
+            .map_or(AppEvent::Idle.label(), AppEvent::label)
+            .into()
+    });
+    let alone = event.as_ref().is_some_and(AppEvent::master_only);
+    let order = speaking_order(user.as_deref(), &master, &guest, trio::coin(), alone);
+    let named = |id: Uuid| {
+        if id == master.id {
+            master.clone()
+        } else {
+            guest.clone()
+        }
+    };
+    let other = |id: Uuid| {
+        if id == master.id {
+            guest.clone()
+        } else {
+            master.clone()
+        }
+    };
+    let first = named(order[0]);
+    let mut first_tag = tag;
+    if first.id != tag.profile_id {
+        let id = first.id;
+        let begun = with_core(shared.clone(), move |c| {
+            let next = c.session.begin_peer(tag, id)?;
+            // The turn's own reset already settled the memory extraction.
+            c.reset_live_for_event(next);
+            Ok(next)
+        })
+        .await;
+        let Ok(next) = begun else { return };
+        first_tag = next;
+        match speaker_provider(&shared, id).await {
+            Ok(mut next) => {
+                next.images = std::mem::take(&mut provider.images);
+                provider = next;
+            }
+            Err(error) => {
+                fail_turn(&app, &shared, first_tag, &error).await;
+                return;
+            }
+        }
+    }
+    let ids = [master.id, guest.id];
+    let announce = |app: &AppHandle| {
+        for id in ids {
+            let _ = app.emit("sherka:history", id);
+        }
+    };
+    // After a user turn and the arrival remark the other companion waits for
+    // the cooldown, so the relay is armed now: its token keeps the reaction
+    // prepared during the answer alive, and the user's activity ends both.
+    let relay_token =
+        if relay_follows(user.as_deref(), event.as_ref()) && settings.relay_seconds > 0 {
+            with_core(shared.clone(), move |c| {
+                Ok(c.session.accepts(first_tag).then(|| c.arm_relay()))
+            })
+            .await
+            .ok()
+            .flatten()
+        } else {
+            None
+        };
+    // The second speaker prepares its reply while the first one speaks. This
+    // token ends that work, whatever the reason the first speaker stops; it is
+    // cancelled when this function returns, after the second speaker's turn.
+    let ahead = token.child_token();
+    let _halt = ahead.clone().drop_guard();
+    let mut signals = None;
+    let mut prefetching = None;
+    // The reaction prepared for after the cooldown, detached from this turn.
+    let mut detached = None;
+    if let Some(&second_id) = order.get(1) {
+        let (text_tx, text_rx) = tokio::sync::oneshot::channel();
+        let (synth_tx, synth_rx) = tokio::sync::oneshot::channel();
+        signals = Some(FirstSignals {
+            text: text_tx,
+            synthesized: synth_tx,
+        });
+        prefetching = Some(tauri::async_runtime::spawn(start_prefetch(
+            app.clone(),
+            shared.clone(),
+            voice.clone(),
+            ahead.clone(),
+            PrefetchPlan {
+                gate: Gate::Pending,
+                first_tag,
+                first: first.clone(),
+                second: second_id,
+                user: user.clone(),
+                user_name: settings.user_name.clone(),
+                quick,
+                spontaneous,
+                speak,
+            },
+            text_rx,
+            synth_rx,
+        )));
+    } else if let Some(relay) = &relay_token {
+        let (ready, prepared) = prepare_ahead(
+            &app,
+            &shared,
+            &voice,
+            relay,
+            PrefetchPlan {
+                gate: Gate::Detached,
+                first_tag,
+                first: first.clone(),
+                second: other(first.id).id,
+                user: user.clone(),
+                user_name: settings.user_name.clone(),
+                quick,
+                spontaneous: false,
+                speak,
+            },
+        );
+        signals = Some(ready);
+        detached = Some(prepared);
+    }
+    let first_end = run_turn(
+        app.clone(),
+        shared.clone(),
+        voice.clone(),
+        first_tag,
+        token.clone(),
+        provider,
+        text.clone(),
+        speak,
+        priority,
+        event.clone(),
+        Some(TrioStep::First {
+            peer: trio::Peer {
+                name: other(first.id).name,
+                second: false,
+                quick,
+            },
+            continues: order.len() > 1,
+            signals,
+        }),
+    )
+    .await;
+    let TurnEnd::Done {
+        reply,
+        provider: first_provider,
+        memory,
+    } = first_end
+    else {
+        announce(&app);
+        return;
+    };
+    let mut memory_provider = *first_provider;
+    let mut stopped = false;
+    // The last spoken line, and passes in a row: where the relay takes over.
+    let mut last =
+        (!reply.trim().is_empty()).then(|| (first.clone(), reply.clone(), first_tag.generation_id));
+    let mut passes = 0;
+    if let Some(&second_id) = order.get(1) {
+        if reply.trim().is_empty() {
+            // Nothing to react to: end the turn here.
+            let _ = with_core(shared.clone(), move |c| c.discard_generation(first_tag)).await;
+        } else {
+            let follow = trio::follow_message(user.as_deref(), &settings.user_name, &first, &reply);
+            // The reply generated ahead, if it is ready and answers this very text.
+            let mut prefetch = match prefetching {
+                Some(handle) => tokio::select! {biased; _=token.cancelled()=>None, ready=handle=>ready.ok().flatten()},
+                None => None,
+            }
+            .filter(|p| p.follow == follow);
+            if prefetch.is_none() {
+                // Nothing to promote: stop any work still running ahead.
+                ahead.cancel();
+            }
+            let ahead_tag = prefetch.as_ref().map(|p| (p.tag, p.chat.budget.clone()));
+            let begun = with_core(shared.clone(), move |c| {
+                hand_over(c, first_tag, second_id, ahead_tag, false)
+            })
+            .await;
+            if begun.is_ok() && prefetch.is_some() {
+                emit(&app, &shared);
+            }
+            match begun {
+                // The user interrupted between the two speakers.
+                Err(_) => stopped = true,
+                Ok(second_tag) => match match &prefetch {
+                    Some(ahead) => Ok(ahead.provider.clone()),
+                    None => speaker_provider(&shared, second_id).await,
+                } {
+                    Err(error) => {
+                        fail_turn(&app, &shared, second_tag, &error).await;
+                        stopped = true;
+                    }
+                    Ok(second_provider) => {
+                        let priority = app
+                            .state::<crate::illustrations::Illustrations>()
+                            .priority(app.clone(), shared.clone());
+                        let end = run_turn(
+                            app.clone(),
+                            shared.clone(),
+                            voice.clone(),
+                            second_tag,
+                            token.clone(),
+                            second_provider,
+                            text,
+                            speak,
+                            priority,
+                            event.clone(),
+                            Some(TrioStep::Second {
+                                peer: trio::Peer {
+                                    name: first.name.clone(),
+                                    second: true,
+                                    quick,
+                                },
+                                follow,
+                                first_generation: first_tag.generation_id,
+                                user_turn: first_tag.turn_id,
+                                prefetch: prefetch.take().map(Box::new),
+                                signals: None,
+                                continues: false,
+                            }),
+                        )
+                        .await;
+                        match end {
+                            TurnEnd::Done {
+                                provider,
+                                reply: second_reply,
+                                ..
+                            } => {
+                                memory_provider = *provider;
+                                last = Some((
+                                    named(second_id),
+                                    second_reply,
+                                    second_tag.generation_id,
+                                ));
+                            }
+                            TurnEnd::Passed => passes = 1,
+                            TurnEnd::Stopped => stopped = true,
+                        }
+                    }
+                },
+            }
+        }
+    }
+    // Both companions' histories feed memory, one after the other.
+    if memory && !spontaneous && !stopped {
+        memory_provider.images.clear();
+        schedule_memory(app.clone(), shared.clone(), ids.to_vec(), memory_provider);
+    }
+    emit(&app, &shared);
+    announce(&app);
+    // The exchange ended normally and the companions wait for the user: if the
+    // user stays silent for the cooldown, the other companion reacts, then
+    // they chain replies (see `schedule_relay`). After a user turn and after
+    // the arrival remark; solo turns, idle invitations and a stop do not.
+    let wait = relay_follows(user.as_deref(), event.as_ref());
+    if wait && (stopped || last.is_none() || relay_token.is_none()) {
+        // Why the companions do not wait for the user after this exchange.
+        let why = if stopped {
+            "stopped"
+        } else if last.is_none() {
+            "no_reply"
+        } else if settings.relay_seconds == 0 {
+            "off"
+        } else {
+            "cancelled"
+        };
+        voice.diagnose(&shared, "trio_relay_skipped", Some(why));
+    }
+    if let (false, Some((last, last_reply, last_generation)), Some(token)) =
+        (stopped, last, relay_token)
+    {
+        schedule_relay(
+            app,
+            shared,
+            voice,
+            RelayPlan {
+                token,
+                ahead: detached,
+                master,
+                guest,
+                session_id: first_tag.session_id,
+                // None after the arrival remark: there is no user message.
+                user: user.clone(),
+                user_turn: first_tag.turn_id,
+                last,
+                last_reply,
+                last_generation,
+                state: sherka_core::trio::RelayState {
+                    passes,
+                    ..Default::default()
+                },
+                speak,
+            },
+        );
+    }
+}
+
+/// Whether the companions wait for the user after an exchange that ended
+/// normally, and start the silence relay: after a user turn and after the
+/// arrival remark (an event that `arms_relay`), not after an idle invitation
+/// or a spontaneous exchange.
+fn relay_follows(user: Option<&str>, event: Option<&AppEvent>) -> bool {
+    user.is_some() || event.is_some_and(AppEvent::arms_relay)
+}
+
+/// The next speaker of an open turn takes over: the prepared one (`ahead`) is
+/// promoted, otherwise a fresh one begins. `keep_relay`: the speaker belongs to
+/// the relay chain, which must not cancel itself; otherwise it is the second
+/// speaker of a spontaneous exchange, which ends the relay. Neither cancels a
+/// pending memory extraction.
+fn hand_over(
+    c: &mut sherka_core::Companion,
+    after: OperationTag,
+    next: Uuid,
+    ahead: Option<(OperationTag, sherka_core::conversation::ContextBudget)>,
+    keep_relay: bool,
+) -> Result<OperationTag> {
+    let tag = match &ahead {
+        Some((tag, _)) => {
+            c.session.promote_pending(*tag)?;
+            *tag
+        }
+        None => c.session.begin_peer(after, next)?,
+    };
+    if keep_relay {
+        c.reset_live_keeping_relay(tag);
+    } else {
+        c.reset_live_for_event(tag);
+    }
+    if let Some((_, budget)) = ahead {
+        c.live.budget = Some(budget);
+    }
+    Ok(tag)
+}
+
+/// Where the companions stand once an exchange with the user ended normally:
+/// they wait for the user (see `schedule_relay`).
+struct RelayPlan {
+    /// Armed before the answer (`run_trio_turn`), so that the reaction could
+    /// be prepared during it; ended by the user's activity.
+    token: CancellationToken,
+    /// That reaction, if it is being prepared (`Gate::Detached`).
+    ahead: Option<Ahead>,
+    master: sherka_core::trio::Participant,
+    guest: sherka_core::trio::Participant,
+    session_id: Uuid,
+    /// The user's message, until a relay reply has been spoken: the follow-up
+    /// message carries it, so the user's row is left out of the history.
+    user: Option<String>,
+    /// The turn that holds the user's message.
+    user_turn: Uuid,
+    /// Whose line the next reply reacts to: the author of the last spoken reply.
+    last: sherka_core::trio::Participant,
+    last_reply: String,
+    last_generation: Uuid,
+    state: sherka_core::trio::RelayState,
+    speak: bool,
+}
+
+/// Wait for the cooldown, then let the other companion react; after a quick
+/// second silence the companions chain replies until the user cuts in
+/// (`run_relay`). One token covers all of it: the core cancels it on a new
+/// turn, a stop, a pause, a guest or profile change, and `initiative_activity`
+/// does when the user types. The chain's own replies use
+/// `reset_live_keeping_relay`, so they never cancel it. Started only while its
+/// token is alive and this very turn is the last thing that happened.
+fn schedule_relay(app: AppHandle, shared: Shared, voice: Voice, plan: RelayPlan) {
+    use sherka_core::session::{ResponseState, TranscriptionState};
+    // The first condition that fails is logged (fixed codes, no content).
+    let armed = shared.0.lock().map_err(|_| "engine").and_then(|c| {
+        let session = c.session.snapshot();
+        if plan.token.is_cancelled() {
+            Err("cancelled")
+        } else if c.live.tag.is_some() {
+            Err("live_tag")
+        } else if session.response != ResponseState::Idle {
+            Err("response")
+        } else if session.transcription != TranscriptionState::Idle {
+            Err("transcription")
+        } else if session.session_id != plan.session_id {
+            Err("session")
+        } else if session.profile_id != plan.master.id {
+            Err("master")
+        } else if c.guest() != Some(plan.guest.id) {
+            Err("guest")
+        } else {
+            Ok(c.trio_settings().relay_seconds)
+        }
+    });
+    match armed {
+        Ok(seconds) => {
+            voice.diagnose(
+                &shared,
+                "trio_relay_armed",
+                Some(&format!("delay_s={seconds}")),
+            );
+            let token = plan.token.clone();
+            tauri::async_runtime::spawn(run_relay(app, shared, voice, token, plan));
+        }
+        Err(why) => voice.diagnose(
+            &shared,
+            "trio_relay_ended",
+            Some(&format!("not_armed:{why}")),
+        ),
+    }
+}
+
+/// The next reply of the chain, started while the current one talks.
+struct Ahead {
+    handle: Option<tauri::async_runtime::JoinHandle<Option<Prefetch>>>,
+    /// Ends the preparation when dropped, whatever happens to the chain.
+    _halt: tokio_util::sync::DropGuard,
+}
+
+/// Start preparing the next reaction while the current reply is produced:
+/// the signals the speaker sends (text complete, speech synthesized) and the
+/// handle the relay keeps. `parent` ends it: the turn's token for a pending
+/// prefetch, the relay token for a detached one; dropping the `Ahead` does too.
+fn prepare_ahead(
+    app: &AppHandle,
+    shared: &Shared,
+    voice: &Voice,
+    parent: &CancellationToken,
+    plan: PrefetchPlan,
+) -> (FirstSignals, Ahead) {
+    let (text_tx, text_rx) = tokio::sync::oneshot::channel();
+    let (synth_tx, synth_rx) = tokio::sync::oneshot::channel();
+    let halt = parent.child_token();
+    let handle = tauri::async_runtime::spawn(start_prefetch(
+        app.clone(),
+        shared.clone(),
+        voice.clone(),
+        halt.clone(),
+        plan,
+        text_rx,
+        synth_rx,
+    ));
+    (
+        FirstSignals {
+            text: text_tx,
+            synthesized: synth_tx,
+        },
+        Ahead {
+            handle: Some(handle),
+            _halt: halt.drop_guard(),
+        },
+    )
+}
+
+/// The companions' reactions to the user's silence, one step at a time.
+/// `plan.state.next` decides: wait the cooldown (`relay_seconds`, after the
+/// answer to the user), then `QUICK_SILENCE` after the first reaction, then
+/// react after a short pause (the chain). Each step is the companion who
+/// did not speak last reacting to the last line, and may pass. A reply that
+/// another follows at once keeps the session turn open (`continues`), so one
+/// barge-in stops everything and the next speaker prepares while this one
+/// talks (`start_prefetch`, pending); a reply followed by a wait closes it, so
+/// the session is idle while the user is expected to speak, and the next
+/// speaker prepares detached from it, gated by the relay token alone. The
+/// first reaction was prepared during the answer to the user. No user row, no
+/// memory.
+async fn run_relay(
+    app: AppHandle,
+    shared: Shared,
+    voice: Voice,
+    relay: CancellationToken,
+    mut plan: RelayPlan,
+) {
+    use sherka_core::trio::{self, RelayNext};
+    // The turn left open by a reply that another follows at once.
+    let mut open: Option<OperationTag> = None;
+    // The next reply, if it is being prepared: during the answer to the user,
+    // or while the previous reply of the relay talks.
+    let mut carried: Option<Ahead> = plan.ahead.take();
+    // Why the relay ended: a fixed code for `audio-events.log`.
+    let reason: &'static str = loop {
+        let Some(settings) = shared.0.lock().ok().map(|c| c.trio_settings()) else {
+            break "failed";
+        };
+        let (pause, silence) = match plan.state.next(settings.relay_seconds) {
+            RelayNext::Stop => {
+                break if settings.relay_seconds == 0 {
+                    "off"
+                } else if plan.state.replies >= trio::CHAIN_LIMIT {
+                    "limit"
+                } else {
+                    "passes"
+                };
+            }
+            RelayNext::Wait(pause) => (pause, true),
+            RelayNext::Chain(pause) => (pause, false),
+        };
+        if silence {
+            let wait = if pause == trio::QUICK_SILENCE {
+                "quick_silence"
+            } else {
+                "cooldown"
+            };
+            voice.diagnose(&shared, "trio_relay_wait", Some(wait));
+        }
+        tokio::select! {biased; _=relay.cancelled()=>break "cancelled", _=tokio::time::sleep(pause)=>{}}
+        if silence {
+            plan.state.silence();
+        }
+        // Nobody to talk to: the widget is hidden. (Outside any lock: the
+        // native getter waits for the UI event loop.)
+        if !crate::windows::widget_visible(&app).unwrap_or(false) {
+            break "widget_hidden";
+        }
+        let who = trio::reactor(plan.last.id, &plan.master, &plan.guest).clone();
+        let continues = plan.state.chains_after_reply(settings.relay_seconds);
+        let follow = trio::follow_message(
+            plan.user.as_deref(),
+            &settings.user_name,
+            &plan.last,
+            &plan.last_reply,
+        );
+        // The reply prepared during the previous one, if it answers this very line.
+        let mut ahead = carried.take();
+        let prefetch = match ahead.as_mut().and_then(|a| a.handle.take()) {
+            Some(handle) => tokio::select! {biased; _=relay.cancelled()=>None, ready=handle=>ready.ok().flatten()},
+            None => None,
+        }
+        .filter(|p| p.follow == follow);
+        // Kept alive through this step only when it is promoted.
+        let _promoted = prefetch.is_some().then_some(ahead).flatten();
+        // Promoted into the open turn, or, after a wait, ready to speak in a
+        // fresh turn (the budget is published when the speaker takes over).
+        let ahead_tag = prefetch.as_ref().map(|p| (p.tag, p.chat.budget.clone()));
+        let detached_budget = ahead_tag
+            .as_ref()
+            .filter(|_| open.is_none())
+            .map(|(_, budget)| budget.clone());
+        let begun = {
+            let (master, guest, session_id) = (plan.master.id, plan.guest.id, plan.session_id);
+            let (token, reactor, after) = (relay.clone(), who.id, open);
+            with_core(shared.clone(), move |c| {
+                let session = c.session.snapshot();
+                // Still the same conversation, and the user is silent.
+                if token.is_cancelled() {
+                    return Ok(Err("cancelled"));
+                }
+                if c.guest() != Some(guest)
+                    || session.profile_id != master
+                    || session.session_id != session_id
+                {
+                    return Ok(Err("stale"));
+                }
+                if c.session.initiative_paused() {
+                    return Ok(Err("paused"));
+                }
+                let tag = match after {
+                    Some(after) => hand_over(c, after, reactor, ahead_tag, true)?,
+                    None => {
+                        use sherka_core::session::{ResponseState, TranscriptionState};
+                        // Nothing playing, captured or running.
+                        if session.response != ResponseState::Idle
+                            || session.transcription != TranscriptionState::Idle
+                            || c.live.tag.is_some()
+                        {
+                            return Ok(Err("busy"));
+                        }
+                        let turn = c.session.begin_text_turn();
+                        let tag = c.session.begin_peer(turn, reactor)?;
+                        c.reset_live_keeping_relay(tag);
+                        if detached_budget.is_some() {
+                            c.live.budget = detached_budget;
+                        }
+                        tag
+                    }
+                };
+                Ok(Ok((tag, c.session.cancellation())))
+            })
+            .await
+        };
+        let (tag, token) = match begun {
+            Ok(Ok(started)) => started,
+            Ok(Err(why)) => break why,
+            // The turn the chain was holding open is gone: the user cut in.
+            Err(_) => break "stale",
+        };
+        emit(&app, &shared);
+        let provider = match &prefetch {
+            Some(ahead) => Ok(ahead.provider.clone()),
+            None => speaker_provider(&shared, who.id).await,
+        };
+        let provider = match provider {
+            Ok(provider) => provider,
+            Err(error) => {
+                fail_turn(&app, &shared, tag, &error).await;
+                open = None;
+                break "failed";
+            }
+        };
+        // The speaker who follows prepares while this one talks: in the open
+        // turn when it follows at once, otherwise (a wait, so the session turn
+        // closes and the user may speak) detached, gated by the relay token.
+        let waits = !continues && plan.state.waits_after_reply(settings.relay_seconds);
+        let (signals, next) = match (continues, waits) {
+            (false, false) => (None, None),
+            (continues, _) => {
+                let (gate, parent) = if continues {
+                    (Gate::Pending, &token)
+                } else {
+                    (Gate::Detached, &relay)
+                };
+                let (ready, next) = prepare_ahead(
+                    &app,
+                    &shared,
+                    &voice,
+                    parent,
+                    PrefetchPlan {
+                        gate,
+                        first_tag: tag,
+                        first: who.clone(),
+                        second: plan.last.id,
+                        user: None,
+                        user_name: settings.user_name.clone(),
+                        quick: settings.quick_replies,
+                        spontaneous: false,
+                        speak: plan.speak,
+                    },
+                );
+                (Some(ready), Some(next))
+            }
+        };
+        let priority = app
+            .state::<crate::illustrations::Illustrations>()
+            .priority(app.clone(), shared.clone());
+        let user_turn = if plan.user.is_some() {
+            plan.user_turn
+        } else {
+            tag.turn_id
+        };
+        let kind = if plan.state.replies == 0 {
+            "first"
+        } else if silence {
+            "silence"
+        } else {
+            "chained"
+        };
+        voice.diagnose(&shared, "trio_relay_fired", Some(kind));
+        let end = run_turn(
+            app.clone(),
+            shared.clone(),
+            voice.clone(),
+            tag,
+            token,
+            provider,
+            plan.user.clone().unwrap_or_default(),
+            plan.speak,
+            priority,
+            None,
+            Some(TrioStep::Second {
+                peer: trio::Peer {
+                    name: plan.last.name.clone(),
+                    second: true,
+                    quick: settings.quick_replies,
+                },
+                follow,
+                first_generation: plan.last_generation,
+                user_turn,
+                prefetch: prefetch.map(Box::new),
+                signals,
+                continues,
+            }),
+        )
+        .await;
+        for id in [plan.master.id, plan.guest.id] {
+            let _ = app.emit("sherka:history", id);
+        }
+        match end {
+            TurnEnd::Done { reply, .. } => {
+                plan.state.replied();
+                plan.user = None;
+                plan.last = who;
+                plan.last_reply = reply;
+                plan.last_generation = tag.generation_id;
+                open = continues.then_some(tag);
+                carried = next;
+            }
+            TurnEnd::Passed => {
+                // `discard_generation` ended the turn.
+                plan.state.passed();
+                open = None;
+            }
+            TurnEnd::Stopped => {
+                open = None;
+                // A provider or turn error is kept for the panel; a stop is not.
+                let failed = shared.0.lock().is_ok_and(|c| c.live.error.is_some());
+                break if failed { "failed" } else { "cancelled" };
+            }
+        }
+    };
+    // Back to the user: never leave the turn of a chain half open.
+    if let Some(tag) = open {
+        let _ = with_core(shared.clone(), move |c| c.session.complete(tag)).await;
+    }
+    emit(&app, &shared);
+    voice.diagnose(&shared, "trio_relay_ended", Some(reason));
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn run_turn(
     app: AppHandle,
@@ -1537,60 +3010,49 @@ async fn run_turn(
     user: String,
     speak: bool,
     priority: crate::illustrations::Priority,
-    spontaneous: bool,
-) {
+    event: Option<AppEvent>,
+    mut trio: Option<TrioStep>,
+) -> TurnEnd {
+    let spontaneous = event.is_some();
+    // Signals to, or the reply prefetched by, the other speaker of a trio turn.
+    // A sender dropped unsent (any early return) tells the prefetch to give up.
+    let (mut text_signal, mut synth_signal, mut prefetch) = match &mut trio {
+        Some(TrioStep::First { signals, .. }) => match signals.take() {
+            Some(FirstSignals { text, synthesized }) => (Some(text), Some(synthesized), None),
+            None => (None, None, None),
+        },
+        Some(TrioStep::Second {
+            prefetch, signals, ..
+        }) => match signals.take() {
+            Some(FirstSignals { text, synthesized }) => {
+                (Some(text), Some(synthesized), prefetch.take())
+            }
+            None => (None, None, prefetch.take()),
+        },
+        None => (None, None, None),
+    };
     let speech_end = voice.take_speech_end(tag);
     let clock = crate::turn_timing::TurnClock::new(speech_end);
     if speech_end.is_some() {
         clock.mark(crate::turn_timing::Mark::Transcribed);
     }
-    tokio::select! {biased;_=token.cancelled()=>return,_=priority.ready()=>{}}
+    tokio::select! {biased;_=token.cancelled()=>return TurnEnd::Stopped,_=priority.ready()=>{}}
     let agent = provider.connections.llm_provider.is_agent();
-    let maintenance = if agent || spontaneous {
-        None
-    } else {
-        shared.0.lock().ok().and_then(|mut c| {
-            let command = c.profile(tag.profile_id).ok().and_then(|p| {
-                sherka_core::privacy::contextual_command(
-                    &user,
-                    &p.details.name,
-                    c.pending_clear.valid(tag.profile_id, tag.session_id),
-                )
-            });
-            if command.is_none() {
-                c.pending_clear = Default::default();
-            }
-            command
-        })
-    };
-    if let Some(command) = maintenance {
-        if let Err(error) = maintenance_command(
-            &app,
-            shared.clone(),
-            &voice,
-            tag.profile_id,
-            command,
-            speak,
-            Some(tag),
-        )
-        .await
-        {
-            if let Ok(mut c) = shared.0.lock()
-                && c.session.snapshot().profile_id == tag.profile_id
-                && c.session.snapshot().session_id == tag.session_id
-            {
-                c.live.error = Some(error);
-            }
-            emit(&app, &shared);
-        }
-        return;
+    let solo = trio.is_none();
+    // In a three-way turn the orchestrator already handled the master's commands.
+    if !agent
+        && !spontaneous
+        && solo
+        && handle_maintenance(&app, &shared, &voice, tag, &user, speak).await
+    {
+        return TurnEnd::Stopped;
     }
     // A new utterance may arrive while the old run acknowledges cancellation.
     // Serialize remote runs and keep failed stops retryable instead of silently
     // starting overlapping agent work on the same server conversation.
     let _remote_gate = if agent {
         Some(
-            tokio::select! { biased; _=token.cancelled()=>return, guard=voice.hermes_gate.lock()=>guard },
+            tokio::select! { biased; _=token.cancelled()=>return TurnEnd::Stopped, guard=voice.hermes_gate.lock()=>guard },
         )
     } else {
         None
@@ -1603,7 +3065,7 @@ async fn run_turn(
             "L’arrêt Hermes n’est pas confirmé. Réessaie /stop avant de poursuivre.",
         )
         .await;
-        return;
+        return TurnEnd::Stopped;
     }
     let hermes = sherka_core::hermes::HermesRun::new(provider.clone());
     let mut remote_session = None;
@@ -1627,6 +3089,33 @@ async fn run_turn(
                 .await?,
             );
             Ok(None)
+        } else if let Some(ahead) = &prefetch {
+            // Prepared and already generating; the budget is published by the
+            // orchestrator when this speaker was promoted.
+            Ok(Some(ahead.chat.clone()))
+        } else if let Some(TrioStep::Second {
+            peer,
+            follow,
+            first_generation,
+            user_turn,
+            ..
+        }) = &trio
+        {
+            prepare_peer(
+                &app,
+                &shared,
+                &voice,
+                tag,
+                Gate::Current,
+                &mut provider,
+                follow,
+                peer,
+                *first_generation,
+                *user_turn,
+                spontaneous,
+            )
+            .await
+            .map(Some)
         } else {
             prepare_turn(
                 &app,
@@ -1635,7 +3124,8 @@ async fn run_turn(
                 tag,
                 &mut provider,
                 &user,
-                spontaneous,
+                event.as_ref(),
+                trio.as_ref().map(TrioStep::peer),
             )
             .await
             .map(Some)
@@ -1643,24 +3133,31 @@ async fn run_turn(
     };
     let prepared = tokio::select! {
         biased;
-        _=token.cancelled()=>return,
+        _=token.cancelled()=>return TurnEnd::Stopped,
         result=preparation=>result
     };
     let prepared = match prepared {
         Ok(value) => value,
         Err(e) => {
             fail_turn(&app, &shared, tag, &e).await;
-            return;
+            return TurnEnd::Stopped;
         }
     };
     clock.mark(crate::turn_timing::Mark::Prepared);
     if voice.playback.arm(token.clone()).is_err() {
-        return;
+        return TurnEnd::Stopped;
     }
     if agent && let Ok(mut active) = voice.hermes_run.lock() {
         *active = Some((tag, hermes.clone()));
     }
     let (tokens_tx, mut tokens_rx) = mpsc::channel::<String>(64);
+    // A prefetched reply replays the tokens received so far, then the rest.
+    let (mut pregenerated, mut cache) = (None, None);
+    if let Some(ahead) = prefetch.take() {
+        tokens_rx = ahead.tokens;
+        pregenerated = Some(ahead.generation);
+        cache = ahead.cache;
+    }
     let web_reply = prepared
         .as_ref()
         .and_then(|p| p.web.as_ref())
@@ -1707,6 +3204,11 @@ async fn run_turn(
                     result
                 })
                 .await
+        } else if let Some(generation) = pregenerated.take() {
+            generation
+                .await
+                .map_err(|_| Error::StaleOperation)
+                .and_then(|outcome| outcome)
         } else {
             let prepared = prepared.ok_or(Error::StaleOperation)?;
             provider
@@ -1718,13 +3220,15 @@ async fn run_turn(
                 .await
         }
     };
+    let second = matches!(trio, Some(TrioStep::Second { .. }));
     let consume = async {
         let mut web_speech = sherka_core::web::SpeechFilter::default();
-        let mut expression = sherka_core::avatar::ExpressionStream::default();
         let mut paint = LivePaint::default();
+        // A second speaker may answer `[[pass]]`: nothing is shown or spoken,
+        // but the provider's stream is still drained to its end.
+        let mut filter = ReplyFilter::new(expressions, second);
         let mut append =
             |text: String, emotion, paint: &mut LivePaint| -> sherka_core::Result<()> {
-                let text = sherka_core::conversation::plain_reply(&text);
                 quiet_update(&shared, tag, |c| {
                     c.live.emotion = emotion;
                     c.live.reply.push_str(&text);
@@ -1757,22 +3261,19 @@ async fn run_turn(
             };
             let Some(text) = next else { break };
             clock.mark(crate::turn_timing::Mark::FirstToken);
-            let text = if expressions {
-                expression.push(&text)
-            } else {
-                text
-            };
-            append(text, expression.emotion, &mut paint)?;
+            if let Some(text) = filter.push(&text) {
+                append(text, filter.emotion(), &mut paint)?;
+            }
         }
-        if expressions {
-            append(expression.finish(), expression.emotion, &mut paint)?;
+        for text in filter.finish() {
+            append(text, filter.emotion(), &mut paint)?;
         }
         if speak && web_reply {
             speech_text.push(&web_speech.finish())?;
         }
         // The last coalesced tokens.
         emit(&app, &shared);
-        if expressions {
+        if expressions && !second {
             update(&app, &shared, tag, |c| {
                 if c.live.reply.trim().is_empty() {
                     return Err(Error::Validation(
@@ -1782,7 +3283,7 @@ async fn run_turn(
                 Ok(())
             })?;
         }
-        Ok::<_, Error>(())
+        Ok::<_, Error>(filter.passed())
     };
     // Closing on errors matters too: never leave TTS waiting on a failed LLM.
     let consume = async {
@@ -1795,7 +3296,11 @@ async fn run_turn(
             if speak {
                 while let Some(phrase) = speech_text.next().await? {
                     clock.mark(crate::turn_timing::Mark::FirstPassage);
-                    let pcm = provider.speech(&phrase).await?;
+                    // The first passages of a prefetched reply are already synthesized.
+                    let pcm = match PcmCache::take(&mut cache, &phrase).await {
+                        Some(pcm) => pcm,
+                        None => provider.speech(&phrase).await?,
+                    };
                     audio_tx
                         .send((phrase, pcm))
                         .await
@@ -1805,6 +3310,12 @@ async fn run_turn(
             Ok::<_, Error>(())
         }
         .await;
+        // Every passage is synthesized: VoiceStudio is free for the next speaker.
+        if result.is_ok()
+            && let Some(free) = synth_signal.take()
+        {
+            let _ = free.send(());
+        }
         drop(audio_tx);
         let _ = text_done_rx.await;
         // TTS synthesis has finished; buffered PCM can play without holding the
@@ -1843,15 +3354,21 @@ async fn run_turn(
                 let result=tokio::join!(generate,consume);
                 if result.0.is_ok() && result.1.is_ok() {
                     clock.mark(crate::turn_timing::Mark::TextComplete);
+                    let mut visible=String::new();
                     let complete=update(&app,&shared,tag,|c|{
                         c.live.text_complete=true;
+                        visible=c.live.reply.clone();
                         if !agent && !unavailable { c.complete_mood(tag, &user)?; }
-                        if !agent && !unavailable && c.profile(tag.profile_id)?.details.illustration.enabled {
+                        if !agent && !unavailable && solo && c.profile(tag.profile_id)?.details.illustration.enabled {
                             c.store.save_response(tag,&c.live.reply,&c.live.heard,if speak {Delivery::Uncertain}else{Delivery::TextOnly})?;
                         }
                         Ok(())
                     });
-                    if complete.is_ok() && !agent && !unavailable {
+                    // The language model is free: the second speaker may start.
+                    if complete.is_ok() && !visible.trim().is_empty() && let Some(done)=text_signal.take() {
+                        let _=done.send(visible);
+                    }
+                    if complete.is_ok() && !agent && !unavailable && solo {
                         app.state::<crate::illustrations::Illustrations>().request(app.clone(),shared.clone());
                     }
                 }
@@ -1862,7 +3379,7 @@ async fn run_turn(
             (generated,consumed,spoken)
         }=>Some(result)
     };
-    match result {
+    let end = match result {
         None => {
             voice.diagnose(&shared, "response_cancelled", None);
             if agent {
@@ -1877,8 +3394,9 @@ async fn run_turn(
                 Ok(())
             })
             .await;
+            TurnEnd::Stopped
         }
-        Some((Ok(outcome), Ok(()), spoken)) => {
+        Some((Ok(outcome), Ok(passed), spoken)) => {
             voice.diagnose(
                 &shared,
                 if spoken.is_ok() {
@@ -1891,26 +3409,60 @@ async fn run_turn(
             if agent {
                 finish_hermes_run(&app, &shared, &voice, tag, &hermes, false).await;
             }
-            let delivery = if !speak || provider.connections.volume <= 0.0 {
-                Delivery::TextOnly
-            } else if spoken.is_ok() {
-                Delivery::Completed
+            if passed {
+                // The second speaker had nothing to add: nothing is saved.
+                let _ = with_core(shared.clone(), move |c| c.discard_generation(tag)).await;
+                TurnEnd::Passed
             } else {
-                Delivery::Uncertain
-            };
-            let _ = with_core(shared.clone(), move |c| {
-                if !c.session.accepts(tag) {return Err(Error::StaleOperation);}
-                if outcome.length_limited {c.live.notice=Some("La réponse a atteint la réserve de tokens. Tu peux demander la suite ou augmenter cette réserve dans les réglages.".into());}
-                c.live.usage=if unavailable {None} else {Some(outcome)};
-                c.finish_response(tag, delivery)
-            }).await;
-            if !unavailable && !agent && !spontaneous {
-                schedule_memory(
-                    app.clone(),
-                    shared.clone(),
-                    tag.profile_id,
-                    provider.clone(),
+                let delivery = if !speak || provider.connections.volume <= 0.0 {
+                    Delivery::TextOnly
+                } else if spoken.is_ok() {
+                    Delivery::Completed
+                } else {
+                    Delivery::Uncertain
+                };
+                // A speaker who is followed at once leaves the turn open.
+                let continues = matches!(
+                    trio,
+                    Some(
+                        TrioStep::First {
+                            continues: true,
+                            ..
+                        } | TrioStep::Second {
+                            continues: true,
+                            ..
+                        }
+                    )
                 );
+                let saved = with_core(shared.clone(), move |c| {
+                    if !c.session.accepts(tag) {return Err(Error::StaleOperation);}
+                    if outcome.length_limited {c.live.notice=Some("La réponse a atteint la réserve de tokens. Tu peux demander la suite ou augmenter cette réserve dans les réglages.".into());}
+                    c.live.usage=if unavailable {None} else {Some(outcome)};
+                    let reply = c.live.reply.clone();
+                    let saved = if continues {c.finish_generation(tag, delivery)} else {c.finish_response(tag, delivery)};
+                    if !solo && saved.is_err() {
+                        // Never leave a three-way turn half open.
+                        let _ = c.stop_response();
+                    }
+                    saved.map(|()| reply)
+                }).await;
+                let memory = !unavailable && !agent;
+                if memory && solo && !spontaneous {
+                    schedule_memory(
+                        app.clone(),
+                        shared.clone(),
+                        vec![tag.profile_id],
+                        provider.clone(),
+                    );
+                }
+                match saved {
+                    Ok(reply) => TurnEnd::Done {
+                        reply,
+                        provider: Box::new(provider),
+                        memory,
+                    },
+                    Err(_) => TurnEnd::Stopped,
+                }
             }
         }
         Some((llm, consumed, _)) => {
@@ -1923,8 +3475,9 @@ async fn run_turn(
                 .or_else(|| consumed.err())
                 .map_or_else(|| "La réponse a été interrompue.".into(), |e| e.to_string());
             fail_turn(&app, &shared, tag, &error).await;
+            TurnEnd::Stopped
         }
-    }
+    };
     let reply = shared
         .0
         .lock()
@@ -1933,6 +3486,7 @@ async fn run_turn(
     voice.diagnostics.record_timing(reply, &clock.summary());
     emit(&app, &shared);
     let _ = app.emit("sherka:history", tag.profile_id);
+    end
 }
 
 async fn finish_hermes_run(
@@ -2009,6 +3563,31 @@ async fn play_prepared(
     Ok(())
 }
 
+/// Whether the master may react to `event` now. An event remark does not need
+/// the initiative to be enabled, but the guest it greets must still be there.
+fn check_event(
+    core: &sherka_core::Companion,
+    profile: &sherka_core::model::Profile,
+    event: &AppEvent,
+) -> sherka_core::Result<()> {
+    match event {
+        AppEvent::Idle => check_spontaneous(core, profile),
+        // The user just invited the guest: a remark is welcome even before the
+        // microphone was ever enabled, so `voice_paused` does not gate it.
+        AppEvent::GuestJoined { id, .. } => {
+            let session = core.session.snapshot();
+            if profile.details.connections.llm_provider.is_agent()
+                || core.guest() != Some(*id)
+                || session.response != sherka_core::session::ResponseState::Idle
+                || session.transcription != sherka_core::session::TranscriptionState::Idle
+            {
+                return Err(Error::StaleOperation);
+            }
+            Ok(())
+        }
+    }
+}
+
 fn check_spontaneous(
     core: &sherka_core::Companion,
     profile: &sherka_core::model::Profile,
@@ -2069,5 +3648,275 @@ mod tests {
         assert_eq!(core.session.snapshot().microphone, MicrophoneState::Off);
         assert!(record_turn_failure(&mut core, interrupted, "late error".into()).is_err());
         assert_eq!(core.session.snapshot().microphone, MicrophoneState::Off);
+    }
+
+    #[test]
+    fn a_chained_speaker_takes_over_without_cancelling_the_relay_that_runs_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = sherka_core::Companion::open(dir.path()).unwrap();
+        let turn = core.session.begin_text_turn();
+        core.reset_live(turn);
+        let relay = core.arm_relay();
+        let (a, b) = (Uuid::new_v4(), Uuid::new_v4());
+        let first = hand_over(&mut core, turn, a, None, true).unwrap();
+        assert!(!relay.is_cancelled());
+        assert_eq!((first.profile_id, core.live.tag), (a, Some(first)));
+        assert!(core.session.accepts(first) && !core.session.accepts(turn));
+        // The previous speaker is final once the next one has taken over.
+        let second = hand_over(&mut core, first, b, None, true).unwrap();
+        assert!(!relay.is_cancelled() && core.session.accepts(second));
+        assert!(hand_over(&mut core, first, a, None, true).is_err());
+        // A speaker that is not the relay's ends it, but keeps the memory job.
+        let job = core.memory_job.clone();
+        hand_over(&mut core, second, a, None, false).unwrap();
+        assert!(relay.is_cancelled() && !job.is_cancelled());
+    }
+
+    #[test]
+    fn an_extraction_waits_while_the_companions_talk_and_ignores_strangers() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = sherka_core::Companion::open(dir.path()).unwrap();
+        let master = core.session.snapshot().profile_id;
+        assert_eq!(memory_turn(&core, master), MemoryTurn::Go);
+        assert_eq!(memory_turn(&core, Uuid::new_v4()), MemoryTurn::Stale);
+        // A relay or chained reply is running: wait for it instead of giving up.
+        let turn = core.session.begin_text_turn();
+        core.reset_live_keeping_relay(turn);
+        assert_eq!(memory_turn(&core, master), MemoryTurn::Wait);
+        core.stop_response().unwrap();
+        assert_eq!(memory_turn(&core, master), MemoryTurn::Go);
+    }
+
+    fn who(name: &str) -> sherka_core::trio::Participant {
+        sherka_core::trio::Participant {
+            id: Uuid::new_v4(),
+            name: name.into(),
+        }
+    }
+
+    #[test]
+    fn a_spontaneous_trio_opens_with_the_coin_and_one_companion_answers_the_user() {
+        let (master, guest) = (who("Sherka"), who("Kit"));
+        assert_eq!(
+            speaking_order(None, &master, &guest, true, false),
+            vec![master.id, guest.id]
+        );
+        assert_eq!(
+            speaking_order(None, &master, &guest, false, false),
+            vec![guest.id, master.id]
+        );
+        // The user is answered by one companion: the addressee, else the coin.
+        // The other one waits for the cooldown (the relay).
+        assert_eq!(
+            speaking_order(Some("Kit, tu dors ?"), &master, &guest, true, false),
+            vec![guest.id]
+        );
+        assert_eq!(
+            speaking_order(Some("Salut vous deux"), &master, &guest, false, false),
+            vec![guest.id]
+        );
+        assert_eq!(
+            speaking_order(Some("Salut vous deux"), &master, &guest, true, false),
+            vec![master.id]
+        );
+    }
+
+    #[test]
+    fn a_detached_preparation_lives_and_dies_with_the_relay_token() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = sherka_core::Companion::open(dir.path()).unwrap();
+        let (a, b) = (Uuid::new_v4(), Uuid::new_v4());
+        let turn = core.session.begin_text_turn();
+        core.reset_live(turn);
+        let answer = core.session.begin_peer(turn, a).unwrap();
+        core.reset_live(answer);
+        let relay = core.arm_relay();
+        let prepared = detached_tag(answer, b);
+        // Same session and turn as the answer it reacts to, a generation of its own.
+        assert_eq!(
+            (prepared.profile_id, prepared.session_id, prepared.turn_id),
+            (b, answer.session_id, answer.turn_id)
+        );
+        assert_ne!(prepared.generation_id, answer.generation_id);
+        // The session never accepts it: it only answers to the relay token.
+        assert!(!core.session.accepts(prepared) && !core.session.accepts_pending(prepared));
+        assert!(Gate::Detached.accepts(&core, prepared));
+        assert!(!Gate::Pending.accepts(&core, prepared) && !Gate::Current.accepts(&core, prepared));
+        // The answer finishes: the session turn closes so the user can speak,
+        // and the prepared reaction is still wanted.
+        core.session.complete(answer).unwrap();
+        assert_eq!(
+            core.session.snapshot().response,
+            sherka_core::session::ResponseState::Idle
+        );
+        assert!(!relay.is_cancelled() && Gate::Detached.accepts(&core, prepared));
+        // Typing, speaking or any new turn of the user cancels it at once.
+        let user = core.session.begin_text_turn();
+        core.reset_live(user);
+        assert!(relay.is_cancelled() && !Gate::Detached.accepts(&core, prepared));
+        // A child token, as `prepare_ahead` hands out, follows its parent.
+        let relay = core.arm_relay();
+        let halt = relay.child_token();
+        assert!(!halt.is_cancelled());
+        core.cancel_relay();
+        assert!(halt.is_cancelled());
+    }
+
+    #[test]
+    fn an_event_remark_in_a_trio_is_the_masters_alone() {
+        let (master, guest) = (who("Sherka"), who("Kit"));
+        for coin in [true, false] {
+            assert_eq!(
+                speaking_order(None, &master, &guest, coin, true),
+                vec![master.id]
+            );
+        }
+        let joined = AppEvent::GuestJoined {
+            id: guest.id,
+            name: guest.name,
+            description: None,
+        };
+        assert!(joined.master_only());
+        assert!(!AppEvent::Idle.master_only());
+        // The silence relay follows a user turn and the arrival remark only.
+        assert!(relay_follows(Some("Salut"), None));
+        assert!(relay_follows(None, Some(&joined)));
+        assert!(!relay_follows(None, Some(&AppEvent::Idle)));
+        assert!(!relay_follows(None, None));
+    }
+
+    #[test]
+    fn the_second_speaker_does_not_see_the_turn_twice() {
+        let generation = Uuid::new_v4();
+        assert_eq!(
+            peer_exclusions(Some("user-row".into()), generation),
+            vec!["user-row".to_string(), generation.to_string()]
+        );
+        // A spontaneous turn has no user row.
+        assert_eq!(
+            peer_exclusions(None, generation),
+            vec![generation.to_string()]
+        );
+    }
+
+    #[test]
+    fn only_a_second_speaker_can_pass_and_an_empty_reply_is_a_pass() {
+        // Solo and first speakers: text flows untouched, nothing is held back.
+        let mut solo = PassGate::new(false);
+        assert_eq!(solo.push("[[pass]]".into()).as_deref(), Some("[[pass]]"));
+        assert_eq!(solo.finish(), None);
+        assert!(!solo.passed);
+
+        let mut speaker = PassGate::new(true);
+        assert_eq!(speaker.push("[".into()), None);
+        assert_eq!(speaker.push("Bonjour".into()).as_deref(), Some("[Bonjour"));
+        assert_eq!(speaker.push(" toi".into()).as_deref(), Some(" toi"));
+        assert_eq!(speaker.finish(), None);
+        assert!(!speaker.passed);
+
+        let mut silent = PassGate::new(true);
+        assert_eq!(silent.push("[[pa".into()), None);
+        assert_eq!(silent.push("ss]]".into()), None);
+        assert_eq!(silent.push(" ignored".into()), None);
+        assert_eq!(silent.finish(), None);
+        assert!(silent.passed);
+
+        let mut empty = PassGate::new(true);
+        assert_eq!(empty.push(String::new()), None);
+        assert_eq!(empty.finish(), None);
+        assert!(empty.passed);
+    }
+
+    /// The visible text of a whole reply, chunk by chunk, as the listener gets it.
+    fn visible(filter: &mut ReplyFilter, chunks: &[&str]) -> String {
+        let mut text = String::new();
+        for chunk in chunks {
+            text.extend(filter.push(chunk));
+        }
+        text.extend(filter.finish());
+        text
+    }
+
+    #[test]
+    fn the_reply_filter_hides_the_header_the_pass_marker_and_emoji() {
+        use sherka_core::avatar::Emotion;
+        let mut first = ReplyFilter::new(true, false);
+        let text = visible(
+            &mut first,
+            &["[[emo", "tion: joy]]\nBon", "jour 😊 toi", " !"],
+        );
+        assert_eq!(
+            text,
+            "
+Bonjour  toi !"
+        );
+        assert_eq!(first.emotion(), Emotion::Joy);
+        assert!(!first.passed());
+        // The same text however it is cut, and without a header when the avatar has none.
+        let mut once = ReplyFilter::new(true, true);
+        assert_eq!(
+            visible(&mut once, &["[[emotion: joy]]\nBonjour 😊 toi !"]),
+            text
+        );
+        let mut plain = ReplyFilter::new(false, false);
+        assert_eq!(
+            visible(&mut plain, &["[[emotion: joy]]\nSalut"]),
+            "[[emotion: joy]]\nSalut"
+        );
+        assert_eq!(plain.emotion(), Emotion::Neutral);
+        // A second speaker passing says nothing, whatever the header.
+        let mut pass = ReplyFilter::new(true, true);
+        assert_eq!(
+            visible(&mut pass, &["[[emotion: calm]]\n[[pa", "ss]] ok"]),
+            ""
+        );
+        assert!(pass.passed());
+        let mut early = ReplyFilter::new(false, true);
+        assert_eq!(visible(&mut early, &["[[pass]]"]), "");
+        assert!(early.passed());
+        // A first speaker is never held back: the marker is plain text for it.
+        let mut solo = ReplyFilter::new(false, false);
+        assert_eq!(visible(&mut solo, &["[[pass]]"]), "[[pass]]");
+        assert!(!solo.passed());
+        // An empty reply is silence for a second speaker.
+        let mut empty = ReplyFilter::new(true, true);
+        assert_eq!(visible(&mut empty, &[]), "");
+        assert!(empty.passed());
+        let mut held = ReplyFilter::new(false, true);
+        assert_eq!(visible(&mut held, &["[", "Oui"]), "[Oui");
+        assert!(!held.passed());
+    }
+
+    #[test]
+    fn prepared_passages_serve_matching_phrases_only() {
+        tauri::async_runtime::block_on(async {
+            let passages = |items: &[(&str, i16)]| {
+                let (tx, rx) = mpsc::channel::<Passage>(4);
+                for (phrase, sample) in items {
+                    tx.try_send(((*phrase).to_owned(), vec![*sample])).unwrap();
+                }
+                Some(PcmCache {
+                    passages: rx,
+                    _halt: None,
+                })
+            };
+            // Hits, in order; then the cache is exhausted and dropped.
+            let mut cache = passages(&[("Un.", 1), ("Deux.", 2)]);
+            assert_eq!(PcmCache::take(&mut cache, "Un.").await, Some(vec![1]));
+            assert!(cache.is_some());
+            assert_eq!(PcmCache::take(&mut cache, "Deux.").await, Some(vec![2]));
+            assert_eq!(PcmCache::take(&mut cache, "Trois.").await, None);
+            assert!(cache.is_none());
+            // A different phrase drops the rest: nothing stale can play later.
+            let mut cache = passages(&[("Un.", 1), ("Deux.", 2)]);
+            assert_eq!(PcmCache::take(&mut cache, "Autre.").await, None);
+            assert!(cache.is_none());
+            assert_eq!(PcmCache::take(&mut cache, "Deux.").await, None);
+            // No cache at all, or an empty one.
+            assert_eq!(PcmCache::take(&mut None, "Un.").await, None);
+            let mut empty = passages(&[]);
+            assert_eq!(PcmCache::take(&mut empty, "Un.").await, None);
+            assert!(empty.is_none());
+        });
     }
 }

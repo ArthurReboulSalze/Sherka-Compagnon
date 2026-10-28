@@ -64,12 +64,14 @@ export interface Snapshot {
     theme: Theme;
     comfyui_startup: ComfyStartupConfig;
     voice_service: VoiceServiceConfig;
+    trio: TrioSettings;
     search: SearchConfig;
     desktop_layouts: Record<string,DesktopLayout>;
     web_search: SearchMode;
     ui_language: import('./i18n').Language;
     default_companion: string | null;
     active_profile: string;
+    recent_guests: Record<string, string[]>;
     always_on_top: boolean;
     widget_scale: number;
     widget_bounds: { x: number; y: number; width: number; height: number } | null;
@@ -82,6 +84,7 @@ export interface Snapshot {
     transcription: 'idle' | 'capturing' | 'transcribing';
     response: 'idle' | 'generating' | 'speaking';
     voice_paused: boolean;
+    guest_profile_id: string | null;
   };
   data_directory: string;
   audio_available: boolean;
@@ -97,11 +100,16 @@ export interface Message {
   delivery: 'text_only' | 'completed' | 'interrupted' | 'uncertain';
   heard_content: string;
   created_at: number;
+  speaker: { id: string; name: string } | null;
 }
+
+/** Global settings of three-way conversations: relay_seconds 0 = off, else 3..30; user_name labels the user's lines (empty = "the user"). */
+export interface TrioSettings { relay_seconds: number; quick_replies: boolean; user_name: string }
 
 export type Mutation =
   | { kind: 'search_config'; config: SearchConfig }
   | { kind: 'voice_service'; config: VoiceServiceConfig }
+  | { kind: 'trio_settings'; config: TrioSettings }
   | { kind: 'initiative'; id:string;revision:number;config:InitiativeConfig }
   | { kind: 'theme'; theme: Theme }
   | { kind: 'comfyui_startup'; config: ComfyStartupConfig }
@@ -127,7 +135,7 @@ export interface AudioSettings { input_device: string | null; output_device: str
 export interface ContextBudget { model: string; max_context: number | null; loaded_context: number; limit: number; input_estimate: number; response_tokens: number; safety_tokens: number; history_kept: number; history_omitted: number; memories_used: number[]; memories_omitted: number }
 export type SearchMode = 'off' | 'on_request' | 'auto';
 export interface WebReport { query: string; searching: boolean; error: string | null; sources: {title:string;url:string;snippet:string}[] }
-export interface LiveConversation { mood: Emotion; emotion: Emotion; hermes_approval?: {run_id:string;request_id:string|null;description:string;allow_once:boolean}|null; web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
+export interface LiveConversation { mood: Emotion; guest: { profile_id: string; mood: Emotion } | null; emotion: Emotion; hermes_approval?: {run_id:string;request_id:string|null;description:string;allow_once:boolean}|null; web: WebReport | null; tag: { profile_id: string; session_id: string; turn_id: string; generation_id: string } | null; transcript: string; reply: string; heard: string; error: string | null; notice: string | null; budget: ContextBudget | null; memory_receipt: string | null; usage: {length_limited:boolean;prompt_tokens:number|null;completion_tokens:number|null;reasoning_tokens:number|null}|null }
 export interface LiveState { session: Snapshot['session']; live: LiveConversation }
 export interface AudioDevices { inputs: { id: string; name: string; is_default: boolean }[]; outputs: { id: string; name: string; is_default: boolean }[] }
 

@@ -1,4 +1,12 @@
 {
+  "Ce compagnon est déjà ton compagnon principal.": [
+    "This companion is already your main companion.",
+    "Este compañero ya es tu compañero principal.",
+    "Questo compagno è già il tuo compagno principale.",
+    "Dieser Begleiter ist bereits dein Hauptbegleiter.",
+    "这个伙伴已经是你的主伙伴了。",
+    "このコンパニオンはすでにメインのコンパニオンです。"
+  ],
   "Cette action ne peut pas être annulée.": [
     "This action cannot be undone.",
     "Esta acción no se puede deshacer.",
@@ -4327,6 +4335,38 @@
     "VoiceStudio 已就绪。",
     "VoiceStudio の準備ができました。"
   ],
+  "VoiceStudio démarre et charge ses modèles… ({0} s)": [
+    "VoiceStudio is starting and loading its models… ({0} s)",
+    "VoiceStudio se está iniciando y cargando sus modelos… ({0} s)",
+    "VoiceStudio si sta avviando e carica i suoi modelli… ({0} s)",
+    "VoiceStudio startet und lädt seine Modelle … ({0} s)",
+    "VoiceStudio 正在启动并加载模型…（{0} 秒）",
+    "VoiceStudio を起動してモデルを読み込み中… ({0} 秒)"
+  ],
+  "VoiceStudio s’est arrêté pendant son démarrage (code {0}). Consulte son journal (logs/voicestudio.log), puis réessaie.": [
+    "VoiceStudio stopped while starting (code {0}). Check its log (logs/voicestudio.log), then try again.",
+    "VoiceStudio se detuvo durante el inicio (código {0}). Consulta su registro (logs/voicestudio.log) y vuelve a intentarlo.",
+    "VoiceStudio si è fermato durante l’avvio (codice {0}). Controlla il suo registro (logs/voicestudio.log), poi riprova.",
+    "VoiceStudio wurde beim Start beendet (Code {0}). Sieh im Protokoll (logs/voicestudio.log) nach und versuche es erneut.",
+    "VoiceStudio 在启动过程中停止了（代码 {0}）。请查看其日志 (logs/voicestudio.log)，然后重试。",
+    "VoiceStudio が起動中に停止しました (コード {0})。ログ (logs/voicestudio.log) を確認して、もう一度お試しください。"
+  ],
+  "VoiceStudio n’est pas prêt après {0} min. Il charge peut-être encore ses modèles : consulte son journal (logs/voicestudio.log), puis réessaie.": [
+    "VoiceStudio is not ready after {0} min. It may still be loading its models: check its log (logs/voicestudio.log), then try again.",
+    "VoiceStudio no está listo tras {0} min. Quizá aún esté cargando sus modelos: consulta su registro (logs/voicestudio.log) y vuelve a intentarlo.",
+    "VoiceStudio non è pronto dopo {0} min. Potrebbe ancora caricare i suoi modelli: controlla il suo registro (logs/voicestudio.log), poi riprova.",
+    "VoiceStudio ist nach {0} Min. nicht bereit. Vielleicht lädt es noch seine Modelle: Sieh im Protokoll (logs/voicestudio.log) nach und versuche es erneut.",
+    "VoiceStudio 在 {0} 分钟后仍未就绪。它可能仍在加载模型：请查看其日志 (logs/voicestudio.log)，然后重试。",
+    "VoiceStudio は {0} 分経っても準備できていません。まだモデルを読み込み中かもしれません。ログ (logs/voicestudio.log) を確認して、もう一度お試しください。"
+  ],
+  "Ton compagnon apparaît dès que la voix est prête.": [
+    "Your companion appears as soon as the voice is ready.",
+    "Tu compañero aparece en cuanto la voz esté lista.",
+    "Il tuo compagno appare appena la voce è pronta.",
+    "Dein Begleiter erscheint, sobald die Stimme bereit ist.",
+    "语音就绪后，你的伙伴就会出现。",
+    "音声の準備ができると、コンパニオンが表示されます。"
+  ],
   "VoiceStudio indisponible · ouvre le poste de bord": [
     "VoiceStudio unavailable · open control panel",
     "VoiceStudio no disponible · abre el panel de control",
@@ -4366,14 +4406,6 @@
     "VoiceStudio bietet nicht das erwartete Sprachprotokoll. Prüfe die Version.",
     "VoiceStudio 未提供预期的语音协议。请检查版本。",
     "VoiceStudio が必要な音声プロトコルに対応していません。バージョンを確認してください。"
-  ],
-  "VoiceStudio se prépare…": [
-    "VoiceStudio is getting ready…",
-    "VoiceStudio se prepara…",
-    "VoiceStudio si prepara…",
-    "VoiceStudio wird vorbereitet…",
-    "VoiceStudio 正在准备…",
-    "VoiceStudio を準備中…"
   ],
   "Voix & modèles": [
     "Voices & models",
@@ -8183,14 +8215,6 @@
     "首次生成可能较慢，因为 ComfyUI 需要启动并加载模型。",
     "ComfyUI の起動とモデル読み込みのため、最初の生成には時間がかかる場合があります。"
   ],
-  "VoiceStudio n’est pas prêt après 5 minutes. Vérifie son chemin et son journal, puis réessaie.": [
-    "VoiceStudio is not ready after 5 minutes. Check its path and log, then retry.",
-    "VoiceStudio no está listo tras 5 minutos. Revisa su ruta y registro e inténtalo de nuevo.",
-    "VoiceStudio non è pronto dopo 5 minuti. Controlla percorso e registro, poi riprova.",
-    "VoiceStudio ist nach 5 Minuten nicht bereit. Prüfe Pfad und Protokoll und versuche es erneut.",
-    "VoiceStudio 在 5 分钟后仍未就绪。请检查路径和日志后重试。",
-    "5 分経っても VoiceStudio が準備できません。パスとログを確認して再試行してください。"
-  ],
   "Démarrer avec Sherka": [
     "Start with Sherka",
     "Iniciar con Sherka",
@@ -9902,5 +9926,245 @@
     "Seine sieben aktuellen Bilder werden ersetzt.",
     "其当前的七张图片将被替换。",
     "現在の7枚の画像が置き換えられます。"
+  ],
+  "{0} quitte la conversation.": [
+    "{0} leaves the conversation.",
+    "{0} sale de la conversación.",
+    "{0} lascia la conversazione.",
+    "{0} verlässt die Unterhaltung.",
+    "{0} 已退出对话。",
+    "{0} が会話から退出しました。"
+  ],
+  "{0} rejoint la conversation.": [
+    "{0} joins the conversation.",
+    "{0} se une a la conversación.",
+    "{0} si unisce alla conversazione.",
+    "{0} tritt der Unterhaltung bei.",
+    "{0} 加入了对话。",
+    "{0} が会話に参加しました。"
+  ],
+  "Ajouter un compagnon": [
+    "Add a companion",
+    "Añadir un compañero",
+    "Aggiungi un compagno",
+    "Begleiter hinzufügen",
+    "添加伙伴",
+    "コンパニオンを追加"
+  ],
+  "Aucun autre compagnon à inviter.": [
+    "No other companion to invite.",
+    "No hay otro compañero a quien invitar.",
+    "Nessun altro compagno da invitare.",
+    "Kein weiterer Begleiter zum Einladen.",
+    "没有其他可邀请的伙伴。",
+    "招待できるコンパニオンがいません。"
+  ],
+  "Choisis d’abord une voix pour ce compagnon.": [
+    "First choose a voice for this companion.",
+    "Elige primero una voz para este compañero.",
+    "Scegli prima una voce per questo compagno.",
+    "Wähle zuerst eine Stimme für diesen Begleiter.",
+    "请先为这位伙伴选择一个声音。",
+    "まずこのコンパニオンの声を選んでください。"
+  ],
+  "Compagnon invité": [
+    "Guest companion",
+    "Compañero invitado",
+    "Compagno ospite",
+    "Eingeladener Begleiter",
+    "受邀伙伴",
+    "ゲストのコンパニオン"
+  ],
+  "En conversation avec {0}": [
+    "In conversation with {0}",
+    "Conversando con {0}",
+    "In conversazione con {0}",
+    "Im Gespräch mit {0}",
+    "正在与 {0} 对话",
+    "{0} と会話中"
+  ],
+  "Indisponible en conversation à trois": [
+    "Unavailable in a three-way conversation",
+    "No disponible en una conversación a tres",
+    "Non disponibile in una conversazione a tre",
+    "In einer Dreierunterhaltung nicht verfügbar",
+    "三方对话中不可用",
+    "3人での会話では利用できません"
+  ],
+  "Inviter un compagnon": [
+    "Invite a companion",
+    "Invitar a un compañero",
+    "Invita un compagno",
+    "Einen Begleiter einladen",
+    "邀请一位伙伴",
+    "コンパニオンを招待"
+  ],
+  "Les compagnons Hermes ne participent pas aux conversations à trois.": [
+    "Hermes companions do not take part in three-way conversations.",
+    "Los compañeros Hermes no participan en las conversaciones a tres.",
+    "I compagni Hermes non partecipano alle conversazioni a tre.",
+    "Hermes-Begleiter nehmen nicht an Dreierunterhaltungen teil.",
+    "Hermes 伙伴不参与三方对话。",
+    "Hermes のコンパニオンは3人での会話に参加しません。"
+  ],
+  "Récents": [
+    "Recent",
+    "Recientes",
+    "Recenti",
+    "Zuletzt",
+    "最近",
+    "最近"
+  ],
+  "Reprendre la dernière conversation": [
+    "Resume the last conversation",
+    "Retomar la última conversación",
+    "Riprendi l’ultima conversazione",
+    "Letzte Unterhaltung fortsetzen",
+    "继续上次对话",
+    "前回の会話を再開"
+  ],
+  "Retirer de la conversation": [
+    "Remove from the conversation",
+    "Quitar de la conversación",
+    "Rimuovi dalla conversazione",
+    "Aus der Unterhaltung entfernen",
+    "从对话中移除",
+    "会話から外す"
+  ],
+  "Terminer": [
+    "End",
+    "Terminar",
+    "Termina",
+    "Beenden",
+    "结束",
+    "終了"
+  ],
+  "Conversations à trois": [
+    "Three-way conversations",
+    "Conversaciones a tres",
+    "Conversazioni a tre",
+    "Gespräche zu dritt",
+    "三方对话",
+    "三者での会話"
+  ],
+  "Relance de l’autre compagnon": [
+    "Nudge from the other companion",
+    "Intervención del otro compañero",
+    "Rilancio dell’altro compagno",
+    "Nachfrage des anderen Begleiters",
+    "另一位伙伴的跟进发言",
+    "もう一人のコンパニオンの促し"
+  ],
+  "Après 5 secondes": [
+    "After 5 seconds",
+    "Después de 5 segundos",
+    "Dopo 5 secondi",
+    "Nach 5 Sekunden",
+    "5 秒后",
+    "5 秒後"
+  ],
+  "Après 8 secondes": [
+    "After 8 seconds",
+    "Después de 8 segundos",
+    "Dopo 8 secondi",
+    "Nach 8 Sekunden",
+    "8 秒后",
+    "8 秒後"
+  ],
+  "Après 10 secondes": [
+    "After 10 seconds",
+    "Después de 10 segundos",
+    "Dopo 10 secondi",
+    "Nach 10 Sekunden",
+    "10 秒后",
+    "10 秒後"
+  ],
+  "Après 15 secondes": [
+    "After 15 seconds",
+    "Después de 15 segundos",
+    "Dopo 15 secondi",
+    "Nach 15 Sekunden",
+    "15 秒后",
+    "15 秒後"
+  ],
+  "Après {0} secondes": [
+    "After {0} seconds",
+    "Después de {0} segundos",
+    "Dopo {0} secondi",
+    "Nach {0} Sekunden",
+    "{0} 秒后",
+    "{0} 秒後"
+  ],
+  "Quand tu parles, un seul compagnon répond ; si tu restes silencieux pendant ce délai, l’autre réagit, puis ils discutent entre eux jusqu’à ce que tu parles ou écrives (20 répliques au plus).": [
+    "When you speak, only one companion answers; if you stay silent for this delay, the other reacts, then they talk to each other until you speak or type (20 replies at most).",
+    "Cuando hablas, solo responde un compañero; si te quedas en silencio durante este tiempo, el otro reacciona y luego hablan entre ellos hasta que tú hables o escribas (20 réplicas como máximo).",
+    "Quando parli, risponde un solo compagno; se resti in silenzio per questo intervallo, l’altro reagisce, poi parlano tra loro finché non parli o scrivi (al massimo 20 battute).",
+    "Wenn du sprichst, antwortet nur ein Begleiter; schweigst du in dieser Zeit, reagiert der andere, dann unterhalten sie sich miteinander, bis du sprichst oder schreibst (höchstens 20 Antworten).",
+    "你说话时只有一位伙伴回答；如果你在这段时间内保持沉默，另一位伙伴会接话，然后他们会彼此交谈，直到你说话或输入文字（最多 20 句）。",
+    "あなたが話すと、答えるのは一人だけです。この時間のあいだ黙っていると、もう一人のコンパニオンが反応し、その後はあなたが話すか入力するまで二人で会話を続けます（最大20発言）。"
+  ],
+  "Favoriser des réponses rapides": [
+    "Favor quick replies",
+    "Favorecer respuestas rápidas",
+    "Favorire risposte rapide",
+    "Schnelle Antworten bevorzugen",
+    "优先快速回复",
+    "素早い返答を優先する"
+  ],
+  "En conversation à trois, les compagnons répondent en une ou deux phrases courtes : la voix démarre plus vite et les échanges s’enchaînent.": [
+    "In three-way conversations, companions answer in one or two short sentences: the voice starts sooner and the exchange flows more smoothly.",
+    "En las conversaciones a tres, los compañeros responden con una o dos frases cortas: la voz empieza antes y el intercambio fluye mejor.",
+    "Nelle conversazioni a tre, i compagni rispondono con una o due frasi brevi: la voce parte prima e lo scambio scorre meglio.",
+    "In Gesprächen zu dritt antworten die Begleiter in ein oder zwei kurzen Sätzen: Die Stimme startet schneller und der Austausch läuft flüssiger.",
+    "在三方对话中，伙伴们用一两句简短的话回答：语音启动更快，交流也更连贯。",
+    "三者での会話では、コンパニオンは短い一、二文で答えます。音声がすばやく始まり、やり取りがスムーズにつながります。"
+  ],
+  "Réglages des conversations à trois enregistrés.": [
+    "Three-way conversation settings saved.",
+    "Ajustes de las conversaciones a tres guardados.",
+    "Impostazioni delle conversazioni a tre salvate.",
+    "Einstellungen für Gespräche zu dritt gespeichert.",
+    "三方对话设置已保存。",
+    "三者での会話の設定を保存しました。"
+  ],
+  "Ton prénom": [
+    "Your first name",
+    "Tu nombre",
+    "Il tuo nome",
+    "Dein Vorname",
+    "你的名字",
+    "あなたの名前"
+  ],
+  "Tes compagnons l’utilisent pour savoir que c’est toi qui parles en conversation à trois. Laisse vide pour « l’utilisateur ».": [
+    "Your companions use it to know it is you speaking in a three-way conversation. Leave empty for “the user”.",
+    "Tus compañeros lo usan para saber que eres tú quien habla en una conversación a tres. Déjalo vacío para «el usuario».",
+    "I tuoi compagni lo usano per sapere che sei tu a parlare in una conversazione a tre. Lascia vuoto per «l’utente».",
+    "Deine Begleiter nutzen ihn, um zu wissen, dass du in einem Gespräch zu dritt sprichst. Leer lassen für „der Nutzer“.",
+    "你的伙伴会用它来分辨三方对话中是你在说话。留空则称为“用户”。",
+    "三者での会話で、あなたが話していることを仲間が把握するために使います。空欄の場合は「ユーザー」と呼びます。"
+  ],
+  "Ton prénom doit faire au plus 40 caractères, sans deux-points.": [
+    "Your first name must be at most 40 characters, with no colon.",
+    "Tu nombre debe tener como máximo 40 caracteres, sin dos puntos.",
+    "Il tuo nome deve avere al massimo 40 caratteri, senza due punti.",
+    "Dein Vorname darf höchstens 40 Zeichen lang sein und keinen Doppelpunkt enthalten.",
+    "你的名字最多 40 个字符，且不能包含冒号。",
+    "名前は40文字以内で、コロンは使えません。"
+  ],
+  "Le délai de relance doit être désactivé ou compris entre 3 et 30 secondes.": [
+    "The nudge delay must be off or between 3 and 30 seconds.",
+    "El tiempo de intervención debe estar desactivado o entre 3 y 30 segundos.",
+    "Il ritardo del rilancio deve essere disattivato o compreso tra 3 e 30 secondi.",
+    "Die Verzögerung der Nachfrage muss deaktiviert sein oder zwischen 3 und 30 Sekunden liegen.",
+    "跟进发言的延迟必须关闭，或设为 3 到 30 秒之间。",
+    "促しの遅延はオフにするか、3〜30 秒の範囲にしてください。"
+  ],
+  "En conversation à trois, un second compagnon rejoint la discussion dans sa propre fenêtre. La relance de l’autre compagnon et les réponses rapides se règlent dans Conversations à trois, dans Réglages.": [
+    "In a three-way conversation, a second companion joins the discussion in its own window. The other companion’s nudge and quick replies are set in Three-way conversations, under Settings.",
+    "En una conversación a tres, un segundo compañero se une a la charla en su propia ventana. La intervención del otro compañero y las respuestas rápidas se ajustan en Conversaciones a tres, dentro de Ajustes.",
+    "In una conversazione a tre, un secondo compagno si unisce alla discussione nella sua finestra. Il rilancio dell’altro compagno e le risposte rapide si regolano in Conversazioni a tre, nelle Impostazioni.",
+    "In einem Gespräch zu dritt nimmt ein zweiter Begleiter in seinem eigenen Fenster teil. Die Nachfrage des anderen Begleiters und die schnellen Antworten stellst du unter Gespräche zu dritt in den Einstellungen ein.",
+    "在三方对话中，第二位伙伴会在自己的窗口里加入讨论。另一位伙伴的跟进发言和快速回复可在“设置”的“三方对话”中调整。",
+    "三者での会話では、二人目のコンパニオンが専用のウィンドウで会話に加わります。もう一人の促しと素早い返答は、設定の「三者での会話」で調整できます。"
   ]
 }

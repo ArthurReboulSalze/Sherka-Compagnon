@@ -43,6 +43,8 @@ pub struct SessionSnapshot {
     pub transcription: TranscriptionState,
     pub response: ResponseState,
     pub voice_paused: bool,
+    /// The guest companion of a three-way conversation, for this session only.
+    pub guest_profile_id: Option<Uuid>,
 }
 
 /// The one authority for profile/session/turn/generation identity. Cancellation
@@ -52,6 +54,8 @@ pub struct Session {
     initiative_paused: bool,
     state: SessionSnapshot,
     current: Option<OperationTag>,
+    /// The next speaker, generating ahead while `current` still speaks.
+    pending: Option<OperationTag>,
     cancellation: CancellationToken,
     stt_final_accepted: bool,
 }
@@ -67,8 +71,10 @@ impl Session {
                 transcription: TranscriptionState::Idle,
                 response: ResponseState::Idle,
                 voice_paused: true,
+                guest_profile_id: None,
             },
             current: None,
+            pending: None,
             cancellation: CancellationToken::new(),
             stt_final_accepted: false,
         }
@@ -86,11 +92,18 @@ impl Session {
         self.current == Some(tag) && !self.cancellation.is_cancelled()
     }
 
+    /// The prefetching next speaker of the turn. It owns no live state and is
+    /// refused everywhere `accepts` is required until it is promoted.
+    pub fn accepts_pending(&self, tag: OperationTag) -> bool {
+        self.pending == Some(tag) && !self.cancellation.is_cancelled()
+    }
+
     /// Invalidates immediately. Audio queue flushing belongs in the backend,
     /// which must observe this cancellation before playback, not after STT.
     pub fn cancel(&mut self) {
         self.cancellation.cancel();
         self.current = None;
+        self.pending = None;
         self.state.transcription = TranscriptionState::Idle;
         self.state.response = ResponseState::Idle;
         self.stt_final_accepted = false;
@@ -100,7 +113,12 @@ impl Session {
         self.cancel();
         self.state.profile_id = profile_id;
         self.state.session_id = Uuid::new_v4();
+        self.state.guest_profile_id = None;
         // Global microphone consent is never changed by a profile switch.
+    }
+
+    pub fn set_guest(&mut self, id: Option<Uuid>) {
+        self.state.guest_profile_id = id;
     }
 
     pub fn initiative_paused(&self) -> bool {
@@ -143,6 +161,57 @@ impl Session {
         self.require_current(tag)?;
         self.cancel();
         Ok(())
+    }
+
+    /// The next speaker of the same turn: same session, turn and cancellation
+    /// token, so one barge-in cancels every speaker. The previous tag stops
+    /// being accepted.
+    pub fn begin_peer(&mut self, after: OperationTag, profile_id: Uuid) -> Result<OperationTag> {
+        self.require_current(after)?;
+        let tag = Self::peer_tag(after, profile_id);
+        self.current = Some(tag);
+        self.pending = None;
+        self.state.transcription = TranscriptionState::Idle;
+        self.state.response = ResponseState::Generating;
+        Ok(tag)
+    }
+
+    /// Registers the next speaker without replacing the current one, so it can
+    /// prepare while `after` still speaks. Same turn and cancellation token;
+    /// `current`, the response state and late events of `after` are untouched.
+    pub fn begin_pending_peer(
+        &mut self,
+        after: OperationTag,
+        profile_id: Uuid,
+    ) -> Result<OperationTag> {
+        self.require_current(after)?;
+        let tag = Self::peer_tag(after, profile_id);
+        self.pending = Some(tag);
+        Ok(tag)
+    }
+
+    /// The pending speaker takes over: what `begin_peer` does at once.
+    pub fn promote_pending(&mut self, tag: OperationTag) -> Result<()> {
+        let same_turn = self
+            .current
+            .is_some_and(|c| (c.session_id, c.turn_id) == (tag.session_id, tag.turn_id));
+        if !self.accepts_pending(tag) || !same_turn {
+            return Err(Error::StaleOperation);
+        }
+        self.current = Some(tag);
+        self.pending = None;
+        self.state.transcription = TranscriptionState::Idle;
+        self.state.response = ResponseState::Generating;
+        Ok(())
+    }
+
+    fn peer_tag(after: OperationTag, profile_id: Uuid) -> OperationTag {
+        OperationTag {
+            profile_id,
+            session_id: after.session_id,
+            turn_id: after.turn_id,
+            generation_id: Uuid::new_v4(),
+        }
     }
 
     pub fn begin_utterance(&mut self) -> Result<OperationTag> {
@@ -266,6 +335,113 @@ mod tests {
         assert!(!session.accepts(tag));
         assert_ne!(tag.session_id, session.snapshot().session_id);
         assert_eq!(session.snapshot().microphone, MicrophoneState::Off);
+    }
+    #[test]
+    fn a_second_speaker_shares_the_turn_and_its_cancellation() {
+        let (a, b) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut session = Session::new(a);
+        let first = session.begin_text_turn();
+        let token = session.cancellation();
+        let second = session.begin_peer(first, b).unwrap();
+        assert_eq!(second.profile_id, b);
+        assert_eq!(
+            (second.session_id, second.turn_id),
+            (first.session_id, first.turn_id)
+        );
+        assert_ne!(second.generation_id, first.generation_id);
+        assert!(!session.accepts(first));
+        assert!(session.accepts(second));
+        assert!(!token.is_cancelled());
+        assert_eq!(session.snapshot().response, ResponseState::Generating);
+        // A stale tag cannot start another speaker, and complete returns to idle.
+        assert!(session.begin_peer(first, b).is_err());
+        session.complete(second).unwrap();
+        assert!(token.is_cancelled());
+        assert_eq!(session.snapshot().response, ResponseState::Idle);
+        // A barge-in invalidates the new speaker; a cancelled turn refuses a peer.
+        let first = session.begin_text_turn();
+        let second = session.begin_peer(first, b).unwrap();
+        session.cancel();
+        assert!(!session.accepts(second));
+        assert!(session.begin_peer(second, a).is_err());
+    }
+    #[test]
+    fn a_pending_speaker_prepares_without_taking_over_until_promoted() {
+        let (a, b) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut session = Session::new(a);
+        let first = session.begin_text_turn();
+        let token = session.cancellation();
+        let pending = session.begin_pending_peer(first, b).unwrap();
+        assert_eq!(pending.profile_id, b);
+        assert_eq!(
+            (pending.session_id, pending.turn_id),
+            (first.session_id, first.turn_id)
+        );
+        assert_ne!(pending.generation_id, first.generation_id);
+        // The first speaker keeps every right; the pending one has none yet.
+        assert!(session.accepts(first));
+        assert!(!session.accepts(pending));
+        assert!(session.accepts_pending(pending));
+        assert!(!session.accepts_pending(first));
+        session.playback_started(first).unwrap();
+        assert_eq!(session.snapshot().response, ResponseState::Speaking);
+        assert!(session.playback_started(pending).is_err());
+        // A stale tag cannot register a pending speaker.
+        assert!(session.begin_pending_peer(pending, a).is_err());
+        session.promote_pending(pending).unwrap();
+        assert!(session.accepts(pending));
+        assert!(!session.accepts(first));
+        assert!(!session.accepts_pending(pending));
+        assert_eq!(session.snapshot().response, ResponseState::Generating);
+        assert!(!token.is_cancelled());
+        // Nothing is pending any more.
+        assert!(session.promote_pending(pending).is_err());
+        session.complete(pending).unwrap();
+    }
+    #[test]
+    fn cancelling_or_replacing_the_turn_drops_the_pending_speaker() {
+        let (a, b) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut session = Session::new(a);
+        // Barge-in.
+        let first = session.begin_text_turn();
+        let pending = session.begin_pending_peer(first, b).unwrap();
+        session.cancel();
+        assert!(!session.accepts_pending(pending));
+        assert!(session.promote_pending(pending).is_err());
+        assert!(!session.accepts(pending));
+        // A new turn does not inherit the old pending speaker.
+        let first = session.begin_text_turn();
+        let old = session.begin_pending_peer(first, b).unwrap();
+        let next = session.begin_text_turn();
+        assert!(!session.accepts_pending(old));
+        assert!(session.promote_pending(old).is_err());
+        assert!(session.accepts(next));
+        // Starting the next speaker the usual way replaces the pending one.
+        let pending = session.begin_pending_peer(next, b).unwrap();
+        let second = session.begin_peer(next, b).unwrap();
+        assert!(!session.accepts_pending(pending));
+        assert!(session.promote_pending(pending).is_err());
+        assert!(session.accepts(second));
+        // A pending speaker needs a live current speaker, and a token that is
+        // still alive when it is promoted.
+        session.complete(second).unwrap();
+        assert!(session.begin_pending_peer(second, a).is_err());
+        let first = session.begin_text_turn();
+        let pending = session.begin_pending_peer(first, b).unwrap();
+        session.pause_voice();
+        assert!(session.promote_pending(pending).is_err());
+    }
+    #[test]
+    fn the_guest_is_session_only() {
+        let (a, b) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut session = Session::new(a);
+        assert_eq!(session.snapshot().guest_profile_id, None);
+        session.set_guest(Some(b));
+        assert_eq!(session.snapshot().guest_profile_id, Some(b));
+        session.cancel();
+        assert_eq!(session.snapshot().guest_profile_id, Some(b));
+        session.switch_profile(b);
+        assert_eq!(session.snapshot().guest_profile_id, None);
     }
     #[test]
     fn short_words_are_accepted_once_and_empty_interruption_stays_stopped() {

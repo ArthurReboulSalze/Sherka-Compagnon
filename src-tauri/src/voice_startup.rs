@@ -1,10 +1,11 @@
 //! VoiceStudio is the required speech service. Conversation providers do not
 //! participate in this lifecycle, and no microphone is opened here.
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde::Serialize;
+use sherka_core::catalogs::{CatalogClient, DiscoveryError, VoiceCatalog};
 use std::{
     sync::{Arc, Mutex},
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tauri::{Emitter, Manager};
 use tokio::sync::watch;
@@ -20,6 +21,8 @@ pub struct Status {
 
 type Launcher = Arc<dyn Fn(u16, CancellationToken) -> Result<(), String> + Send + Sync>;
 type Reporter = Arc<dyn Fn(Status) + Send + Sync>;
+// Exit code of the server this session started on a port, once it has died.
+type Exited = Arc<dyn Fn(u16) -> Option<String> + Send + Sync>;
 struct Attempt {
     id: u64,
     cancel: CancellationToken,
@@ -30,6 +33,7 @@ struct Inner {
     state: watch::Sender<Status>,
     cancel: CancellationToken,
     launch: Launcher,
+    exited: Exited,
     report: Reporter,
     enabled: bool,
     budget: Duration,
@@ -51,17 +55,20 @@ impl VoiceStartup {
                 drop(core);
                 crate::service_process::launch(port, token, config, logs)
             }),
+            Arc::new(crate::service_process::exited),
             Arc::new(move |status| {
                 let _ = app.emit("sherka:voice-service", status);
             }),
             std::env::var("SHERKA_AUTOSTART_VOICE").as_deref() != Ok("0"),
-            Duration::from_secs(300),
+            // A cold start can load several large speech models.
+            Duration::from_secs(600),
             Duration::from_millis(700),
         )
     }
 
     fn build(
         launch: Launcher,
+        exited: Exited,
         report: Reporter,
         enabled: bool,
         budget: Duration,
@@ -89,6 +96,7 @@ impl VoiceStartup {
             state,
             cancel: CancellationToken::new(),
             launch,
+            exited,
             report,
             enabled,
             budget,
@@ -153,7 +161,7 @@ impl VoiceStartup {
                 biased;
                 _ = cancel.cancelled() => return,
                 result = tokio::time::timeout(service.0.budget, service.prepare(id, &url, cancel.clone())) =>
-                    result.unwrap_or_else(|_| Err("VoiceStudio n’est pas prêt après 5 minutes. Vérifie son chemin et son journal, puis réessaie.".into())),
+                    result.unwrap_or_else(|_| Err(format!("VoiceStudio n’est pas prêt après {} min. Il charge peut-être encore ses modèles : consulte son journal (logs/voicestudio.log), puis réessaie.", (service.0.budget.as_secs() / 60).max(1)))),
             };
             match result {
                 Ok(()) => service.update(id, "ready", "VoiceStudio est prêt.".into()),
@@ -201,17 +209,23 @@ impl VoiceStartup {
             return;
         }
         let mut status = self.status();
+        if status.phase == phase && status.message == message {
+            return;
+        }
         status.phase = phase;
         status.message = message;
         self.publish(status);
     }
 
+    // A server that is still alive or still answering "not ready" is only
+    // slow: it stays `starting` until it is ready, dies, or the budget ends.
     async fn prepare(&self, id: u64, url: &str, cancel: CancellationToken) -> Result<(), String> {
-        let mut launched = false;
+        let started = Instant::now();
+        let mut launched = None;
         loop {
             match probe(&self.0.client, url).await? {
                 Probe::Ready => return Ok(()),
-                Probe::Stopped if !launched => {
+                Probe::Stopped if launched.is_none() => {
                     let port = local_port(url).ok_or("VoiceStudio est inaccessible à cette adresse. Le lancement automatique nécessite une adresse HTTP locale, sans chemin intermédiaire.")?;
                     self.update(id, "starting", "Démarrage de VoiceStudio…".into());
                     let launch = self.0.launch.clone();
@@ -219,10 +233,26 @@ impl VoiceStartup {
                     tauri::async_runtime::spawn_blocking(move || launch(port, cancel))
                         .await
                         .map_err(|_| "Impossible de démarrer VoiceStudio.")??;
-                    launched = true;
+                    launched = Some(port);
+                    tokio::time::sleep(self.0.interval).await;
+                    continue;
                 }
-                _ => self.update(id, "starting", "VoiceStudio se prépare…".into()),
+                Probe::Stopped | Probe::Pending => {}
             }
+            if let Some(code) = launched.and_then(|port| (self.0.exited)(port)) {
+                return Err(format!(
+                    "VoiceStudio s’est arrêté pendant son démarrage (code {}). Consulte son journal (logs/voicestudio.log), puis réessaie.",
+                    code
+                ));
+            }
+            self.update(
+                id,
+                "starting",
+                format!(
+                    "VoiceStudio démarre et charge ses modèles… ({} s)",
+                    started.elapsed().as_secs()
+                ),
+            );
             tokio::time::sleep(self.0.interval).await;
         }
     }
@@ -252,19 +282,21 @@ enum Probe {
     Stopped,
     Pending,
 }
-async fn json(mut response: reqwest::Response) -> Result<serde_json::Value, String> {
+// `None`: the body was cut off or timed out, which a loading server does.
+async fn json(mut response: reqwest::Response) -> Result<Option<serde_json::Value>, String> {
     let mut bytes = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|_| "Réponse VoiceStudio interrompue.")?
-    {
-        if bytes.len() + chunk.len() > 65_536 {
-            return Err("Réponse VoiceStudio trop volumineuse.".into());
+    loop {
+        match response.chunk().await {
+            Ok(Some(chunk)) if bytes.len() + chunk.len() > 65_536 => {
+                return Err("Réponse VoiceStudio trop volumineuse.".into());
+            }
+            Ok(Some(chunk)) => bytes.extend_from_slice(&chunk),
+            Ok(None) => break,
+            Err(_) => return Ok(None),
         }
-        bytes.extend_from_slice(&chunk);
     }
     serde_json::from_slice(&bytes)
+        .map(Some)
         .map_err(|_| "Cette adresse ne renvoie pas une réponse VoiceStudio valide.".into())
 }
 fn checked(response: &reqwest::Response) -> Result<(), String> {
@@ -277,18 +309,48 @@ fn checked(response: &reqwest::Response) -> Result<(), String> {
         ))
     }
 }
+// Server errors are what a Python server answers while it loads its models.
+fn loading(status: reqwest::StatusCode) -> bool {
+    status.is_server_error()
+}
+fn announces_loading(health: &serde_json::Value) -> bool {
+    health["ready"] == false
+        || health["status"].as_str().is_some_and(|status| {
+            let status = status.to_ascii_lowercase();
+            [
+                "start",
+                "load",
+                "init",
+                "warm",
+                "boot",
+                "not_ready",
+                "not ready",
+            ]
+            .iter()
+            .any(|word| status.contains(word))
+        })
+}
 async fn probe(client: &Client, base: &str) -> Result<Probe, String> {
     let health = match client.get(format!("{base}/health")).send().await {
         Ok(response) => response,
         Err(error) if error.is_timeout() => return Ok(Probe::Pending),
         Err(error) if error.is_connect() => return Ok(Probe::Stopped),
-        Err(_) => return Err("Impossible de joindre VoiceStudio. Vérifie son adresse.".into()),
+        Err(error) if error.is_builder() || error.is_redirect() => {
+            return Err("Impossible de joindre VoiceStudio. Vérifie son adresse.".into());
+        }
+        // A reset or closed connection: the server is busy starting.
+        Err(_) => return Ok(Probe::Pending),
     };
-    if health.status() == reqwest::StatusCode::SERVICE_UNAVAILABLE {
+    if loading(health.status()) {
         return Ok(Probe::Pending);
     }
     checked(&health)?;
-    let health = json(health).await?;
+    let Some(health) = json(health).await? else {
+        return Ok(Probe::Pending);
+    };
+    if announces_loading(&health) {
+        return Ok(Probe::Pending);
+    }
     if health["status"] != "ok" || !health["version"].is_string() || !health["device"].is_string() {
         return Err("Un autre service répond à cette adresse, ou VoiceStudio n’est pas compatible. Vérifie l’adresse dans les réglages.".into());
     }
@@ -298,19 +360,66 @@ async fn probe(client: &Client, base: &str) -> Result<Probe, String> {
         .await
     {
         Ok(response) => response,
-        Err(error) if error.is_timeout() || error.is_connect() => return Ok(Probe::Pending),
-        Err(_) => return Err("Impossible de vérifier les capacités de VoiceStudio.".into()),
+        Err(error) if error.is_builder() || error.is_redirect() => {
+            return Err("Impossible de vérifier les capacités de VoiceStudio.".into());
+        }
+        Err(_) => return Ok(Probe::Pending),
     };
-    if response.status() == reqwest::StatusCode::SERVICE_UNAVAILABLE {
+    if loading(response.status()) {
         return Ok(Probe::Pending);
     }
     checked(&response)?;
-    if json(response).await?["protocol"] != "voicestudio.speech.v1" {
+    let Some(capabilities) = json(response).await? else {
+        return Ok(Probe::Pending);
+    };
+    if capabilities["protocol"] != "voicestudio.speech.v1" {
         return Err(
             "VoiceStudio ne fournit pas le protocole vocal attendu. Vérifie sa version.".into(),
         );
     }
     Ok(Probe::Ready)
+}
+
+/// How long the voice catalog is retried after VoiceStudio reported ready.
+const CATALOG_PATIENCE: Duration = Duration::from_secs(20);
+
+/// What to do about a failed voice catalog read: wait this long and try again
+/// (`waited`: time spent since the first try), or `None` to report the error.
+/// Only what a server finishing its start-up does is worth another try
+/// (unreachable, timeout, 5xx, as for `loading`); a missing voice or any 4xx,
+/// an authentication or a format problem is final.
+fn catalog_retry(error: &DiscoveryError, attempt: u32, waited: Duration) -> Option<Duration> {
+    let transient = match error {
+        DiscoveryError::Unreachable | DiscoveryError::Timeout => true,
+        DiscoveryError::Http(code, _) => StatusCode::from_u16(*code).is_ok_and(loading),
+        _ => false,
+    };
+    (transient && waited < CATALOG_PATIENCE)
+        .then(|| Duration::from_millis(250u64 << attempt.min(3)).min(CATALOG_PATIENCE - waited))
+}
+
+/// The voice catalog right after `ensure` succeeded: VoiceStudio may still be
+/// loading its models, so transient failures are retried for a few seconds.
+/// `cancel` is the turn's pending token.
+pub async fn voice_catalog(url: &str, cancel: &CancellationToken) -> Result<VoiceCatalog, String> {
+    let client = CatalogClient::new(url).map_err(|e| e.to_string())?;
+    let started = Instant::now();
+    let mut attempt = 0;
+    loop {
+        let error = match client.voices().await {
+            Ok(catalog) => return Ok(catalog),
+            Err(error) => error,
+        };
+        let Some(wait) = catalog_retry(&error, attempt, started.elapsed()) else {
+            return Err(error.to_string());
+        };
+        attempt += 1;
+        tokio::select! {
+            biased;
+            _ = cancel.cancelled() => return Err("Demande vocale annulée.".into()),
+            _ = tokio::time::sleep(wait) => {}
+        }
+    }
 }
 
 pub async fn start_active(app: &tauri::AppHandle, recheck: bool) -> Result<(), String> {

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-guest-companion"
+description = "Enables the set_guest_companion command without any pre-configured scope."
+commands.allow = ["set_guest_companion"]
+
+[[permission]]
+identifier = "deny-set-guest-companion"
+description = "Denies the set_guest_companion command without any pre-configured scope."
+commands.deny = ["set_guest_companion"]

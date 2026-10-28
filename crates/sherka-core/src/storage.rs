@@ -16,7 +16,7 @@ use std::{
 };
 use uuid::Uuid;
 
-const SCHEMA_VERSION: i64 = 9;
+const SCHEMA_VERSION: i64 = 10;
 const MAX_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_EXPORT_BYTES: usize = 48 * 1024 * 1024;
 
@@ -36,15 +36,31 @@ pub enum Delivery {
     Uncertain,
 }
 
+/// The other companion that said a message in a three-way conversation.
+/// `None` on a message means the user or the database's own companion.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Speaker {
+    pub id: Uuid,
+    pub name: String,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct Message {
     pub web: Option<crate::web::Report>,
+    pub speaker: Option<Speaker>,
     pub id: String,
     pub role: MessageRole,
     pub content: String,
     pub delivery: Delivery,
     pub heard_content: String,
     pub created_at: i64,
+}
+
+/// Where a new message row is written.
+struct Target {
+    profile: Uuid,
+    session: String,
+    extraction: bool,
 }
 
 #[derive(Clone)]
@@ -74,7 +90,7 @@ impl Store {
         fs::create_dir_all(store.root.join("profiles"))?;
         let mut db = connect(&store.root.join("settings.sqlite3"), true)?;
         let tx = db.transaction()?;
-        tx.execute_batch("CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); PRAGMA user_version = 9;")?;
+        tx.execute_batch("CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); PRAGMA user_version = 10;")?;
         tx.execute_batch("CREATE TABLE IF NOT EXISTS hermes_sessions (companion TEXT NOT NULL, endpoint TEXT NOT NULL, session TEXT NOT NULL, PRIMARY KEY(companion, endpoint)); CREATE TABLE IF NOT EXISTS hermes_session_tips (session TEXT PRIMARY KEY, tip TEXT NOT NULL); CREATE TABLE IF NOT EXISTS hermes_profiles (server TEXT NOT NULL, profile TEXT NOT NULL, PRIMARY KEY(server, profile));")?;
         tx.execute(
             "INSERT OR IGNORE INTO settings(id,value) VALUES(1,?1)",
@@ -378,6 +394,21 @@ impl Store {
         }
         if version < 9 {
             db.execute_batch(include_str!("mood_schema.sql"))?;
+        }
+        if version < 10 {
+            let tx = db.transaction()?;
+            let present: bool = tx.query_row(
+                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('messages') WHERE name='speaker_id')",
+                [],
+                |r| r.get(0),
+            )?;
+            // Idempotent: a database whose version was lowered keeps its columns.
+            if present {
+                tx.execute_batch("PRAGMA user_version = 10;")?;
+            } else {
+                tx.execute_batch(include_str!("speaker_schema.sql"))?;
+            }
+            tx.commit()?;
         }
         Ok(db)
     }
@@ -704,20 +735,55 @@ impl Store {
         content: &str,
         delivery: Delivery,
     ) -> Result<()> {
+        let session = self.transcript_session(tag.profile_id)?;
+        let extraction = session.is_none();
+        let target = Target {
+            profile: tag.profile_id,
+            session: session.unwrap_or_else(|| tag.session_id.to_string()),
+            extraction,
+        };
+        self.insert_message(tag, target, role, content, delivery)
+    }
+
+    /// Write the user's message into another companion's database for a
+    /// three-way conversation. Peer copies are never Hermes transcripts.
+    pub fn append_user_message_to(
+        &self,
+        profile: Uuid,
+        tag: OperationTag,
+        content: &str,
+        delivery: Delivery,
+    ) -> Result<()> {
+        let target = Target {
+            profile,
+            session: tag.session_id.to_string(),
+            extraction: true,
+        };
+        self.insert_message(tag, target, MessageRole::User, content, delivery)
+    }
+
+    fn insert_message(
+        &self,
+        tag: OperationTag,
+        target: Target,
+        role: MessageRole,
+        content: &str,
+        delivery: Delivery,
+    ) -> Result<()> {
         if content.trim().is_empty() || content.len() > 256_000 {
             return Err(Error::Validation(
                 "Le message est vide ou trop long.".into(),
             ));
         }
-        let db = self.db(tag.profile_id)?;
+        let db = self.db(target.profile)?;
         db.execute("INSERT INTO messages(id,session_id,turn_id,generation_id,role,content,delivery,created_at,extraction_allowed) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)",
-            params![Uuid::new_v4().to_string(), self.transcript_session(tag.profile_id)?.unwrap_or_else(||tag.session_id.to_string()), tag.turn_id.to_string(), tag.generation_id.to_string(), serde_json::to_string(&role)?, content, serde_json::to_string(&delivery)?, now(), self.transcript_session(tag.profile_id)?.is_none()])?;
+            params![Uuid::new_v4().to_string(), target.session, tag.turn_id.to_string(), tag.generation_id.to_string(), serde_json::to_string(&role)?, content, serde_json::to_string(&delivery)?, now(), target.extraction])?;
         Ok(())
     }
 
     pub fn history(&self, id: Uuid, limit: u32) -> Result<Vec<Message>> {
         let db = self.db(id)?;
-        let mut query = db.prepare("SELECT id,role,content,delivery,created_at,heard_content,web_sources FROM (SELECT seq,id,role,content,delivery,created_at,heard_content,web_sources FROM messages WHERE (?2 IS NULL OR session_id=?2) ORDER BY seq DESC LIMIT ?1) ORDER BY seq")?;
+        let mut query = db.prepare("SELECT id,role,content,delivery,created_at,heard_content,web_sources,speaker_id,speaker_name FROM (SELECT seq,id,role,content,delivery,created_at,heard_content,web_sources,speaker_id,speaker_name FROM messages WHERE (?2 IS NULL OR session_id=?2) ORDER BY seq DESC LIMIT ?1) ORDER BY seq")?;
         let raw = query.query_map(params![limit.min(100), self.transcript_session(id)?], |r| {
             Ok((
                 r.get::<_, String>(0)?,
@@ -727,12 +793,30 @@ impl Store {
                 r.get::<_, i64>(4)?,
                 r.get::<_, String>(5)?,
                 r.get::<_, Option<String>>(6)?,
+                r.get::<_, Option<String>>(7)?,
+                r.get::<_, Option<String>>(8)?,
             ))
         })?;
         raw.map(|row| {
-            let (id, role, content, delivery, created_at, heard_content, web) = row?;
+            let (
+                id,
+                role,
+                content,
+                delivery,
+                created_at,
+                heard_content,
+                web,
+                speaker_id,
+                speaker_name,
+            ) = row?;
             Ok(Message {
                 web: web.map(|text| serde_json::from_str(&text)).transpose()?,
+                speaker: speaker_id.zip(speaker_name).and_then(|(id, name)| {
+                    Some(Speaker {
+                        id: id.parse().ok()?,
+                        name,
+                    })
+                }),
                 id,
                 role: serde_json::from_str(&role)?,
                 content,
@@ -760,6 +844,31 @@ impl Store {
         self.db(tag.profile_id)?.execute(
             "INSERT INTO messages(id,session_id,turn_id,generation_id,role,content,delivery,created_at,heard_content,extraction_allowed) VALUES(?1,?2,?3,?1,?4,?5,?6,?7,?8,?9) ON CONFLICT(id) DO UPDATE SET content=excluded.content,delivery=excluded.delivery,heard_content=excluded.heard_content",
             params![tag.generation_id.to_string(), self.transcript_session(tag.profile_id)?.unwrap_or_else(||tag.session_id.to_string()), tag.turn_id.to_string(), serde_json::to_string(&MessageRole::Assistant)?,content,serde_json::to_string(&delivery)?,now(),heard,self.transcript_session(tag.profile_id)?.is_none()])?;
+        Ok(())
+    }
+
+    /// Copy another companion's reply into `profile`'s database, attributed to
+    /// `speaker`. The row reuses the generation id, so re-copying an updated
+    /// reply replaces the previous copy.
+    pub fn append_peer_reply(
+        &self,
+        profile: Uuid,
+        tag: OperationTag,
+        speaker: &Speaker,
+        content: &str,
+        heard: &str,
+        delivery: Delivery,
+    ) -> Result<()> {
+        if content.trim().is_empty() {
+            return Ok(());
+        }
+        if content.len() > 512_000 || heard.len() > 512_000 {
+            return Err(Error::Validation("Réponse trop longue.".into()));
+        }
+        self.db(profile)?.execute(
+            "INSERT INTO messages(id,session_id,turn_id,generation_id,role,content,delivery,created_at,heard_content,extraction_allowed,speaker_id,speaker_name) VALUES(?1,?2,?3,?1,?4,?5,?6,?7,?8,1,?9,?10) ON CONFLICT(id) DO UPDATE SET content=excluded.content,delivery=excluded.delivery,heard_content=excluded.heard_content",
+            params![tag.generation_id.to_string(), tag.session_id.to_string(), tag.turn_id.to_string(), serde_json::to_string(&MessageRole::Assistant)?, content, serde_json::to_string(&delivery)?, now(), heard, speaker.id.to_string(), speaker.name],
+        )?;
         Ok(())
     }
 

@@ -524,3 +524,44 @@ fn positive_suffix_is_appended_once_verbatim_in_both_families() {
     let upgraded: Config = serde_json::from_value(old).unwrap();
     assert!(upgraded.positive_prompt_suffix.is_empty());
 }
+
+#[test]
+fn the_image_generator_starts_off_for_the_active_companion_at_startup_and_on_every_switch() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut app = Companion::open(dir.path()).unwrap();
+    let first = app.session.snapshot().profile_id;
+    let second = app.store.create(ProfileDraft::default(), None).unwrap().id;
+    let enable = |app: &mut Companion, id| {
+        let p = app.store.profile(id).unwrap();
+        let mut draft = p.details;
+        draft.illustration = Config {
+            enabled: true,
+            ..config()
+        };
+        app.update_profile(id, p.revision, draft).unwrap();
+    };
+    let enabled = |app: &Companion, id| app.store.profile(id).unwrap().details.illustration.enabled;
+    enable(&mut app, first);
+    enable(&mut app, second);
+    assert!(enabled(&app, first) && enabled(&app, second));
+    drop(app);
+    // Startup: only the active companion is reset, through a normal update.
+    let revision = |app: &Companion, id| app.store.profile(id).unwrap().revision;
+    let mut app = Companion::open(dir.path()).unwrap();
+    assert!(!enabled(&app, first) && enabled(&app, second));
+    // A switch turns the target off, even if it was switched on before.
+    let before = revision(&app, second);
+    app.switch_profile(second).unwrap();
+    assert!(!enabled(&app, second));
+    assert_eq!(revision(&app, second), before + 1);
+    // The user switches it on during the session; going back and forth resets it.
+    enable(&mut app, second);
+    enable(&mut app, first);
+    // Selecting the companion that is already active changes nothing.
+    app.switch_profile(second).unwrap();
+    assert!(enabled(&app, second));
+    app.switch_profile(first).unwrap();
+    assert!(!enabled(&app, first));
+    app.switch_profile(second).unwrap();
+    assert!(!enabled(&app, second));
+}

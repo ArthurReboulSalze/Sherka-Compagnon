@@ -490,3 +490,415 @@ fn migration_v2_keeps_messages_and_memory_provenance() {
     assert_eq!(memory.entries[0].draft.content, "astronomie");
     assert_eq!(memory.entries[0].draft.kind, "detail");
 }
+
+fn row(
+    n: usize,
+    role: MessageRole,
+    speaker: Option<&str>,
+    content: &str,
+) -> sherka_core::storage::Message {
+    sherka_core::storage::Message {
+        web: None,
+        speaker: speaker.map(|name| sherka_core::storage::Speaker {
+            id: uuid::Uuid::new_v4(),
+            name: name.into(),
+        }),
+        id: n.to_string(),
+        role,
+        content: content.into(),
+        delivery: Delivery::Completed,
+        heard_content: content.into(),
+        created_at: n as i64,
+    }
+}
+
+fn minerva() -> ProfileDraft {
+    ProfileDraft {
+        name: "Minerva".into(),
+        ..Default::default()
+    }
+}
+
+#[test]
+fn peer_rows_become_named_user_turns_and_adjacent_users_merge() {
+    let p = minerva();
+    let history = [
+        row(1, MessageRole::User, None, "Q1"),
+        row(2, MessageRole::Assistant, None, "A1"),
+        row(3, MessageRole::Assistant, Some("Sherka"), "P1"),
+        row(4, MessageRole::User, None, "Q2"),
+    ];
+    let prepared = prepare_context(
+        &p,
+        &history,
+        "Q3",
+        &Default::default(),
+        budget(&p, &model(8192, 8192)).unwrap(),
+        None,
+    )
+    .unwrap();
+    let roles: Vec<_> = prepared.messages.iter().map(|m| m.role).collect();
+    assert_eq!(roles, ["system", "user", "assistant", "user"]);
+    // The departed companion's line makes the prompt multi-party: the user's
+    // lines are labelled.
+    assert_eq!(prepared.messages[1].content, "User: Q1");
+    assert_eq!(prepared.messages[2].content, "A1");
+    assert_eq!(
+        prepared.messages[3].content,
+        "Sherka: P1\n\nUser: Q2\n\nUser: Q3"
+    );
+    assert_eq!(prepared.budget.history_kept, 4);
+    assert_eq!(prepared.budget.history_omitted, 0);
+    // The prompt is readable in solo mode too, without a peer paragraph.
+    assert!(!prepared.messages[0].content.contains("Three-way"));
+}
+
+#[test]
+fn interrupted_peer_rows_keep_only_what_was_heard() {
+    let p = minerva();
+    let mut cut = row(2, MessageRole::Assistant, Some("Sherka"), "HEARD UNHEARD");
+    cut.delivery = Delivery::Interrupted;
+    cut.heard_content = "HEARD".into();
+    let mut silent = row(3, MessageRole::Assistant, Some("Sherka"), "NEVERHEARD");
+    silent.delivery = Delivery::Uncertain;
+    silent.heard_content = String::new();
+    let history = [row(1, MessageRole::User, None, "Q1"), cut, silent];
+    let prepared = prepare_context(
+        &p,
+        &history,
+        "Q2",
+        &Default::default(),
+        budget(&p, &model(8192, 8192)).unwrap(),
+        None,
+    )
+    .unwrap();
+    let json = serde_json::to_string(&prepared.messages).unwrap();
+    assert!(!json.contains("UNHEARD") && !json.contains("NEVERHEARD"));
+    assert_eq!(
+        prepared.messages[1].content,
+        "User: Q1\n\nSherka: HEARD [Suite interrompue, non entendue.]\n\nUser: Q2"
+    );
+}
+
+#[test]
+fn peer_paragraph_and_pass_rule_depend_on_the_turn_order() {
+    use sherka_core::{
+        conversation::prepare_context_with_avatar,
+        trio::{Participant, Peer, follow_message},
+    };
+    let p = minerva();
+    let run = |user: &str, peer: Option<&Peer>| {
+        prepare_context_with_avatar(
+            &p,
+            &[row(1, MessageRole::User, None, "Salut")],
+            user,
+            &Default::default(),
+            budget(&p, &model(8192, 8192)).unwrap(),
+            None,
+            None,
+            false,
+            peer,
+            "",
+            if peer.is_some_and(|p| p.second) {
+                sherka_core::trio::Last::Attributed
+            } else {
+                sherka_core::trio::Last::User
+            },
+        )
+        .unwrap()
+    };
+    let solo = run("Hello", None);
+    assert!(!solo.messages[0].content.contains("Three-way"));
+    assert!(!solo.messages[0].content.contains("[[pass]]"));
+    let first = run(
+        "Hello",
+        Some(&Peer {
+            name: "Sherka".into(),
+            second: false,
+            quick: false,
+        }),
+    );
+    let system = &first.messages[0].content;
+    assert!(system.contains("Three-way conversation"));
+    assert!(system.contains("Speak only as Minerva"));
+    assert!(system.contains("another companion named Sherka"));
+    assert!(!system.contains("[[pass]]"));
+    assert!(system.contains("Character: Minerva."));
+    let sherka = Participant {
+        id: uuid::Uuid::new_v4(),
+        name: "Sherka".into(),
+    };
+    let follow = follow_message(Some("Hello"), "", &sherka, "Hi, I am Sherka.");
+    let second = run(
+        &follow,
+        Some(&Peer {
+            name: "Sherka".into(),
+            second: true,
+            quick: false,
+        }),
+    );
+    assert!(second.messages[0].content.contains("reply only [[pass]]"));
+    assert_eq!(second.messages.len(), 2);
+    assert_eq!(
+        second.messages[1].content,
+        "User: Salut\n\nUser: Hello\n\nSherka: Hi, I am Sherka."
+    );
+    // The extra paragraph is mandatory text, so it is part of the estimate.
+    assert!(second.budget.input_estimate > solo.budget.input_estimate);
+}
+
+#[test]
+fn merged_three_way_prompts_stay_inside_the_budget() {
+    use sherka_core::trio::Peer;
+    let p = minerva();
+    let mut history = Vec::new();
+    for n in 0..60 {
+        let who = match n % 3 {
+            0 => (MessageRole::User, None),
+            1 => (MessageRole::Assistant, None),
+            _ => (MessageRole::Assistant, Some("Sherka")),
+        };
+        history.push(row(
+            n,
+            who.0,
+            who.1,
+            &format!("ligne {n} {}", "mot ".repeat(60)),
+        ));
+    }
+    let budget = budget(&p, &model(8192, 8192)).unwrap();
+    let limit = budget.limit as usize;
+    let prepared = sherka_core::conversation::prepare_context_with_avatar(
+        &p,
+        &history,
+        "Et toi ?",
+        &Default::default(),
+        budget,
+        None,
+        None,
+        false,
+        Some(&Peer {
+            name: "Sherka".into(),
+            second: true,
+            quick: false,
+        }),
+        "",
+        sherka_core::trio::Last::User,
+    )
+    .unwrap();
+    let b = &prepared.budget;
+    assert!(b.input_estimate + b.response_tokens as usize + b.safety_tokens <= limit);
+    assert!(b.history_omitted > 0 && b.history_kept > 0);
+    assert_eq!(prepared.messages[0].role, "system");
+    assert!(
+        prepared
+            .messages
+            .windows(2)
+            .all(|w| w[0].role != w[1].role || w[0].role == "system")
+    );
+    assert_eq!(prepared.messages[1].role, "user");
+    assert!(
+        prepared
+            .messages
+            .last()
+            .unwrap()
+            .content
+            .ends_with("Et toi ?")
+    );
+}
+
+#[test]
+fn a_departed_guest_is_explained_to_the_master() {
+    use sherka_core::{conversation::prepare_context_with_avatar, trio::Peer};
+    let p = minerva();
+    let history = [
+        row(1, MessageRole::User, None, "Q1"),
+        row(2, MessageRole::Assistant, Some("Kit"), "Salut, c'est Kit."),
+        row(3, MessageRole::Assistant, None, "Et moi, Minerva."),
+    ];
+    let run = |history: &[sherka_core::storage::Message], peer: Option<&Peer>| {
+        prepare_context_with_avatar(
+            &p,
+            history,
+            "Q2",
+            &Default::default(),
+            budget(&p, &model(8192, 8192)).unwrap(),
+            None,
+            None,
+            false,
+            peer,
+            "",
+            sherka_core::trio::Last::User,
+        )
+        .unwrap()
+        .messages[0]
+            .content
+            .clone()
+    };
+    // Kit left: no peer, but his lines remain.
+    let system = run(&history, None);
+    assert!(system.contains("Earlier in this conversation, Kit (another companion) took part"));
+    assert!(system.contains("Kit has left the conversation and can no longer hear you."));
+    assert!(system.contains("not by the user"));
+    assert!(!system.contains("Three-way conversation"));
+    // Nobody ever spoke: nothing to explain.
+    let alone = run(&history[..1], None);
+    assert!(!alone.contains("Earlier in this conversation"));
+    // Kit is the current peer: not departed.
+    let peer = |name: &str| Peer {
+        name: name.into(),
+        second: false,
+        quick: false,
+    };
+    let current = run(&history, Some(&peer("Kit")));
+    assert!(current.contains("Three-way conversation"));
+    assert!(!current.contains("Earlier in this conversation"));
+    assert!(!run(&history, Some(&peer(" kit "))).contains("Earlier in this conversation"));
+    // A new guest joined while the old one's lines remain.
+    let replaced = run(&history, Some(&peer("Sherka")));
+    assert!(replaced.contains("another companion named Sherka"));
+    assert!(replaced.contains("Earlier in this conversation, Kit (another companion)"));
+    // Several former guests are listed once each.
+    let mut crowd = history.to_vec();
+    crowd.push(row(4, MessageRole::Assistant, Some("Alba"), "Coucou."));
+    crowd.push(row(5, MessageRole::Assistant, Some("Kit"), "Encore moi."));
+    crowd.push(row(6, MessageRole::Assistant, Some("Botsy"), "Bip."));
+    let system = run(&crowd, None);
+    assert!(system.contains("Kit, Alba and Botsy (other companions) took part"));
+    assert!(system.contains("those names were said by them"));
+    assert!(system.contains("They have left the conversation"));
+    assert_eq!(system.matches("Kit").count(), 1);
+}
+
+#[test]
+fn the_users_lines_are_labelled_whenever_another_companion_is_in_the_prompt() {
+    use sherka_core::{
+        conversation::prepare_context_with_avatar,
+        trio::{Last, Peer},
+    };
+    let p = minerva();
+    let run = |history: &[sherka_core::storage::Message],
+               user: &str,
+               peer: Option<&Peer>,
+               user_name: &str,
+               last: Last| {
+        prepare_context_with_avatar(
+            &p,
+            history,
+            user,
+            &Default::default(),
+            budget(&p, &model(8192, 8192)).unwrap(),
+            None,
+            None,
+            false,
+            peer,
+            user_name,
+            last,
+        )
+        .unwrap()
+    };
+    let sherka = Peer {
+        name: "Sherka".into(),
+        second: false,
+        quick: false,
+    };
+    let history = [
+        row(1, MessageRole::User, None, "Salut"),
+        row(
+            2,
+            MessageRole::Assistant,
+            Some("Sherka"),
+            "Coucou, moi c'est Sherka.",
+        ),
+        row(3, MessageRole::User, None, "Stop, écoute-moi."),
+        row(4, MessageRole::Assistant, None, "Je t'écoute."),
+    ];
+    // Trio: the user's words stay apart from the other companion's line.
+    let trio = run(&history, "Et toi ?", Some(&sherka), "", Last::User);
+    assert_eq!(trio.messages.len(), 4);
+    assert_eq!(
+        trio.messages[1].content,
+        "User: Salut\n\nSherka: Coucou, moi c'est Sherka.\n\nUser: Stop, écoute-moi."
+    );
+    assert!(trio.messages[1].content.contains("\n\nUser: "));
+    assert_eq!(trio.messages[2].content, "Je t'écoute.");
+    assert_eq!(trio.messages[3].content, "User: Et toi ?");
+    assert!(trio.messages[0].content.contains("\"User:\""));
+    // The label costs context: the estimate follows.
+    let bare = run(&history, "Et toi ?", None, "", Last::User);
+    assert!(trio.budget.input_estimate > bare.budget.input_estimate);
+    // A named user.
+    let named = run(&history, "Et toi ?", Some(&sherka), " Arthur ", Last::User);
+    assert_eq!(
+        named.messages[1].content,
+        "Arthur: Salut\n\nSherka: Coucou, moi c'est Sherka.\n\nArthur: Stop, écoute-moi."
+    );
+    assert_eq!(named.messages[3].content, "Arthur: Et toi ?");
+    assert!(named.messages[0].content.contains("\"Arthur:\""));
+    assert!(!named.messages[0].content.contains("User:"));
+    // The second speaker's follow message already carries the label.
+    let second = Peer {
+        second: true,
+        ..sherka.clone()
+    };
+    let who = sherka_core::trio::Participant {
+        id: uuid::Uuid::new_v4(),
+        name: "Sherka".into(),
+    };
+    let follow = sherka_core::trio::follow_message(Some("Et toi ?"), "", &who, "Bonjour.");
+    let reacting = run(&history[..1], &follow, Some(&second), "", Last::Attributed);
+    assert_eq!(
+        reacting.messages[1].content,
+        "User: Salut\n\nUser: Et toi ?\n\nSherka: Bonjour."
+    );
+    // Departed companion only: the user's lines are labelled all the same.
+    let departed = run(&history, "Et toi ?", None, "", Last::User);
+    assert_eq!(departed.messages[3].content, "User: Et toi ?");
+    assert!(
+        departed.messages[1]
+            .content
+            .starts_with("User: Salut\n\nSherka: ")
+    );
+    let note = &departed.messages[0].content;
+    assert!(note.contains("Earlier in this conversation, Sherka (another companion) took part"));
+    assert!(note.contains("The user's lines start with \"User:\"."));
+    assert!(!note.contains("Three-way conversation"));
+    let named = run(&history, "Et toi ?", None, "Arthur", Last::User);
+    assert!(
+        named.messages[0]
+            .content
+            .contains("The user's lines start with \"Arthur:\".")
+    );
+    assert_eq!(named.messages[3].content, "Arthur: Et toi ?");
+    // With a peer present, its paragraph says it; the note does not repeat it.
+    assert!(
+        !trio.messages[0]
+            .content
+            .contains("The user's lines start with")
+    );
+    // An application event is not a line of the user.
+    let event = sherka_core::event::AppEvent::GuestJoined {
+        id: uuid::Uuid::new_v4(),
+        name: "Sherka".into(),
+        description: None,
+    }
+    .prompt();
+    let remark = run(&history[..1], &event, Some(&sherka), "", Last::Attributed);
+    let last = &remark.messages.last().unwrap().content;
+    assert!(last.ends_with(&event) && !last.contains("User: [Application"));
+    assert!(remark.messages[1].content.starts_with("User: Salut"));
+    // Solo, with no other companion anywhere: nothing is labelled.
+    let solo_history = [
+        row(1, MessageRole::User, None, "Salut"),
+        row(2, MessageRole::Assistant, None, "Bonjour."),
+    ];
+    let solo = run(&solo_history, "Et toi ?", None, "Arthur", Last::User);
+    assert_eq!(solo.messages.len(), 4);
+    assert_eq!(solo.messages[1].content, "Salut");
+    assert_eq!(solo.messages[3].content, "Et toi ?");
+    assert!(
+        solo.messages
+            .iter()
+            .all(|m| !m.content.contains("User:") && !m.content.contains("Arthur:"))
+    );
+    assert!(!solo.messages[0].content.contains("lines start with"));
+}

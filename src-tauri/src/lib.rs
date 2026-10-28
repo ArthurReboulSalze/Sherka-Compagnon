@@ -3,6 +3,7 @@ mod character_studio;
 mod comfy_startup;
 mod conversation;
 mod desktop_tools;
+mod guest_window;
 mod illustrations;
 mod image_viewer;
 mod initiative;
@@ -44,6 +45,9 @@ enum Mutation {
     },
     VoiceService {
         config: sherka_core::model::VoiceServiceConfig,
+    },
+    TrioSettings {
+        config: sherka_core::model::TrioSettings,
     },
     Initiative {
         id: Uuid,
@@ -176,6 +180,47 @@ async fn retry_voice_service(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn set_guest_companion(
+    app: AppHandle,
+    shared: State<'_, Shared>,
+    voice: State<'_, Voice>,
+    id: Option<Uuid>,
+) -> Result<Snapshot, String> {
+    windows::ensure_running()?;
+    let _gate = voice.gate.lock().await;
+    windows::ensure_running()?;
+    voice.cancel_pending();
+    // Keep the position of the guest that is about to leave.
+    guest_window::save_now(&app);
+    let previous = with_core(shared.inner().clone(), move |core| {
+        let previous = core.guest();
+        core.set_guest(id)?;
+        Ok(previous)
+    })
+    .await?;
+    voice.playback.interrupt();
+    let synced = guest_window::sync(&app, shared.inner()).await;
+    if synced.is_err() && id.is_some() {
+        // No window, no guest: never keep an invisible participant.
+        with_core(shared.inner().clone(), |core| core.set_guest(None)).await?;
+        let _ = guest_window::sync(&app, shared.inner()).await;
+    }
+    conversation::emit(&app, shared.inner());
+    app.emit("sherka:changed", ()).map_err(|e| e.to_string())?;
+    synced?;
+    if let Some(guest) = id.filter(|guest| previous != Some(*guest)) {
+        // The master greets a new guest; it stays silent when it cannot.
+        tauri::async_runtime::spawn(conversation::greet_guest(
+            app.clone(),
+            shared.inner().clone(),
+            voice.inner().clone(),
+            guest,
+        ));
+    }
+    with_core(shared.inner().clone(), |core| core.snapshot()).await
+}
+
+#[tauri::command]
 async fn switch_companion(
     app: AppHandle,
     shared: State<'_, Shared>,
@@ -220,6 +265,7 @@ async fn apply_mutation(
             | Mutation::MoodPersistence { .. }
             | Mutation::ResetMood { .. }
             | Mutation::ComfyuiStartup { .. }
+            | Mutation::TrioSettings { .. }
     ) {
         voice.cancel_pending();
     }
@@ -230,6 +276,8 @@ async fn apply_mutation(
     if matches!(&mutation, Mutation::SwitchProfile { .. }) {
         windows::save_geometry_now(&app);
     }
+    // A profile change may drop the guest: keep its position first.
+    guest_window::save_now(&app);
     let voice_changed = matches!(&mutation, Mutation::VoiceService { .. });
     let preferences_changed = matches!(&mutation, Mutation::Preferences { .. });
     let stop_audio = matches!(
@@ -252,6 +300,7 @@ async fn apply_mutation(
         match mutation {
             Mutation::SearchConfig { config } => core.set_search_config(config)?,
             Mutation::VoiceService { config } => core.set_voice_service(config)?,
+            Mutation::TrioSettings { config } => core.set_trio_settings(config)?,
             Mutation::Initiative {
                 id,
                 revision,
@@ -315,7 +364,7 @@ async fn apply_mutation(
             Mutation::DuplicateProfile { id } => {
                 core.store.duplicate(id)?;
             }
-            Mutation::DeleteProfile { id } => core.store.delete(id)?,
+            Mutation::DeleteProfile { id } => core.delete_profile(id)?,
             Mutation::SetAvatar {
                 id,
                 revision,
@@ -406,6 +455,10 @@ async fn apply_mutation(
     }
     if stop_audio {
         voice.stop_audio().await;
+    }
+    // Switching, deleting or editing a profile can end the three-way conversation.
+    if let Err(error) = guest_window::sync(&app, shared.inner()).await {
+        eprintln!("Guest window synchronization failed: {error}");
     }
     conversation::emit(&app, shared.inner());
     illustrations::synchronize(&app, shared.inner());
@@ -944,6 +997,7 @@ async fn widget_action(
                 w.set_ignore_cursor_events(true)
                     .map_err(|e| e.to_string())?;
             }
+            guest_window::click_through(&app);
         }
         WidgetAction::ToggleMicrophone => {
             conversation::toggle(app, shared.inner().clone(), voice.inner().clone()).await?
@@ -1027,6 +1081,7 @@ pub fn run() {
             get_voice_service,
             retry_voice_service,
             switch_companion,
+            set_guest_companion,
             apply_mutation,
             get_history,
             clear_conversation,

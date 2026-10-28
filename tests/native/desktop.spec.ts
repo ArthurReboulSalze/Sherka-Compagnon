@@ -3292,3 +3292,358 @@ test('real VoiceStudio: prepared local runtime starts without Electron and close
     if(child.exitCode===null)await native('widget_action',{action:'quit'}).catch(()=>{});
   }
 });
+
+// ---------------------------------------------------------------------------
+// Three-way conversation: the active companion (master), a guest companion and
+// the user. A single fake server plays LM Studio and VoiceStudio.
+// ---------------------------------------------------------------------------
+
+interface TrioChat { name: string; body: any }
+interface TrioServer {
+  base: string;
+  chats: TrioChat[];
+  spoken: { voice: string; input: string }[];
+  /** Chunks streamed for the n-th Character request (0-based) of the test. */
+  script: (index: number, name: string) => string[];
+  close: () => Promise<void>;
+}
+
+const trioReply = (name: string): string => `Voici la réponse de ${name}.`;
+const trioWords = (text: string): string => text.replace(/\s+/g, ' ').trim();
+
+async function startTrioServer(): Promise<TrioServer> {
+  const fixture = JSON.parse(readFileSync('tests/fixtures/services.json', 'utf8'));
+  fixture['/v1/audio/voices'].voices = [
+    {voice_id:'voice-a',name:'Voix A',type:'profile',language:'French'},
+    {voice_id:'voice-b',name:'Voix B',type:'profile',language:'French'},
+  ];
+  const models = modelRoutes(['trio-chat'], 64000);
+  const result: TrioServer = {
+    base: '', chats: [], spoken: [],
+    script: (_index, name) => [trioReply(name)],
+    close: async () => {},
+  };
+  const server = createServer((request, response) => {
+    if (models(request, response)) return;
+    if (request.method === 'GET') {
+      const data = fixture[request.url ?? ''];
+      response.writeHead(data ? 200 : 404, {'Content-Type':'application/json'});
+      response.end(JSON.stringify(data ?? {})); return;
+    }
+    let raw = ''; request.on('data', bytes => { raw += bytes; });
+    request.on('end', () => {
+      const body = raw ? JSON.parse(raw) : {};
+      if (request.url === '/v1/audio/speech') {
+        result.spoken.push({voice: body.voice, input: body.input});
+        response.writeHead(200, {'Content-Type':'audio/pcm'});
+        response.end(Buffer.alloc(4800)); return;
+      }
+      const system = String(body.messages?.[0]?.content ?? '');
+      const name = /^Character: ([^.\n]*)\./.exec(system)?.[1] ?? '';
+      let chunks = [trioReply(name)];
+      if (name) { chunks = result.script(result.chats.length, name); result.chats.push({name, body}); }
+      response.writeHead(200, {'Content-Type':'text/event-stream'});
+      for (const content of chunks) response.write('data: ' + JSON.stringify({choices:[{delta:{content}}]}) + '\n\n');
+      response.end('data: [DONE]\n\n');
+    });
+  });
+  await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
+  const address = server.address(); if (!address || typeof address === 'string') throw new Error('No port');
+  result.base = `http://127.0.0.1:${address.port}`;
+  result.close = async () => { server.closeAllConnections(); await new Promise<void>(done => server.close(() => done())); };
+  return result;
+}
+
+/** Master on voice-a with the fake server; guest on voice-b with an unreachable LLM of its own. */
+async function configureTrio(trio: TrioServer): Promise<{master: any; guest: any; connections: any}> {
+  const state = await native<any>('get_snapshot');
+  const current = state.profiles.find((p:any) => p.id === state.session.profile_id);
+  const connections = {...current.connections, lm_studio_url:trio.base, voice_studio_url:trio.base, llm_model:'trio-chat', tts_engine:'omni', tts_voice:'voice-a', volume:0};
+  await native('apply_mutation', {mutation:{kind:'connections', id:current.id, revision:current.revision, connections}});
+  const guest = await addTrioProfile('Thalia Trio', {lm_studio_url:'http://127.0.0.1:9', llm_model:'ghost-model', tts_voice:'voice-b'}, connections);
+  const master = (await native<any>('get_snapshot')).profiles.find((p:any) => p.id === current.id);
+  expect(master.connections.llm_model).toBe('trio-chat');
+  return {master, guest, connections};
+}
+
+async function addTrioProfile(name: string, overrides: Record<string, unknown>, base: any): Promise<any> {
+  const snapshot = await native<any>('apply_mutation', {mutation:{kind:'create_profile', draft:{name, personality:'Joyeuse.', instructions:'', accent:'amber', connections:{...base, ...overrides}}}});
+  const created = snapshot.profiles.find((p:any) => p.name === name);
+  expect(created).toBeTruthy();
+  return created;
+}
+
+/** Invoke a command from the widget window, the one that owns the guest picker. */
+async function fromWidget(command: string, args?: unknown): Promise<{ok:true; value:any} | {ok:false; error:string}> {
+  return widget.evaluate(async ({command, args}) => {
+    try { return {ok:true as const, value:await (window as any).__TAURI_INTERNALS__.invoke(command, args)}; }
+    catch (error) { return {ok:false as const, error:String(error)}; }
+  }, {command, args});
+}
+
+async function setGuest(id: string | null): Promise<any> {
+  const result = await fromWidget('set_guest_companion', {id});
+  if (!result.ok) throw new Error('set_guest_companion: ' + result.error);
+  return result.value;
+}
+
+const guestListeners = new WeakSet<Page>();
+
+async function findGuestPage(): Promise<Page | undefined> {
+  for (const page of browser.contexts().flatMap(c => c.pages())) {
+    if (page.isClosed()) continue;
+    const href = await page.evaluate(() => location.href).catch(() => page.url());
+    if (href.includes('view=guest')) return page;
+  }
+  return undefined;
+}
+
+async function waitForGuestPage(): Promise<Page> {
+  let found: Page | undefined;
+  await expect.poll(async () => { found = await findGuestPage(); return !!found; }, {timeout:30000}).toBe(true);
+  const page = found!;
+  if (!guestListeners.has(page)) {
+    guestListeners.add(page);
+    page.on('pageerror', e => consoleErrors.push(e.message));
+    page.on('console', e => { if (e.type() === 'error') consoleErrors.push(e.text()); });
+  }
+  return page;
+}
+
+async function expectNoGuestPage(): Promise<void> {
+  await expect.poll(async () => !!(await findGuestPage()), {timeout:30000}).toBe(false);
+}
+
+async function openGuestPicker() {
+  await native('widget_action', {action:'show_widget'});
+  await widget.locator('#drag-region').hover();
+  await widget.getByRole('button', {name:'Ajouter un compagnon', exact:true}).click();
+  const group = widget.getByRole('group', {name:'Inviter un compagnon'});
+  await expect(group).toBeVisible();
+  return group;
+}
+
+async function trioCanSpeak(): Promise<boolean> {
+  const devices = await native<{outputs:{is_default:boolean}[]}>('get_audio_devices');
+  return process.env.SHERKA_TEST_TEXT_ONLY !== '1' && devices.outputs.some(device => device.is_default);
+}
+
+/** Wait until the whole turn is over (every speaker done, no live operation). */
+async function waitForTrioTurn(trio: TrioServer, requests: number): Promise<void> {
+  await expect.poll(() => trio.chats.length).toBe(requests);
+  await expect.poll(async () => (await native<any>('get_conversation')).live.tag).toBeNull();
+}
+
+/** Consecutive speech requests with the same voice, merged into one utterance. */
+function spokenUtterances(spoken: {voice:string; input:string}[]): {voice:string; text:string}[] {
+  const utterances: {voice:string; text:string}[] = [];
+  for (const item of spoken) {
+    const last = utterances.at(-1);
+    if (last?.voice === item.voice) last.text = trioWords(last.text + ' ' + item.input);
+    else utterances.push({voice:item.voice, text:trioWords(item.input)});
+  }
+  return utterances;
+}
+
+const assistantRows = (history: any[]) => history.filter(m => m.role === 'assistant');
+const speakerId = (row: any) => row.speaker?.id ?? null;
+
+test('trio: invite from the widget, two ordered replies with attributed history', async () => {
+  const canSpeak = await trioCanSpeak();
+  const trio = await startTrioServer();
+  try {
+    const {master, guest} = await configureTrio(trio);
+    const group = await openGuestPicker();
+    await expect(group.locator(`[data-guest="${guest.id}"]`)).toBeEnabled();
+    await widget.screenshot({path:'artifacts/trio-guest-picker.png', omitBackground:true});
+    await group.locator(`[data-guest="${guest.id}"]`).click();
+
+    const guestWindow = await waitForGuestPage();
+    await expect(guestWindow.locator('.guest-name span')).toHaveText(guest.name);
+    const portraitImage = guestWindow.locator('.guest-portrait > img:not(.avatar-outgoing)');
+    await expect(portraitImage).toBeVisible();
+    await expect(portraitImage).toHaveAttribute('alt', guest.name);
+    await expect(portraitImage).toHaveAttribute('data-emotion', 'neutral');
+    const invited = await native<any>('get_snapshot');
+    expect(invited.session.guest_profile_id).toBe(guest.id);
+    expect(invited.settings.recent_guests[master.id][0]).toBe(guest.id);
+    // The master keeps a pressed "add companion" button while a guest is present.
+    await widget.locator('#drag-region').hover();
+    await expect(widget.locator('#add-companion')).toHaveAttribute('aria-pressed', 'true');
+
+    const text = 'Que pensez-vous de la pluie ?';
+    await native('send_message', {profileId:master.id, text, speak:canSpeak});
+    await waitForTrioTurn(trio, 2);
+    const [first, second] = trio.chats;
+    expect([first!.name, second!.name].sort()).toEqual([master.name, guest.name].sort());
+    const [firstId, secondId] = first!.name === master.name ? [master.id, guest.id] : [guest.id, master.id];
+
+    for (const chat of trio.chats) {
+      // Whatever the guest's own connection says, the master's model answers.
+      expect(chat.body.model).toBe('trio-chat');
+      expect(chat.body.messages[0].role).toBe('system');
+      expect(chat.body.messages[0].content).toContain('Three-way conversation');
+    }
+    expect(first!.body.messages[0].content.startsWith(`Character: ${first!.name}`)).toBe(true);
+    expect(second!.body.messages[0].content.startsWith(`Character: ${second!.name}`)).toBe(true);
+    expect(first!.body.messages[0].content).not.toContain('[[pass]]');
+    expect(second!.body.messages[0].content).toContain('[[pass]]');
+    expect(String(first!.body.messages.at(-1).content)).toContain(text);
+    expect(JSON.stringify(first!.body.messages)).not.toContain(trioReply(second!.name));
+    const followUp = String(second!.body.messages.at(-1).content);
+    expect(followUp).toContain(text);
+    expect(followUp).toContain(`${first!.name}: ${trioReply(first!.name)}`);
+
+    // Both databases hold the whole exchange; the other companion's lines are attributed.
+    const masterHistory = await native<any[]>('get_history', {profileId:master.id});
+    const guestHistory = await native<any[]>('get_history', {profileId:guest.id});
+    expect(masterHistory.filter(m => m.role === 'user').map(m => m.content)).toEqual([text]);
+    for (const [history, owner, other] of [[masterHistory, master, guest], [guestHistory, guest, master]] as const) {
+      const rows = assistantRows(history);
+      expect(rows.map(m => m.content)).toEqual([trioReply(first!.name), trioReply(second!.name)]);
+      expect(rows.map(speakerId)).toEqual([firstId, secondId].map(id => id === owner.id ? null : id));
+      for (const row of rows) if (row.speaker) expect(row.speaker).toEqual({id:other.id, name:other.name});
+    }
+
+    if (canSpeak) {
+      // One voice at a time: the first speaker finishes before the second begins.
+      const voiceOf = (id: string) => id === master.id ? 'voice-a' : 'voice-b';
+      await expect.poll(() => spokenUtterances(trio.spoken)).toEqual([
+        {voice:voiceOf(firstId), text:trioReply(first!.name)},
+        {voice:voiceOf(secondId), text:trioReply(second!.name)},
+      ]);
+    } else expect(trio.spoken).toHaveLength(0);
+    expect(consoleErrors).toEqual([]);
+  } finally { await trio.close(); }
+});
+
+test('trio: addressing one companion by name', async () => {
+  const trio = await startTrioServer();
+  try {
+    const {master, guest} = await configureTrio(trio);
+    await setGuest(guest.id);
+    await waitForGuestPage();
+
+    const text = `${guest.name}, raconte-moi une blague`;
+    await native('send_message', {profileId:master.id, text, speak:false});
+    await waitForTrioTurn(trio, 1);
+    expect(trio.chats[0]!.name).toBe(guest.name);
+    expect(trio.chats[0]!.body.model).toBe('trio-chat');
+    expect(trio.chats[0]!.body.messages[0].content.startsWith(`Character: ${guest.name}`)).toBe(true);
+    expect(trio.chats[0]!.body.messages[0].content).toContain('Three-way conversation');
+    expect(String(trio.chats[0]!.body.messages.at(-1).content)).toContain(text);
+    let masterHistory = await native<any[]>('get_history', {profileId:master.id});
+    expect(masterHistory.map(m => m.role)).toEqual(['user', 'assistant']);
+    expect(masterHistory[1].content).toBe(trioReply(guest.name));
+    expect(masterHistory[1].speaker).toEqual({id:guest.id, name:guest.name});
+    const guestHistory = await native<any[]>('get_history', {profileId:guest.id});
+    expect(assistantRows(guestHistory).map(m => [m.content, speakerId(m)])).toEqual([[trioReply(guest.name), null]]);
+
+    // Naming the master gives it the floor alone, with the guest present in its prompt.
+    await native('send_message', {profileId:master.id, text:`${master.name}, et toi ?`, speak:false});
+    await waitForTrioTurn(trio, 2);
+    expect(trio.chats[1]!.name).toBe(master.name);
+    expect(trio.chats[1]!.body.messages[0].content).toContain('Three-way conversation');
+    expect(trio.chats[1]!.body.messages[0].content).toContain(guest.name);
+    masterHistory = await native<any[]>('get_history', {profileId:master.id});
+    expect(assistantRows(masterHistory).map(m => [m.content, speakerId(m)])).toEqual([[trioReply(guest.name), guest.id], [trioReply(master.name), null]]);
+    expect(consoleErrors).toEqual([]);
+  } finally { await trio.close(); }
+});
+
+test('trio: second companion can pass', async () => {
+  const canSpeak = await trioCanSpeak();
+  const trio = await startTrioServer();
+  // The first speaker answers normally; the second streams the marker split across chunks.
+  trio.script = (index, name) => index === 1 ? ['[[pa', 'ss]]'] : [trioReply(name)];
+  try {
+    const {master, guest} = await configureTrio(trio);
+    await setGuest(guest.id);
+    await waitForGuestPage();
+
+    await native('send_message', {profileId:master.id, text:'Quelqu’un veut ajouter quelque chose ?', speak:canSpeak});
+    await waitForTrioTurn(trio, 2);
+    const [first, second] = trio.chats;
+    expect(second!.body.messages[0].content).toContain('[[pass]]');
+    const firstIsMaster = first!.name === master.name;
+
+    const masterHistory = await native<any[]>('get_history', {profileId:master.id});
+    const guestHistory = await native<any[]>('get_history', {profileId:guest.id});
+    // Only the question and the first reply are stored: the pass leaves no trace.
+    expect(masterHistory).toHaveLength(2);
+    expect(masterHistory.map(m => m.role)).toEqual(['user', 'assistant']);
+    expect(masterHistory[1].content).toBe(trioReply(first!.name));
+    expect(speakerId(masterHistory[1])).toBe(firstIsMaster ? null : guest.id);
+    expect(assistantRows(guestHistory).map(m => m.content)).toEqual([trioReply(first!.name)]);
+    expect(speakerId(assistantRows(guestHistory)[0])).toBe(firstIsMaster ? master.id : null);
+    for (const row of [...masterHistory, ...guestHistory]) expect(row.content).not.toMatch(/\[\[\s*pass/i);
+    expect((await native<any>('get_conversation')).live.reply).not.toContain('[[pass');
+
+    if (canSpeak) {
+      await expect.poll(() => spokenUtterances(trio.spoken)).toEqual([{voice:firstIsMaster ? 'voice-a' : 'voice-b', text:trioReply(first!.name)}]);
+    } else expect(trio.spoken).toHaveLength(0);
+    expect(consoleErrors).toEqual([]);
+  } finally { await trio.close(); }
+});
+
+test('trio: Hermes and voiceless companions cannot be invited', async () => {
+  const trio = await startTrioServer();
+  try {
+    const {master, guest, connections} = await configureTrio(trio);
+    const hermes = await addTrioProfile('Hermes Trio', {llm_provider:'hermes', llm_api_url:trio.base, hermes_profile:'default', llm_model:null}, connections);
+    const mute = await addTrioProfile('Silence Trio', {tts_voice:null}, connections);
+
+    const group = await openGuestPicker();
+    await expect(group.locator(`[data-guest="${guest.id}"]`)).toBeEnabled();
+    await expect(group.locator(`[data-guest="${hermes.id}"]`)).toBeDisabled();
+    await expect(group.locator(`[data-guest="${hermes.id}"]`)).toHaveAttribute('title', 'Les compagnons Hermes ne participent pas aux conversations à trois.');
+    await expect(group.locator(`[data-guest="${mute.id}"]`)).toBeDisabled();
+    await expect(group.locator(`[data-guest="${mute.id}"]`)).toHaveAttribute('title', 'Choisis d’abord une voix pour ce compagnon.');
+    await expect(group.locator(`[data-guest="${master.id}"]`)).toHaveCount(0);
+
+    const refused = await fromWidget('set_guest_companion', {id:hermes.id});
+    expect(refused.ok).toBe(false);
+    if (!refused.ok) expect(refused.error).toContain('Les compagnons Hermes ne participent pas aux conversations à trois.');
+    const unknown = await fromWidget('set_guest_companion', {id:randomUUID()});
+    expect(unknown.ok).toBe(false);
+    expect((await native<any>('get_snapshot')).session.guest_profile_id).toBeNull();
+    expect(await findGuestPage()).toBeUndefined();
+    // Nothing was said to anybody by these attempts.
+    expect(trio.chats).toHaveLength(0);
+  } finally { await trio.close(); }
+});
+
+test('trio: removing the guest or switching the master closes the guest window', async () => {
+  const trio = await startTrioServer();
+  try {
+    const {master, guest, connections} = await configureTrio(trio);
+    const other = await addTrioProfile('Mira Trio', {}, connections);
+
+    // Removal from the guest window itself.
+    await setGuest(guest.id);
+    const guestWindow = await waitForGuestPage();
+    await guestWindow.locator('.guest-portrait').hover();
+    await guestWindow.getByRole('button', {name:'Retirer de la conversation', exact:true}).click();
+    await expect.poll(async () => (await native<any>('get_snapshot')).session.guest_profile_id).toBeNull();
+    await expectNoGuestPage();
+
+    // Removal by command; the guest stays among the master's recent guests.
+    await setGuest(guest.id);
+    await waitForGuestPage();
+    const cleared = await setGuest(null);
+    expect(cleared.session.guest_profile_id).toBeNull();
+    await expectNoGuestPage();
+    expect((await native<any>('get_snapshot')).settings.recent_guests[master.id]).toContain(guest.id);
+
+    // Switching the master dismisses the guest too.
+    await setGuest(guest.id);
+    await waitForGuestPage();
+    const switched = await fromWidget('switch_companion', {id:other.id});
+    expect(switched.ok).toBe(true);
+    await expect.poll(async () => (await native<any>('get_snapshot')).session.profile_id).toBe(other.id);
+    expect((await native<any>('get_snapshot')).session.guest_profile_id).toBeNull();
+    await expectNoGuestPage();
+    await expect(widget.locator('.widget-name')).toHaveText(other.name);
+    expect(consoleErrors).toEqual([]);
+  } finally { await trio.close(); }
+});

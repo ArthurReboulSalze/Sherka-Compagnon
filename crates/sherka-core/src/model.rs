@@ -97,6 +97,9 @@ pub struct Settings {
     pub voice_service: Option<VoiceServiceConfig>,
     pub search: Option<crate::search_provider::Config>,
     pub desktop_layouts: std::collections::BTreeMap<Uuid, DesktopLayout>,
+    /// Last guests invited by each master, most recent first, at most three.
+    pub recent_guests: std::collections::BTreeMap<Uuid, Vec<Uuid>>,
+    pub trio: TrioSettings,
     pub companion_pack_initialized: bool,
     pub web_search: crate::web::SearchMode,
     pub ui_language: crate::i18n::Language,
@@ -117,6 +120,8 @@ impl Default for Settings {
             voice_service: None,
             search: None,
             desktop_layouts: Default::default(),
+            recent_guests: Default::default(),
+            trio: Default::default(),
             companion_pack_initialized: false,
             web_search: Default::default(),
             ui_language: Default::default(),
@@ -128,6 +133,48 @@ impl Default for Settings {
             widget_bounds: None,
             audio: Default::default(),
         }
+    }
+}
+
+/// Global behaviour of the three-way conversation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default, deny_unknown_fields)]
+pub struct TrioSettings {
+    /// Seconds of user silence after which the other companion reacts to a
+    /// question addressed to one companion. 0 turns the relay off.
+    pub relay_seconds: u32,
+    /// Shorter spoken replies in a three-way conversation.
+    pub quick_replies: bool,
+    /// How the companions call the user in a three-way conversation (the label
+    /// of the user's lines). Empty means "the user".
+    pub user_name: String,
+}
+impl Default for TrioSettings {
+    fn default() -> Self {
+        Self {
+            relay_seconds: 8,
+            quick_replies: false,
+            user_name: String::new(),
+        }
+    }
+}
+impl TrioSettings {
+    pub fn validated(mut self) -> Result<Self> {
+        if self.relay_seconds != 0 && !(3..=30).contains(&self.relay_seconds) {
+            return Err(Error::Validation(
+                "Le délai de relance doit être désactivé ou compris entre 3 et 30 secondes.".into(),
+            ));
+        }
+        self.user_name = self.user_name.trim().to_owned();
+        // The name labels the user's lines, so it cannot contain the separator.
+        if self.user_name.chars().count() > 40
+            || self.user_name.chars().any(|c| c.is_control() || c == ':')
+        {
+            return Err(Error::Validation(
+                "Ton prénom doit faire au plus 40 caractères, sans deux-points.".into(),
+            ));
+        }
+        Ok(self)
     }
 }
 

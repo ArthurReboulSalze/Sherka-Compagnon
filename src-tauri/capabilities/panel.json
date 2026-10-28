@@ -11,6 +11,7 @@
     "allow-get-startup-issue",
     "allow-close-startup-recovery",
     "allow-get-snapshot",
+    "allow-set-guest-companion",
     "allow-get-comfy-service",
     "allow-select-comfyui-path",
     "allow-get-widget-visibility",

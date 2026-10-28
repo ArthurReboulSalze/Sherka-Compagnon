@@ -45,7 +45,7 @@ VoiceStudio's server address and transcription model are configured once in **Se
 
 **Start with Sherka** launches the prepared VoiceStudio Python server without opening Electron. Leave the paths empty for automatic detection, or select a custom installation/runtime folder and Python executable. Open VoiceStudio once to complete its initial setup and install engines and voices. Sherka does not install packages or models. Startup logs are stored in Sherka's local `logs/voicestudio.log`.
 
-Sherka reuses a ready service. Only local root HTTP addresses may start a process; remote and HTTPS endpoints must already be running. Startup waits for the health endpoint and speech protocol, for up to five minutes. The microphone remains off until you enable it.
+Sherka reuses a ready service. Only local root HTTP addresses may start a process; remote and HTTPS endpoints must already be running. Startup waits for the health endpoint and speech protocol, for up to ten minutes, because a cold start can load several large speech and transcription models. While the server process is alive, still refusing connections, or answering "not ready" (HTTP 5xx, a loading `/health`, a dropped connection), Sherka only reports that VoiceStudio is loading, with the elapsed time. It reports an error as soon as the process exits (with its exit code), the budget is exhausted, or the endpoint gives a definitive answer (for example HTTP 401 or 404, or another service). A spoken or typed turn made meanwhile waits for readiness instead of failing. The microphone remains off until you enable it.
 
 On exit, Sherka closes only server processes started by this session, including their child processes. Servers that were already running, and remote services, are left alone.
 

@@ -58,6 +58,7 @@ export const widgetAction = (action: WidgetAction) => invoke<void>('widget_actio
 export const widgetVisibility = () => invoke<boolean>('get_widget_visibility');
 export const onWidgetVisibility = (callback: (visible: boolean) => void) => listen<boolean>('sherka:widget-visibility', e => callback(e.payload));
 export const switchCompanion = (id: string) => invoke<Snapshot>('switch_companion', { id });
+export const setGuestCompanion = (id: string | null) => invoke<Snapshot>('set_guest_companion', { id });
 export const onQuit = (callback: (value: { stage: 'unloading' | 'failed'; error?: string }) => void) => listen<{ stage: 'unloading' | 'failed'; error?: string }>('sherka:quit', e => callback(e.payload));
 export const onChanged = (callback: () => void) => listen('sherka:changed', callback);
 export const discoverLanguageModels = (config: string | Connections) => invoke<LanguageCatalog>('discover_language_models', typeof config === 'string' ? { baseUrl: config } : { connections: config });
@@ -94,6 +95,6 @@ export const exportIllustrationWorkflow=(config:IllustrationConfig,transparent=f
 
 export const saveWidgetCell=(profileId:string,image:import('./types').ImagePlacement|null,textHeight:number|null)=>invoke<void>('save_widget_cell',{profileId,image,textHeight});
 
-export const initiativeActivity=()=>invoke<void>('initiative_activity');
+export const initiativeActivity=(typing=false)=>invoke<void>('initiative_activity',{typing});
 
 export const getIllustrationWorkflow=(config:IllustrationConfig,transparent=false)=>invoke<Record<string,unknown>>('get_illustration_workflow',{config,transparent});

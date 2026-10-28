@@ -156,6 +156,7 @@ pub async fn prepare_shutdown(app: &AppHandle) -> Result<(), String> {
     }
     match &result {
         Ok(()) => {
+            crate::guest_window::close(app);
             save_geometry_now(app);
             QUIT_STATE.store(2, Ordering::SeqCst);
         }
@@ -187,6 +188,7 @@ pub fn hide_widget(app: &AppHandle) -> tauri::Result<()> {
     if let Some(window) = app.get_webview_window("widget") {
         window.hide()?;
     }
+    crate::guest_window::hide(app);
     emit_widget_visibility(app)
 }
 
@@ -213,6 +215,7 @@ pub fn restore_widget(app: &AppHandle) -> tauri::Result<()> {
         window.unminimize()?;
         recover_widget(app, None)?;
         window.show()?;
+        crate::guest_window::show(app);
     }
     emit_widget_visibility(app)
 }
@@ -221,6 +224,10 @@ pub fn apply_preferences(app: &AppHandle, settings: &Settings) -> tauri::Result<
     crate::image_viewer::set_top_preference(app, settings.always_on_top);
     if let Some(window) = app.get_webview_window("widget") {
         window.set_always_on_top(settings.always_on_top || crate::image_viewer::active(app))?;
+        crate::guest_window::set_always_on_top(
+            app,
+            settings.always_on_top || crate::image_viewer::active(app),
+        );
         let factor = f64::from(settings.widget_scale) / 100.0;
         if !crate::desktop_tools::resize_avatar(app, 290.0 * factor, 350.0 * factor) {
             window.set_size(tauri::LogicalSize::new(290.0 * factor, 350.0 * factor))?;
@@ -404,6 +411,12 @@ pub fn on_window_event(window: &tauri::Window, event: &WindowEvent) {
                     }
                 });
             }
+        }
+        WindowEvent::Moved(_) | WindowEvent::Resized(_) if window.label() == "guest" => {
+            crate::guest_window::geometry_changed(window.app_handle());
+        }
+        WindowEvent::ScaleFactorChanged { .. } if window.label() == "guest" => {
+            crate::guest_window::recover(window.app_handle());
         }
         WindowEvent::ScaleFactorChanged { .. } if window.label() == "widget" => {
             if let Err(e) = recover_widget(window.app_handle(), None) {

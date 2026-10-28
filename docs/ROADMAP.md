@@ -32,4 +32,12 @@ The next phase focuses on performance, polish and wider provider support. Furthe
 - More Windows configurations and audio devices tested; ongoing update and migration validation between published versions.
 - Physical Linux desktop/audio validation, wider distribution compatibility and a Linux update mechanism beyond manual Debian packages.
 
+## Three-way conversations
+
+Inviting a second companion into the conversation is now available, added at user request. Possible follow-ups, not promises:
+
+- Conversation illustrations in a three-way conversation.
+- More than one guest.
+- Prompt tuning for small models that speak for the other companion or pass too often.
+
 Visual changes must respect reduced-motion preferences and keep the desktop widget unobtrusive.

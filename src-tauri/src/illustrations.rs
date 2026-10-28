@@ -278,6 +278,10 @@ impl Illustrations {
         if crate::windows::ensure_running().is_err() {
             return;
         }
+        // No pictures during a three-way conversation.
+        if shared.0.lock().is_ok_and(|c| c.guest().is_some()) {
+            return;
+        }
         let (sequence, token) = {
             let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
             if inner.priority > 0 && inner.context.as_ref().is_some_and(|c| c.2.live) {
@@ -305,6 +309,7 @@ impl Illustrations {
                 let profile = c.profile(session.profile_id)?;
                 if profile.details.connections.llm_provider.is_agent()
                     || !profile.details.illustration.enabled
+                    || c.guest().is_some()
                     || (c.live.tag.is_some() && !c.live.text_complete)
                 {
                     return Err(Error::StaleOperation);

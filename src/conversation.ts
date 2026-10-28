@@ -8,6 +8,10 @@ const escape = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<':
 const drafts = new Map<string, string>();
 let spoken = true;
 let historyRequest = 0;
+let companions = new Map<string, string>();
+
+/** Names of the known companions, so live and history labels can name a speaker. */
+export function rememberCompanions(profiles: Profile[]): void { companions = new Map(profiles.map(p => [p.id, p.name])); }
 
 export function clearConversationDraft(profileId: string): void {
   drafts.delete(profileId);
@@ -61,6 +65,7 @@ export function status(session: Snapshot['session']): string {
 
 export function conversationView(profile: Profile, mode: Snapshot['settings']['web_search']): string {
   return html`<div class="page-heading"><div><p class="eyebrow">UNE CONVERSATION, TOUT SIMPLEMENT</p><h1>Avec ${escape(profile.name)}<span>.</span></h1><p>Active le micro, parle naturellement. Tu peux l’interrompre à tout moment.</p></div></div>
+    <div class="guest-banner" id="guest-banner" hidden><span></span><button type="button" class="button quiet small" id="end-guest">Terminer</button></div>
     <section class="conversation-controls"><button class="button primary" data-action="toggle_microphone" data-mic-toggle>${icon('mic')} <span>Activer le micro</span></button><button class="button secondary" data-action="${profile.connections.llm_provider === 'hermes' ? 'stop_hermes' : 'stop_response'}">${icon('stop')} ${profile.connections.llm_provider === 'hermes' ? t('Arrêter Hermes (/stop)') : t('Arrêter la réponse')}</button><div class="voice-indicator"><span data-session-status></span><meter data-meter min="0" max="1" value="0" aria-label="Niveau du microphone"></meter><small data-speech-indicator>Microphone coupé</small></div></section>
     <div class="conversation-privacy"><button type="button" class="button quiet small" id="clear-conversation">${icon('trash')} ${profile.connections.llm_provider === 'hermes' ? t('Effacer l’historique local') : t('Effacer la conversation')}</button>${profile.connections.llm_provider === 'hermes' ? '' : html`<button type="button" class="button quiet small" id="reset-mood-conversation">Réinitialiser l’humeur</button><small>Dis « Efface la discussion » ou écris /clear, puis confirme avec /confirm-clear. Les faits mémorisés sont conservés. Pour résumer la mémoire : /optimize-memory.</small>`}</div>
     <p class="conversation-error" id="conversation-error" role="alert" hidden></p><p class="muted" id="conversation-notice" hidden></p>
@@ -75,6 +80,11 @@ export function mountConversation(profile: Profile, report: (e: unknown) => void
   const form = document.querySelector<HTMLFormElement>('#message-form');
   if (!form) return;
   document.querySelector('#clear-conversation')?.addEventListener('click', () => confirmClear(profile, report));
+  document.querySelector<HTMLButtonElement>('#end-guest')?.addEventListener('click', event => {
+    const button = event.currentTarget as HTMLButtonElement;
+    button.disabled = true;
+    api.setGuestCompanion(null).catch(report).finally(() => { button.disabled = false; });
+  });
   document.querySelector('#reset-mood-conversation')?.addEventListener('click',()=>void save({kind:'reset_mood',id:profile.id},t('Humeur réinitialisée.')));
   const input = form.querySelector<HTMLTextAreaElement>('#chat-text')!;
   input.addEventListener('input', () => drafts.set(profile.id, input.value));
@@ -110,7 +120,7 @@ export async function loadConversationHistory(profileId: string): Promise<void> 
   const messages = await api.history(profileId);
   if (request !== historyRequest || !root.isConnected) return;
   const follow = nearConversationBottom();
-  root.innerHTML = messages.length ? messages.map((m) => html`<article class="message ${m.role}"><div><strong>${m.role === 'user' ? t('Toi') : t('Réponse')}</strong><small>${new Intl.DateTimeFormat(formatLocale(), { hour: '2-digit', minute: '2-digit' }).format(m.created_at)}${m.delivery === 'interrupted' ? t(' · interrompue') : m.delivery === 'uncertain' ? t(' · lecture incomplète') : m.delivery === 'text_only' ? t(' · texte') : t(' · diffusée')}</small></div><p>${escape(m.content)}</p>${webReport(m.web,profileId,m.id)}${['interrupted','uncertain'].includes(m.delivery) ? html`<details><summary>Partie diffusée en entier</summary><p>${escape(m.heard_content || t('Aucune phrase complète confirmée. Le dernier fragment a pu être entendu en partie.'))}</p></details>` : ''}</article>`).join('') : html`<div class="empty-state"><h3>Fais-lui signe.</h3><p>Le micro s’active seulement quand tu le demandes.<br>Tu peux aussi commencer par un message écrit.</p></div>`;
+  root.innerHTML = messages.length ? messages.map((m) => html`<article class="message ${m.role}${m.speaker ? ' peer' : ''}"><div><strong>${m.role === 'user' ? t('Toi') : escape(m.speaker?.name ?? companions.get(profileId) ?? t('Réponse'))}</strong><small>${new Intl.DateTimeFormat(formatLocale(), { hour: '2-digit', minute: '2-digit' }).format(m.created_at)}${m.delivery === 'interrupted' ? t(' · interrompue') : m.delivery === 'uncertain' ? t(' · lecture incomplète') : m.delivery === 'text_only' ? t(' · texte') : t(' · diffusée')}</small></div><p>${escape(m.content)}</p>${webReport(m.web,profileId,m.id)}${['interrupted','uncertain'].includes(m.delivery) ? html`<details><summary>Partie diffusée en entier</summary><p>${escape(m.heard_content || t('Aucune phrase complète confirmée. Le dernier fragment a pu être entendu en partie.'))}</p></details>` : ''}</article>`).join('') : html`<div class="empty-state"><h3>Fais-lui signe.</h3><p>Le micro s’active seulement quand tu le demandes.<br>Tu peux aussi commencer par un message écrit.</p></div>`;
   scrollConversation(follow);
 }
 
@@ -138,10 +148,21 @@ export function paintLive(value: LiveState): void {
     el.innerHTML = `${icon(on ? 'mic' : 'micOff')}${el.classList.contains('button') ? html`<span>${label}</span>` : ''}`;
   });
   document.querySelectorAll('.mic-status').forEach((el) => { el.classList.toggle('listening', on); const span = el.querySelector('span'); if (span) span.textContent = on ? t('Microphone actif') : t('Microphone coupé'); });
-  document.querySelector('.widget')?.classList.toggle('speaking', value.session.response === 'speaking');
+  const speakerId = value.live.tag?.profile_id;
+  // With a guest, the master's glow follows its own turns only.
+  document.querySelector('.widget')?.classList.toggle('speaking', value.session.response === 'speaking' && (!value.session.guest_profile_id || speakerId === value.session.profile_id));
   document.querySelector('.widget')?.classList.toggle('listening', on);
   const web = document.querySelector<HTMLElement>('#web-report');
-  if (web) { const content=webReport(value.live.tag ? value.live.web : null,value.session.profile_id,null); if(web.innerHTML!==content)web.innerHTML=content; }
+  if (web) { const content=webReport(value.live.tag ? value.live.web : null,speakerId ?? value.session.profile_id,null); if(web.innerHTML!==content)web.innerHTML=content; }
+  const banner = document.querySelector<HTMLElement>('#guest-banner');
+  if (banner) {
+    const guestName = value.session.guest_profile_id ? companions.get(value.session.guest_profile_id) : undefined;
+    banner.hidden = !guestName;
+    if (guestName) banner.querySelector('span')!.textContent = t`En conversation avec ${guestName}`;
+  }
+  const replyName = companions.get(speakerId ?? value.session.profile_id);
+  const replyLabel = document.querySelector<HTMLElement>('#live-reply strong');
+  if (replyLabel && replyName && replyLabel.textContent !== replyName) replyLabel.textContent = replyName;
   const approvalRoot = document.querySelector<HTMLElement>('#hermes-approval');
   const approval = value.live.hermes_approval;
   if (approvalRoot) {
