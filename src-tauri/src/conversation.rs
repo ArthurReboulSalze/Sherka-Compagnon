@@ -28,7 +28,7 @@ pub struct Voice {
     pending: Arc<Mutex<CancellationToken>>,
     hermes_gate: Arc<AsyncMutex<()>>,
     hermes_run: Arc<Mutex<Option<(OperationTag, sherka_core::hermes::HermesRun)>>>,
-    diagnostics: Arc<crate::audio_diagnostics::AudioDiagnostics>,
+    pub diagnostics: Arc<crate::audio_diagnostics::AudioDiagnostics>,
     speech_input: Arc<Mutex<crate::speech_input::PendingSpeech>>,
     speech_end: Arc<Mutex<Option<(OperationTag, Instant)>>>,
 }
@@ -1329,7 +1329,10 @@ async fn prepare_turn(
 ) -> std::result::Result<sherka_core::conversation::PreparedChat, String> {
     let model = activate_model(voice, shared, tag, Gate::Current, provider).await?;
     let peer = peer.cloned();
+    let illustrations = app.state::<crate::illustrations::Illustrations>();
     if let Some(event) = event.cloned() {
+        // Not a request: an image request still waiting is stale.
+        illustrations.forget_wish();
         return with_core(shared.clone(), move |c| {
             if !c.session.accepts(tag) {
                 return Err(Error::StaleOperation);
@@ -1340,6 +1343,16 @@ async fn prepare_turn(
             let budget = sherka_core::conversation::budget(&profile.details, &model)?;
             let history = c.store.context_history(tag.profile_id)?;
             let recall = c.store.recall(tag.profile_id, "")?;
+            // The remark after the Image button knows the generator is on.
+            let images = matches!(event, AppEvent::ImagesOn { .. })
+                .then(|| {
+                    sherka_core::illustration::ImagePrompt::new(
+                        &profile.details.illustration,
+                        true,
+                        None,
+                    )
+                })
+                .flatten();
             let mut chat = sherka_core::conversation::prepare_context_with_avatar(
                 &profile.details,
                 &history,
@@ -1352,6 +1365,7 @@ async fn prepare_turn(
                 peer.as_ref(),
                 &c.trio_settings().user_name,
                 sherka_core::trio::Last::Attributed,
+                images.as_ref(),
             )?;
             // A bounded invitation uses the normal cancellable TTS pipeline.
             chat.budget.response_tokens = chat.budget.response_tokens.min(256);
@@ -1362,7 +1376,7 @@ async fn prepare_turn(
     }
     let text = user.to_owned();
     let quick_peer = peer.clone();
-    let (profile, source, guard, visible) = with_core(shared.clone(), move |c| {
+    let (profile, source, guard, visible, trio) = with_core(shared.clone(), move |c| {
         if !c.session.accepts(tag) {
             return Err(Error::StaleOperation);
         }
@@ -1389,9 +1403,11 @@ async fn prepare_turn(
                 visible.push(m);
             }
         }
-        Ok((profile, source, guard, visible))
+        Ok((profile, source, guard, visible, c.guest().is_some()))
     })
     .await?;
+    let (image_plan, images_on) =
+        switch_images(app, shared, tag, &profile.details.illustration, trio, user).await;
     let mut budget =
         sherka_core::conversation::budget(&profile.details, &model).map_err(|e| e.to_string())?;
     budget.safety_tokens += provider.images.len() * 4096;
@@ -1486,6 +1502,9 @@ async fn prepare_turn(
         let _ = app.emit("sherka:memory", tag.profile_id);
     }
     let text = user.to_owned();
+    let image_receipt = image_plan.receipt();
+    let images =
+        crate::image_control::prompt(image_plan.tell, &profile.details.illustration, images_on);
     let prepared = with_core(shared.clone(), move |c| {
         if !c.session.accepts(tag) {
             return Err(Error::StaleOperation);
@@ -1510,14 +1529,61 @@ async fn prepare_turn(
             peer.as_ref(),
             &c.trio_settings().user_name,
             sherka_core::trio::Last::User,
+            images.as_ref(),
         )?;
         c.live.budget = Some(prepared.budget.clone());
         c.live.web = prepared.web.clone();
+        c.live.image_receipt = image_receipt;
         Ok(prepared)
     })
     .await?;
     emit(app, shared);
     Ok(prepared)
+}
+
+/// Decides what the user's words ask of the image generator and does it, before
+/// the reply, so that the companion can tell the truth. The switch is the one
+/// of the widget button; the turn is not cancelled by it: it only saves the
+/// profile, synchronizes the illustrations (their own token) and notifies.
+/// Returns the decision and whether the generator is on afterwards.
+async fn switch_images(
+    app: &AppHandle,
+    shared: &Shared,
+    tag: OperationTag,
+    config: &sherka_core::illustration::Config,
+    trio: bool,
+    user: &str,
+) -> (crate::image_control::Plan, bool) {
+    use crate::image_control::{Facts, Tell, Wish, plan};
+    use sherka_core::illustration::{ImageIntent, ImageReceipt};
+    let images = app.state::<crate::illustrations::Illustrations>();
+    let intent = sherka_core::illustration::image_intent(user);
+    let facts = Facts {
+        enabled: config.enabled,
+        ready: sherka_core::illustration::generator_ready(config),
+        trio,
+        wished: images.has_wish(tag.profile_id, tag.session_id),
+    };
+    let asks_on =
+        intent == Some(ImageIntent::Make) && sherka_core::illustration::asks_switch_on(user);
+    let mut plan = plan(intent, asks_on, facts);
+    let mut enabled = config.enabled;
+    if let Some(on) = plan.switch {
+        match crate::desktop_tools::set_image_enabled(app, shared.clone(), on).await {
+            Ok(()) => enabled = on,
+            Err(_) => plan = plan.failed(),
+        }
+    }
+    if plan.tell == Tell::State(Some(ImageReceipt::SwitchedOn)) {
+        // A command exchange is not illustrated, not even by a live resume.
+        images.skip_resume();
+    }
+    match plan.wish {
+        Wish::Keep => {}
+        Wish::Clear => images.forget_wish(),
+        Wish::Store => images.keep_wish(tag.profile_id, tag.session_id, user),
+    }
+    (plan, enabled)
 }
 
 /// The second speaker's context: its own history and memories, with the first
@@ -1579,6 +1645,7 @@ async fn prepare_peer(
             Some(&peer),
             &c.trio_settings().user_name,
             sherka_core::trio::Last::Attributed,
+            None,
         )?;
         if spontaneous {
             chat.budget.response_tokens = chat.budget.response_tokens.min(256);
@@ -3355,9 +3422,11 @@ async fn run_turn(
                 if result.0.is_ok() && result.1.is_ok() {
                     clock.mark(crate::turn_timing::Mark::TextComplete);
                     let mut visible=String::new();
+                    let mut image_receipt=None;
                     let complete=update(&app,&shared,tag,|c|{
                         c.live.text_complete=true;
                         visible=c.live.reply.clone();
+                        image_receipt=c.live.image_receipt;
                         if !agent && !unavailable { c.complete_mood(tag, &user)?; }
                         if !agent && !unavailable && solo && c.profile(tag.profile_id)?.details.illustration.enabled {
                             c.store.save_response(tag,&c.live.reply,&c.live.heard,if speak {Delivery::Uncertain}else{Delivery::TextOnly})?;
@@ -3368,7 +3437,7 @@ async fn run_turn(
                     if complete.is_ok() && !visible.trim().is_empty() && let Some(done)=text_signal.take() {
                         let _=done.send(visible);
                     }
-                    if complete.is_ok() && !agent && !unavailable && solo {
+                    if complete.is_ok() && !agent && !unavailable && solo && crate::image_control::illustrate_after_reply(image_receipt) {
                         app.state::<crate::illustrations::Illustrations>().request(app.clone(),shared.clone());
                     }
                 }
@@ -3572,6 +3641,18 @@ fn check_event(
 ) -> sherka_core::Result<()> {
     match event {
         AppEvent::Idle => check_spontaneous(core, profile),
+        // The Image button was just pressed: like a guest arrival, the remark
+        // does not wait for the microphone, but needs a free conversation.
+        AppEvent::ImagesOn { .. } => {
+            let session = core.session.snapshot();
+            if profile.details.connections.llm_provider.is_agent()
+                || session.response != sherka_core::session::ResponseState::Idle
+                || session.transcription != sherka_core::session::TranscriptionState::Idle
+            {
+                return Err(Error::StaleOperation);
+            }
+            Ok(())
+        }
         // The user just invited the guest: a remark is welcome even before the
         // microphone was ever enabled, so `voice_paused` does not gate it.
         AppEvent::GuestJoined { id, .. } => {

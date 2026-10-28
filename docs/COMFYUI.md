@@ -66,6 +66,10 @@ The scene prompt is separate from the companion's dialogue and memory. It does n
 
 Only the newest eligible exchange is allowed to publish an image. New input, a profile/configuration change, conversation clearing or shutdown invalidates older work. Pending owned prompts are deleted by ID. On ComfyUI 0.3.57 or newer, a running owned task is interrupted by its prompt ID. Older or unrecognized servers drain running tasks and cannot enable live mode. Sherka never sends a global interrupt that could stop another client's generation. ComfyUI may retain temporary images and workflow history on its server. Clearing Sherka's conversation removes its in-memory preview, not those server files.
 
+## Talk to the generator
+
+The companion is told whether the generator is on, the model family (Illustrious or SDXL) and the checkpoint's short name, so it can talk about the style (anime tags or natural visual prose) without writing the ComfyUI prompt itself: the scene planner stays the only author of the prompts. You can say "switch on / off the image generator" or "make me an image of…" in any interface language; a request made while the generator is off is kept until you switch it on, then drawn first. Only you switch the generator (button or words), never the companion, and nothing changes in a three-way conversation or with Hermes. See the [user guide](USER_GUIDE.md) for the phrases and the [architecture](ARCHITECTURE.md) for the flow.
+
 ## Custom workflows
 
 In **Companions → Conversation illustrations → ComfyUI workflow**, click **Export API workflow** to save the active template. It exports your imported API graph when present, otherwise the [bundled API template](../config/workflows/illustrious.json). Open that JSON in ComfyUI, adapt it, export in API format, then import it back into Sherka. Export works without connecting to ComfyUI. The template contains substitution fields; the actual model, LoRAs, sampler settings and scene text are injected at generation time. It does not contain conversation history or API keys.

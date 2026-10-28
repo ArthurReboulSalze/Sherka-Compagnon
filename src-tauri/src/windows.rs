@@ -127,6 +127,7 @@ pub async fn prepare_shutdown(app: &AppHandle) -> Result<(), String> {
     }
     app.state::<crate::character_studio::Studio>().cancel(app);
     app.state::<crate::voice_startup::VoiceStartup>().cancel();
+    crate::voice_warmup::stop();
     app.state::<crate::comfy_startup::ComfyStartup>().cancel();
     app.state::<crate::illustrations::Illustrations>()
         .cancel(app, true);
@@ -322,6 +323,7 @@ pub fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
                     let shared = app.state::<Shared>().inner().clone();
                     let app = app.clone();
                     let pause = event.id.as_ref() == "pause";
+                    crate::voice_warmup::cancel();
                     tauri::async_runtime::spawn(async move {
                         let voice = app.state::<Voice>().inner().clone();
                         let _gate = voice.gate.lock().await;
@@ -451,9 +453,37 @@ pub async fn shutdown_services(app: &AppHandle) {
         .state::<crate::comfy_startup::ComfyStartup>()
         .inner()
         .clone();
-    let _ = tauri::async_runtime::spawn_blocking(move || {
-        crate::service_process::shutdown();
+    let closed = tauri::async_runtime::spawn_blocking(move || {
+        let closed = crate::service_process::shutdown();
         service.shutdown();
+        closed
     })
-    .await;
+    .await
+    .ok();
+    record_voice_exit(app, closed);
+}
+
+/// Last chance, on the final exit event: a VoiceStudio server started by this
+/// session never outlives Sherka, whatever path led here.
+pub fn exit_cleanup(app: &AppHandle) {
+    record_voice_exit(app, Some(crate::service_process::shutdown()));
+}
+
+// One fixed line in `audio-events.log`, once per run, telling what became of
+// VoiceStudio so that the user can check after quitting.
+fn record_voice_exit(app: &AppHandle, closed: Option<crate::service_process::Closed>) {
+    static RECORDED: AtomicBool = AtomicBool::new(false);
+    let (Some(voice), Some(startup)) = (
+        app.try_state::<Voice>(),
+        app.try_state::<crate::voice_startup::VoiceStartup>(),
+    ) else {
+        return;
+    };
+    if RECORDED.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    let running = startup.status().phase == "ready";
+    if let Some(event) = crate::service_process::exit_event(closed.as_ref(), running) {
+        voice.diagnostics.record(event, 0, 0, None);
+    }
 }

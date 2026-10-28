@@ -12,6 +12,7 @@ pub mod event;
 pub mod hermes;
 pub mod i18n;
 pub mod illustration;
+pub mod image_intent;
 pub mod image_pipeline;
 mod llm;
 pub mod memory;

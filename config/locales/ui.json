@@ -1,4 +1,12 @@
 {
+  "Ouvre VoiceStudio : une licence de modèle ou de voix attend peut-être d’être acceptée, ou le modèle choisi n’est pas installé.": [
+    "Open VoiceStudio: a model or voice licence may be waiting to be accepted, or the selected model is not installed.",
+    "Abre VoiceStudio: puede que haya una licencia de modelo o de voz pendiente de aceptar, o que el modelo elegido no esté instalado.",
+    "Apri VoiceStudio: una licenza di modello o di voce potrebbe essere in attesa di accettazione, oppure il modello scelto non è installato.",
+    "Öffne VoiceStudio: Möglicherweise wartet eine Modell- oder Stimmlizenz auf deine Zustimmung, oder das gewählte Modell ist nicht installiert.",
+    "打开 VoiceStudio：可能有模型或语音许可等待接受，或所选模型尚未安装。",
+    "VoiceStudio を開いてください。モデルまたは音声のライセンスが承認待ちか、選択したモデルがインストールされていない可能性があります。"
+  ],
   "Ce compagnon est déjà ton compagnon principal.": [
     "This companion is already your main companion.",
     "Este compañero ya es tu compañero principal.",

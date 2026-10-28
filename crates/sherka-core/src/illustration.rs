@@ -21,6 +21,166 @@ pub enum ModelFamily {
     Sdxl,
 }
 
+impl ModelFamily {
+    /// Short name shown to the user and the model.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Illustrious => "Illustrious",
+            Self::Sdxl => "SDXL",
+        }
+    }
+    // i18n: data-start
+    /// What this family's pictures look like, for the companion's system text.
+    pub fn style(self) -> &'static str {
+        match self {
+            Self::Illustrious => "anime-style illustrations built from tags",
+            Self::Sdxl => "illustrations described in natural English visual prose",
+        }
+    }
+    // i18n: data-end
+}
+
+pub use crate::image_intent::{ImageIntent, asks_switch_on, image_intent};
+
+/// A generator is usable when a checkpoint is chosen or a custom workflow is
+/// stored; before that the companion is told nothing about images.
+pub fn generator_ready(config: &Config) -> bool {
+    config.checkpoint.is_some() || config.workflow.is_some()
+}
+
+/// A checkpoint file as the user knows it: no folders, no extension.
+pub fn checkpoint_short_name(checkpoint: &str) -> String {
+    let file = checkpoint.rsplit(['/', '\\']).next().unwrap_or(checkpoint);
+    std::path::Path::new(file)
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .unwrap_or(file)
+        .to_owned()
+}
+
+/// Why the application cannot make an image for an explicit request.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ImageUnavailable {
+    /// No checkpoint or workflow: images were never set up.
+    NotConfigured,
+    ThreeWay,
+    /// The switch itself failed; nothing changed.
+    SwitchFailed,
+}
+
+/// What the application just did (or could not do) about the images, so that
+/// the companion's answer tells the truth.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ImageReceipt {
+    /// Switched on with the Image button or by the user's words.
+    SwitchedOn,
+    /// Switched on, and an earlier image request is being drawn now.
+    SwitchedOnWithRequest,
+    SwitchedOff,
+    /// An image was requested and will follow this reply.
+    Preparing,
+    /// An image was requested while the generator is off; the request is kept.
+    NeedsSwitchOn,
+    Unavailable(ImageUnavailable),
+}
+
+impl ImageReceipt {
+    // i18n: data-start
+    pub fn text(&self) -> String {
+        match self {
+            Self::SwitchedOn => "The user has just switched the image generator on; images will accompany your next replies.",
+            Self::SwitchedOnWithRequest => "The user has just switched the image generator on; the illustration of their earlier request is being made now, right after your reply. You may say briefly what you are drawing.",
+            Self::SwitchedOff => "The user has just switched the image generator off; no image will be made until they switch it on again.",
+            Self::Preparing => "An illustration of the user's request is being prepared right after your reply: say briefly you are making it; you may sketch in a few words what you are drawing.",
+            Self::NeedsSwitchOn => "The user asked for an image but the generator is off: ask them to switch it on; their request is kept and will be drawn as soon as they do.",
+            Self::Unavailable(ImageUnavailable::NotConfigured) => "The user asked about images but no image model is set up: say honestly that you cannot make images yet and that it can be set up in the application's settings.",
+            Self::Unavailable(ImageUnavailable::ThreeWay) => "The user asked for an image but the image generator is unavailable during a three-way conversation: say honestly that no image can be made now.",
+            Self::Unavailable(ImageUnavailable::SwitchFailed) => "The user asked to switch the image generator but it failed and nothing changed: say honestly that the generator state is unchanged.",
+        }
+        .into()
+    }
+    // i18n: data-end
+}
+
+/// What the companion is told about the image generator for one turn.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ImagePrompt {
+    pub enabled: bool,
+    pub family: ModelFamily,
+    /// Short name of the checkpoint (see [`checkpoint_short_name`]).
+    pub checkpoint: Option<String>,
+    pub receipt: Option<ImageReceipt>,
+}
+
+impl ImagePrompt {
+    /// `None` while no image model is set up. `enabled` is the live switch.
+    pub fn new(config: &Config, enabled: bool, receipt: Option<ImageReceipt>) -> Option<Self> {
+        generator_ready(config).then(|| Self {
+            enabled,
+            family: config.model_family,
+            checkpoint: config.checkpoint.as_deref().map(checkpoint_short_name),
+            receipt,
+        })
+    }
+
+    /// Only a receipt: the generator cannot answer (not set up, three-way).
+    pub fn unavailable(reason: ImageUnavailable) -> Self {
+        Self {
+            enabled: false,
+            family: ModelFamily::default(),
+            checkpoint: None,
+            receipt: Some(ImageReceipt::Unavailable(reason)),
+        }
+    }
+
+    fn has_state(&self) -> bool {
+        !matches!(
+            self.receipt,
+            Some(ImageReceipt::Unavailable(
+                ImageUnavailable::NotConfigured | ImageUnavailable::ThreeWay
+            ))
+        )
+    }
+
+    // i18n: data-start
+    /// The generator-state line, empty when only an unavailable receipt applies.
+    pub fn state_text(&self) -> String {
+        if !self.has_state() {
+            return String::new();
+        }
+        let model = self
+            .checkpoint
+            .as_deref()
+            .map(|name| format!(", model {name}"))
+            .unwrap_or_default();
+        let (family, style) = (self.family.name(), self.family.style());
+        if self.enabled {
+            format!(
+                "\nImage generator: on ({family}: {style}{model}). After your reply, the application automatically creates one illustration of this exchange, shown beside you in the widget; the user's visual request comes first, and your words can guide it. You may say briefly what you will draw, but you cannot see the image: never describe or comment on the finished picture as if you had seen it."
+            )
+        } else {
+            format!(
+                "\nImage generator: off ({family}{model}). The application makes no image now and you cannot switch it on yourself. If the user wants images, tell them to say 'switch on the image generator' (or to add their request, e.g. 'switch it on and make me an image of…') or to press the Image button. Do not promise or announce an image while it is off."
+            )
+        }
+    }
+
+    /// The receipt line, empty without a receipt.
+    pub fn receipt_text(&self) -> String {
+        self.receipt
+            .map(|receipt| format!("\nImage receipt: {}", receipt.text()))
+            .unwrap_or_default()
+    }
+    // i18n: data-end
+
+    /// The whole addition to the system text.
+    pub fn text(&self) -> String {
+        format!("{}{}", self.state_text(), self.receipt_text())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct AdvancedSampling {

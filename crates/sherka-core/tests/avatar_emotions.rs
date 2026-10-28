@@ -344,6 +344,7 @@ fn expression_prompt_respects_context_budget_and_agent_boundary() {
             None,
             "",
             sherka_core::trio::Last::User,
+            None,
         )
         .unwrap();
         let expressive = prepare_context_with_avatar(
@@ -358,6 +359,7 @@ fn expression_prompt_respects_context_budget_and_agent_boundary() {
             None,
             "",
             sherka_core::trio::Last::User,
+            None,
         )
         .unwrap();
         assert!(expressive.avatar_emotions);
@@ -386,6 +388,7 @@ fn expression_prompt_respects_context_budget_and_agent_boundary() {
             None,
             "",
             sherka_core::trio::Last::User,
+            None,
         )
         .unwrap();
         assert!(!fallback.avatar_emotions);
@@ -403,6 +406,7 @@ fn expression_prompt_respects_context_budget_and_agent_boundary() {
             None,
             "",
             sherka_core::trio::Last::User,
+            None,
         )
         .unwrap();
         assert!(!agent.avatar_emotions);

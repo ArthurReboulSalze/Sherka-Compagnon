@@ -22,6 +22,17 @@ The widget menu and selecting a companion card in the board both activate that c
 
 **Image** toggles the optional conversation illustration cell; configure it under Companions first. The image generator always starts off: whenever Sherka starts or you switch to a companion, its images are switched off (and ComfyUI is not started) until you press **Image** again. Its pencil button shows the latest scene prompt; edit it to regenerate that image with your own wording. Drag it to change its position relative to the avatar and resize it from its corner. Choose the image count and slideshow duration in the illustration settings. Images start preparing after text generation, while speech continues. Pressing Image again hides the cell and disables subsequent generations. Both cells follow the widget without opening additional windows. Controls follow the visible avatar bounds, and the character's chosen color supplies its active halo. Application themes are selected in Settings.
 
+**Talk to the image generator.** Your companion knows whether the generator is on or off, which model family it uses (Illustrious or SDXL) and which checkpoint is selected. You control the switch, either with **Image** or by saying so (in any of the seven interface languages), and the companion never switches it itself:
+
+- **Switch on or off.** "Switch on the image generator", "turn the images off", "stop making images". The **Image** button follows. Switching on this way does not draw the exchange that carried the command; images start with your next message.
+- **Ask for a picture.** "Make me an image of a cat astronaut", "draw me a dragon", "show me a picture of the beach". With the generator on, the companion says it is preparing it, and the image follows its reply; your sentence leads the scene. Without a request, ordinary conversation is still illustrated automatically.
+- **When it is off.** The companion asks you to switch it on and does not claim to have made anything. Your request is kept (in memory only, for this companion and this conversation): when you then say "switch on the image generator" or press **Image**, that request is illustrated right away instead of the last exchange. Say both at once ("switch on the generator and make me an image of…") to switch it on and draw in one message. Any other message in between forgets the waiting request.
+- **Without a model.** If no checkpoint or custom workflow is configured, the companion honestly says images are not set up yet.
+- **Pressing Image.** When you turn the generator on with the button, your companion makes one short remark about it (nothing is drawn for the previous exchange then; images start with your next message). If it cannot speak just then, or a request was waiting, the image of the last exchange or request starts at once.
+- **Hermes and three-way conversations.** Hermes companions know nothing about images. In a three-way conversation the generator stays unavailable: a request is answered honestly with that, and the switch is never touched.
+
+The companion cannot see the pictures, so it does not describe them, and it only claims one was made when the application says so.
+
 ## Three-way conversations
 
 You can bring a second companion into the conversation. The active companion stays the **master** and keeps the microphone, the text cell, **Stop** and **Hide**; the one you invite is the **guest**.

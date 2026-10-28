@@ -72,14 +72,152 @@ impl Memo {
         }
     }
 }
+/// An image the user asked for while the generator was off: kept in memory only,
+/// until the generator is switched on, the conversation moves on or the
+/// companion changes.
+#[derive(Default)]
+struct Wish(Option<(Uuid, Uuid, String)>);
+impl Wish {
+    fn keep(&mut self, profile: Uuid, session: Uuid, text: &str) {
+        self.0 = Some((profile, session, text.chars().take(2400).collect()));
+    }
+    fn exists(&self, profile: Uuid, session: Uuid) -> bool {
+        self.0
+            .as_ref()
+            .is_some_and(|(p, s, _)| (*p, *s) == (profile, session))
+    }
+    /// The request, left in place: a job that is interrupted or restarted
+    /// before it draws finds it again.
+    fn peek(&self, profile: Uuid, session: Uuid) -> Option<String> {
+        self.0
+            .as_ref()
+            .filter(|(p, s, _)| (*p, *s) == (profile, session))
+            .map(|(_, _, text)| text.clone())
+    }
+    /// The job that used `text` starts drawing: the request is used up, unless
+    /// the user has replaced it meanwhile.
+    fn release(&mut self, profile: Uuid, session: Uuid, text: &str) {
+        if self
+            .0
+            .as_ref()
+            .is_some_and(|(p, s, t)| (*p, *s) == (profile, session) && t == text)
+        {
+            self.0 = None;
+        }
+    }
+    fn retain_for(&mut self, profile: Uuid, session: Uuid) {
+        if !self.exists(profile, session) {
+            self.0 = None;
+        }
+    }
+}
+type Context = (Uuid, Uuid, Config, sherka_core::connections::Connections);
 struct Inner {
     sequence: u64,
     token: CancellationToken,
     status: Status,
     memo: Option<Memo>,
-    context: Option<(Uuid, Uuid, Config, sherka_core::connections::Connections)>,
+    context: Option<Context>,
     priority: usize,
+    /// An illustration was asked for and has not begun to draw: it starts (again)
+    /// when the conversation releases its priority.
     pending: bool,
+    wish: Wish,
+}
+impl Inner {
+    fn new() -> Self {
+        Self {
+            sequence: 0,
+            token: CancellationToken::new(),
+            context: None,
+            priority: 0,
+            pending: false,
+            wish: Wish::default(),
+            memo: None,
+            status: Status {
+                profile_id: None,
+                phase: "disabled",
+                image: None,
+                images: vec![],
+                message: None,
+                prompt: None,
+            },
+        }
+    }
+    /// The job is about to be cancelled by the conversation. One that has not
+    /// begun to draw (it waits for ComfyUI to start, or plans the scene) is
+    /// asked again when the conversation is quiet again.
+    fn interrupt(&mut self) {
+        if !self.token.is_cancelled() && self.status.phase == "planning" {
+            self.pending = true;
+        }
+    }
+    /// The last conversation lease was released: whether to start a job.
+    fn resume(&self) -> bool {
+        self.priority == 0
+            && (self.pending
+                || self
+                    .context
+                    .as_ref()
+                    .is_some_and(|c| c.2.enabled && c.2.live))
+    }
+    /// A new companion, session, configuration or provider. Returns whether it
+    /// changed; a changed context cancels the job and its queued request.
+    fn apply_context(&mut self, context: Context) -> bool {
+        if self.context.as_ref() == Some(&context) {
+            return false;
+        }
+        let (profile, session, enabled) = (context.0, context.1, context.2.enabled);
+        let switched_off = !enabled
+            && self
+                .context
+                .as_ref()
+                .is_some_and(|c| c.0 == profile && c.2.enabled);
+        self.token.cancel();
+        self.sequence += 1;
+        self.context = Some(context);
+        self.pending = false;
+        if switched_off {
+            // Turning the generator off withdraws what was asked of it.
+            self.wish = Wish::default();
+        } else {
+            self.wish.retain_for(profile, session);
+        }
+        if self.memo.as_ref().is_some_and(|m| m.profile != profile) {
+            self.memo = None;
+        }
+        self.status = Status {
+            profile_id: Some(profile),
+            phase: if enabled { "idle" } else { "disabled" },
+            image: None,
+            images: vec![],
+            message: None,
+            prompt: self.memo.as_ref().map(Memo::view),
+        };
+        true
+    }
+    /// Cancel the job; `clear` also forgets everything shown and asked.
+    fn stop(&mut self, clear: bool) {
+        if !clear {
+            self.interrupt();
+        }
+        self.token.cancel();
+        self.sequence += 1;
+        if clear {
+            self.pending = false;
+            self.wish = Wish::default();
+            self.status.image = None;
+            self.status.images.clear();
+            self.memo = None;
+            self.status.prompt = None;
+        }
+        self.status.phase = if self.context.as_ref().is_some_and(|c| c.2.enabled) {
+            "idle"
+        } else {
+            "disabled"
+        };
+        self.status.message = None;
+    }
 }
 /// Conversation/STT/TTS work preempts our image job. Dropping the final lease
 /// resumes the newest eligible exchange, including on error/cancellation.
@@ -109,12 +247,7 @@ impl Drop for Priority {
         let resume = {
             let mut inner = self.manager.inner.lock().unwrap_or_else(|e| e.into_inner());
             inner.priority = inner.priority.saturating_sub(1);
-            inner.priority == 0
-                && (inner.pending
-                    || inner
-                        .context
-                        .as_ref()
-                        .is_some_and(|c| c.2.enabled && c.2.live))
+            inner.resume()
         };
         if resume {
             self.manager.request(self.app.clone(), self.shared.clone());
@@ -129,22 +262,7 @@ pub struct Illustrations {
 impl Illustrations {
     pub fn new() -> Self {
         Self {
-            inner: Arc::new(Mutex::new(Inner {
-                sequence: 0,
-                token: CancellationToken::new(),
-                context: None,
-                priority: 0,
-                pending: false,
-                memo: None,
-                status: Status {
-                    profile_id: None,
-                    phase: "disabled",
-                    image: None,
-                    images: vec![],
-                    message: None,
-                    prompt: None,
-                },
-            })),
+            inner: Arc::new(Mutex::new(Inner::new())),
             gate: Arc::new(AsyncMutex::new(())),
         }
     }
@@ -164,12 +282,31 @@ impl Illustrations {
         }
         self.studio_priority(app, shared)
     }
+    /// An image request waits for the generator to be switched on.
+    pub fn keep_wish(&self, profile: Uuid, session: Uuid, text: &str) {
+        self.lock().wish.keep(profile, session, text);
+    }
+    pub fn has_wish(&self, profile: Uuid, session: Uuid) -> bool {
+        self.lock().wish.exists(profile, session)
+    }
+    pub fn forget_wish(&self) {
+        self.lock().wish = Wish::default();
+    }
+    /// The generator was just switched on inside a turn that must not be
+    /// illustrated: nothing is resumed when the turn releases its priority.
+    pub fn skip_resume(&self) {
+        self.lock().pending = false;
+    }
+    fn lock(&self) -> std::sync::MutexGuard<'_, Inner> {
+        self.inner.lock().unwrap_or_else(|e| e.into_inner())
+    }
     pub async fn exclusive(&self) -> tokio::sync::OwnedMutexGuard<()> {
         self.gate.clone().lock_owned().await
     }
     pub fn studio_priority(&self, app: AppHandle, shared: Shared) -> Priority {
         let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         inner.priority += 1;
+        inner.interrupt();
         inner.token.cancel();
         inner.sequence += 1;
         let release = inner
@@ -208,49 +345,16 @@ impl Illustrations {
         let context = (
             profile.id,
             snapshot.session_id,
-            config.clone(),
+            config,
             profile.details.connections.clone(),
         );
-        let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
-        if inner.context.as_ref() == Some(&context) {
-            return;
+        let changed = self.lock().apply_context(context);
+        if changed {
+            self.emit(app);
         }
-        inner.token.cancel();
-        inner.sequence += 1;
-        inner.context = Some(context);
-        inner.pending = false;
-        if inner.memo.as_ref().is_some_and(|m| m.profile != profile.id) {
-            inner.memo = None;
-        }
-        inner.status = Status {
-            profile_id: Some(profile.id),
-            phase: if config.enabled { "idle" } else { "disabled" },
-            image: None,
-            images: vec![],
-            message: None,
-            prompt: inner.memo.as_ref().map(Memo::view),
-        };
-        drop(inner);
-        self.emit(app);
     }
     pub fn cancel(&self, app: &AppHandle, clear: bool) {
-        let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
-        inner.token.cancel();
-        inner.sequence += 1;
-        if clear {
-            inner.pending = false;
-            inner.status.image = None;
-            inner.status.images.clear();
-            inner.memo = None;
-            inner.status.prompt = None;
-        }
-        inner.status.phase = if inner.context.as_ref().is_some_and(|c| c.2.enabled) {
-            "idle"
-        } else {
-            "disabled"
-        };
-        inner.status.message = None;
-        drop(inner);
+        self.lock().stop(clear);
         self.emit(app);
     }
     fn publish(
@@ -338,7 +442,11 @@ impl Illustrations {
                 config.clone(),
                 profile.details.connections.clone(),
             );
-            {
+            // An earlier request waiting for the generator replaces the user's
+            // latest message; the companion's latest reply stays the context. It
+            // stays queued until the job draws, so that a job interrupted while
+            // ComfyUI starts, or while the scene is planned, is not lost.
+            let wish = {
                 let mut inner = manager.inner.lock().unwrap_or_else(|e| e.into_inner());
                 if inner.sequence != sequence || token.is_cancelled() {
                     return;
@@ -347,7 +455,9 @@ impl Illustrations {
                     inner.pending = true;
                     return;
                 }
-            }
+                inner.wish.peek(profile.id, session)
+            };
+            let asked = wish.as_deref().unwrap_or(&history[0].content);
             let startup_config = match shared.0.lock() {
                 Ok(core) => core.comfy_startup_config(),
                 Err(_) => return,
@@ -384,6 +494,7 @@ impl Illustrations {
                     })
             };
             if !valid() {
+                manager.publish(&app, sequence, "idle", None, None);
                 return;
             }
             // An edited prompt for this same exchange replaces scene planning.
@@ -401,9 +512,9 @@ impl Illustrations {
                         let mut provider=Providers::new(profile.details.connections.clone())?;
                         if !provider.connections.llm_provider.is_local() { let model=provider.remote_model().await?;provider.use_api_model(&model); }
                         let appearance=if config.physical_description.is_empty() {sherka_core::illustration::default_description(profile.details.avatar_preset)} else {&config.physical_description};
-                        let (messages,schema)=sherka_core::illustration::subject_request(&profile.details.name,&history[0].content,&history[1].content);
+                        let (messages,schema)=sherka_core::illustration::subject_request(&profile.details.name,asked,&history[1].content);
                         let subject:sherka_core::illustration::Subject=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured_budgeted(messages,schema,limit,128)=>r?};
-                        let (messages,schema)=sherka_core::illustration::configured_scene_request(&config,if subject.include_companion {appearance}else{""},&history[0].content,&history[1].content);
+                        let (messages,schema)=sherka_core::illustration::configured_scene_request(&config,if subject.include_companion {appearance}else{""},asked,&history[1].content);
                         let plan:ScenePlan=tokio::select!{biased;_=token.cancelled()=>return Err(Error::StaleOperation),r=provider.structured(messages,schema,limit)=>r.map_err(|e|if e.to_string().contains("mémoire"){Error::Validation("La préparation de la scène a échoué. Vérifie le modèle de conversation puis réessaie.".into())}else{e})?};
                         let prompts=sherka_core::illustration::final_prompts(&config,plan.into_scene(config.model_family),subject.include_companion,None)?;
                         let memo=Memo{profile:profile.id,message:last.clone(),include_companion:subject.include_companion,prompts:prompts.clone(),edited:false};
@@ -423,6 +534,10 @@ impl Illustrations {
                     let bytes=avatar_reference(&app,&profile)?;
                     Some(client.upload_reference(&bytes).await?)
                 }else{None};
+                if let Some(text)=&wish {
+                    let mut inner=manager.inner.lock().unwrap_or_else(|e|e.into_inner());
+                    if inner.sequence==sequence&&!token.is_cancelled(){inner.wish.release(profile.id,session,text);}
+                }
                 manager.publish(&app,sequence,"generating",None,None);
                 let mut images=vec![];
                 // One latent image per job avoids multiplying VRAM use. A batch
@@ -444,6 +559,7 @@ impl Illustrations {
             }.await;
             drop(gate);
             if !valid() {
+                manager.publish(&app, sequence, "idle", None, None);
                 return;
             }
             match result {
@@ -612,5 +728,213 @@ pub fn synchronize(app: &AppHandle, shared: &Shared) {
         if restart {
             images.request(app.clone(), shared.clone());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn context(profile: Uuid, session: Uuid, enabled: bool) -> Context {
+        let config = Config {
+            enabled,
+            ..Default::default()
+        };
+        (profile, session, config, Default::default())
+    }
+    /// A job that waits for ComfyUI to start or plans the scene.
+    fn planning(inner: &mut Inner) {
+        inner.sequence += 1;
+        inner.token = CancellationToken::new();
+        inner.status.phase = "planning";
+    }
+
+    #[test]
+    fn a_request_waits_for_its_companion_and_session_and_stays_until_used() {
+        let (profile, session, other) = (Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4());
+        let mut wish = Wish::default();
+        assert!(!wish.exists(profile, session));
+        wish.keep(profile, session, "un chat astronaute");
+        assert!(wish.exists(profile, session));
+        assert!(!wish.exists(other, session) && !wish.exists(profile, other));
+        assert!(wish.peek(other, session).is_none() && wish.peek(profile, other).is_none());
+        // Looking at it does not use it up: an interrupted job finds it again.
+        for _ in 0..2 {
+            assert_eq!(
+                wish.peek(profile, session).as_deref(),
+                Some("un chat astronaute")
+            );
+        }
+        wish.release(profile, session, "un chat astronaute");
+        assert!(!wish.exists(profile, session) && wish.peek(profile, session).is_none());
+    }
+
+    #[test]
+    fn a_job_only_uses_up_the_request_it_drew() {
+        let (profile, session) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut wish = Wish::default();
+        wish.keep(profile, session, "a fox");
+        wish.release(profile, session, "a deer");
+        wish.release(profile, Uuid::new_v4(), "a fox");
+        assert!(
+            wish.exists(profile, session),
+            "another request is untouched"
+        );
+        wish.keep(profile, session, "a deer");
+        wish.release(profile, session, "a fox");
+        assert_eq!(wish.peek(profile, session).as_deref(), Some("a deer"));
+    }
+
+    #[test]
+    fn the_request_follows_the_session_and_the_latest_one_wins() {
+        let (profile, session) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut wish = Wish::default();
+        wish.keep(profile, session, "a fox");
+        wish.retain_for(profile, session);
+        assert!(wish.exists(profile, session));
+        wish.keep(profile, session, "a deer");
+        assert_eq!(wish.peek(profile, session).as_deref(), Some("a deer"));
+        wish.retain_for(Uuid::new_v4(), session);
+        assert!(!wish.exists(profile, session));
+    }
+
+    #[test]
+    fn a_request_is_bounded() {
+        let (profile, session) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut wish = Wish::default();
+        wish.keep(profile, session, &"é".repeat(5000));
+        assert_eq!(wish.peek(profile, session).unwrap().chars().count(), 2400);
+    }
+
+    #[test]
+    fn a_job_waiting_for_comfyui_is_resumed_when_the_conversation_is_quiet() {
+        let (profile, session) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut inner = Inner::new();
+        assert!(inner.apply_context(context(profile, session, true)));
+        inner.wish.keep(profile, session, "un mouton");
+        // The turn holds its lease; the job waits for ComfyUI to be ready.
+        inner.priority = 1;
+        planning(&mut inner);
+        // The user speaks again before ComfyUI is ready: the job is cancelled.
+        inner.stop(false);
+        assert!(inner.pending && inner.token.is_cancelled());
+        assert_eq!(inner.status.phase, "idle");
+        assert!(!inner.resume(), "not while the conversation has priority");
+        inner.priority = 0;
+        assert!(inner.resume(), "then it starts again");
+        assert_eq!(
+            inner.wish.peek(profile, session).as_deref(),
+            Some("un mouton"),
+            "and still knows what to draw"
+        );
+    }
+
+    #[test]
+    fn a_lease_taken_over_a_waiting_job_flags_it_for_resuming() {
+        let mut inner = Inner::new();
+        inner.apply_context(context(Uuid::new_v4(), Uuid::new_v4(), true));
+        planning(&mut inner);
+        // What studio_priority does: flag, then cancel.
+        inner.priority += 1;
+        inner.interrupt();
+        inner.token.cancel();
+        assert!(inner.pending && !inner.resume());
+        inner.priority -= 1;
+        assert!(inner.resume());
+    }
+
+    #[test]
+    fn only_a_job_that_has_not_begun_to_draw_is_asked_again() {
+        let mut inner = Inner::new();
+        inner.apply_context(context(Uuid::new_v4(), Uuid::new_v4(), true));
+        for phase in ["idle", "generating", "ready", "error", "disabled"] {
+            inner.status.phase = phase;
+            inner.interrupt();
+            assert!(!inner.pending, "{phase}");
+        }
+        planning(&mut inner);
+        inner.token.cancel();
+        inner.interrupt();
+        assert!(!inner.pending, "an already cancelled job is not revived");
+        planning(&mut inner);
+        inner.interrupt();
+        assert!(inner.pending);
+    }
+
+    #[test]
+    fn nothing_is_started_when_nothing_asked_for_an_image() {
+        let mut inner = Inner::new();
+        inner.apply_context(context(Uuid::new_v4(), Uuid::new_v4(), true));
+        // Switched on, idle: a conversation going by does not start a job.
+        inner.priority = 1;
+        inner.interrupt();
+        inner.stop(false);
+        inner.priority = 0;
+        assert!(!inner.pending && !inner.resume());
+    }
+
+    #[test]
+    fn turning_the_generator_off_or_changing_companion_drops_the_queued_request() {
+        let (profile, session) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut inner = Inner::new();
+        inner.apply_context(context(profile, session, true));
+        inner.wish.keep(profile, session, "un mouton");
+        planning(&mut inner);
+        inner.interrupt();
+        // The same settings change nothing.
+        assert!(!inner.apply_context(context(profile, session, true)));
+        assert!(inner.pending && inner.wish.exists(profile, session));
+        // Turned off: the job, its resume flag and the request are gone.
+        assert!(inner.apply_context(context(profile, session, false)));
+        assert!(inner.token.is_cancelled() && !inner.pending && !inner.resume());
+        assert!(!inner.wish.exists(profile, session));
+        assert_eq!(inner.status.phase, "disabled");
+        // Another companion.
+        inner.apply_context(context(profile, session, true));
+        inner.wish.keep(profile, session, "un mouton");
+        inner.apply_context(context(Uuid::new_v4(), Uuid::new_v4(), true));
+        assert!(!inner.wish.exists(profile, session) && !inner.pending);
+    }
+
+    #[test]
+    fn switching_on_with_a_waiting_request_keeps_it() {
+        let (profile, session) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut inner = Inner::new();
+        inner.apply_context(context(profile, session, false));
+        // Asked while off: kept (the waiting request).
+        inner.wish.keep(profile, session, "un mouton");
+        assert!(inner.apply_context(context(profile, session, true)));
+        assert_eq!(
+            inner.wish.peek(profile, session).as_deref(),
+            Some("un mouton")
+        );
+        assert_eq!(inner.status.phase, "idle");
+        assert!(
+            !inner.pending,
+            "the reply asks for the image, not the switch"
+        );
+    }
+
+    #[test]
+    fn clearing_forgets_the_request_and_the_resume() {
+        let (profile, session) = (Uuid::new_v4(), Uuid::new_v4());
+        let mut inner = Inner::new();
+        inner.apply_context(context(profile, session, true));
+        inner.wish.keep(profile, session, "un mouton");
+        planning(&mut inner);
+        inner.stop(true);
+        assert!(!inner.pending && !inner.wish.exists(profile, session));
+        assert!(!inner.resume());
+    }
+
+    #[test]
+    fn live_mode_resumes_without_a_request() {
+        let mut inner = Inner::new();
+        let mut live = context(Uuid::new_v4(), Uuid::new_v4(), true);
+        live.2.live = true;
+        inner.apply_context(live);
+        assert!(inner.resume());
+        inner.priority = 2;
+        assert!(!inner.resume());
     }
 }

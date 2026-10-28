@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- When VoiceStudio refuses a request (HTTP 401, 403, 409 or 451), say to open VoiceStudio to accept a pending model or voice licence or check the selected model, instead of asking for an API key a local VoiceStudio does not use. Endpoints checked unchanged with VoiceStudio 0.5.7.
+- Close the VoiceStudio that Sherka started, and only that one, on every way out: quitting, quitting without unloading, an update restart, and a Sherka crash (Windows job closed with Sherka; Linux process group and `PR_SET_PDEATHSIG`). The server is now placed in its job before it can start any child process, a server that died no longer leaves workers holding its port for the next try, and `audio-events.log` records `voicestudio_stopped`, `voicestudio_left_running` (a server Sherka did not start, left alone) or `voicestudio_stop_failed` when you quit.
+- Warm VoiceStudio up once it is ready, so the first reply does not wait for its models to load: a short word in the companion's voice (and the guest's) is synthesized and discarded, and half a second of silence goes through transcription. Nothing is played, shown or saved. It repeats for another voice, language or model and after VoiceStudio restarts, and records a `voicestudio_warmup` line (duration, `ok` or `failed`) in `audio-events.log`.
+- Tell the companion about the image generator: it knows whether it is on or off, the model family (Illustrious or SDXL) and the selected checkpoint, so it no longer promises pictures that will not come or ignores the ones that do. It is told nothing when no image model is set up, and for Hermes companions.
+- Let you control the generator by voice or text, in all seven languages: "switch on / off the image generator" and "make me an image of…". Only you switch it (these words or the **Image** button); the companion never does, and it asks you to when it is off.
+- Keep an image request made while the generator is off and draw it as soon as you switch the generator on, by voice or with **Image**, instead of illustrating the "switch it on" exchange. "Switch it on and make me…" does both in one message; switching on alone starts the images with your next message.
+- Start a requested image by itself when ComfyUI is still starting: the request is no longer lost when you speak, type or the companion talks while it loads, and it is drawn as soon as ComfyUI is ready.
+- Let the companion react to the **Image** button with one brief remark when you turn the generator on.
+- Keep the generator unavailable in three-way conversations: a request is answered honestly and the switch is never touched.
+
 ## 1.4.0 — 2026-10-28
 
 - Add three-way conversations: invite a second companion from the widget toolbar with **Add a companion**. The active companion keeps the controls; the guest gets its own transparent window with its seven expressions, speaking halo, independent drag and resize, and saved position. Its controls follow the portrait's visible pixels.

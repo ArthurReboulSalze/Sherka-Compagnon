@@ -23,6 +23,9 @@ type Launcher = Arc<dyn Fn(u16, CancellationToken) -> Result<(), String> + Send 
 type Reporter = Arc<dyn Fn(Status) + Send + Sync>;
 // Exit code of the server this session started on a port, once it has died.
 type Exited = Arc<dyn Fn(u16) -> Option<String> + Send + Sync>;
+// Called once VoiceStudio is ready; `true` when it was not at the first probe
+// (it started or restarted), so its models are cold.
+type Warmer = Arc<dyn Fn(bool) + Send + Sync>;
 struct Attempt {
     id: u64,
     cancel: CancellationToken,
@@ -35,6 +38,7 @@ struct Inner {
     launch: Launcher,
     exited: Exited,
     report: Reporter,
+    warm: Warmer,
     enabled: bool,
     budget: Duration,
     interval: Duration,
@@ -46,6 +50,8 @@ pub struct VoiceStartup(Arc<Inner>);
 impl VoiceStartup {
     pub fn new(app: tauri::AppHandle) -> Result<Self, String> {
         let owner = app.clone();
+        let reporter = app.clone();
+        let warmer = app;
         Self::build(
             Arc::new(move |port, token| {
                 let shared = owner.state::<crate::Shared>();
@@ -57,8 +63,9 @@ impl VoiceStartup {
             }),
             Arc::new(crate::service_process::exited),
             Arc::new(move |status| {
-                let _ = app.emit("sherka:voice-service", status);
+                let _ = reporter.emit("sherka:voice-service", status);
             }),
+            Arc::new(move |cold| crate::voice_warmup::on_ready(&warmer, cold)),
             std::env::var("SHERKA_AUTOSTART_VOICE").as_deref() != Ok("0"),
             // A cold start can load several large speech models.
             Duration::from_secs(600),
@@ -70,6 +77,7 @@ impl VoiceStartup {
         launch: Launcher,
         exited: Exited,
         report: Reporter,
+        warm: Warmer,
         enabled: bool,
         budget: Duration,
         interval: Duration,
@@ -98,6 +106,7 @@ impl VoiceStartup {
             launch,
             exited,
             report,
+            warm,
             enabled,
             budget,
             interval,
@@ -164,8 +173,14 @@ impl VoiceStartup {
                     result.unwrap_or_else(|_| Err(format!("VoiceStudio n’est pas prêt après {} min. Il charge peut-être encore ses modèles : consulte son journal (logs/voicestudio.log), puis réessaie.", (service.0.budget.as_secs() / 60).max(1)))),
             };
             match result {
-                Ok(()) => service.update(id, "ready", "VoiceStudio est prêt.".into()),
-                Err(error) => service.update(id, "error", error),
+                Ok(cold) => {
+                    if service.update(id, "ready", "VoiceStudio est prêt.".into()) {
+                        (service.0.warm)(cold);
+                    }
+                }
+                Err(error) => {
+                    service.update(id, "error", error);
+                }
             }
         });
         Ok(id)
@@ -201,30 +216,34 @@ impl VoiceStartup {
         self.0.state.send_replace(status.clone());
         (self.0.report)(status);
     }
-    fn update(&self, id: u64, phase: &'static str, message: String) {
+    // False when this attempt is no longer the current one (or nothing changed).
+    fn update(&self, id: u64, phase: &'static str, message: String) -> bool {
         let Ok(attempt) = self.0.attempt.lock() else {
-            return;
+            return false;
         };
         if attempt.id != id || attempt.cancel.is_cancelled() {
-            return;
+            return false;
         }
         let mut status = self.status();
         if status.phase == phase && status.message == message {
-            return;
+            return false;
         }
         status.phase = phase;
         status.message = message;
         self.publish(status);
+        true
     }
 
     // A server that is still alive or still answering "not ready" is only
     // slow: it stays `starting` until it is ready, dies, or the budget ends.
-    async fn prepare(&self, id: u64, url: &str, cancel: CancellationToken) -> Result<(), String> {
+    // `Ok(cold)`: ready, and not at the first probe.
+    async fn prepare(&self, id: u64, url: &str, cancel: CancellationToken) -> Result<bool, String> {
         let started = Instant::now();
         let mut launched = None;
+        let mut cold = false;
         loop {
             match probe(&self.0.client, url).await? {
-                Probe::Ready => return Ok(()),
+                Probe::Ready => return Ok(cold),
                 Probe::Stopped if launched.is_none() => {
                     let port = local_port(url).ok_or("VoiceStudio est inaccessible à cette adresse. Le lancement automatique nécessite une adresse HTTP locale, sans chemin intermédiaire.")?;
                     self.update(id, "starting", "Démarrage de VoiceStudio…".into());
@@ -234,10 +253,11 @@ impl VoiceStartup {
                         .await
                         .map_err(|_| "Impossible de démarrer VoiceStudio.")??;
                     launched = Some(port);
+                    cold = true;
                     tokio::time::sleep(self.0.interval).await;
                     continue;
                 }
-                Probe::Stopped | Probe::Pending => {}
+                Probe::Stopped | Probe::Pending => cold = true,
             }
             if let Some(code) = launched.and_then(|port| (self.0.exited)(port)) {
                 return Err(format!(

@@ -34,6 +34,8 @@ pub struct LiveConversation {
     pub notice: Option<String>,
     pub budget: Option<ContextBudget>,
     pub memory_receipt: Option<String>,
+    /// What the application did about the image generator this turn.
+    pub image_receipt: Option<crate::illustration::ImageReceipt>,
     pub usage: Option<crate::providers::ChatOutcome>,
 }
 
@@ -176,6 +178,7 @@ pub fn prepare_context_with_web(
         None,
         "",
         crate::trio::Last::User,
+        None,
     )
 }
 
@@ -192,6 +195,7 @@ pub fn prepare_context_with_avatar(
     peer: Option<&crate::trio::Peer>,
     user_name: &str,
     last: crate::trio::Last,
+    images: Option<&crate::illustration::ImagePrompt>,
 ) -> Result<PreparedChat> {
     // With another companion present or in the history, the user's lines carry
     // a label too, or they read as the continuation of the other's line.
@@ -245,6 +249,20 @@ pub fn prepare_context_with_avatar(
         } else { "\nWeb receipt: search completed. Only evidence actually included below may be used; these are not full page readings." });
     }
     let max_input = budget.limit as usize - budget.response_tokens as usize - budget.safety_tokens;
+    // The generator state and receipt are short, but never worth failing a
+    // small context for: the receipt alone is the fallback, then nothing.
+    if let Some(images) = images {
+        let fits = |text: &String| {
+            !text.is_empty()
+                && system.len() + text.len() + user.len() + final_prefix.len() + 80 <= max_input
+        };
+        if let Some(text) = [images.text(), images.receipt_text()]
+            .into_iter()
+            .find(fits)
+        {
+            system.push_str(&text);
+        }
+    }
     // Expression metadata is optional. It must never displace the user's
     // message or make a previously valid small-context conversation fail.
     let expression_prompt = if profile.mood_persistence {

@@ -230,10 +230,13 @@ pub fn launch(
     if cancel.is_cancelled() {
         return Err("Démarrage annulé.".into());
     }
-    if let Some(child) = children.get_mut(&key)
-        && child.try_wait().map_err(|e| e.to_string())?.is_none()
-    {
-        return Ok(());
+    if let Some(child) = children.get_mut(&key) {
+        if child.try_wait().map_err(|e| e.to_string())?.is_none() {
+            return Ok(());
+        }
+        // The first server died: close what it left before starting another,
+        // or a leftover worker could still hold the port.
+        children.remove(&key);
     }
     let (root, python) = resolve(&config)?;
     std::fs::create_dir_all(&logs).map_err(|e| e.to_string())?;
@@ -294,12 +297,37 @@ pub fn exited(port: u16) -> Option<String> {
         .find_map(|(_, child)| child.try_wait().ok().flatten())
         .map(|status| status.code().map_or("?".into(), |code| code.to_string()))
 }
-pub fn shutdown() {
+/// What closing the servers started by this session achieved.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct Closed {
+    pub stopped: usize,
+    pub failed: usize,
+}
+/// The fixed `audio-events.log` event for the end of the run. `closed`: what
+/// `shutdown` returned (`None` if it could not run); `running`: VoiceStudio was
+/// answering. A server that is up but was not started here is left alone.
+pub fn exit_event(closed: Option<&Closed>, running: bool) -> Option<&'static str> {
+    match closed {
+        None => Some("voicestudio_stop_failed"),
+        Some(c) if c.failed > 0 => Some("voicestudio_stop_failed"),
+        Some(c) if c.stopped > 0 => Some("voicestudio_stopped"),
+        Some(_) => running.then_some("voicestudio_left_running"),
+    }
+}
+/// Closes every server this session started, with all its child processes;
+/// never one that was already running. Safe to call again.
+pub fn shutdown() -> Closed {
     let mut children = CHILDREN.lock().unwrap_or_else(|e| e.into_inner());
+    let mut closed = Closed::default();
     for child in children.values_mut() {
-        child.stop();
+        if child.stop() {
+            closed.stopped += 1;
+        } else {
+            closed.failed += 1;
+        }
     }
     children.clear();
+    closed
 }
 
 #[cfg(test)]

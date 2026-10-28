@@ -27,6 +27,11 @@ struct Entry<'a> {
     audio_error: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     timing: Option<&'a crate::turn_timing::TurnTiming>,
+    // Service lines only (`voicestudio_warmup`): a fixed code and a duration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    outcome: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    duration_ms: Option<u64>,
 }
 
 impl AudioDiagnostics {
@@ -44,12 +49,17 @@ impl AudioDiagnostics {
         heard_chars: usize,
         audio_error: Option<&str>,
     ) {
-        self.write(event, reply_chars, heard_chars, audio_error, None);
+        self.write(event, reply_chars, heard_chars, audio_error, None, None);
+    }
+
+    /// A background service step: a fixed outcome code and how long it took.
+    pub fn record_service(&self, event: &'static str, outcome: &'static str, duration_ms: u64) {
+        self.write(event, 0, 0, None, None, Some((outcome, duration_ms)));
     }
 
     /// One line per turn with stage latencies; see `turn_timing`.
     pub fn record_timing(&self, reply_chars: usize, timing: &crate::turn_timing::TurnTiming) {
-        self.write("turn_timing", reply_chars, 0, None, Some(timing));
+        self.write("turn_timing", reply_chars, 0, None, Some(timing), None);
     }
 
     fn write(
@@ -59,6 +69,7 @@ impl AudioDiagnostics {
         heard_chars: usize,
         audio_error: Option<&str>,
         timing: Option<&crate::turn_timing::TurnTiming>,
+        service: Option<(&'static str, u64)>,
     ) {
         let Ok(_guard) = self.lock.lock() else { return };
         if fs::metadata(&self.path).is_ok_and(|m| m.len() >= 128 * 1024) {
@@ -79,6 +90,8 @@ impl AudioDiagnostics {
             heard_chars,
             audio_error,
             timing,
+            outcome: service.map(|s| s.0),
+            duration_ms: service.map(|s| s.1),
         };
         if let Ok(mut file) = OpenOptions::new()
             .create(true)
@@ -127,5 +140,12 @@ mod tests {
         assert!(entry["timing"]["first_token_ms"].is_u64());
         assert!(entry["timing"]["first_audio_ms"].is_null());
         assert!(!line.lines().next().unwrap().contains("timing"));
+        log.record_service("voicestudio_warmup", "ok", 840);
+        let line = fs::read_to_string(&log.path).unwrap();
+        let entry: serde_json::Value = serde_json::from_str(line.lines().last().unwrap()).unwrap();
+        assert_eq!(entry["event"], "voicestudio_warmup");
+        assert_eq!(entry["outcome"], "ok");
+        assert_eq!(entry["duration_ms"], 840);
+        assert!(!line.lines().next().unwrap().contains("duration_ms"));
     }
 }

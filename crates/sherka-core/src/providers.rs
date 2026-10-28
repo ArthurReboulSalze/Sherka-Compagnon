@@ -180,6 +180,11 @@ impl Providers {
             "Le crédit API ou le forfait de ce fournisseur est indisponible. Vérifie la facturation et l’adresse de l’API ; un abonnement de chat ou de code peut être distinct."
         } else {
             match status.as_u16() {
+                // A local VoiceStudio has no API key: a refusal usually means a
+                // model or voice licence still waits to be accepted in its UI.
+                401 | 403 | 409 | 451 if service.starts_with("VoiceStudio") => {
+                    "Ouvre VoiceStudio : une licence de modèle ou de voix attend peut-être d’être acceptée, ou le modèle choisi n’est pas installé."
+                }
                 401 | 403 => "Vérifie la clé API et les droits d’accès du fournisseur.",
                 404 => "Vérifie l'adresse et le modèle choisi dans les réglages.",
                 409 => "Vérifie que le modèle choisi est installé et actif dans ce logiciel.",

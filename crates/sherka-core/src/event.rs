@@ -18,19 +18,25 @@ pub enum AppEvent {
         name: String,
         description: Option<String>,
     },
+    /// The user switched the image generator on with the button; `family` is
+    /// the active model family ("Illustrious" or "SDXL").
+    ImagesOn { family: String },
 }
 
 impl AppEvent {
     /// Stand-in for the user's message in logs and mood: never stored.
     pub fn label(&self) -> &'static str {
+        // i18n: data-start
         match self {
             Self::Idle => "Idle invitation",
             Self::GuestJoined { .. } => "Guest joined",
+            Self::ImagesOn { .. } => "Images on",
         }
+        // i18n: data-end
     }
     /// In a three-way conversation, only the master reacts to this event.
     pub fn master_only(&self) -> bool {
-        matches!(self, Self::GuestJoined { .. })
+        matches!(self, Self::GuestJoined { .. } | Self::ImagesOn { .. })
     }
     /// After this event's remark the companions wait for the user like after a
     /// user turn: the silence relay starts, with the remark as the last line.
@@ -42,6 +48,9 @@ impl AppEvent {
         // i18n: data-start
         match self {
             Self::Idle => "[Application idle event, not a user message] Take the initiative with one brief, natural invitation to chat in your character's language. At most two short sentences and one question. You may refer to an established topic, but do not invent recent events, user activity or new facts. Do not mention this timer or repeat your identity. No tools, web search or memory changes. Wait for a reply afterwards.".into(),
+            Self::ImagesOn { family } => format!(
+                "[Application event, not a user message] The user has just switched on your image generator ({family}). React with one brief, natural, in-character remark about creating images together, in your character's language: at most two short sentences (e.g. wondering what you will create today). Do not describe this event technically and do not claim an image was made."
+            ),
             Self::GuestJoined { name, description, .. } => {
                 let known = description
                     .as_deref()
@@ -143,6 +152,22 @@ mod tests {
             "request. What you know about Minerva: Irritable and sharp-tongued. React with"
         ));
         assert!(joined(None).master_only());
+    }
+
+    #[test]
+    fn the_images_on_prompt_is_one_in_character_remark() {
+        let event = AppEvent::ImagesOn {
+            family: "Illustrious".into(),
+        };
+        let prompt = event.prompt();
+        assert!(prompt.starts_with(
+            "[Application event, not a user message] The user has just switched on your image generator (Illustrious)."
+        ));
+        assert!(prompt.contains("at most two short sentences"));
+        assert!(prompt.contains("do not claim an image was made"));
+        assert!(event.master_only());
+        assert!(!event.arms_relay());
+        assert_eq!(event.label(), "Images on");
     }
 
     #[test]

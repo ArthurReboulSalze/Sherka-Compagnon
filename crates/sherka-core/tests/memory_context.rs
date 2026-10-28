@@ -604,6 +604,7 @@ fn peer_paragraph_and_pass_rule_depend_on_the_turn_order() {
             } else {
                 sherka_core::trio::Last::User
             },
+            None,
         )
         .unwrap()
     };
@@ -683,6 +684,7 @@ fn merged_three_way_prompts_stay_inside_the_budget() {
         }),
         "",
         sherka_core::trio::Last::User,
+        None,
     )
     .unwrap();
     let b = &prepared.budget;
@@ -728,6 +730,7 @@ fn a_departed_guest_is_explained_to_the_master() {
             peer,
             "",
             sherka_core::trio::Last::User,
+            None,
         )
         .unwrap()
         .messages[0]
@@ -793,6 +796,7 @@ fn the_users_lines_are_labelled_whenever_another_companion_is_in_the_prompt() {
             peer,
             user_name,
             last,
+            None,
         )
         .unwrap()
     };

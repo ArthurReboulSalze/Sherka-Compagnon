@@ -5,6 +5,7 @@ mod conversation;
 mod desktop_tools;
 mod guest_window;
 mod illustrations;
+mod image_control;
 mod image_viewer;
 mod initiative;
 mod memory_ops;
@@ -16,6 +17,7 @@ mod startup;
 mod turn_timing;
 mod updates;
 mod voice_startup;
+mod voice_warmup;
 mod windows;
 
 use base64::{Engine, engine::general_purpose::STANDARD};
@@ -199,6 +201,10 @@ async fn set_guest_companion(
     })
     .await?;
     voice.playback.interrupt();
+    if id.is_some() {
+        // A guest with another voice is warmed up before it first speaks.
+        voice_warmup::companions_changed(&app);
+    }
     let synced = guest_window::sync(&app, shared.inner()).await;
     if synced.is_err() && id.is_some() {
         // No window, no guest: never keep an invisible participant.
@@ -280,6 +286,7 @@ async fn apply_mutation(
     guest_window::save_now(&app);
     let voice_changed = matches!(&mutation, Mutation::VoiceService { .. });
     let preferences_changed = matches!(&mutation, Mutation::Preferences { .. });
+    let paused = matches!(&mutation, Mutation::PauseVoice);
     let stop_audio = matches!(
         &mutation,
         Mutation::PauseVoice
@@ -434,6 +441,19 @@ async fn apply_mutation(
     {
         app.state::<voice_startup::VoiceStartup>()
             .start(&active.details.connections.voice_studio_url, false)?;
+    }
+    if paused {
+        voice_warmup::cancel();
+    }
+    if let Some(active) = snapshot
+        .profiles
+        .iter()
+        .find(|p| p.id == snapshot.session.profile_id)
+        && (previous.0 != active.id
+            || voice_warmup::speech_changed(&previous.1, &active.details.connections))
+    {
+        // Another companion or voice: load its models before its first turn.
+        voice_warmup::companions_changed(&app);
     }
     if let Some(active) = snapshot
         .profiles
@@ -1184,12 +1204,13 @@ pub fn run() {
         .on_window_event(windows::on_window_event)
         .build(context)
         .expect("Sherka n'a pas pu démarrer")
-        .run(|app, event| {
-            if let tauri::RunEvent::ExitRequested { api, .. } = event
-                && !windows::exit_ready()
-            {
+        .run(|app, event| match event {
+            tauri::RunEvent::ExitRequested { api, .. } if !windows::exit_ready() => {
                 api.prevent_exit();
                 windows::quit(app);
             }
+            // Whatever path led here, a server started by this session ends with it.
+            tauri::RunEvent::Exit => windows::exit_cleanup(app),
+            _ => {}
         });
 }

@@ -71,6 +71,7 @@ pub async fn set_image_enabled(
 pub async fn desktop_tool(
     app: AppHandle,
     shared: State<'_, Shared>,
+    voice: State<'_, crate::conversation::Voice>,
     tool: Tool,
     open: bool,
 ) -> Result<(), String> {
@@ -78,10 +79,54 @@ pub async fn desktop_tool(
     if matches!(tool, Tool::Image) {
         set_image_enabled(&app, shared.inner().clone(), open).await?;
         if open {
-            app.state::<crate::illustrations::Illustrations>()
-                .request(app.clone(), shared.inner().clone());
+            images_switched_on(&app, shared.inner().clone(), voice.inner().clone()).await?;
         }
     }
+    Ok(())
+}
+/// The user just pressed the Image button. A request waiting for the generator
+/// is drawn now. Otherwise the master makes one brief remark and the images
+/// begin with the next exchange (the remark would cancel an illustration of the
+/// previous one); where no remark is possible (three-way conversation, Hermes,
+/// no model set up, busy conversation, no voice) the latest exchange is
+/// illustrated at once, as before.
+async fn images_switched_on(
+    app: &AppHandle,
+    shared: Shared,
+    voice: crate::conversation::Voice,
+) -> Result<(), String> {
+    let (master, session, remark, family) = with_core(shared.clone(), |c| {
+        let session = c.session.snapshot();
+        let profile = c.profile(session.profile_id)?;
+        let config = &profile.details.illustration;
+        Ok((
+            session.profile_id,
+            session.session_id,
+            c.guest().is_none()
+                && !profile.details.connections.llm_provider.is_agent()
+                && sherka_core::illustration::generator_ready(config),
+            config.model_family.name(),
+        ))
+    })
+    .await?;
+    let images = app.state::<crate::illustrations::Illustrations>();
+    if !remark || images.has_wish(master, session) {
+        images.request(app.clone(), shared);
+        return Ok(());
+    }
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let event = sherka_core::event::AppEvent::ImagesOn {
+            family: family.into(),
+        };
+        if crate::conversation::speak_event(app.clone(), shared.clone(), voice, master, event)
+            .await
+            .is_err()
+        {
+            app.state::<crate::illustrations::Illustrations>()
+                .request(app.clone(), shared);
+        }
+    });
     Ok(())
 }
 #[tauri::command]

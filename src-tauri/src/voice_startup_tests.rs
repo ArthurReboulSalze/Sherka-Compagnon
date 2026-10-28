@@ -77,11 +77,38 @@ fn manager_with(launch: Launcher, exited: Exited, budget: Duration) -> VoiceStar
         launch,
         exited,
         Arc::new(|_| {}),
+        Arc::new(|_| {}),
         true,
         budget,
         Duration::from_millis(10),
     )
     .unwrap()
+}
+// A manager that records every warm-up request (`true`: a cold start).
+fn warming(launch: Launcher) -> (VoiceStartup, Arc<Mutex<Vec<bool>>>) {
+    let warms = Arc::new(Mutex::new(Vec::new()));
+    let record = warms.clone();
+    let service = VoiceStartup::build(
+        launch,
+        Arc::new(|_| None),
+        Arc::new(|_| {}),
+        Arc::new(move |cold| record.lock().unwrap().push(cold)),
+        true,
+        Duration::from_secs(12),
+        Duration::from_millis(10),
+    )
+    .unwrap();
+    (service, warms)
+}
+async fn warms_after(warms: &Arc<Mutex<Vec<bool>>>, count: usize) -> Vec<bool> {
+    for _ in 0..100 {
+        if warms.lock().unwrap().len() >= count {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    warms.lock().unwrap().clone()
 }
 fn no_launch() -> Launcher {
     Arc::new(|_, _| panic!("must reuse the existing service"))
@@ -382,4 +409,32 @@ fn the_voice_catalog_is_retried_only_for_what_a_loading_server_does() {
     ] {
         assert_eq!(at(error, 0, 0), None);
     }
+}
+
+#[test]
+fn warm_up_is_requested_when_ready_and_cold_only_after_a_start() {
+    tauri::async_runtime::block_on(async {
+        // Already running: ready at the first probe, never cold.
+        let server = Server::bind(0);
+        let (service, warms) = warming(no_launch());
+        service.ensure(&server.url).await.unwrap();
+        assert_eq!(warms_after(&warms, 1).await, [false]);
+        // Not an error path: a definitive refusal never warms anything.
+        server.mode.store(3, Ordering::SeqCst);
+        assert!(service.ensure(&server.url).await.is_err());
+        assert_eq!(warms_after(&warms, 2).await, [false]);
+
+        // Started by Sherka: cold.
+        let reservation = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = reservation.local_addr().unwrap();
+        drop(reservation);
+        let started = Arc::new(Mutex::new(None));
+        let owner = started.clone();
+        let (service, warms) = warming(Arc::new(move |_, _| {
+            *owner.lock().unwrap() = Some(Server::new(TcpListener::bind(address).unwrap(), 0));
+            Ok(())
+        }));
+        service.ensure(&format!("http://{address}")).await.unwrap();
+        assert_eq!(warms_after(&warms, 1).await, [true]);
+    });
 }
