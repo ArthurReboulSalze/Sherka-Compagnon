@@ -38,6 +38,7 @@
 *.mp3
 *.mp4
 !/docs/site/video/sherka-overview.mp4
+!/docs/images/sherka-explainer.mp4
 *.webm
 /releases/
 /data/

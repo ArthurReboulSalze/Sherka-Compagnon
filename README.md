@@ -23,6 +23,13 @@
 ---
 
 <p align="center">
+  <video src="docs/images/sherka-explainer.mp4" poster="docs/images/sherka-explainer-poster.jpg" controls muted playsinline width="1000">
+    <a href="docs/images/sherka-explainer.mp4">Watch the 90-second Sherka overview (MP4)</a>
+  </video>
+</p>
+<p align="center"><em>Ninety seconds: a voice, a personality, memory, scenes and three-way conversations.</em></p>
+
+<p align="center">
   <img src="docs/images/sherka-ecosystem-en.png" alt="Sherka ecosystem: local or hosted language models, VoiceStudio speech, and ComfyUI visuals" width="1200">
 </p>
 
