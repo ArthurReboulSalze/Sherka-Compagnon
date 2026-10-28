@@ -2,6 +2,7 @@
 
 - [Getting started](GETTING_STARTED.md): requirements, downloads and your first conversation.
 - [User guide](USER_GUIDE.md): characters, voices, memory and backups.
+- [Three-way conversations](USER_GUIDE.md#three-way-conversations): inviting a guest companion, turn-taking and the silence relay.
 - [Languages](LANGUAGES.md): interface language, companion language and your models.
 - [Web search](WEB_SEARCH.md): DuckDuckGo, Brave, Tavily or SearXNG and sources.
 - [Conversation illustrations](COMFYUI.md): Illustrious/SDXL scenes, IP-Adapter, formats, upscaling and per-character models/LoRAs.

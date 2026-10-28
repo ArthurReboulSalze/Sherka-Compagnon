@@ -1,16 +1,22 @@
 # Project status
 
-Release version: **1.3.4**, October 27, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
+Release version: **1.4.0**, October 28, 2026. Windows x64 and an initial Debian x64 port, Rust/Tauri 2, seven interface languages.
 
 ## Current state
 
-- **Data formats:** profile/settings database schema **9** (persistent moods), legacy JSON profile export **version 5** (accepting 1–4), default companion export Sherka Companion Archive **v1** (`.sherka.zip`). Upgraded data must not be opened with older executables; keep installed and no-install copies on the same version.
+- **Data formats:** profile/settings database schema **10** (speaker-attributed, mirrored three-way messages), legacy JSON profile export **version 5** (accepting 1–4), default companion export Sherka Companion Archive **v1** (`.sherka.zip`). Upgraded data must not be opened with older executables; keep installed and no-install copies on the same version.
 - **Platforms:** Windows x64 is the tested platform (NSIS installer, portable ZIP, signed in-app updates). The Debian x64 package builds, starts under Xvfb and opens its widget window in a KDE Plasma (X11) session; physical Linux audio, compositor, tray and Secret Service unlocking remain unvalidated, and Linux updates are manual.
-- **Test suite:** for 1.3.4, `cargo test --workspace --locked` passed 172 Rust tests on Windows, with one opt-in live DuckDuckGo test ignored.
+- **Test suite:** for 1.4.0, `cargo test --workspace --locked` passed 246 Rust tests on Windows, with one opt-in live DuckDuckGo test ignored.
 - **Validation model:** core and native tests use isolated data (`SHERKA_DATA_DIR`) and simulated services; real-service checks are opt-in. Physical microphone, speaker-echo and listening behavior are validated manually by the author, not automatically.
 - **Known limitations:** speaker echo cancellation depends on hardware and placement; one VoiceStudio cold start exceeded the startup timeout; token counts are conservative estimates; speech is synthesized per passage, not per token; image and emotion fidelity depend on the selected models.
 
 See [roadmap](ROADMAP.md) for planned work. The sections below are the release log, newest first.
+
+## 1.4.0 — three-way conversations
+
+A guest companion can join the active one (the host) from the widget toolbar. The guest runs in its own transparent `guest` window with its own expressions and voice and borrows the host's provider, model and context settings, so one LM Studio model serves both. `sherka-core::trio` addresses each user message to one companion (name in the first three words, accent- and one-typo-tolerant, else random); after a configurable silence (off, 5, 8, 10 or 15 s; 8 by default) the other reacts, using a reply prepared while the first one was speaking, then the two chain replies with a short pause until the user acts, 20 replies have been said or both pass. Speech never overlaps. The thread is mirrored into both histories with the speaker recorded (schema 10); user lines are labelled in model context and the instructions name the three participants, so a companion no longer takes the user for the other one. The host greets a new guest with one spoken remark, and the relay also starts from that remark. Memory extraction still reads only the user's messages and is no longer cancelled by the companions' own replies. Hermes, voiceless companions and conversation illustrations are excluded. Also: a loading screen until VoiceStudio is ready, slow VoiceStudio starts reported as loading rather than errors (ten-minute budget, immediate report of an exited process), and conversation images off at startup and on companion switch.
+
+Validation: 246 Rust tests (one opt-in live search test skipped), formatting, Clippy, localization and publication checks, and the Windows/Linux CI including native WebView2 scenarios with five new `trio:` scenarios on simulated services. The user tested invitation, turn-taking, the silence relay, the arrival remark, interruption and speaker awareness by voice in the Windows app over five builds.
 
 ## 1.3.4 — lossless WebP companion images
 

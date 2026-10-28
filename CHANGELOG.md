@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 — 2026-10-28
 
 - Add three-way conversations: invite a second companion from the widget toolbar with **Add a companion**. The active companion keeps the controls; the guest gets its own transparent window with its seven expressions, speaking halo, independent drag and resize, and saved position. Its controls follow the portrait's visible pixels.
 - Choose who answers: name a companion within the first three words ("Minerva, tell me a joke") and that companion replies, with case, accent and one-letter tolerance. Otherwise one companion chosen at random answers. Exactly one companion answers your message, and it cannot pass; the other one reacts later (see below).
