@@ -40,6 +40,8 @@ Invite a second companion into the conversation and listen to them talk, to you 
 
 The host greets its guest with a remark in character, recent pairs are one click away, and both still learn about you from your own words. Choose the silence delay, or turn the relay off, in **Settings → Three-way conversations**. [How it works](docs/USER_GUIDE.md#three-way-conversations) · [Release notes](docs/releases/1.4.0.md).
 
+**1.4.1:** ask your companion for a picture. It knows whether its image generator is on and which style it draws in; say "switch on the image generator" or "make me an image of…", and a request made while it is off is drawn as soon as you switch it on. [Release notes](docs/releases/1.4.1.md).
+
 <p align="center">
   <img src="docs/images/sherka-1.3.0.png" alt="Sherka control panel with companions, character creation and help" width="1000">
 </p>
