@@ -1518,7 +1518,9 @@ test('avatars: seven images, avatar voice, streamed emotions, neutral fallback a
       }
       sent.push(value);
       response.writeHead(200, {'Content-Type':'text/event-stream'});
-      const emotion = value.messages.at(-1).content;
+      // Consecutive user turns are merged, so the requested emotion is the last line.
+      const emotion = String(value.messages.at(-1).content).split('
+').at(-1);
       for (const content of ['[[emo', 'tion:', emotion, ']]', 'Bonjour, quelle belle journée !']) {
         response.write('data: ' + JSON.stringify({choices:[{delta:{content}}]}) + '\n\n');
       }
@@ -2693,7 +2695,10 @@ server=ThreadingHTTPServer((args.listen,args.port),Handler);server.serve_forever
     await panel.locator('[name="image_checkpoint"]').selectOption('fixture.safetensors');await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();await expect(panel.locator('body')).not.toHaveClass(/working/);
     await native('widget_action',{action:'quit'}).catch(()=>{});await expect.poll(()=>child.exitCode,{timeout:30000}).toBe(0);await stopApplication();
     await expect.poll(async()=>{try{await fetch(url+'/system_stats');return false;}catch{return true;}}).toBe(true);
-    await startApplication();await expect.poll(async()=>(await native<any>('get_comfy_service')).phase).toBe('ready');expect(JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8')).pid).not.toBe(launch.pid);
+    await startApplication();await expect.poll(async()=>(await native<any>('get_comfy_service')).phase).toBe('disabled');expect(JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8')).pid).toBe(launch.pid);
+    // Images start off after a restart: ComfyUI starts again only once they are switched back on.
+    await panel.locator('[data-nav="profiles"]').click();await panel.locator('[name="image_enabled"]').check();await panel.getByRole('button',{name:'Enregistrer les illustrations',exact:true}).click();await expect(panel.locator('body')).not.toHaveClass(/working/);
+    await expect.poll(async()=>(await native<any>('get_comfy_service')).phase).toBe('ready');expect(JSON.parse(readFileSync(resolve(folder,'launch.json'),'utf8')).pid).not.toBe(launch.pid);
     await panel.locator('[name="image_server"]').fill('http://192.0.2.1:8188');await expect(panel.locator('#comfy-directory')).toHaveCount(0);await panel.locator('[data-nav="settings"]').click();await expect(panel.locator('#comfy-directory')).toHaveValue(folder);await expect(panel.locator('#comfy-directory')).toBeEnabled();
     await panel.screenshot({path:'artifacts/comfy-remote-startup-options.png'});expect(consoleErrors).toEqual([]);
   }finally{await fetch(url+'/shutdown',{method:'POST'}).catch(()=>{});await expect.poll(async()=>{try{await fetch(url+'/system_stats');return false;}catch{return true;}},{timeout:10000}).toBe(true);}
