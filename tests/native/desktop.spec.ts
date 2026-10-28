@@ -1519,8 +1519,7 @@ test('avatars: seven images, avatar voice, streamed emotions, neutral fallback a
       sent.push(value);
       response.writeHead(200, {'Content-Type':'text/event-stream'});
       // Consecutive user turns are merged, so the requested emotion is the last line.
-      const emotion = String(value.messages.at(-1).content).split('
-').at(-1);
+      const emotion = String(value.messages.at(-1).content).split(/\r?\n/).at(-1);
       for (const content of ['[[emo', 'tion:', emotion, ']]', 'Bonjour, quelle belle journée !']) {
         response.write('data: ' + JSON.stringify({choices:[{delta:{content}}]}) + '\n\n');
       }
